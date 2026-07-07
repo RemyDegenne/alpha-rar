@@ -1,5 +1,6 @@
 import AlphaRAR.Auxiliary.Deterministic
 import AlphaRAR.Example
+import AlphaRAR.Mathlib.HasCondDistrib
 import AlphaRAR.Probability.Assignment
 import AlphaRAR.Probability.AssignmentRate
 import AlphaRAR.Probability.MartingaleRate

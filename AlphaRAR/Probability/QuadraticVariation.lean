@@ -281,7 +281,7 @@ theorem martingale_mul [IsFiniteMeasure μ] {N : ℕ → Ω → ℝ}
 conditionally orthogonal martingales, see `martingale_mul`), then
 `⟨M + N⟩ = ⟨M⟩ + ⟨N⟩`. This is predictable-part linearity together with the fact
 that the predictable part of the martingale `M · N` vanishes. -/
-theorem predQuadVar_add_of_martingale_mul [IsFiniteMeasure μ] {N : ℕ → Ω → ℝ}
+theorem predQuadVar_add_of_martingale_mul {N : ℕ → Ω → ℝ}
     (hM2 : ∀ n, Integrable (fun ω => M n ω ^ 2) μ)
     (hN2 : ∀ n, Integrable (fun ω => N n ω ^ 2) μ)
     (hMN : ∀ n, Integrable (M n * N n) μ)

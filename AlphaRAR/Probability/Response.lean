@@ -3,6 +3,7 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
+import AlphaRAR.Mathlib.HasCondDistrib
 import AlphaRAR.Probability.QuadraticVariation
 import LeanMachineLearning.SequentialLearning.StationaryEnv
 
@@ -70,6 +71,18 @@ lemma filtration_le_filtrationAction_succ (n : ℕ) :
     filtration hA hY n ≤ filtrationAction hA hY (n + 1) :=
   measurable_iff_comap_le.mp (measurable_history_filtrationAction hA hY n)
 
+/-- A past action is measurable with respect to a later history filtration:
+for `i ≤ n`, `A i` is `filtration n`-measurable. -/
+lemma measurable_action_filtration {i n : ℕ} (hin : i ≤ n) :
+    Measurable[filtration hA hY n] (A i) :=
+  Measurable.mono (adapted_action hA hY i) ((filtration hA hY).mono hin) le_rfl
+
+/-- A past feedback is measurable with respect to a later history filtration:
+for `i ≤ n`, `Y i` is `filtration n`-measurable. -/
+lemma measurable_feedback_filtration {i n : ℕ} (hin : i ≤ n) :
+    Measurable[filtration hA hY n] (Y i) :=
+  Measurable.mono (adapted_feedback hA hY i) ((filtration hA hY).mono hin) le_rfl
+
 end Learning.IsAlgEnvSeq
 
 namespace AlphaRAR
@@ -81,28 +94,55 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
   {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
 omit [StandardBorelSpace 𝓐] [Nonempty 𝓐] [MeasurableSingletonClass 𝓐] in
-/-- **Conditional expectation of the feedback is the mean of the arm's reward kernel.**
+/-- **Conditional expectation of a function of the feedback.**
 Under a stationary environment with per-arm reward kernel `ν`, the conditional
-expectation of the response `Y (n+1)` given the history up to `n` together with the
-action `A (n+1)` is the mean `(ν (A (n+1)))[id]` of the chosen arm's reward
-distribution. This is the crux behind the response martingale: the fresh randomness
-of a step is the response, revealed *after* the arm is chosen. -/
-lemma condExp_feedback (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (n : ℕ)
-    (hint : Integrable (Y (n + 1)) P) :
-    P[Y (n + 1) | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback (n + 1)]
-      =ᵐ[P] fun ω ↦ (ν (A (n + 1) ω))[id] := by
+expectation of `g (Y (n+1))` given the history up to `n` together with the action
+`A (n+1)` is the integral of `g` against the chosen arm's reward distribution,
+`∫ x, g x ∂(ν (A (n+1)))`. This is the crux behind the response martingale (and its
+quadratic variation): the fresh randomness of a step is the response, revealed
+*after* the arm is chosen. -/
+lemma condExp_feedback_comp (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (n : ℕ)
+    {g : ℝ → ℝ} (hg : StronglyMeasurable g) (hint : Integrable (fun ω ↦ g (Y (n + 1) ω)) P) :
+    P[fun ω ↦ g (Y (n + 1) ω) |
+        IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback (n + 1)]
+      =ᵐ[P] fun ω ↦ (ν (A (n + 1) ω))[g] := by
   have hX : Measurable (fun ω ↦ (history A Y n ω, A (n + 1) ω)) :=
     (measurable_history h.measurable_action h.measurable_feedback n).prodMk
       (h.measurable_action (n + 1))
-  rw [IsAlgEnvSeq.filtrationAction_eq_comap (n + 1) (Nat.succ_ne_zero n)]
-  refine (condExp_ae_eq_integral_condDistrib' hX hint).trans ?_
   have hcd : HasCondDistrib (Y (n + 1)) (fun ω ↦ (history A Y n ω, A (n + 1) ω))
       (ν.prodMkLeft _) P := by
     have hf := h.hasCondDistrib_feedback n
     rwa [feedback_stationaryEnv] at hf
-  filter_upwards [ae_of_ae_map hX.aemeasurable hcd.condDistrib_eq] with ω hω
-  rw [hω, Kernel.prodMkLeft_apply]
-  rfl
+  rw [IsAlgEnvSeq.filtrationAction_eq_comap (n + 1) (Nat.succ_ne_zero n)]
+  refine (hcd.condExp_comp_eq hX hg hint).trans ?_
+  filter_upwards with ω
+  rw [Kernel.prodMkLeft_apply]
+
+omit [StandardBorelSpace 𝓐] [Nonempty 𝓐] [MeasurableSingletonClass 𝓐] in
+/-- **Conditional expectation of the feedback is the mean of the arm's reward kernel.**
+Under a stationary environment with per-arm reward kernel `ν`, the conditional
+expectation of the response `Y (n+1)` given the history up to `n` together with the
+action `A (n+1)` is the mean `(ν (A (n+1)))[id]` of the chosen arm's reward
+distribution. This is the `g = id` case of `condExp_feedback_comp`. -/
+lemma condExp_feedback (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (n : ℕ)
+    (hint : Integrable (Y (n + 1)) P) :
+    P[Y (n + 1) | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback (n + 1)]
+      =ᵐ[P] fun ω ↦ (ν (A (n + 1) ω))[id] :=
+  condExp_feedback_comp h n stronglyMeasurable_id hint
+
+/-- The **variance of arm `a`** under its reward kernel: `V_a = Var[id ; ν a]`, the
+variance of the reward distribution `ν a` (Mathlib's `ProbabilityTheory.variance`). This
+is the `V_k` of blueprint Condition **A**; it is the per-step conditional variance of the
+response martingale increment. -/
+noncomputable def armVar (ν : Kernel 𝓐 ℝ) (a : 𝓐) : ℝ := variance id (ν a)
+
+omit [StandardBorelSpace 𝓐] [Nonempty 𝓐] [MeasurableSingletonClass 𝓐] in
+/-- `armVar` as the central second moment: `V_a = ∫ (x - θ_a)² ∂(ν a)`, where
+`θ_a = (ν a)[id]` is the arm mean. -/
+lemma armVar_eq_integral (ν : Kernel 𝓐 ℝ) (a : 𝓐) :
+    armVar ν a = ∫ x, (x - (ν a)[id]) ^ 2 ∂(ν a) := by
+  rw [armVar, variance_eq_integral measurable_id.aemeasurable]
+  simp only [id_eq]
 
 /-- The centered **response martingale** of arm `k`:
 `Q k n = ∑_{m < n} 𝟙{A (m+1) = k} (Y (m+1) - (ν k)[id])`. Its increments are the
@@ -174,6 +214,60 @@ lemma condExp_respMart_increment (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
     _ =ᵐ[P] P[(0 : Ω → ℝ) | IsAlgEnvSeq.filtration hA hY i] := condExp_congr_ae hEG
     _ =ᵐ[P] 0 := by simp
 
+omit [StandardBorelSpace 𝓐] [Nonempty 𝓐] in
+/-- **Conditional second moment of the response-martingale increment** (blueprint
+`lem:Q_quad_var`, per-step form). Conditioning on the history *and* the current
+assignment `𝒢 (i+1) = ℱ i ⊔ σ(A (i+1))`, the squared increment
+`(𝟙{A (i+1) = k}(Y (i+1) - θ_k))²` has conditional expectation `𝟙{A (i+1) = k} · V_k`,
+where `V_k = armVar ν k` is the variance of arm `k`. The indicator squares to itself,
+and on the event `{A (i+1) = k}` the response's conditional second central moment is
+exactly the arm variance. Retaining the (`𝒢`-measurable) indicator is what turns the
+summed second moments into `V_k N_{n,k}`. -/
+lemma condExp_respMart_increment_sq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (i : ℕ)
+    (hint : Integrable (fun ω ↦ (Y (i + 1) ω - (ν k)[id]) ^ 2) P) :
+    P[fun ω ↦ (Set.indicator {ω | A (i + 1) ω = k} (fun _ ↦ (1 : ℝ)) ω
+          * (Y (i + 1) ω - (ν k)[id])) ^ 2
+        | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback (i + 1)]
+      =ᵐ[P] fun ω ↦ Set.indicator {ω | A (i + 1) ω = k} (fun _ ↦ (1 : ℝ)) ω * armVar ν k := by
+  set hA := h.measurable_action with hA_def
+  set hY := h.measurable_feedback with hY_def
+  set G := IsAlgEnvSeq.filtrationAction hA hY (i + 1) with hG_def
+  set c : Ω → ℝ := Set.indicator {ω | A (i + 1) ω = k} (fun _ ↦ (1 : ℝ)) with hc_def
+  set g : Ω → ℝ := fun ω ↦ (Y (i + 1) ω - (ν k)[id]) ^ 2 with hg_def
+  have hcG : StronglyMeasurable[G] c :=
+    stronglyMeasurable_const.indicator
+      ((IsAlgEnvSeq.measurable_action_filtrationAction hA hY i) (measurableSet_singleton k))
+  -- The squared increment equals `c · g` (the indicator squares to itself).
+  have hsq : (fun ω ↦ (c ω * (Y (i + 1) ω - (ν k)[id])) ^ 2) = fun ω ↦ c ω * g ω := by
+    funext ω
+    simp only [hg_def]
+    by_cases hω : ω ∈ {ω | A (i + 1) ω = k}
+    · simp only [hc_def, Set.indicator_of_mem hω]; ring
+    · simp only [hc_def, Set.indicator_of_notMem hω]; ring
+  rw [hsq]
+  -- `c · g` is integrable (bounded indicator times an integrable square).
+  have hcgint : Integrable (fun ω ↦ c ω * g ω) P := by
+    have hform : (fun ω ↦ c ω * g ω) = {ω | A (i + 1) ω = k}.indicator g := by
+      funext ω
+      simp only [hc_def, Set.indicator]
+      by_cases hω : ω ∈ {ω | A (i + 1) ω = k} <;> simp [hω]
+    rw [hform]
+    exact hint.indicator (hA (i + 1) (measurableSet_singleton k))
+  -- Conditional expectation of `g = (Y - θ_k)²` given `G` is the arm's second central moment.
+  have hcondg : P[g | G] =ᵐ[P] fun ω ↦ ∫ x, (x - (ν k)[id]) ^ 2 ∂(ν (A (i + 1) ω)) := by
+    have hg2 : StronglyMeasurable (fun x : ℝ ↦ (x - (ν k)[id]) ^ 2) :=
+      ((continuous_id.sub continuous_const).pow 2).stronglyMeasurable
+    exact condExp_feedback_comp h i hg2 hint
+  -- Pull out the `G`-measurable indicator `c`, then evaluate on the arm event.
+  have hpull := condExp_mul_of_stronglyMeasurable_left hcG hcgint hint
+  filter_upwards [hpull, hcondg] with ω hp hcg
+  change P[c * g | G] ω = _
+  rw [hp, Pi.mul_apply, hcg]
+  rcases eq_or_ne (A (i + 1) ω) k with hak | hak
+  · rw [hak, armVar_eq_integral]
+  · have hc0 : c ω = 0 := by rw [hc_def, Set.indicator_of_notMem (by simpa using hak)]
+    rw [hc0, zero_mul, zero_mul]
+
 omit [StandardBorelSpace 𝓐] [Nonempty 𝓐] [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] in
 /-- Successor form: `Q k (n+1) = Q k n + 𝟙{A (n+1) = k}(Y (n+1) - (ν k)[id])`. -/
 lemma respMart_succ (k : 𝓐) (n : ℕ) :
@@ -199,13 +293,10 @@ lemma stronglyAdapted_respMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k
   unfold respMart
   refine Finset.stronglyMeasurable_sum _ fun m hm => ?_
   rw [Finset.mem_range] at hm
-  have hmono : ℱ (m + 1) ≤ ℱ n := ℱ.mono (by omega)
   have hAm : Measurable[ℱ n] (A (m + 1)) :=
-    Measurable.mono
-      (IsAlgEnvSeq.adapted_action h.measurable_action h.measurable_feedback (m + 1)) hmono le_rfl
+    IsAlgEnvSeq.measurable_action_filtration h.measurable_action h.measurable_feedback (by omega)
   have hYm : Measurable[ℱ n] (Y (m + 1)) :=
-    Measurable.mono
-      (IsAlgEnvSeq.adapted_feedback h.measurable_action h.measurable_feedback (m + 1)) hmono le_rfl
+    IsAlgEnvSeq.measurable_feedback_filtration h.measurable_action h.measurable_feedback (by omega)
   exact (stronglyMeasurable_const.indicator (hAm (measurableSet_singleton k))).mul
     (hYm.stronglyMeasurable.sub stronglyMeasurable_const)
 
