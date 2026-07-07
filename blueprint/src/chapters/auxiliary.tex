@@ -70,7 +70,7 @@ Sum the identity $X_{m,k} = p_{m,k} + \Delta M_{m,k}$ over $m \le n$.
 \label{sec:aux_response}
 
 \begin{definition}[Centered response martingale]\label{def:Q}
-\lean{AlphaRAR.respMG}\leanok
+\lean{AlphaRAR.respMG, AlphaRAR.respMart}\leanok
 \uses{def:assignment, def:responses}
 For $k \in [K]$ set $Y_{m,k} := \xi_{m,k} - \theta_k$ and
 \[
@@ -81,17 +81,32 @@ For $k \in [K]$ set $Y_{m,k} := \xi_{m,k} - \theta_k$ and
 \end{definition}
 
 \begin{lemma}[$Q$ is a martingale]\label{lem:Q_martingale}
-\uses{def:Q, def:filtration, def:condA}
-Assume Condition~\textbf{A}. For each $k \in [K]$, $(Q_{n,k})_{n\ge0}$ is an
-$(\filt_n)$-martingale, and $\E[(\Delta Q_{n,k})^2 \mid \filt_{n-1}]
-= X_{n,k} V_k$.
+\lean{AlphaRAR.martingale_respMart}\leanok
+\uses{def:Q, def:filtration}
+For each $k \in [K]$, if the responses are integrable then $(Q_{n,k})_{n\ge0}$ is an
+$(\filt_n)$-martingale.
 \end{lemma}
 
-\begin{proof}
-$\E[X_{m,k}Y_{m,k}\mid\filt_{m-1}] = X_{m,k}\E[Y_{m,k}] = 0$ since $X_{m,k}$ is
-$\filt_{m-1}$-measurable and $\xi_{m,k}$ is independent of $\filt_{m-1}$ with
-mean $\theta_k$. Squaring, $\E[X_{m,k}^2 Y_{m,k}^2\mid\filt_{m-1}]
-= X_{m,k}\E[Y_{m,k}^2] = X_{m,k}V_k$.
+\begin{proof}\leanok
+Write $\Delta Q_{n,k} = X_{n,k}(\xi_{n,k} - \theta_k)$, where $X_{n,k}$ is the
+indicator that the assignment $A_n$ equals arm $k$. The subtle point is the
+\emph{filtration convention}: $X_{n,k}$ is measurable with respect to the
+action-augmented $\sigma$-algebra $\mathcal{G}_n := \filt_{n-1}\vee\sigma(A_n)$
+(\texttt{filtrationAction}) but \emph{not} with respect to $\filt_{n-1}$ --- indeed,
+if it were, the assignment martingale $M_{n,k}$ of Definition~\ref{def:M} would be
+identically zero. Conditioning on $\mathcal{G}_n$, the response $\xi_{n,k}$ is drawn
+from the arm's reward kernel independently of the past given the arm, so its
+conditional mean is $\theta_k$; pulling out the $\mathcal{G}_n$-measurable factor
+$X_{n,k}$ gives $\E[\Delta Q_{n,k}\mid\mathcal{G}_n] = X_{n,k}(\theta_k-\theta_k)=0$.
+The tower property ($\filt_{n-1}\subseteq\mathcal{G}_n$) yields
+$\E[\Delta Q_{n,k}\mid\filt_{n-1}] = 0$.
+
+This is formalized in the \texttt{LeanMachineLearning} algorithm--environment
+framework: the arm is the action and the response is the feedback of a stationary
+environment with per-arm reward kernel $\nu$, and $\theta_k = \int x\,\nu_k(dx)$ is
+the kernel mean. The conditional-mean computation is \texttt{condExp\_feedback}, and
+the two filtrations $\filt$ and $\mathcal{G}$ are \texttt{filtration} and
+\texttt{filtrationAction}.
 \end{proof}
 
 \begin{lemma}[Quadratic variation of $Q$]\label{lem:Q_quad_var}

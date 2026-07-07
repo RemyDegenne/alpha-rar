@@ -7,6 +7,8 @@ AlphaRAR.martingale_assignMart
 AlphaRAR.isBigOpOne_assignMart_div_sqrt
 AlphaRAR.count_eq
 AlphaRAR.respMG
+AlphaRAR.respMart
+AlphaRAR.martingale_respMart
 AlphaRAR.theta_error_Q
 AlphaRAR.auxU
 AlphaRAR.auxU_succ_sub
