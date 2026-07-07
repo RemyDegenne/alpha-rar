@@ -5,3 +5,93 @@
 % If you want to split the blueprint content into several files then
 % the current file can be a simple sequence of \input. Otherwise It
 % can start with a \section or \chapter for instance.
+
+\part{Response-adaptive targeting for multi-treatment experiments}
+
+\textbf{Overview}
+
+This blueprint guides the Lean formalization of the paper
+\emph{On Response-Adaptive Targeting Strategies for Multi-Treatment Experiments}
+by Redouane Yagouti, Rémy Degenne and Emilie Kaufmann. The paper introduces the
+$\alpha$-Rebalancing Targeting Strategies ($\aRTS$), a family of response-adaptive
+randomization procedures for clinical trials with $K \geq 2$ arms, and proves
+that every member of the family enjoys the same asymptotic guarantees: strong
+consistency, asymptotic normality of the estimators and allocation proportions,
+and asymptotic efficiency. A forced-exploration variant ($\aRTSFE$) extends these
+guarantees, in particular to sparse target allocations.
+
+The mathematical development is organized so that the two main theorems are
+proved once, from an abstract set of \emph{generic sufficient conditions}
+(Chapter~\ref{chap:generic}), and each concrete design family is then handled by
+verifying those conditions. The blueprint is deliberately decomposed into many
+small lemmas to make the formalization tractable.
+
+\textbf{Reading guide}
+\begin{itemize}
+  \item Chapters~\ref{chap:model}--\ref{chap:auxiliary} set up the model,
+        estimators, conditions, the $\aRTS$ family and the auxiliary processes.
+  \item Chapter~\ref{chap:technical} collects self-contained technical lemmas
+        (good starting points for formalization).
+  \item Chapter~\ref{chap:generic} states the generic conditions and verifies
+        them for $\aRTS$.
+  \item Chapters~\ref{chap:consistency}--\ref{chap:normality} prove the two main
+        theorems from the generic conditions.
+  \item Chapter~\ref{chap:forced} treats forced exploration and sparse targets.
+  \item Chapter~\ref{chap:testing} gives an application to hypothesis testing.
+\end{itemize}
+
+Part~\ref{part:prereq} is separate: it details the probabilistic results this
+formalization needs that are \emph{not yet in Mathlib}, decomposed into small
+lemmas with proof sketches, so that they can be contributed to Mathlib
+independently.
+
+\textbf{Status} The formalization has not started.
+
+\textbf{Blueprint author} Rémy Degenne. Anyone is welcome to contribute!
+
+\input{chapters/model.tex}
+\input{chapters/design.tex}
+\input{chapters/auxiliary.tex}
+\input{chapters/technical.tex}
+\input{chapters/generic.tex}
+\input{chapters/consistency.tex}
+\input{chapters/normality.tex}
+\input{chapters/forced.tex}
+\input{chapters/hypothesis_testing.tex}
+
+\part{Probabilistic prerequisites to be added to Mathlib}
+\label{part:prereq}
+
+\textbf{Overview}
+
+The proofs in Part~I rely on several standard results of probability theory that
+are not yet available in Mathlib. This part develops them at the level of a
+blueprint: statements decomposed into small lemmas, with proof sketches and, for
+each, a note on the Mathlib building blocks already available. Nothing here is
+formalized yet, and the results are stated for their own sake (independently of
+the $\aRTS$ application), so that each can become a self-contained Mathlib
+contribution.
+
+Ordered by how much of Part~I depends on them:
+\begin{itemize}
+  \item Chapter~\ref{chap:pre_orders}: supporting API (stochastic orders
+        $o_p/O_p$, predictable quadratic variation, a multivariate Taylor
+        remainder). Not deep, but pervasive.
+  \item Chapter~\ref{chap:pre_slln}: the strong law of large numbers for
+        martingales, used for the consistency of the allocation.
+  \item Chapter~\ref{chap:pre_lil}: a one-sided law of the iterated logarithm for
+        martingales, used for every almost-sure rate.
+  \item Chapter~\ref{chap:pre_clt}: the martingale central limit theorem, the
+        analytic core of the asymptotic normality results.
+  \item Chapter~\ref{chap:pre_cochran}: the $\chi^2$ distribution and Cochran's
+        theorem, used to calibrate the Pearson test.
+\end{itemize}
+The variance/inverse-Fisher-information identity for exponential families
+(Proposition~\ref{prop:exp_fam}) is deliberately omitted here: it is used only in
+the efficiency remark and can be discharged concretely per distribution family.
+
+\input{chapters/prereq_orders.tex}
+\input{chapters/prereq_slln.tex}
+\input{chapters/prereq_lil.tex}
+\input{chapters/prereq_clt.tex}
+\input{chapters/prereq_cochran.tex}

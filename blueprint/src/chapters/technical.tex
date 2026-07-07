@@ -1,0 +1,160 @@
+\chapter{Technical lemmas}
+\label{chap:technical}
+
+This chapter gathers the probabilistic and analytic lemmas that are used as
+black boxes in the asymptotic analysis. They are self-contained and are natural
+first formalization targets. It corresponds to Appendix~C of the paper.
+
+\section{Probabilistic lemmas}
+\label{sec:tech_prob}
+
+\begin{lemma}[Bounded expectation gives $O_p$]\label{lem:expectation_to_O}
+\uses{def:op_Op}
+Let $(u_n)_{n\ge1}$ be positive reals and $(X_n)_{n\ge1}$ real random variables.
+If there is $C > 0$ with $\E|X_n| \le C u_n$ for all $n$, then $X_n = O_p(u_n)$.
+\end{lemma}
+
+\begin{proof}
+By Markov's inequality, $\Prob(|X_n| > M u_n) \le \E|X_n|/(M u_n) \le C/M$.
+Given $\varepsilon > 0$, take $M \ge C/\varepsilon$ to get
+$\Prob(|X_n| > M u_n) \le \varepsilon$ for all $n$, which is the definition of
+$X_n = O_p(u_n)$.
+\end{proof}
+
+\begin{lemma}[Doob $L^2$ maximal bound for martingale differences]\label{lem:mart_maximal}
+Let $\{M_n, \filt_n\}$ be a martingale with $\E|\Delta M_n|^2 \le C_0$ for all
+$n$. Then for any integer $L$,
+\[
+  \E\Big[\max_{1 \le m \le L} |M_n - M_{n-m}|\Big] \le 4\sqrt{C_0 L}.
+\]
+\end{lemma}
+
+\begin{proof}
+Fix $n$ and set $S_k := M_{n-L+k} - M_{n-L}$ for $0 \le k \le L$, a martingale for
+the shifted filtration $\mathcal{G}_k := \filt_{n-L+k}$. First,
+$\max_{1\le m\le L}|M_n - M_{n-m}| \le 2\max_{1\le k\le L}|S_k|$ by the triangle
+inequality. Since $\{S_k^2\}$ is a submartingale, Doob's maximal inequality gives
+$\Prob(\max_k |S_k| \ge x) \le \E[S_L^2]/x^2$. Orthogonality of martingale
+increments yields $\E[S_L^2] = \sum_{k=1}^L \E|\Delta M_{n-L+k}|^2 \le L C_0$.
+Combining, $\Prob(\max_m |M_n - M_{n-m}| \ge x) \le 4 L C_0 / x^2$, and integrating
+the tail,
+$\E[\max_m |M_n-M_{n-m}|] \le \int_0^{2\sqrt{LC_0}} 1\,dx
+ + 4\int_{2\sqrt{LC_0}}^\infty \frac{LC_0}{x^2}\,dx = 4\sqrt{LC_0}$.
+\end{proof}
+
+\begin{lemma}[Dyadic maximal bound]\label{lem:mart_maximal_dyadic}
+Under the hypotheses of Lemma~\ref{lem:mart_maximal}, for any $L$ with
+$4 < L < n$,
+\[
+  \E\Big[\max_{L \le m \le n} \frac{|M_n - M_{n-m}|}{m}\Big] \le 12\sqrt{\frac{C_0}{L}}.
+\]
+\end{lemma}
+
+\begin{proof}
+\uses{lem:mart_maximal}
+Split the range $[L,n]$ into dyadic blocks $2^{j-1} \le m < 2^j$. On such a block
+$\frac1m \le \frac{2}{2^j}$, so
+$\E[\max_{L\le m\le n}\frac{|M_n-M_{n-m}|}{m}]
+ \le \sum_{j \ge \log_2 L} \frac{2}{2^j}\, \E[\max_{m<2^j}|M_n-M_{n-m}|]
+ \le \sum_{j\ge\log_2 L} \frac{2}{2^j}\, 4\sqrt{C_0 2^j}$
+by Lemma~\ref{lem:mart_maximal}. The geometric sum is bounded by
+$12\sqrt{C_0/L}$.
+\end{proof}
+
+\begin{lemma}[Increment control from maximal bounds]\label{lem:increment_control}
+For any sequence $(Q_n)_{n\ge0}$ in a normed space, any $\ell$ with
+$0 \le \ell \le n$ and any $L < n$,
+\[
+  \|Q_n - Q_\ell\| \le (n - \ell)\max_{L \le m \le n}\frac{\|Q_n - Q_{n-m}\|}{m}
+   + \max_{m < L}\|Q_n - Q_{n-m}\|.
+\]
+\end{lemma}
+
+\begin{proof}
+Let $d := n - \ell$. If $d < L$, then $\|Q_n - Q_\ell\| = \|Q_n - Q_{n-d}\| \le
+\max_{m<L}\|Q_n-Q_{n-m}\|$. If $d \ge L$, then
+$\|Q_n - Q_\ell\| = d\cdot \frac{\|Q_n-Q_{n-d}\|}{d}
+ \le (n-\ell)\max_{L\le m\le n}\frac{\|Q_n-Q_{n-m}\|}{m}$.
+Taking the larger of the two bounds proves the claim.
+\end{proof}
+
+\begin{lemma}[Kolmogorov-type inequality for martingales]\label{lem:chebyshev_mart}
+Let $\{X_n\}$ be a square-integrable martingale with $\E[X_1] = 0$. Then for
+$\lambda > 0$,
+\[
+  \Prob\Big(\max_{1\le i\le n} X_i \ge \lambda\Big)
+  \le \frac{\Var(X_n)}{\Var(X_n) + \lambda^2}.
+\]
+\end{lemma}
+
+\begin{proof}
+For $\alpha > 0$, $\{\max_k X_k \ge \lambda\} \subseteq
+\{\max_k (X_k+\alpha)^2 \ge (\lambda+\alpha)^2\}$. As $\{(X_k+\alpha)^2\}$ is a
+submartingale, Doob's inequality gives
+$\Prob(\max_k(X_k+\alpha)^2 \ge (\lambda+\alpha)^2)
+ \le \frac{\E[(X_n+\alpha)^2]}{(\lambda+\alpha)^2}
+ = \frac{\Var(X_n)+\alpha^2}{(\lambda+\alpha)^2}$.
+Optimizing at $\alpha = \Var(X_n)/\lambda$ gives
+$\frac{\Var(X_n)}{\Var(X_n)+\lambda^2}$.
+\end{proof}
+
+\begin{corollary}[Martingale is $O_p(\sqrt n)$]\label{cor:mart_Op}
+\uses{def:op_Op}
+Let $\{X_n\}$ be a square-integrable martingale with $\E[X_1]=0$ and stationary
+increment variances, i.e.\ $\Var(X_n) = n\sigma^2$ for some $\sigma^2 < \infty$.
+Then $X_n = O_p(\sqrt n)$.
+\end{corollary}
+
+\begin{proof}
+\uses{lem:chebyshev_mart}
+By Lemma~\ref{lem:chebyshev_mart},
+$\Prob(X_n \ge M\sqrt n) \le \frac{n\sigma^2}{n\sigma^2 + M^2 n}
+ = \frac{\sigma^2}{\sigma^2 + M^2}$, uniformly in $n$; the right-hand side is
+$\le \varepsilon$ for $M$ large. Applying the same to $-X_n$ gives boundedness in
+probability of $X_n/\sqrt n$.
+\end{proof}
+
+\section{Exponential families}
+\label{sec:tech_expfam}
+
+\begin{proposition}[Variance equals inverse Fisher information]\label{prop:exp_fam}
+For a regular one-parameter exponential family with density
+$f(y\mid\eta) = \exp\{\eta y - A(\eta)\}h(y)$, if the parameter of interest
+$\theta_k = A'(\eta_k)$ is the mean parameter and $\xi_{1,k} = Y$, then
+$\Var(\xi_{1,k}) = I_k(\theta_k)^{-1}$, where $I_k$ is the Fisher information for
+one observation.
+\end{proposition}
+
+\begin{proof}
+For the natural family, $\E_\eta[Y] = A'(\eta)$ and $\Var_\eta(Y) = A''(\eta)$.
+With $\theta_k = A'(\eta_k)$ one has $\Var(\xi_{1,k}) = A''(\eta_k)$. By the
+reparameterization formula for Fisher information,
+$I_k(\theta_k) = I_{\eta_k}(\eta_k)\big(\frac{d\eta_k}{d\theta_k}\big)^2
+ = A''(\eta_k)\big(\frac{1}{A''(\eta_k)}\big)^2 = \frac{1}{A''(\eta_k)}$,
+so $\Var(\xi_{1,k}) = I_k(\theta_k)^{-1}$.
+\end{proof}
+
+\section{An analytic convergence lemma}
+\label{sec:tech_analytic}
+
+\begin{lemma}[Positive-part convergence]\label{lem:convergence}
+Let $(a_n)_{n\ge1}$ be a non-decreasing sequence with $a_n \le n$, let
+$\alpha, v \in [0,1]$, and let $(X_n)_{n\ge1}$ be real with
+$\lim_{n\to\infty} \frac{X_n}{n} = -\alpha v$. Then for any real sequence
+$\varepsilon_n$ with $\limsup_n \varepsilon_n \le 0$,
+\[
+  \lim_{n\to\infty}\Big(\varepsilon_n + \frac{X_n - X_{a_n}}{n}\Big)^+ = 0.
+\]
+\end{lemma}
+
+\begin{proof}
+If $(a_n)$ is bounded, it is eventually constant, so $X_{a_n}/n \to 0$ and
+$\varepsilon_n + \frac{X_n - X_{a_n}}{n} \to -\alpha v \le 0$, whence the positive
+part tends to $0$. If $a_n \to \infty$, then $X_{a_n}/a_n \to -\alpha v$; for
+$\varepsilon>0$ and $n$ large, $-\frac{X_{a_n}}{n} \le (\varepsilon + \alpha v)\frac{a_n}{n}
+ \le \varepsilon + \alpha v$ (using $a_n \le n$), so
+$\varepsilon_n + \frac{X_n - X_{a_n}}{n} \le \varepsilon_n + \frac{X_n}{n} + \varepsilon + \alpha v$.
+Since $\frac{X_n}{n} + \alpha v \to 0$ and $\limsup \varepsilon_n \le 0$, the
+limsup of the left side is $\le \varepsilon$; as $\varepsilon$ is arbitrary the
+positive part tends to $0$.
+\end{proof}

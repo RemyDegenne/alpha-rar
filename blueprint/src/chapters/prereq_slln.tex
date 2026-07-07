@@ -1,0 +1,102 @@
+\chapter{Strong law of large numbers for martingales}
+\label{chap:pre_slln}
+
+We formalize the $L^2$ strong law of large numbers for martingales: if the
+increment variances decay fast enough (in particular for uniformly bounded
+increments), then $M_n / n \to 0$ a.s. This is the result used in
+Lemma~\ref{lem:M_lln} to control the assignment martingale.
+
+\textbf{Formalization note.} Mathlib has the i.i.d.\ strong law
+(\texttt{Probability/StrongLaw.lean}) but no martingale version. The classical
+route below is Kolmogorov's: turn the claim into the a.s.\ convergence of a
+series via the $L^2$ martingale convergence theorem (which Mathlib \emph{does}
+have, \texttt{Probability/Martingale/Convergence.lean}), then apply Kronecker's
+lemma. The only genuinely new pieces are Kronecker's lemma (elementary real
+analysis) and the assembly.
+
+\section{Ingredients}
+\label{sec:pre_slln_ingredients}
+
+\begin{lemma}[Orthogonality of martingale increments]\label{lem:slln_orthogonal}
+Let $(M_n)$ be a square-integrable martingale. For $i \ne j$,
+$\E[\Delta M_i\, \Delta M_j] = 0$; consequently
+$\E[M_n^2] = \sum_{i=1}^n \E[(\Delta M_i)^2]$ when $M_0 = 0$.
+\end{lemma}
+
+\begin{proof}
+For $i < j$, condition on $\filt_{j-1}$: $\E[\Delta M_i \Delta M_j]
+= \E[\Delta M_i\, \E[\Delta M_j\mid\filt_{j-1}]] = 0$. Expanding
+$M_n^2 = (\sum_i \Delta M_i)^2$ and using orthogonality kills the cross terms.
+\end{proof}
+
+\begin{lemma}[Weighted increment martingale is $L^2$-bounded]\label{lem:slln_weighted}
+\uses{lem:slln_orthogonal}
+Let $(M_n)$ be a square-integrable martingale with $M_0=0$ and
+$\sum_{k\ge1}\frac{\E[(\Delta M_k)^2]}{k^2} < \infty$. Then
+$S_n := \sum_{k=1}^n \frac{\Delta M_k}{k}$ is a square-integrable martingale with
+$\sup_n \E[S_n^2] = \sum_{k\ge1}\frac{\E[(\Delta M_k)^2]}{k^2} < \infty$.
+\end{lemma}
+
+\begin{proof}
+Each increment $\Delta S_k = \Delta M_k / k$ is $\filt_k$-measurable with
+$\E[\Delta S_k\mid\filt_{k-1}] = 0$, so $S_n$ is a martingale. By
+Lemma~\ref{lem:slln_orthogonal}, $\E[S_n^2] = \sum_{k\le n}\E[(\Delta M_k)^2]/k^2$,
+which is bounded by the convergent series.
+\end{proof}
+
+\begin{lemma}[$L^2$-bounded martingales converge a.s.]\label{lem:slln_l2_conv}
+A square-integrable martingale $(S_n)$ with $\sup_n \E[S_n^2] < \infty$ converges
+a.s.\ to an integrable limit.
+\end{lemma}
+
+\begin{proof}
+This is the $L^2$ (hence $L^1$-bounded) martingale convergence theorem, available
+in Mathlib as \texttt{MeasureTheory.Submartingale.ae\_tendsto\_limitProcess}
+applied to the $L^1$-bounded martingale $S_n$.
+\end{proof}
+
+\begin{lemma}[Kronecker's lemma]\label{lem:kronecker}
+Let $(b_n)$ be a positive nondecreasing sequence with $b_n \to \infty$, and let
+$(x_n)$ be reals such that $\sum_n x_n$ converges. Then
+$\frac{1}{b_n}\sum_{k=1}^n b_k x_k \to 0$.
+\end{lemma}
+
+\begin{proof}
+Let $s_n = \sum_{k\le n} x_k \to s$. Abel summation gives
+$\frac{1}{b_n}\sum_{k\le n} b_k x_k = s_n - \frac{1}{b_n}\sum_{k=1}^{n-1}(b_{k+1}-b_k)s_k$.
+The weights $(b_{k+1}-b_k)/b_n$ are nonnegative, sum to $(b_n - b_1)/b_n \to 1$,
+and concentrate on large $k$; since $s_k \to s$, the weighted average tends to
+$s$, so the whole expression tends to $s - s = 0$.
+\end{proof}
+
+\textbf{Formalization note.} Kronecker's lemma is not in Mathlib (only unrelated
+``Kronecker'' matrix results exist). It is a short, self-contained real-analysis
+lemma and a natural standalone contribution.
+
+\section{The theorem}
+\label{sec:pre_slln_thm}
+
+\begin{theorem}[Martingale SLLN]\label{thm:mart_slln}
+\uses{lem:slln_weighted, lem:slln_l2_conv, lem:kronecker}
+Let $(M_n)$ be a square-integrable martingale with $M_0 = 0$ and
+$\sum_{k\ge1}\frac{\E[(\Delta M_k)^2]}{k^2} < \infty$. Then $\frac{M_n}{n}\to 0$
+a.s.
+\end{theorem}
+
+\begin{proof}
+By Lemmas~\ref{lem:slln_weighted} and \ref{lem:slln_l2_conv}, the series
+$S_n = \sum_{k\le n}\Delta M_k/k$ converges a.s. Apply Kronecker's lemma
+(Lemma~\ref{lem:kronecker}) pathwise with $b_k = k$ and $x_k = \Delta M_k/k$:
+$\frac{1}{n}\sum_{k\le n} k\cdot\frac{\Delta M_k}{k} = \frac{M_n}{n}\to 0$ a.s.
+\end{proof}
+
+\begin{corollary}[Bounded increments]\label{cor:mart_slln_bounded}
+\uses{thm:mart_slln}
+If $(M_n)$ is a martingale with $M_0=0$ and uniformly bounded increments
+$|\Delta M_k| \le c$, then $\frac{M_n}{n}\to 0$ a.s.
+\end{corollary}
+
+\begin{proof}
+$\E[(\Delta M_k)^2]\le c^2$, so $\sum_k \E[(\Delta M_k)^2]/k^2 \le c^2\sum_k k^{-2}
+< \infty$; apply Theorem~\ref{thm:mart_slln}.
+\end{proof}

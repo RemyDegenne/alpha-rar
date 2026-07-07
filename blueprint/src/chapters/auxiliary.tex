@@ -1,0 +1,173 @@
+\chapter{Auxiliary processes and martingales}
+\label{chap:auxiliary}
+
+The analysis of the $\aRTS$ family rests on a handful of auxiliary stochastic
+processes built from the assignments and responses. This chapter collects their
+definitions and elementary (mostly martingale) properties. It corresponds to the
+setup of the proof sketch (Section~3.2) and of Appendix~A.
+
+\section{Conditional probabilities and the assignment martingale}
+\label{sec:aux_assignment}
+
+\begin{definition}[Conditional selection probability]\label{def:cond_prob}
+\uses{def:assignment, def:filtration}
+For $k \in [K]$ and $m \ge 1$,
+\[
+  p_{m,k} := \E[X_{m,k} \mid \filt_{m-1}].
+\]
+For a RAR procedure these coincide with the allocation probabilities: with the
+indexing convention of Definition~\ref{def:rar}, $p_{m,k}$ is the $k$-th
+component of the vector used to draw $X_m$.
+\end{definition}
+
+\begin{definition}[Assignment martingale]\label{def:M}
+\uses{def:cond_prob}
+For $k \in [K]$ set $\Delta M_{m,k} := X_{m,k} - p_{m,k}$ and
+\[
+  M_{n,k} := \sum_{m=1}^n (X_{m,k} - p_{m,k}), \qquad M_n := (M_{n,1},\dots,M_{n,K}).
+\]
+\end{definition}
+
+\begin{lemma}[$M$ is a martingale]\label{lem:M_martingale}
+\uses{def:M, def:filtration}
+For each $k \in [K]$, $(M_{n,k})_{n\ge0}$ is an $(\filt_n)$-martingale with
+$M_{0,k}=0$ and bounded increments $|\Delta M_{m,k}| \le 1$.
+\end{lemma}
+
+\begin{proof}
+\uses{def:cond_prob}
+$\E[\Delta M_{m,k}\mid\filt_{m-1}] = \E[X_{m,k}\mid\filt_{m-1}] - p_{m,k} = 0$
+by Definition~\ref{def:cond_prob}, and $X_{m,k},p_{m,k}\in[0,1]$.
+\end{proof}
+
+\begin{lemma}[Count decomposition]\label{lem:count_decomp}
+\uses{def:M, def:counts}
+For all $n\ge1$ and $k\in[K]$,
+$\displaystyle N_{n,k} = \sum_{m=1}^n p_{m,k} + M_{n,k}$.
+\end{lemma}
+
+\begin{proof}
+Sum the identity $X_{m,k} = p_{m,k} + \Delta M_{m,k}$ over $m \le n$.
+\end{proof}
+
+\section{The response martingale}
+\label{sec:aux_response}
+
+\begin{definition}[Centered response martingale]\label{def:Q}
+\uses{def:assignment, def:responses}
+For $k \in [K]$ set $Y_{m,k} := \xi_{m,k} - \theta_k$ and
+\[
+  Q_{n,k} := \sum_{m=1}^n X_{m,k}\,(\xi_{m,k} - \theta_k)
+           = \sum_{m=1}^n X_{m,k}\,Y_{m,k},
+  \qquad Q_n := (Q_{n,1}, \dots, Q_{n,K}).
+\]
+\end{definition}
+
+\begin{lemma}[$Q$ is a martingale]\label{lem:Q_martingale}
+\uses{def:Q, def:filtration, def:condA}
+Assume Condition~\textbf{A}. For each $k \in [K]$, $(Q_{n,k})_{n\ge0}$ is an
+$(\filt_n)$-martingale, and $\E[(\Delta Q_{n,k})^2 \mid \filt_{n-1}]
+= X_{n,k} V_k$.
+\end{lemma}
+
+\begin{proof}
+$\E[X_{m,k}Y_{m,k}\mid\filt_{m-1}] = X_{m,k}\E[Y_{m,k}] = 0$ since $X_{m,k}$ is
+$\filt_{m-1}$-measurable and $\xi_{m,k}$ is independent of $\filt_{m-1}$ with
+mean $\theta_k$. Squaring, $\E[X_{m,k}^2 Y_{m,k}^2\mid\filt_{m-1}]
+= X_{m,k}\E[Y_{m,k}^2] = X_{m,k}V_k$.
+\end{proof}
+
+\begin{lemma}[Quadratic variation of $Q$]\label{lem:Q_quad_var}
+\uses{def:Q, def:counts}
+Under Condition~\textbf{A}, the predictable quadratic variation of $Q_{\cdot,k}$
+is $\langle Q_{\cdot,k}\rangle_n = V_k N_{n,k}$, and for $k \ne j$ the cross
+variation $\langle Q_{\cdot,k}, Q_{\cdot,j}\rangle_n = 0$.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:Q_martingale, lem:qv_incr, lem:qv_orthogonal}
+Sum the conditional second moments of Lemma~\ref{lem:Q_martingale} using
+$\sum_{m\le n} X_{m,k} = N_{n,k}$. The cross terms vanish because
+$X_{m,k}X_{m,j} = 0$ for $k \ne j$ (each patient is assigned to one arm).
+\end{proof}
+
+\begin{lemma}[Estimator error via $Q$]\label{lem:theta_error_Q}
+\uses{def:estimator, def:Q, def:bahadur}
+On $\{N_{m,k}\ge1\}$, the leading term of the estimator error is
+$\dfrac{1}{N_{m,k}}\sum_{j=1}^m X_{j,k}\xi_{j,k} - \theta_k
+ = \dfrac{Q_{m,k}}{N_{m,k}}$.
+Consequently, under the Bahadur representation
+(Definition~\ref{def:bahadur}),
+$\hat{\theta}_{m,k} - \theta_k = \dfrac{Q_{m,k}}{N_{m,k}} + o(N_{m,k}^{-1/2})$.
+\end{lemma}
+
+\begin{proof}
+$\frac{1}{N_{m,k}}\sum_j X_{j,k}\xi_{j,k} - \theta_k
+= \frac{1}{N_{m,k}}\sum_j X_{j,k}(\xi_{j,k}-\theta_k)
+= \frac{Q_{m,k}}{N_{m,k}}$, using $\sum_j X_{j,k} = N_{m,k}$.
+\end{proof}
+
+\section{The auxiliary process \texorpdfstring{$U$}{U} and the last hitting time}
+\label{sec:aux_U}
+
+\begin{definition}[Auxiliary process $U$]\label{def:U}
+\uses{def:M, def:plugin_target}
+For a fixed $\alpha \in [0,1)$, $k \in [K]$ and $n \ge 1$,
+\[
+  U_{n,k} := \sum_{m=1}^{n-1} \alpha\, \hat{\rho}_{m,k} + M_{n,k} - n\, \hat{\rho}_{n,k}.
+\]
+\end{definition}
+
+\begin{lemma}[Increment of $U$]\label{lem:U_increment}
+\uses{def:U}
+For all $n \ge 1$ and $k \in [K]$,
+\[
+  \Delta U_{n,k} = U_{n,k} - U_{n-1,k}
+  = \alpha\, \hat{\rho}_{n-1,k} - p_{n,k} + \Delta\big(N_{n,k} - n\hat{\rho}_{n,k}\big),
+\]
+where we used $\Delta M_{n,k} = X_{n,k} - p_{n,k}$ and $\Delta N_{n,k} = X_{n,k}$.
+\end{lemma}
+
+\begin{proof}
+Direct computation from Definition~\ref{def:U}, expanding
+$M_{n,k} - M_{n-1,k} = X_{n,k} - p_{n,k}$ and telescoping.
+\end{proof}
+
+\begin{definition}[Last under-sampling time]\label{def:hitting}
+\uses{def:counts, def:plugin_target}
+For $k \in [K]$ and $n \ge 1$, the \emph{last under-sampling time} before $n$ is
+\[
+  \ell_{n,k} := \max\Big\{\, m \le n : \frac{N_{m,k}}{m} \le \hat{\rho}_{m,k} \,\Big\}.
+\]
+It is the last time up to $n$ at which arm $k$ is under-sampled (its proportion
+is at most its estimated target).
+\end{definition}
+
+\begin{lemma}[Basic properties of the hitting time]\label{lem:hitting_basic}
+\uses{def:hitting}
+For each $k$, $(\ell_{n,k})_{n\ge1}$ is non-decreasing and $\ell_{n,k} \le n$.
+\end{lemma}
+
+\begin{proof}
+Immediate from the definition: enlarging $n$ enlarges the set over which the max
+is taken, and the max is bounded by $n$.
+\end{proof}
+
+\textbf{Lean remark.} Well-definedness of $\ell_{n,k}$ requires the set
+$\{m\le n : N_{m,k}/m \le \hat\rho_{m,k}\}$ to be nonempty; a convenient
+convention (used implicitly in the paper) is that it contains a base time such
+as the end of the burn-in, or one sets $\ell_{n,k}=0$ when the set is empty.
+The proofs only use Lemma~\ref{lem:hitting_basic} together with the sign
+property of the next lemma.
+
+\begin{lemma}[Sign at the hitting time]\label{lem:hitting_sign}
+\uses{def:hitting, def:aRTS}
+For $m > \ell_{n,k}$ (and $m \le n$), $\frac{N_{m,k}}{m} > \hat{\rho}_{m,k}$;
+in particular, for an $\aRTS$ design with $m \ge Km_0$, $p_{m+1,k} \le \alpha\hat{\rho}_{m,k}$.
+\end{lemma}
+
+\begin{proof}
+By maximality of $\ell_{n,k}$, no $m$ with $\ell_{n,k} < m \le n$ satisfies
+$N_{m,k}/m \le \hat{\rho}_{m,k}$. The second statement is the throttling
+condition \eqref{eq:throttle}.
+\end{proof}

@@ -1,0 +1,113 @@
+\chapter{A one-sided law of the iterated logarithm}
+\label{chap:pre_lil}
+
+The blueprint's almost-sure rates all take the form
+$M_n = O(\sqrt{\langle M\rangle_n \log\log\langle M\rangle_n})$. This is the
+\emph{upper} half of the law of the iterated logarithm; the sharp constant is
+never used. We therefore only formalize the one-sided statement, which is
+considerably easier than the full Hartman--Wintner/Stout LIL.
+
+\textbf{Formalization note.} Mathlib has \emph{no} law of the iterated logarithm.
+However, \texttt{Probability/Moments/SubGaussian.lean} already provides
+conditionally sub-Gaussian moment-generating-function bounds and an
+Azuma--Hoeffding tail inequality for martingale differences
+(\texttt{measure\_sum\_ge\_le\_of\_HasCondSubgaussianMGF}), together with the
+Borel--Cantelli lemmas (\texttt{Probability/BorelCantelli.lean}). These are
+exactly the ingredients of the argument below. The bounded-increment case is
+within reach of the existing API; the general finite-variance case needs an
+additional truncation step.
+
+\section{Exponential tail bound}
+\label{sec:pre_lil_tail}
+
+\begin{lemma}[Exponential supermartingale]\label{lem:lil_exp_supermart}
+Let $(M_n)$ be a martingale with $M_0=0$ and increments bounded by
+$|\Delta M_i| \le c$. For $|\theta| \le 1/c$, the process
+\[
+  Z_n(\theta) := \exp\!\Big(\theta M_n - \theta^2 \langle M\rangle_n\Big)
+\]
+is a supermartingale, where $\langle M\rangle$ is the predictable quadratic
+variation (Definition~\ref{def:pred_qv}).
+\end{lemma}
+
+\begin{proof}
+\uses{def:pred_qv}
+Using $e^x \le 1 + x + x^2$ for $|x| \le 1$ and $\E[\Delta M_i\mid\filt_{i-1}]=0$,
+\[
+  \E[e^{\theta\Delta M_i}\mid\filt_{i-1}]
+  \le 1 + \theta^2\E[(\Delta M_i)^2\mid\filt_{i-1}]
+  \le \exp\!\big(\theta^2(\langle M\rangle_i - \langle M\rangle_{i-1})\big).
+\]
+Hence $\E[Z_i(\theta)\mid\filt_{i-1}] \le Z_{i-1}(\theta)$.
+\end{proof}
+
+\begin{lemma}[Freedman-type inequality]\label{lem:lil_freedman}
+\uses{lem:lil_exp_supermart}
+Under the hypotheses of Lemma~\ref{lem:lil_exp_supermart}, for all $\lambda > 0$
+and $v > 0$,
+\[
+  \Prob\!\Big(\exists n:\ M_n \ge \lambda \ \text{and}\ \langle M\rangle_n \le v\Big)
+  \le \exp\!\Big(-\frac{\lambda^2}{2(v + c\lambda)}\Big).
+\]
+\end{lemma}
+
+\begin{proof}
+Optional stopping applied to the supermartingale $Z_n(\theta)$ at the first time
+$M_n\ge\lambda$ with $\langle M\rangle_n\le v$ gives
+$\Prob(\cdots)\le \exp(-\theta\lambda + \theta^2 v)$; optimize over
+$0<\theta\le 1/c$. Equivalently, this is the Azuma--Hoeffding/Freedman bound that
+follows from the conditionally sub-Gaussian MGF machinery of
+\texttt{Probability/Moments/SubGaussian.lean}.
+\end{proof}
+
+\section{The upper bound}
+\label{sec:pre_lil_upper}
+
+\begin{theorem}[One-sided LIL, bounded increments]\label{thm:lil_bounded}
+\uses{lem:lil_freedman}
+Let $(M_n)$ be a martingale with $M_0=0$ and $|\Delta M_i|\le c$, and suppose
+$\langle M\rangle_n \to \infty$ a.s. Then
+\[
+  \limsup_{n\to\infty}
+  \frac{M_n}{\sqrt{2\langle M\rangle_n \log\log\langle M\rangle_n}} \le 1
+  \quad\text{a.s.},
+\]
+and in particular $M_n = O\!\big(\sqrt{\langle M\rangle_n \log\log\langle M\rangle_n}\big)$
+a.s.
+\end{theorem}
+
+\begin{proof}
+\uses{lem:lil_freedman}
+Fix $\eta>1$ and set $v_k = \eta^k$. Apply Lemma~\ref{lem:lil_freedman} on the
+event $\{\langle M\rangle_n\in[v_{k-1},v_k]\}$ with
+$\lambda_k=(1+\varepsilon)\sqrt{2v_k\log\log v_k}$: the resulting probabilities
+are summable in $k$, so Borel--Cantelli implies that a.s.\ only finitely many of
+the events $\{M_n \ge \lambda_k,\ \langle M\rangle_n \le v_k\}$ occur. Letting
+$\eta\downarrow1$ and $\varepsilon\downarrow0$ yields the $\limsup$ bound.
+\end{proof}
+
+\begin{lemma}[Truncation to finite variance]\label{lem:lil_truncation}
+\uses{thm:lil_bounded}
+Let $(M_n)$ with $M_n = \sum_{i\le n}\xi_i D_i$, where $D_i\in\{0,1\}$ is
+$\filt_{i-1}$-measurable and $\xi_i$ are i.i.d.\ centered with $\E[\xi_1^2]<\infty$,
+so that $\langle M\rangle_n = \Var(\xi_1)\sum_{i\le n}D_i$. Then
+$M_n = O\!\big(\sqrt{\langle M\rangle_n \log\log\langle M\rangle_n}\big)$ a.s.
+\end{lemma}
+
+\begin{proof}
+\uses{thm:lil_bounded, thm:mart_slln}
+Split $\xi_i = \xi_i\indic_{\{|\xi_i|\le b_i\}} + \xi_i\indic_{\{|\xi_i|>b_i\}}$
+with a slowly growing truncation level $b_i$. The truncated part gives a
+martingale with bounded increments, to which Theorem~\ref{thm:lil_bounded}
+applies; the tail part is a.s.\ eventually zero (Borel--Cantelli, using
+$\sum_i\Prob(|\xi_i|>b_i)<\infty$ for a suitable $b_i$, guaranteed by
+$\E[\xi_1^2]<\infty$) with a negligible drift correction controlled by the
+martingale SLLN (Theorem~\ref{thm:mart_slln}).
+\end{proof}
+
+\textbf{Remark.} Lemma~\ref{lem:lil_truncation} is exactly the shape used in
+Lemma~\ref{lem:theta_LIL}: there $M = Q_{\cdot,k}$, $D_i = X_{i,k}$,
+$\xi_i = \xi_{i,k}-\theta_k$, and $\langle Q_{\cdot,k}\rangle_n = V_k N_{n,k}$, so
+the conclusion reads $Q_{n,k} = O(\sqrt{N_{n,k}\log\log N_{n,k}})$ a.s. The same
+statement applied to the bounded martingale $M_{\cdot,k}$
+(Definition~\ref{def:M}) covers the use in Lemma~\ref{lem:U_increment_bound}.

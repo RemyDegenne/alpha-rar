@@ -1,0 +1,173 @@
+\chapter{The \texorpdfstring{$\aRTS$}{aRTS} family of designs}
+\label{chap:design}
+
+This chapter defines the $\alpha$-Rebalancing Targeting Strategies ($\aRTS$),
+the central object of the paper, and records the example designs that belong to
+the family. It corresponds to Section~3.1 of the paper.
+
+\section{Definition of the family}
+\label{sec:design_def}
+
+\begin{definition}[$\aRTS$ family]\label{def:aRTS}
+\uses{def:rar, def:plugin_target, def:counts}
+Let $K \ge 2$, $\alpha \in [0,1)$ and $m_0 \in \N$ (a burn-in parameter).
+A RAR procedure is an \emph{$\alpha$-Rebalancing Targeting Strategy} ($\aRTS$)
+if its allocation probabilities $p_{m+1} \in \simplex_K$ satisfy, for all
+$m \ge K m_0$, the \emph{throttling condition}
+\begin{equation}\label{eq:throttle}
+  \forall k \in [K], \quad
+  \frac{N_{m,k}}{m} > \hat{\rho}_{m,k}
+  \ \Longrightarrow\
+  p_{m+1,k} \le \alpha\, \hat{\rho}_{m,k}.
+\end{equation}
+In words: whenever arm $k$ is currently over-sampled relative to its estimated
+target, the probability of selecting it next is throttled down to at most
+$\alpha \hat{\rho}_{m,k}$.
+\end{definition}
+
+\begin{remark}\label{rem:burnin}
+The burn-in parameter $m_0$ is the number of initial samples of each arm that
+may be taken before adaptive randomization starts. It plays no role in the
+proofs; one may take $m_0 = 0$ when the regularization $\theta_0$ of the
+estimator is chosen appropriately.
+\end{remark}
+
+\textbf{Lean remark.} The throttling condition \eqref{eq:throttle} is a
+\emph{property} of a RAR procedure, not a construction. The cleanest Lean design
+is to define a predicate \texttt{IsAlphaRTS} on RAR procedures and prove all
+asymptotic theorems from that predicate, then verify it for each concrete
+example below.
+
+\section{Examples}
+\label{sec:design_examples}
+
+Each of the following designs is shown to belong to the $\aRTS$ family, i.e.\ to
+satisfy \eqref{eq:throttle}. These lemmas are independent of one another and are
+good small formalization targets.
+
+\begin{definition}[Distance-based design]\label{def:distance_design}
+\uses{def:plugin_target, def:counts}
+Given $\alpha \in [0,1)$, the \emph{distance-based} design sets, for
+$m \ge K m_0$ and $k \in [K]$,
+\[
+  p_{m+1,k} = \alpha\, \hat{\rho}_{m,k}
+  + (1-\alpha)\frac{\delta_{m,k}}{\sum_{i=1}^K \delta_{m,i}},
+  \qquad
+  \delta_{m,k} := \max\!\Big(0,\ \hat{\rho}_{m,k} - \frac{N_{m,k}}{m}\Big),
+\]
+with the convention that if $\delta_{m,j} = 0$ for all $j$, then
+$p_{m+1,j} = \hat{\rho}_{m,j}$ for all $j$.
+\end{definition}
+
+\begin{lemma}[Distance-based is a valid probability vector]\label{lem:distance_simplex}
+\uses{def:distance_design}
+For all $m \ge K m_0$, the vector $p_{m+1}$ of Definition~\ref{def:distance_design}
+lies in $\simplex_K$.
+\end{lemma}
+
+\begin{proof}
+Each coordinate is nonnegative, and
+$\sum_k p_{m+1,k} = \alpha \sum_k \hat{\rho}_{m,k}
+ + (1-\alpha)\frac{\sum_k \delta_{m,k}}{\sum_i \delta_{m,i}} = \alpha + (1-\alpha) = 1$
+when some $\delta_{m,i}>0$; in the degenerate case $p_{m+1}=\estTarget_m \in \simplex_K$.
+\end{proof}
+
+\begin{lemma}[Distance-based is $\aRTS$]\label{lem:distance_isARTS}
+\uses{def:distance_design, def:aRTS}
+The distance-based design satisfies the throttling condition \eqref{eq:throttle},
+hence belongs to the $\aRTS$ family.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:distance_simplex}
+Membership in $\simplex_K$ is Lemma~\ref{lem:distance_simplex}. For the throttle:
+if $N_{m,k}/m > \hat{\rho}_{m,k}$ then $\delta_{m,k} = 0$, so
+$p_{m+1,k} = \alpha\hat{\rho}_{m,k} \le \alpha \hat{\rho}_{m,k}$.
+\end{proof}
+
+\begin{definition}[ERADE 2025 design]\label{def:erade2025}
+\uses{def:plugin_target, def:counts}
+Given $\alpha \in [0,1)$, the \emph{ERADE 2025} design of
+\cite{alkhnefr2025efficient} sets, for $m \ge K m_0$ and $k \in [K]$,
+\[
+  p_{m+1,k} =
+  \begin{cases}
+    \alpha \hat{\rho}_{m,k}, & N_{m,k}/m > \hat{\rho}_{m,k},\\
+    \hat{\rho}_{m,k}, & N_{m,k}/m = \hat{\rho}_{m,k},\\
+    \hat{\rho}_{m,k} + (1-\alpha)\dfrac{\sum_{j\in S}\hat{\rho}_{m,j}}{|T|},
+      & N_{m,k}/m < \hat{\rho}_{m,k},
+  \end{cases}
+\]
+where $S = \{ j : N_{m,j}/m > \hat{\rho}_{m,j}\}$ is the set of over-sampled arms
+and $T = \{ j : N_{m,j}/m < \hat{\rho}_{m,j}\}$ the set of under-sampled arms.
+\end{definition}
+
+\begin{lemma}[ERADE 2025 is a valid probability vector]\label{lem:erade2025_simplex}
+\uses{def:erade2025}
+For all $m \ge K m_0$, the vector $p_{m+1}$ of Definition~\ref{def:erade2025}
+lies in $\simplex_K$.
+\end{lemma}
+
+\begin{proof}
+Nonnegativity is clear. For the sum, the total mass removed from over-sampled
+arms is $\sum_{j\in S}(1-\alpha)\hat{\rho}_{m,j}$, which is exactly the mass
+added on the $|T|$ under-sampled arms, and arms with equality keep their target;
+using $\sum_k \hat{\rho}_{m,k} = 1$ gives $\sum_k p_{m+1,k} = 1$.
+\end{proof}
+
+\begin{lemma}[ERADE 2025 is $\aRTS$]\label{lem:erade2025_isARTS}
+\uses{def:erade2025, def:aRTS}
+The ERADE 2025 design satisfies \eqref{eq:throttle}, hence belongs to the
+$\aRTS$ family.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:erade2025_simplex}
+Membership in $\simplex_K$ is Lemma~\ref{lem:erade2025_simplex}. For the throttle:
+if $N_{m,k}/m > \hat{\rho}_{m,k}$ then $p_{m+1,k} = \alpha\hat{\rho}_{m,k}$.
+\end{proof}
+
+\begin{definition}[Interpolated D-Tracking]\label{def:d_tracking}
+\uses{def:plugin_target, def:counts}
+For $\alpha \in [0,1)$, the \emph{Interpolated D-Tracking} rule sets, for
+$m \ge K m_0$ and $k \in [K]$,
+\[
+  p_{m+1,k} = \alpha\, \hat{\rho}_{m,k} + (1-\alpha)\,\indic_{\{k = k^\star\}},
+  \qquad
+  k^\star \in \argmax_{a \in [K]} \big\{ m\hat{\rho}_{m,a} - N_{m,a} \big\}.
+\]
+The quantity $m\hat{\rho}_{m,a} - N_{m,a}$ is the deficit of arm $a$ relative to
+its target, so $k^\star$ is the most under-sampled arm.
+\end{definition}
+
+\begin{lemma}[Interpolated D-Tracking is a valid probability vector]\label{lem:d_tracking_simplex}
+\uses{def:d_tracking}
+For all $m \ge K m_0$, $p_{m+1} \in \simplex_K$.
+\end{lemma}
+
+\begin{proof}
+$\sum_k p_{m+1,k} = \alpha \sum_k \hat{\rho}_{m,k} + (1-\alpha) = 1$, and each
+coordinate is nonnegative.
+\end{proof}
+
+\begin{lemma}[Interpolated D-Tracking is $\aRTS$]\label{lem:d_tracking_isARTS}
+\uses{def:d_tracking, def:aRTS}
+For every $\alpha \in [0,1)$, the Interpolated D-Tracking rule satisfies
+\eqref{eq:throttle}, hence belongs to the $\aRTS$ family.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:counts_sum, lem:d_tracking_simplex}
+Membership in $\simplex_K$ is Lemma~\ref{lem:d_tracking_simplex}.
+If $N_{m,k}/m > \hat{\rho}_{m,k}$ then $m\hat{\rho}_{m,k} - N_{m,k} < 0$. Since
+$\sum_a (m\hat{\rho}_{m,a} - N_{m,a}) = 0$ by Lemma~\ref{lem:counts_sum}, the
+maximizing deficit is $\ge 0$, so $k \ne k^\star$ and
+$p_{m+1,k} = \alpha\hat{\rho}_{m,k}$.
+\end{proof}
+
+\begin{remark}\label{rem:d_tracking_zero}
+When $\alpha = 0$, the Interpolated D-Tracking rule becomes
+$p_{m+1,k} = \indic_{\{k = k^\star\}}$, which is the D-Tracking rule of
+\cite{garivier2016optimal} (without its forced-exploration component, treated in
+Chapter~\ref{chap:forced}).
+\end{remark}

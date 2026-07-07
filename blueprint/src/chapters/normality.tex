@@ -1,0 +1,241 @@
+\chapter{Asymptotic normality}
+\label{chap:normality}
+
+This chapter proves the second main theorem: refined $o_p(\sqrt n)$ rates for the
+deviation between proportions and plug-in targets, and joint central limit
+theorems for the estimators and the allocation proportions. As before, everything
+is derived from the generic conditions, so it applies to every $\aRTS$ design via
+Proposition~\ref{prop:aRTS_generic}. It corresponds to Theorem~3.2 and
+Appendix~A.3 of the paper.
+
+We keep the standing assumptions of Chapter~\ref{chap:consistency}: a RAR
+procedure satisfying the generic conditions with some $\ell_{n,k}$, and
+Conditions~\textbf{A}--\textbf{B}. We introduce the notation
+\[
+  G := \nabla\Target\big|_\Params, \qquad
+  V := \mathrm{diag}\!\Big(\tfrac{V_1}{v_1}, \dots, \tfrac{V_K}{v_K}\Big), \qquad
+  \Omega := \begin{pmatrix} GVG^\top & GVG^\top\\ GVG^\top & GVG^\top\end{pmatrix}.
+\]
+
+\section{A refined decomposition of \texorpdfstring{$U$}{U}}
+\label{sec:norm_U}
+
+\begin{lemma}[Additive decomposition of the $U$-increment]\label{lem:diff_U_decomp}
+\uses{def:U}
+For any non-decreasing sequence $(\ell_n)$ with $\ell_n\le n$, under
+Conditions~\textbf{A}--\textbf{B}, for each $k$,
+\[
+  U_{n,k} - U_{\ell_n,k}
+  = (n-\ell_n)\big[-(1-\alpha)v_k + o(1)\big]
+    + (M_{n,k} - M_{\ell_n,k})
+    + \ell_n\big(\hat{\rho}_{\ell_n,k} - \hat{\rho}_{n,k}\big).
+\]
+\end{lemma}
+
+\begin{proof}
+\uses{thm:LLN}
+Expanding $U_{n,k}-U_{\ell_n,k}$ from Definition~\ref{def:U} and grouping the
+target terms around $v_k$,
+$U_{n,k}-U_{\ell_n,k}
+ = (n-\ell_n)\big[-(1-\alpha)v_k - (\hat{\rho}_{n,k}-v_k)
+   + \frac{\alpha}{n-\ell_n}\sum_{m=\ell_n}^{n-1}(\hat{\rho}_{m,k}-v_k)\big]
+   + M_{n,k}-M_{\ell_n,k} + \ell_n(\hat{\rho}_{\ell_n,k}-\hat{\rho}_{n,k})$.
+By Theorem~\ref{thm:LLN}, $\hat{\rho}_n\to v$, so both $\hat{\rho}_{n,k}-v_k$ and
+the Cesàro average $\frac1{n-\ell_n}\sum_{m=\ell_n}^{n-1}(\hat{\rho}_{m,k}-v_k)$
+are $o(1)$ (treating separately the bounded and diverging cases of $\ell_n$).
+\end{proof}
+
+\begin{lemma}[Control of $\ell_n(\hat{\rho}_{\ell_n}-\hat{\rho}_n)$]\label{lem:ell_rho_control}
+\uses{def:plugin_target, def:Q}
+Under Conditions~\textbf{A}--\textbf{B} there is a constant $C\ge0$ with, for any
+non-decreasing $(\ell_n)$, $\ell_n\le n$,
+\[
+  \big|\ell_n(\hat{\rho}_{\ell_n} - \hat{\rho}_n)\big|
+  \le o(1)(n-\ell_n) + C\|Q_n - Q_{\ell_n}\| + o_p(\sqrt n).
+\]
+\end{lemma}
+
+\begin{proof}
+\uses{lem:theta_error_Q, lem:rho_rate, cor:mart_Op, lem:taylor_rho}
+By Corollary~\ref{cor:mart_Op}, $Q_{n,k}=O_p(\sqrt n)$, hence
+$\hat{\theta}_{n,k}-\theta_k = Q_{n,k}/N_{n,k} + o_p(N_{n,k}^{-1/2}) = O_p(n^{-1/2})$
+using $N_{n,k}\sim v_k n$ (Lemma~\ref{lem:theta_error_Q}). The Taylor expansion of
+$\Target$ gives $\hat{\rho}_n - v = G(\estParams_n-\Params)+O_p(1/n)$ and similarly
+at $\ell_n$; subtracting,
+$\ell_n(\hat{\rho}_{\ell_n}-\hat{\rho}_n)
+ = \ell_n G(\estParams_{\ell_n}-\estParams_n) + O_p(1)$, so
+$|\ell_n(\hat{\rho}_{\ell_n}-\hat{\rho}_n)| \le C\ell_n\|\estParams_{\ell_n}-\estParams_n\| + O_p(1)$.
+Writing the estimator difference through $Q$ (splitting into the increment
+$\sum_{j=\ell_n+1}^n$ and the reweighting of $\sum_{j\le\ell_n}$) and bounding
+each piece using $N_{n,k}-N_{\ell_n,k}\le n-\ell_n$ and the SLLN, the three
+resulting terms are respectively $C\|Q_n-Q_{\ell_n}\|$, $o(1)(n-\ell_n)$ and
+$o_p(\sqrt n)$.
+\end{proof}
+
+\section{Sharp increment bounds}
+\label{sec:norm_bounds}
+
+\begin{lemma}[$Q$- and $M$-increments are $o_p(\sqrt n)$ plus drift]\label{lem:QM_increments}
+\uses{def:Q, def:M, def:hitting}
+Under Conditions~\textbf{A}--\textbf{B}, for the hitting time $\ell_{n,k}$,
+\[
+  \|Q_n - Q_{\ell_{n,k}}\| \le o_p(1)(n-\ell_{n,k}) + o_p(\sqrt n),
+  \qquad
+  |M_{n,k} - M_{\ell_{n,k},k}| \le o_p(1)(n-\ell_{n,k}) + o_p(\sqrt n).
+\]
+\end{lemma}
+
+\begin{proof}
+\uses{lem:mart_maximal, lem:mart_maximal_dyadic, lem:increment_control, lem:expectation_to_O}
+Pick $L_n\to\infty$ with $L_n = o(n)$. Lemma~\ref{lem:mart_maximal} and
+Lemma~\ref{lem:mart_maximal_dyadic} bound the two maximal quantities
+$\E[\max_{m\le L_n}\|Q_n-Q_{n-m}\|]\le 2\sqrt{L_n C_0}$ and
+$\E[\max_{L_n\le m<n}\frac{\|Q_n-Q_{n-m}\|}{m}]\le 3\sqrt{C_0/L_n}$; by
+Lemma~\ref{lem:expectation_to_O} these are $O_p(\sqrt{L_n})=o_p(\sqrt n)$ and
+$O_p(1/\sqrt{L_n})=o_p(1)$ respectively. Plugging into the deterministic
+inequality of Lemma~\ref{lem:increment_control} gives the bound for $Q$; the same
+argument applied to $M$ gives the second bound.
+\end{proof}
+
+\begin{lemma}[Upper bound on the $U$-increment]\label{lem:U_increment_bound}
+\uses{def:U, def:hitting}
+Under Conditions~\textbf{A}--\textbf{B}, for every $k$,
+\[
+  U_{n,k} - U_{\ell_{n,k},k} \le o_p(\sqrt n),
+  \qquad
+  U_{n,k} - U_{\ell_{n,k},k} \le O(\sqrt{n\log\log n})\ \text{a.s.}
+\]
+\end{lemma}
+
+\begin{proof}
+\uses{lem:diff_U_decomp, lem:ell_rho_control, lem:QM_increments, thm:LLN, thm:lil_bounded}
+From Lemma~\ref{lem:ell_rho_control} and the $Q$-bound of
+Lemma~\ref{lem:QM_increments},
+$|\ell_{n,k}(\hat{\rho}_{\ell_{n,k}}-\hat{\rho}_{n,k})| \le o_p(1)(n-\ell_{n,k}) + o_p(\sqrt n)$.
+Substituting this and the $M$-bound into the decomposition of
+Lemma~\ref{lem:diff_U_decomp},
+$U_{n,k}-U_{\ell_{n,k},k} = (n-\ell_{n,k})[-(1-\alpha)v_k+o_p(1)] + o_p(\sqrt n)
+ \le o_p(\sqrt n)$, since the drift coefficient is $\le0$ and $n-\ell_{n,k}\ge0$.
+For the a.s.\ bound, Theorem~\ref{thm:LLN} gives $n(\hat{\rho}_n-v)=O(\sqrt{n\log\log n})$,
+hence $\ell_{n,k}(\hat{\rho}_{\ell_{n,k}}-\hat{\rho}_{n,k})=O(\sqrt{n\log\log n})$,
+and the LIL for the martingale $M$ gives $M_{n,k}=O(\sqrt{n\log\log n})$; the same
+substitution yields the second inequality.
+\end{proof}
+
+\begin{lemma}[Deviation between proportions and plug-in target]\label{lem:prop_dev}
+\uses{def:generic_cond, def:counts, def:plugin_target}
+Under the generic conditions and Conditions~\textbf{A}--\textbf{B}, for every $k$,
+\begin{align*}
+  |N_{n,k} - n\hat{\rho}_{n,k}| &= o_p(\sqrt n), &
+  |N_{n,k} - n\hat{\rho}_{n,k}| &= O(\sqrt{n\log\log n})\ \text{a.s.}, \\
+  N_{n,k} - n v_k &= O(\sqrt{n\log\log n})\ \text{a.s.}
+\end{align*}
+\end{lemma}
+
+\begin{proof}
+\uses{lem:U_increment_bound, lem:counts_sum, thm:LLN}
+The generic inequality \eqref{eq:generic_ineq} together with
+\eqref{eq:generic_small} and Lemma~\ref{lem:U_increment_bound} gives the one-sided
+bounds $N_{n,k}-n\hat{\rho}_{n,k} \le o_p(\sqrt n)$ and $\le O(\sqrt{n\log\log n})$
+a.s. The reverse inequality follows from $\sum_j N_{n,j}=n$, $\sum_j\hat{\rho}_{n,j}=1$
+(Lemma~\ref{lem:counts_sum}): $n\hat{\rho}_{n,k}-N_{n,k}=\sum_{j\ne k}(N_{n,j}-n\hat{\rho}_{n,j})$,
+which inherits the same one-sided bounds. Combining gives the absolute-value
+statements. The last line adds $n(\hat{\rho}_{n,k}-v_k)=O(\sqrt{n\log\log n})$ from
+Theorem~\ref{thm:LLN}.
+\end{proof}
+
+\section{Joint central limit theorem for the estimators}
+\label{sec:norm_clt}
+
+\begin{lemma}[Componentwise joint CLT]\label{lem:componentwise}
+\uses{def:estimator, def:counts, def:condA}
+Consider any RAR procedure with $N_{n,k}\to\infty$ a.s.\ for all $k$. Under
+Condition~\textbf{A}, with $D_n := \mathrm{diag}(\sqrt{N_{n,1}},\dots,\sqrt{N_{n,K}})$,
+\[
+  D_n(\estParams_n - \Params) \eqdist \mathcal{N}\!\big(0, \mathrm{diag}(V_1,\dots,V_K)\big).
+\]
+\end{lemma}
+
+\begin{proof}
+\uses{lem:Q_martingale, lem:Q_quad_var, thm:mart_clt, cor:mart_clt_componentwise}
+The vector martingale $M_{n,k}=\sum_{i\le n} X_{i,k}Y_{i,k}$ (with $Y_{i,k}=\xi_{i,k}-\theta_k$)
+has quadratic variation $\langle M_{\cdot,k}\rangle_n = V_k N_{n,k}$ and zero
+cross-variation (Lemma~\ref{lem:Q_quad_var}). The Lindeberg condition holds: for
+$\varepsilon>0$, $L_{n,k}(\varepsilon)\le \frac1{V_k}\E[Y_{1,k}^2\indic_{\{|Y_{1,k}|>\varepsilon\sqrt{V_k}\sqrt m\}}]$
+on $\{N_{n,k}\ge m\}$, which is small for $m$ large by dominated convergence
+(using $\E|Y_{1,k}|^2<\infty$), and $\Prob(N_{n,k}<m)\to0$. The martingale CLT
+gives $M_n/\sqrt{\langle M\rangle_n}\eqdist \mathcal{N}(0,I_K)$. Finally
+$D_n(\estParams_n-\Params) = \mathrm{diag}(\sqrt{V_1},\dots,\sqrt{V_K})\,M_n/\sqrt{\langle M\rangle_n}$
+(up to a Bahadur $o_p(1)$ term), giving the stated limit.
+\end{proof}
+
+\textbf{Lean remark.} Lemma~\ref{lem:componentwise} uses only $N_{n,k}\to\infty$,
+not any property of the limiting proportions. It is the crux of both the
+non-sparse and the sparse (Chapter~\ref{chap:forced}) analyses and should be a
+standalone theorem depending on a martingale-CLT lemma from Mathlib.
+
+\section{The normality theorem}
+\label{sec:norm_main}
+
+\begin{lemma}[CLT for the estimator]\label{lem:clt_theta}
+\uses{def:estimator}
+Under the standing hypotheses, $\sqrt n(\estParams_n - \Params)\eqdist\mathcal{N}(0,V)$.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:componentwise, thm:LLN}
+$\sqrt n D_n^{-1}\to\mathrm{diag}(v_1^{-1/2},\dots,v_K^{-1/2})$ by Theorem~\ref{thm:LLN},
+so $\sqrt n(\estParams_n-\Params)=\sqrt n D_n^{-1}\cdot D_n(\estParams_n-\Params)$
+converges by Lemma~\ref{lem:componentwise} and Slutsky to
+$\mathrm{diag}(v_k^{-1/2})\,\mathcal{N}(0,\mathrm{diag}(V_k))=\mathcal{N}(0,V)$.
+\end{proof}
+
+\begin{lemma}[CLT for the plug-in target]\label{lem:clt_rho}
+\uses{def:plugin_target}
+Under the standing hypotheses, $\sqrt n(\hat{\rho}_n - v)\eqdist\mathcal{N}(0,GVG^\top)$.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:clt_theta, lem:rho_rate, lem:taylor_rho}
+By the Taylor expansion (as in Lemma~\ref{lem:ell_rho_control}),
+$\sqrt n(\hat{\rho}_n-v)=G\sqrt n(\estParams_n-\Params)+O_p(1/\sqrt n)$. Apply
+Lemma~\ref{lem:clt_theta} and Slutsky.
+\end{proof}
+
+\begin{theorem}[Asymptotic normality]\label{thm:normality}
+\uses{def:generic_cond, def:condA, def:condB, def:counts, def:plugin_target, def:estimator}
+Under the generic conditions and Conditions~\textbf{A}--\textbf{B}, as
+$n\to\infty$:
+\begin{enumerate}
+  \item[(i)] for every $k$, $|N_{n,k}-n\hat{\rho}_{n,k}|=o_p(\sqrt n)$,
+        $|N_{n,k}-n\hat{\rho}_{n,k}|=O(\sqrt{n\log\log n})$ a.s., and
+        $N_{n,k}-nv_k=O(\sqrt{n\log\log n})$ a.s.;
+  \item[(ii)] $\sqrt n(\estParams_n-\Params)\eqdist\mathcal{N}(0,V)$ and
+        \[
+          \begin{pmatrix}\sqrt n(N_n/n - v)\\ \sqrt n(\hat{\rho}_n - v)\end{pmatrix}
+          \eqdist \mathcal{N}(0,\Omega).
+        \]
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\uses{lem:prop_dev, lem:clt_theta, lem:clt_rho}
+Part (i) is Lemma~\ref{lem:prop_dev}. For (ii), the marginal CLT for
+$\estParams_n$ is Lemma~\ref{lem:clt_theta}. By part (i),
+$\sqrt n(N_n/n-\hat{\rho}_n)=o_p(1)$, so $\sqrt n(N_n/n-v)$ and
+$\sqrt n(\hat{\rho}_n-v)$ have the same limit $\mathcal{N}(0,GVG^\top)$
+(Lemma~\ref{lem:clt_rho}) and are asymptotically equal; the joint vector
+$(\sqrt n(N_n/n-v),\sqrt n(\hat{\rho}_n-v))$ therefore equals
+$(\sqrt n(\hat{\rho}_n-v),\sqrt n(\hat{\rho}_n-v))+o_p(1)$, which converges to
+$\mathcal{N}(0,\Omega)$ by Slutsky.
+\end{proof}
+
+\begin{remark}[Asymptotic efficiency]\label{rem:efficiency}
+\uses{thm:normality, prop:exp_fam}
+When the arm responses belong to one-parameter exponential families with mean
+parameter, Proposition~\ref{prop:exp_fam} gives $V_k = I_k(\theta_k)^{-1}$, so the
+asymptotic variance $GVG^\top$ of $N_n/n$ equals the lower bound
+$G\,I(\Params)^{-1}G^\top$ of \cite{hu2006asymptotically}, with
+$I(\Params)=\mathrm{diag}(v_1 I_1(\theta_1),\dots,v_K I_K(\theta_K))$. Hence every
+$\aRTS$ design is asymptotically efficient.
+\end{remark}

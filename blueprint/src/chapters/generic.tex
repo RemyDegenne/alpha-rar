@@ -1,0 +1,133 @@
+\chapter{Generic sufficient conditions}
+\label{chap:generic}
+
+The heart of the paper is a set of abstract sufficient conditions, phrased in
+terms of the auxiliary process $U$ and an arbitrary sequence of times
+$\ell_{n,k}$, under which the main asymptotic theorems hold. The two concrete
+families ($\aRTS$ in Chapter~\ref{chap:consistency}--\ref{chap:normality} and
+$\aRTSFE$ in Chapter~\ref{chap:forced}) are then handled by exhibiting a suitable
+$\ell_{n,k}$. This chapter states the abstract conditions and verifies them for
+the $\aRTS$ family. It corresponds to Lemma~3.2 and Lemma~A.1 of the paper.
+
+\section{The abstract conditions}
+\label{sec:generic_conditions}
+
+\begin{definition}[Generic condition set]\label{def:generic_cond}
+\uses{def:counts, def:plugin_target, def:U}
+Let $(\ell_{n,k})_{n\ge1, k\in[K]}$ be integer-valued random variables. We say
+that a RAR procedure \emph{satisfies the generic conditions with $\ell$} if:
+\begin{enumerate}
+  \item[(i)] for all $k$, $(\ell_{n,k})_n$ is non-decreasing and $\ell_{n,k}\le n$;
+  \item[(ii)] for all $k,n$,
+        \begin{equation}\label{eq:generic_ineq}
+          N_{n,k} - n\hat{\rho}_{n,k}
+          \le 1 + N_{\ell_{n,k},k} - \ell_{n,k}\hat{\rho}_{\ell_{n,k},k}
+             + U_{n,k} - U_{\ell_{n,k},k};
+        \end{equation}
+  \item[(iii)] for all $k,n$,
+        \begin{equation}\label{eq:generic_small}
+          N_{\ell_{n,k},k} - \ell_{n,k}\hat{\rho}_{\ell_{n,k},k} = o(\sqrt n)
+          \quad\text{a.s.}
+        \end{equation}
+\end{enumerate}
+\end{definition}
+
+\begin{theorem}[Generic conditions imply the main theorems]\label{thm:generic_main}
+\uses{def:generic_cond, def:condA, def:condB}
+Suppose a RAR procedure satisfies the generic conditions with some $\ell$, and
+that Conditions~\textbf{A}--\textbf{B} hold. Then the conclusions of the strong
+consistency theorem (Theorem~\ref{thm:LLN}) and of the asymptotic normality
+theorem (Theorem~\ref{thm:normality}) hold.
+\end{theorem}
+
+\begin{proof}\uses{thm:LLN, thm:normality}
+This is the content of Chapters~\ref{chap:consistency} and \ref{chap:normality}:
+those chapters derive Theorem~\ref{thm:LLN} and Theorem~\ref{thm:normality}
+using only the generic conditions of Definition~\ref{def:generic_cond} (together
+with Conditions~\textbf{A}--\textbf{B}), never the specific form of the design.
+\end{proof}
+
+\textbf{Lean remark.} Theorem~\ref{thm:generic_main} is the key modularization:
+it should be a standalone Lean theorem taking a hypothesis bundle
+\texttt{GenericConditions} and returning the two conclusions. Both the $\aRTS$
+and $\aRTSFE$ results then reduce to constructing $\ell$ and discharging
+Definition~\ref{def:generic_cond}.
+
+\section{Verification for the \texorpdfstring{$\aRTS$}{aRTS} family}
+\label{sec:generic_verify}
+
+We now show that the last under-sampling time $\ell_{n,k}$ of
+Definition~\ref{def:hitting} satisfies the generic conditions for any $\aRTS$
+design. The proof of the key inequality \eqref{eq:generic_ineq} is isolated into
+a telescoping identity.
+
+\begin{lemma}[Telescoping identity for $U$]\label{lem:U_telescope}
+\uses{def:U, def:hitting, def:aRTS}
+For any $\aRTS$ design and any $n,k$,
+\[
+  N_{n,k} - n\hat{\rho}_{n,k}
+  = N_{\ell_{n,k},k} - \ell_{n,k}\hat{\rho}_{\ell_{n,k},k}
+    + \big(p_{\ell_{n,k}+1,k} - \alpha\hat{\rho}_{\ell_{n,k},k}\big)
+    + \sum_{m=\ell_{n,k}+2}^{n}\big(p_{m,k} - \alpha\hat{\rho}_{m-1,k}\big)
+    + U_{n,k} - U_{\ell_{n,k},k}.
+\]
+\end{lemma}
+
+\begin{proof}
+\uses{lem:U_increment}
+Summing the increment identity of Lemma~\ref{lem:U_increment} from
+$m = \ell_{n,k}+1$ to $n$ gives
+$U_{n,k} - U_{\ell_{n,k},k}
+ = \sum_{m=\ell_{n,k}+1}^n (\alpha\hat{\rho}_{m-1,k} - p_{m,k})
+   + (N_{n,k}-n\hat{\rho}_{n,k}) - (N_{\ell_{n,k},k}-\ell_{n,k}\hat{\rho}_{\ell_{n,k},k})$.
+Rearranging and splitting off the $m=\ell_{n,k}+1$ term yields the claim.
+\end{proof}
+
+\begin{lemma}[Key inequality for $\aRTS$]\label{lem:preliminary_ineq}
+\uses{def:aRTS, def:hitting, def:U}
+For any $\aRTS$ design, inequality \eqref{eq:generic_ineq} holds with the last
+under-sampling time of Definition~\ref{def:hitting}:
+\[
+  N_{n,k} - n\hat{\rho}_{n,k}
+  \le 1 + N_{\ell_{n,k},k} - \ell_{n,k}\hat{\rho}_{\ell_{n,k},k}
+    + U_{n,k} - U_{\ell_{n,k},k}.
+\]
+\end{lemma}
+
+\begin{proof}
+\uses{lem:U_telescope, lem:hitting_sign}
+In Lemma~\ref{lem:U_telescope}, each summand $p_{m,k} - \alpha\hat{\rho}_{m-1,k}$
+with $\ell_{n,k}+2 \le m \le n$ is $\le 0$: indeed $m-1 > \ell_{n,k}$ so arm $k$
+is over-sampled at time $m-1$ and the throttling condition
+(Lemma~\ref{lem:hitting_sign}) gives $p_{m,k} \le \alpha\hat{\rho}_{m-1,k}$.
+Dropping this nonpositive sum and bounding the leftover term
+$p_{\ell_{n,k}+1,k} \le 1$ gives the inequality.
+\end{proof}
+
+\begin{lemma}[Smallness at the hitting time for $\aRTS$]\label{lem:preliminary_small}
+\uses{def:hitting, def:aRTS}
+For any $\aRTS$ design, \eqref{eq:generic_small} holds:
+$N_{\ell_{n,k},k} - \ell_{n,k}\hat{\rho}_{\ell_{n,k},k} \le Km_0 = o(\sqrt n)$.
+\end{lemma}
+
+\begin{proof}
+If $\ell_{n,k} \ge Km_0+1$, then by definition of the hitting time
+$N_{\ell_{n,k},k}/\ell_{n,k} \le \hat{\rho}_{\ell_{n,k},k}$, so the difference is
+$\le 0$. If $\ell_{n,k} < Km_0+1$, then $N_{\ell_{n,k},k} \le \ell_{n,k} \le Km_0$,
+so the difference is $\le Km_0$. Either way it is bounded by the constant $Km_0$,
+which is $o(\sqrt n)$.
+\end{proof}
+
+\begin{proposition}[$\aRTS$ satisfies the generic conditions]\label{prop:aRTS_generic}
+\uses{def:aRTS, def:generic_cond, def:hitting}
+Every $\aRTS$ design satisfies the generic conditions
+(Definition~\ref{def:generic_cond}) with $\ell_{n,k}$ the last under-sampling
+time of Definition~\ref{def:hitting}.
+\end{proposition}
+
+\begin{proof}
+\uses{lem:hitting_basic, lem:preliminary_ineq, lem:preliminary_small}
+Condition (i) is Lemma~\ref{lem:hitting_basic}, condition (ii) is
+Lemma~\ref{lem:preliminary_ineq}, and condition (iii) is
+Lemma~\ref{lem:preliminary_small}.
+\end{proof}

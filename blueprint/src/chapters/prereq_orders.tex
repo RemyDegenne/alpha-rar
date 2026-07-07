@@ -1,0 +1,185 @@
+\chapter{Stochastic orders, quadratic variation, and Taylor}
+\label{chap:pre_orders}
+
+This chapter collects the supporting API that the asymptotic proofs use but that
+Mathlib does not yet package: a calculus for the stochastic Landau symbols
+$o_p, O_p$; the predictable quadratic variation of a discrete-time martingale;
+and a multivariate first-order Taylor expansion with a quadratic remainder. None
+of these is a deep theorem, but each is used pervasively.
+
+\section{The \texorpdfstring{$o_p$}{op} / \texorpdfstring{$O_p$}{Op} calculus}
+\label{sec:pre_op}
+
+Recall Definition~\ref{def:op_Op}. We reduce everything to statements about
+$o_p(1)$ (convergence to $0$ in probability) and $O_p(1)$ (boundedness in
+probability, i.e.\ tightness).
+
+\textbf{Formalization note.} Mathlib provides the primitives: convergence in
+probability is \texttt{MeasureTheory.TendstoInMeasure} to a constant
+(\texttt{MeasureTheory/Function/ConvergenceInMeasure.lean}), and boundedness in
+probability is tightness of the laws. The lemmas below are an API layer on top of
+these, plus the bridge to Slutsky's theorem
+(\texttt{ConvergenceInDistribution.lean}). This is engineering rather than new
+mathematics, but it must exist before any of the rate computations can be
+written.
+
+\begin{lemma}[Reduction to order one]\label{lem:op_factor}
+\uses{def:op_Op}
+$X_n = o_p(a_n)$ if and only if $X_n/a_n = o_p(1)$, and $X_n = O_p(a_n)$ if and
+only if $X_n/a_n = O_p(1)$.
+\end{lemma}
+
+\begin{proof}
+Unfold Definition~\ref{def:op_Op}: both sides are the same statement about the
+sequence $|X_n|/a_n$.
+\end{proof}
+
+\begin{lemma}[Convergence in probability gives $o_p$]\label{lem:op_of_tendsto}
+\uses{def:op_Op}
+If $X_n \to 0$ in probability (in particular, if $X_n \to 0$ a.s.), then
+$X_n = o_p(1)$. If $X_n \to c$ in distribution for some random variable, then
+$X_n = O_p(1)$.
+\end{lemma}
+
+\begin{proof}
+The first statement is the definition of convergence in probability. For the
+second, convergence in distribution implies tightness of the laws
+($\{X_n\}$ is uniformly tight), which is exactly $O_p(1)$.
+\end{proof}
+
+\begin{lemma}[Arithmetic of stochastic orders]\label{lem:op_arith}
+\uses{def:op_Op}
+For a fixed rate $a_n$:
+\begin{enumerate}
+  \item[(i)] $o_p(a_n) + o_p(a_n) = o_p(a_n)$ and $O_p(a_n) + O_p(a_n) = O_p(a_n)$;
+  \item[(ii)] $o_p(a_n) + O_p(a_n) = O_p(a_n)$;
+  \item[(iii)] if $X_n = O_p(1)$ and $Y_n = o_p(1)$ then $X_n Y_n = o_p(1)$;
+  \item[(iv)] if $X_n = O_p(a_n)$ and $c_n \to c \in \R$ then $c_n X_n = O_p(a_n)$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+\uses{lem:op_factor}
+By Lemma~\ref{lem:op_factor} reduce to $a_n = 1$. Then (i)--(ii) are union bounds
+on the events $\{|X_n| > \varepsilon\}$, $\{|Y_n| > \varepsilon\}$; (iii) follows
+by conditioning on the tightness of $X_n$: for $\eta$ pick $M$ with
+$\sup_n \Prob(|X_n|>M)\le\eta$, then $\Prob(|X_nY_n|>\varepsilon)\le\eta
++\Prob(|Y_n|>\varepsilon/M)$; (iv) is immediate from boundedness of $c_n$.
+\end{proof}
+
+\begin{lemma}[Slutsky bridge]\label{lem:op_slutsky}
+\uses{def:op_Op}
+If $X_n \eqdist X$ (convergence in distribution) and $R_n = o_p(1)$, then
+$X_n + R_n \eqdist X$. More generally, if $(X_n) \eqdist X$ and $Y_n \to c$ in
+probability for a constant $c$, then $(X_n, Y_n) \eqdist (X, c)$.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:op_of_tendsto}
+This is Slutsky's theorem, available in Mathlib as
+\texttt{TendstoInDistribution.prodMk\_of\_tendstoInMeasure\_const}, combined with
+the continuous mapping theorem \texttt{TendstoInDistribution.continuous\_comp}
+applied to addition.
+\end{proof}
+
+\section{Predictable quadratic variation}
+\label{sec:pre_qv}
+
+\begin{definition}[Predictable quadratic variation]\label{def:pred_qv}
+Let $(M_n)_{n\ge0}$ be a square-integrable $(\filt_n)$-martingale with $M_0 = 0$.
+Its \emph{predictable quadratic variation} is
+$\langle M\rangle := \mathrm{predictablePart}(M^2)$, the predictable part of the
+submartingale $M^2$ in the Doob decomposition. Equivalently,
+$\langle M\rangle_0 = 0$ and
+$\langle M\rangle_n = \sum_{i=1}^n \E[(\Delta M_i)^2 \mid \filt_{i-1}]$.
+\end{definition}
+
+\textbf{Formalization note.} Mathlib already has the discrete Doob decomposition
+(\texttt{predictablePart} / \texttt{martingalePart} in
+\texttt{Probability/Martingale/Centering.lean}); $\langle M\rangle$ is a thin
+wrapper. The lemmas below are the basic API and are straightforward from that
+decomposition.
+
+\begin{lemma}[Increment of the quadratic variation]\label{lem:qv_incr}
+\uses{def:pred_qv}
+For a square-integrable martingale $M$ with $M_0=0$,
+$\langle M\rangle_n - \langle M\rangle_{n-1} = \E[(\Delta M_n)^2\mid\filt_{n-1}]$,
+and $\langle M\rangle$ is nondecreasing and predictable.
+\end{lemma}
+
+\begin{proof}
+The Doob decomposition of the submartingale $M^2$ has predictable part with
+increments $\E[M_n^2 - M_{n-1}^2\mid\filt_{n-1}]
+= \E[(\Delta M_n)^2\mid\filt_{n-1}]$, using that $M$ is a martingale so the cross
+term $\E[2M_{n-1}\Delta M_n\mid\filt_{n-1}]=0$. Nonnegativity of the increments
+gives monotonicity.
+\end{proof}
+
+\begin{lemma}[$M^2 - \langle M\rangle$ is a martingale]\label{lem:qv_mart}
+\uses{def:pred_qv}
+$M^2 - \langle M\rangle$ is an $(\filt_n)$-martingale.
+\end{lemma}
+
+\begin{proof}
+This is the martingale part in the Doob decomposition of $M^2$
+(\texttt{martingale\_martingalePart}).
+\end{proof}
+
+\begin{lemma}[Orthogonal martingales]\label{lem:qv_orthogonal}
+\uses{def:pred_qv}
+Let $M, N$ be square-integrable martingales such that
+$\E[\Delta M_i\, \Delta N_i \mid \filt_{i-1}] = 0$ for all $i$ (e.g.\ if
+$\Delta M_i\, \Delta N_i = 0$ a.s.). Then $MN$ is a martingale, so the cross
+variation vanishes, and $\langle M + N\rangle = \langle M\rangle + \langle N\rangle$.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:qv_incr}
+$\E[\Delta(MN)_i\mid\filt_{i-1}] = M_{i-1}\E[\Delta N_i\mid\cdot]
++ N_{i-1}\E[\Delta M_i\mid\cdot] + \E[\Delta M_i\Delta N_i\mid\cdot] = 0$, so $MN$
+is a martingale. Expanding $\langle M+N\rangle$ with Lemma~\ref{lem:qv_incr} and
+using the hypothesis gives additivity.
+\end{proof}
+
+\section{A multivariate Taylor remainder}
+\label{sec:pre_taylor}
+
+\begin{lemma}[First-order expansion with quadratic remainder]\label{lem:taylor_first_order}
+Let $f : \R^K \to \R^d$ be $C^2$ on a convex open set $\hilb$, and suppose
+$\|\mathrm{D}^2 f(z)\| \le C$ for all $z$ in a convex neighborhood of $y \in \hilb$.
+Then for $x$ in that neighborhood,
+\[
+  \big\| f(x) - f(y) - \mathrm{D}f(y)(x - y) \big\| \le \tfrac{C}{2}\,\|x - y\|^2.
+\]
+\end{lemma}
+
+\begin{proof}
+Apply the mean-value / Taylor formula to $t \mapsto f(y + t(x-y))$ on $[0,1]$:
+$f(x) - f(y) - \mathrm{D}f(y)(x-y)
+= \int_0^1 (1-t)\, \mathrm{D}^2 f(y + t(x-y))[x-y, x-y]\, dt$, and bound the
+integrand by $C\|x-y\|^2$.
+\end{proof}
+
+\textbf{Formalization note.} Mathlib has the pieces —
+\texttt{fderiv}, \texttt{ContDiff}, iterated derivatives, and one-dimensional
+Taylor with remainder (\texttt{Analysis/Calculus/Taylor.lean}). What is missing
+is this packaged multivariate first-order statement with an explicit quadratic
+bound on a neighborhood; it can be assembled from the existing bounds on the
+second derivative and the integral form of the remainder.
+
+\begin{corollary}[Expansion of the target function]\label{lem:taylor_rho}
+\uses{def:condB, lem:taylor_first_order}
+Under Condition~\textbf{B}, there is a constant $C$ and a neighborhood of
+$\Params$ on which
+$\big\|\Target(x) - \Target(\Params) - G(x - \Params)\big\| \le C\|x - \Params\|^2$,
+where $G = \nabla\Target|_\Params$. In particular, if $\hat X \to \Params$ with
+$\hat X - \Params = O_p(r_n)$, then
+$\Target(\hat X) - \Target(\Params) = G(\hat X - \Params) + O_p(r_n^2)$.
+\end{corollary}
+
+\begin{proof}
+\uses{lem:op_arith}
+Condition~\textbf{B} makes $\Target$ twice differentiable near $\Params$, so
+Lemma~\ref{lem:taylor_first_order} applies with $y = \Params$; the second
+statement follows from the order arithmetic of Lemma~\ref{lem:op_arith}.
+\end{proof}

@@ -1,0 +1,190 @@
+\chapter{Forced exploration and sparse targets}
+\label{chap:forced}
+
+This chapter augments the $\aRTS$ family with a forced-exploration mechanism,
+yielding the $\aRTSFE$ family. Forced exploration guarantees that every arm is
+sampled infinitely often, which (a) lets the previous asymptotic theory go
+through unchanged for non-sparse targets, and (b) extends consistency and a
+componentwise CLT to \emph{sparse} targets. It corresponds to Section~4 and
+Appendix~B of the paper.
+
+\section{The \texorpdfstring{$\aRTSFE$}{aRTS-FE} family}
+\label{sec:forced_def}
+
+\begin{definition}[Exploration schedule]\label{def:exploration_schedule}
+An \emph{exploration schedule} is a function $h : \N \to \R$ with
+\begin{enumerate}
+  \item[(i)] $\lim_{n\to\infty} h(n) = +\infty$;
+  \item[(ii)] $h(n) = o(\sqrt n)$ as $n\to\infty$.
+\end{enumerate}
+\end{definition}
+
+\begin{example}\label{ex:h_choice}
+The D-Tracking choice $h(n) = (\sqrt n - K/2)^+$ of \cite{garivier2016optimal}
+violates condition (ii). The choice $h(n) = (n^{1/3} - K/2)^+$ satisfies both
+conditions and is used in the experiments.
+\end{example}
+
+\begin{definition}[Under-sampled and least-sampled sets]\label{def:underexplored_sets}
+\uses{def:counts, def:exploration_schedule}
+For a schedule $h$ and $m\ge1$,
+\[
+  \mathbf{U}_m := \{ j\in[K] : N_{m,j} \le h(m)\}, \qquad
+  \mathbf{S}_m := \argmin_{j\in\mathbf{U}_m} N_{m,j}.
+\]
+\end{definition}
+
+\begin{definition}[$\aRTSFE$ family]\label{def:aRTSFE}
+\uses{def:aRTS, def:underexplored_sets}
+Fix $\alpha\in[0,1)$ and a schedule $h$. A RAR procedure is in the $\aRTSFE$
+family if its allocation probabilities obey:
+\begin{align}
+  \textbf{(Forced exploration)}\quad
+    &\mathbf{U}_m\ne\emptyset \Rightarrow \forall a\in\mathbf{S}_m:\ p_{m+1,a}=\tfrac{1}{|\mathbf{S}_m|};
+    \label{eq:fe_phase}\\
+  \textbf{(Otherwise)}\quad
+    &\mathbf{U}_m=\emptyset \Rightarrow p_{m+1}\ \text{satisfies the throttling condition \eqref{eq:throttle}.}
+    \label{eq:fe_otherwise}
+\end{align}
+\end{definition}
+
+\begin{remark}\label{rem:d_tracking_fe}
+The full D-Tracking algorithm of \cite{garivier2016optimal} is the $\aRTSFE$
+member with $\alpha=0$ (up to the choice of $h$).
+\end{remark}
+
+\section{The forced-exploration hitting time}
+\label{sec:forced_hitting}
+
+\begin{definition}[$\aRTSFE$ last hitting time]\label{def:hitting_fe}
+\uses{def:hitting, def:underexplored_sets}
+For $k\in[K]$ and $n\ge1$,
+\[
+  \ell_{n,k}^{\mathrm{FE}} := \max\Big\{ m\le n :
+    \tfrac{N_{m,k}}{m}\le\hat{\rho}_{m,k}
+    \ \text{or}\ \big(\mathbf{U}_m\ne\emptyset\ \text{and}\ k\in\argmin_{j\in\mathbf{U}_m}N_{m,j}\big)\Big\}.
+\]
+It is the last time before $n$ at which arm $k$ is under-sampled or is a
+least-sampled arm among the under-explored set.
+\end{definition}
+
+\begin{lemma}[Sign after the $\aRTSFE$ hitting time]\label{lem:hitting_fe_sign}
+\uses{def:hitting_fe, def:aRTSFE}
+For an $\aRTSFE$ design and $m$ with $\ell_{n,k}^{\mathrm{FE}} < m \le n$,
+we have $\frac{N_{m,k}}{m} > \hat{\rho}_{m,k}$ and
+$\big(\mathbf{U}_m=\emptyset\ \text{or}\ k\notin\argmin_{j\in\mathbf{U}_m}N_{m,j}\big)$;
+consequently $p_{m+1,k}\le\alpha\hat{\rho}_{m,k}$ (equal to $0$ during a forced
+exploration step in which $k$ is not least-sampled).
+\end{lemma}
+
+\begin{proof}
+By maximality of $\ell_{n,k}^{\mathrm{FE}}$, neither disjunct in
+Definition~\ref{def:hitting_fe} holds at such $m$. If $\mathbf{U}_m\ne\emptyset$
+then $k\notin\argmin_{j\in\mathbf{U}_m}N_{m,j}$, so \eqref{eq:fe_phase} gives
+$p_{m+1,k}=0\le\alpha\hat{\rho}_{m,k}$. If $\mathbf{U}_m=\emptyset$ then
+\eqref{eq:fe_otherwise} and the over-sampling $N_{m,k}/m>\hat{\rho}_{m,k}$ give
+$p_{m+1,k}\le\alpha\hat{\rho}_{m,k}$.
+\end{proof}
+
+\begin{lemma}[$\aRTSFE$ satisfies the generic conditions]\label{lem:preliminary_fe}
+\uses{def:generic_cond, def:aRTSFE, def:hitting_fe}
+For any $\aRTSFE$ design, the generic conditions
+(Definition~\ref{def:generic_cond}) hold with $\ell_{n,k}^{\mathrm{FE}}$.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:hitting_fe_sign, lem:U_telescope, def:exploration_schedule}
+(i) Monotonicity and $\ell_{n,k}^{\mathrm{FE}}\le n$ are immediate. (ii) The
+telescoping identity (Lemma~\ref{lem:U_telescope}, whose proof only uses the
+increment of $U$) combined with Lemma~\ref{lem:hitting_fe_sign} — every
+intermediate $p_{m,k}-\alpha\hat{\rho}_{m-1,k}\le0$ — gives inequality
+\eqref{eq:generic_ineq}. (iii) At $m=\ell_{n,k}^{\mathrm{FE}}$, either
+$N_{m,k}/m\le\hat{\rho}_{m,k}$, giving $N_{m,k}-m\hat{\rho}_{m,k}\le0$, or $k$ is
+least-sampled in $\mathbf{U}_m$, giving
+$N_{\ell_{n,k}^{\mathrm{FE}},k}-\ell_{n,k}^{\mathrm{FE}}\hat{\rho}_{\ell_{n,k}^{\mathrm{FE}},k}
+ \le N_{\ell_{n,k}^{\mathrm{FE}},k}\le h(\ell_{n,k}^{\mathrm{FE}})=o(\sqrt n)$
+by Definition~\ref{def:exploration_schedule}.
+\end{proof}
+
+\section{Validity under forced exploration (non-sparse targets)}
+\label{sec:forced_nonsparse}
+
+\begin{theorem}[Validity under forced exploration]\label{thm:forced_valid}
+\uses{def:aRTSFE, def:condA, def:condB}
+Under Conditions~\textbf{A}--\textbf{B}, Theorem~\ref{thm:LLN} and
+Theorem~\ref{thm:normality} hold for every design in the $\aRTSFE$ family.
+\end{theorem}
+
+\begin{proof}
+\uses{lem:preliminary_fe, thm:generic_main}
+By Lemma~\ref{lem:preliminary_fe} the $\aRTSFE$ design satisfies the generic
+conditions with $\ell^{\mathrm{FE}}$; apply Theorem~\ref{thm:generic_main}.
+\end{proof}
+
+\section{Sparse target allocations}
+\label{sec:forced_sparse}
+
+We now drop Condition~\textbf{B} and allow $v_k=0$ for some $k$. The forced
+exploration guarantees infinite sampling of all arms, which is the only
+ingredient the componentwise CLT needs.
+
+\begin{lemma}[Forced exploration prevents starvation]\label{lem:fe_no_starvation}
+\uses{def:aRTSFE, def:exploration_schedule}
+For any $\aRTSFE$ design, $N_{n,k}\to\infty$ a.s.\ for every $k\in[K]$ (no
+assumption on the target).
+\end{lemma}
+
+\begin{proof}
+Suppose for contradiction that some arm $i$ stalls: $N_{n,i}=M$ for all $n\ge N$.
+Since $h(n)\to\infty$, enlarge $N$ so that $h(n)\ge M$ for $n\ge N$. Then for
+$n\ge N$, $N_{n,i}\le h(n)$ gives $i\in\mathbf{U}_n\ne\emptyset$, so the arm
+$I_{n+1}$ selected by forced exploration is a least-sampled arm of $\mathbf{U}_n$,
+whence $N_{n,I_{n+1}}\le N_{n,i}=M$ and $N_{n+1,I_{n+1}}\le M+1$. The potential
+$D(n):=\sum_j (M+1-N_{n,j})^+$ then satisfies $D(n+1)-D(n)=-1$ for all $n\ge N$,
+so $D$ becomes negative, contradicting $D\ge0$. Hence every arm is sampled
+infinitely often.
+\end{proof}
+
+\begin{theorem}[Consistency and rate for sparse targets]\label{thm:sparse_rate}
+\uses{def:aRTSFE, def:condA, def:counts, def:estimator}
+Under Condition~\textbf{A} only, any $\aRTSFE$ design satisfies, for every $k$,
+\[
+  N_{n,k}\xrightarrow{a.s.}+\infty,\qquad
+  \frac{N_{n,k}}{n}\xrightarrow{a.s.}v_k,\qquad
+  \estParams_n-\Params = O\!\Big(\sqrt{\tfrac{\log\log N_{n,k}}{N_{n,k}}}\Big)\ \text{a.s.}
+\]
+\end{theorem}
+
+\begin{proof}
+\uses{lem:fe_no_starvation, lem:theta_limit_dichotomy, lem:match, lem:convergence, lem:preliminary_fe, lem:lil_truncation}
+The first statement is Lemma~\ref{lem:fe_no_starvation}. Given it, every arm's
+estimator converges: $\hat{\theta}_{n,k}\to\theta_k$ by the SLLN, so
+$\hat{\rho}_n\to v$ by continuity of $\Target$; the matching argument (as in
+Lemma~\ref{lem:match}, using Lemma~\ref{lem:convergence} and the generic
+inequality valid by Lemma~\ref{lem:preliminary_fe}) gives $N_{n,k}/n\to v_k$,
+allowing $v_k=0$. The rate is the LIL for the martingale $Q_{\cdot,k}$ scaled by
+its own sample size $N_{n,k}$, as in Lemma~\ref{lem:theta_LIL} but without
+dividing by $n$.
+\end{proof}
+
+\begin{corollary}[Componentwise CLT for sparse targets]\label{cor:sparse_clt}
+\uses{def:aRTSFE, def:condA, def:estimator}
+Under Condition~\textbf{A} only, any $\aRTSFE$ design satisfies
+\[
+  D_n(\estParams_n-\Params)\eqdist\mathcal{N}\!\big(0,\mathrm{diag}(V_1,\dots,V_K)\big),
+  \qquad D_n=\mathrm{diag}(\sqrt{N_{n,1}},\dots,\sqrt{N_{n,K}}).
+\]
+\end{corollary}
+
+\begin{proof}
+\uses{lem:fe_no_starvation, lem:componentwise}
+By Lemma~\ref{lem:fe_no_starvation}, $N_{n,k}\to\infty$ for all $k$, which is the
+sole hypothesis of Lemma~\ref{lem:componentwise}. Apply it.
+\end{proof}
+
+\begin{remark}\label{rem:sparse_normalization}
+The normalization in Corollary~\ref{cor:sparse_clt} is componentwise (by
+$\sqrt{N_{n,k}}$) rather than by $\sqrt n$, which is what makes it meaningful when
+$v_k=0$. When $v\in(0,1)^K$ it recovers the classical result of
+\cite{hu2006asymptotically}.
+\end{remark}

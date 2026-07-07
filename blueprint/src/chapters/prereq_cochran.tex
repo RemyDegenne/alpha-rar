@@ -1,0 +1,105 @@
+\chapter{Chi-square distribution and Cochran's theorem}
+\label{chap:pre_cochran}
+
+To calibrate the Pearson test (Lemma~\ref{lem:pearson}) we need the $\chi^2$
+distribution and the special case of Cochran's theorem stating that a Gaussian
+quadratic form through an orthogonal projection of rank $r$ is $\chi^2_r$.
+
+\textbf{Formalization note.} Mathlib has the Gamma and exponential distributions
+(\texttt{Distributions/Gamma.lean}, \texttt{Distributions/Exponential.lean}) and
+a rich Gaussian theory including rotation invariance of the standard Gaussian
+(\texttt{Distributions/Gaussian/}, \texttt{IsGaussian}, \texttt{stdGaussian}). It
+lacks a named $\chi^2$ distribution, the additivity of Gamma laws, and any
+Cochran-type result. All three are self-contained additions given the existing
+Gaussian and Gamma APIs.
+
+\section{The chi-square distribution}
+\label{sec:pre_chisq_def}
+
+\begin{definition}[Chi-square distribution]\label{def:chiSquared}
+For an integer $r\ge1$, the \emph{chi-square distribution with $r$ degrees of
+freedom} $\chi^2_r$ is the Gamma distribution with shape $r/2$ and rate $1/2$.
+\end{definition}
+
+\begin{lemma}[Square of a standard Gaussian]\label{lem:sq_gaussian_chisq1}
+\uses{def:chiSquared}
+If $Z\sim\mathcal{N}(0,1)$ then $Z^2\sim\chi^2_1$.
+\end{lemma}
+
+\begin{proof}
+Compute the law of $Z^2$ by the change of variables $x = z^2$ on the standard
+Gaussian density; the resulting density $\frac{1}{\sqrt{2\pi x}}e^{-x/2}$ on
+$(0,\infty)$ is the $\mathrm{Gamma}(1/2,1/2)$ density, i.e.\ $\chi^2_1$.
+\end{proof}
+
+\begin{lemma}[Additivity of Gamma laws]\label{lem:gamma_add}
+If $U\sim\mathrm{Gamma}(a,\lambda)$ and $V\sim\mathrm{Gamma}(b,\lambda)$ are
+independent, then $U+V\sim\mathrm{Gamma}(a+b,\lambda)$.
+\end{lemma}
+
+\begin{proof}
+The characteristic function of $\mathrm{Gamma}(a,\lambda)$ is
+$(1 - it/\lambda)^{-a}$; by independence the characteristic function of $U+V$ is
+the product $(1-it/\lambda)^{-(a+b)}$, which identifies the law by injectivity of
+characteristic functions.
+\end{proof}
+
+\textbf{Formalization note.} Mathlib's \texttt{Gamma.lean} provides the density
+but, as of writing, not this convolution/additivity identity; it can be proved via
+the characteristic-function API used elsewhere in this part, or directly by a Beta
+integral convolution of densities.
+
+\begin{lemma}[Chi-square as a sum of squares]\label{lem:sum_sq_chisq}
+\uses{def:chiSquared, lem:sq_gaussian_chisq1, lem:gamma_add}
+If $Z_1,\dots,Z_r\sim\mathcal{N}(0,1)$ are independent, then
+$\sum_{i=1}^r Z_i^2\sim\chi^2_r$.
+\end{lemma}
+
+\begin{proof}
+Each $Z_i^2\sim\chi^2_1=\mathrm{Gamma}(1/2,1/2)$ by
+Lemma~\ref{lem:sq_gaussian_chisq1}, and by independence and
+Lemma~\ref{lem:gamma_add} the sum is $\mathrm{Gamma}(r/2,1/2)=\chi^2_r$.
+\end{proof}
+
+\section{Cochran's theorem for a projection}
+\label{sec:pre_cochran_thm}
+
+\begin{lemma}[Rotation invariance of the standard Gaussian]\label{lem:gaussian_rotation}
+If $Z\sim\mathcal{N}(0,I_K)$ and $O$ is an orthogonal $K\times K$ matrix, then
+$OZ\sim\mathcal{N}(0,I_K)$.
+\end{lemma}
+
+\begin{proof}
+$OZ$ is Gaussian with mean $0$ and covariance $O I_K O^\top = I_K$. In Mathlib
+this is an instance of the invariance of \texttt{stdGaussian}/\texttt{IsGaussian}
+under orthogonal (more generally, measure-preserving linear) maps.
+\end{proof}
+
+\begin{lemma}[Diagonalization of an orthogonal projection]\label{lem:proj_diag}
+An orthogonal projection matrix $P$ of rank $r$ can be written
+$P = O^\top \mathrm{diag}(I_r, 0)\, O$ for some orthogonal matrix $O$.
+\end{lemma}
+
+\begin{proof}
+$P$ is symmetric and idempotent, hence diagonalizable in an orthonormal
+eigenbasis with eigenvalues in $\{0,1\}$, exactly $r$ of which are $1$. This is
+the spectral theorem for symmetric matrices, available in Mathlib.
+\end{proof}
+
+\begin{theorem}[Gaussian quadratic form under a projection]\label{thm:cochran}
+\uses{lem:sum_sq_chisq, lem:gaussian_rotation, lem:proj_diag}
+Let $Z\sim\mathcal{N}(0,I_K)$ and let $P$ be an orthogonal projection of rank $r$.
+Then $Z^\top P Z\sim\chi^2_r$.
+\end{theorem}
+
+\begin{proof}
+Write $P = O^\top\mathrm{diag}(I_r,0)O$ (Lemma~\ref{lem:proj_diag}) and set
+$W = OZ$, which is $\mathcal{N}(0,I_K)$ by Lemma~\ref{lem:gaussian_rotation}.
+Then $Z^\top P Z = W^\top\mathrm{diag}(I_r,0)W = \sum_{i=1}^r W_i^2$, which is
+$\chi^2_r$ by Lemma~\ref{lem:sum_sq_chisq}.
+\end{proof}
+
+\textbf{Application.} In Lemma~\ref{lem:pearson}, $P = I - ss^\top$ is an
+orthogonal projection of rank $K-1$ (Lemma~\ref{lem:projection}), and the limiting
+statistic is $Z^\top P Z$ with $Z\sim\mathcal{N}(0,I_K)$; Theorem~\ref{thm:cochran}
+then gives the $\chi^2_{K-1}$ limit.

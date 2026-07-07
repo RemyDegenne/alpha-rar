@@ -1,0 +1,83 @@
+\chapter{Application: hypothesis testing}
+\label{chap:testing}
+
+As an application of the asymptotic theory, we calibrate a Pearson chi-square
+homogeneity test on data collected by an $\aRTS$ or $\aRTSFE$ design. This
+corresponds to Section~5.3 and Appendix~B.3 of the paper.
+
+Consider $K$ Bernoulli arms and the homogeneity test
+\[
+  \mathcal{H}_0 : \forall k,\ \theta_k = \theta_1
+  \qquad\text{against}\qquad
+  \mathcal{H}_1 : \exists i,j,\ \theta_i \ne \theta_j.
+\]
+
+\begin{definition}[Pearson statistic]\label{def:pearson_stat}
+\uses{def:estimator, def:counts}
+Let $S_{n,k} := N_{n,k}\hat{\theta}_{n,k}$ and
+$\tilde{\theta}_n := \sum_{k=1}^K \frac{N_{n,k}}{n}\hat{\theta}_{n,k}$ be the
+pooled estimator. The \emph{Pearson chi-square statistic} is
+\[
+  \mathcal{X}_n := \sum_{k=1}^K \frac{(S_{n,k} - N_{n,k}\tilde{\theta}_n)^2}
+                                        {N_{n,k}\tilde{\theta}_n(1-\tilde{\theta}_n)}.
+\]
+\end{definition}
+
+\begin{lemma}[Quadratic-form rewriting]\label{lem:pearson_quadform}
+\uses{def:pearson_stat}
+With $Y_n := (\sqrt{N_{n,k}}(\hat{\theta}_{n,k}-\theta))_{k\in[K]}$ and
+$s_n := (\sqrt{\omega_{n,k}})_{k\in[K]}$ where $\omega_{n,k}:=N_{n,k}/n$, under
+$\mathcal{H}_0$ (common value $\theta$),
+\[
+  \mathcal{X}_n = \frac{1}{\tilde{\theta}_n(1-\tilde{\theta}_n)}\,
+                  Y_n^\top\,(I - s_n s_n^\top)\,Y_n.
+\]
+\end{lemma}
+
+\begin{proof}
+Under $\mathcal{H}_0$, $\sqrt{N_{n,k}}(\tilde{\theta}_n-\theta)
+ = \sqrt{\omega_{n,k}}\sum_j\sqrt{\omega_{n,j}}[Y_n]_j$, so
+$\sqrt{N_{n,k}}(\hat{\theta}_{n,k}-\tilde{\theta}_n) = [Y_n - s_n s_n^\top Y_n]_k$.
+Substituting $S_{n,k}-N_{n,k}\tilde{\theta}_n = N_{n,k}(\hat{\theta}_{n,k}-\tilde{\theta}_n)$
+into Definition~\ref{def:pearson_stat} gives the quadratic form.
+\end{proof}
+
+\begin{lemma}[Idempotent projection]\label{lem:projection}
+For a unit vector $s\in\R^K$ (here $s=(\sqrt{v_1},\dots,\sqrt{v_K})$ with
+$\sum_k v_k=1$), the matrix $I - s s^\top$ is an orthogonal projection of rank
+$K-1$.
+\end{lemma}
+
+\begin{proof}
+$s^\top s = \sum_k v_k = 1$, so $(I-ss^\top)^2 = I - 2ss^\top + s(s^\top s)s^\top
+ = I - ss^\top$, and it is symmetric; its trace $K-1$ equals its rank.
+\end{proof}
+
+\begin{lemma}[Asymptotic null distribution of the Pearson statistic]\label{lem:pearson}
+\uses{def:pearson_stat}
+Consider a RAR procedure with $N_{n,k}\to\infty$ a.s.\ for all $k$ (in
+particular any $\aRTS$ design under Condition~\textbf{B}, or any $\aRTSFE$
+design). Under $\mathcal{H}_0$,
+\[
+  \mathcal{X}_n \eqdist \chi^2_{K-1}.
+\]
+\end{lemma}
+
+\begin{proof}
+\uses{lem:pearson_quadform, lem:projection, lem:componentwise, thm:LLN, thm:cochran}
+By Lemma~\ref{lem:componentwise}, $\frac{1}{\sqrt{\theta(1-\theta)}}Y_n
+\eqdist\mathcal{N}(0,I_K)$ (Bernoulli variance $V_k=\theta(1-\theta)$ under
+$\mathcal{H}_0$). By Theorem~\ref{thm:LLN}, $\tilde{\theta}_n\to\theta$ and
+$s_n\to s=(\sqrt{v_1},\dots,\sqrt{v_K})$, so $I-s_ns_n^\top\to I-ss^\top$, an
+orthogonal projection of rank $K-1$ by Lemma~\ref{lem:projection}. Slutsky's
+lemma and Lemma~\ref{lem:pearson_quadform} give
+$\mathcal{X}_n\eqdist Z^\top(I-ss^\top)Z$ with $Z\sim\mathcal{N}(0,I_K)$, which is
+$\chi^2_{K-1}$.
+\end{proof}
+
+\begin{remark}\label{rem:test_level}
+Lemma~\ref{lem:pearson} shows that rejecting $\mathcal{H}_0$ when $\mathcal{X}_n$
+exceeds the $0.95$-quantile of $\chi^2_{K-1}$ is asymptotically a level-$0.05$
+test, valid for all $\aRTS$ designs (under Condition~\textbf{B}) and all
+$\aRTSFE$ designs.
+\end{remark}

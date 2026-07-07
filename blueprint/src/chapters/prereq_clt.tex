@@ -1,0 +1,141 @@
+\chapter{Central limit theorem for martingales}
+\label{chap:pre_clt}
+
+We formalize the martingale central limit theorem in Lindeberg form, in dimension
+one. This is the analytic core of Lemma~\ref{lem:componentwise}, and through it of
+the asymptotic normality Theorem~\ref{thm:normality} and the test calibration
+Lemma~\ref{lem:pearson}. A one-dimensional statement suffices: the coordinates of
+the estimator error are driven by martingales with vanishing cross-variation
+(Lemma~\ref{lem:qv_orthogonal}), so the vector CLT follows coordinatewise via the
+Cramér--Wold device or directly from the orthogonality.
+
+\textbf{Formalization note.} Mathlib has the i.i.d.\ one-dimensional CLT
+(\texttt{Probability/CentralLimitTheorem.lean}), proved by convergence of
+characteristic functions, and the supporting API: \texttt{charFun}
+(\texttt{MeasureTheory/Measure/CharacteristicFunction/Basic.lean}), the fact that
+\texttt{charFun} determines a measure, and the Gaussian characteristic function
+(\texttt{Distributions/Gaussian/CharFun.lean}). What is missing is the martingale
+version. The proof reuses the same final step (charFun convergence $\Rightarrow$
+convergence in distribution) but replaces independence by a
+conditional-characteristic-function argument.
+
+\section{Analytic ingredient}
+\label{sec:pre_clt_analytic}
+
+\begin{lemma}[Complex exponential expansion]\label{lem:clt_exp_bound}
+For all $x \in \R$,
+\[
+  \Big| e^{ix} - 1 - ix + \tfrac{x^2}{2} \Big| \le \min\!\Big(x^2,\ \tfrac{|x|^3}{6}\Big).
+\]
+\end{lemma}
+
+\begin{proof}
+Standard: integrate the remainder of the Taylor expansion of $e^{ix}$; the two
+bounds come from estimating the remainder integral to first and to second order.
+\end{proof}
+
+\begin{lemma}[Conditional characteristic increment]\label{lem:clt_cond_char}
+\uses{lem:clt_exp_bound, def:pred_qv}
+Let $(M_{n,i})_{i\le k_n}$ be a martingale array with increments $\Delta_{n,i}$.
+For fixed $t$,
+\[
+  \E\big[e^{it\Delta_{n,i}}\mid\filt_{i-1}\big]
+  = 1 - \tfrac{t^2}{2}\,\E[\Delta_{n,i}^2\mid\filt_{i-1}] + r_{n,i},
+\]
+where $\sum_i |r_{n,i}|$ is controlled by the conditional Lindeberg quantity
+$\sum_i \E[\Delta_{n,i}^2\indic_{\{|\Delta_{n,i}|>\varepsilon\}}\mid\filt_{i-1}]$
+plus $\varepsilon\, t\, \langle M_n\rangle_{k_n}$.
+\end{lemma}
+
+\begin{proof}
+Take conditional expectation in Lemma~\ref{lem:clt_exp_bound}: the linear term
+vanishes since $\E[\Delta_{n,i}\mid\filt_{i-1}]=0$, and the remainder is bounded
+by $\E[\min(\Delta_{n,i}^2,|\Delta_{n,i}|^3/6)\mid\filt_{i-1}]$, split at the
+threshold $\varepsilon$ into a Lindeberg part and a part $\le \varepsilon t
+\E[\Delta_{n,i}^2\mid\filt_{i-1}]$.
+\end{proof}
+
+\section{Convergence of characteristic functions}
+\label{sec:pre_clt_char}
+
+\begin{lemma}[Telescoping product]\label{lem:clt_product}
+\uses{lem:clt_cond_char}
+With the notation above, if $\langle M_n\rangle_{k_n} \xrightarrow{\Prob}\sigma^2$
+and the conditional Lindeberg condition holds, then
+\[
+  \E\big[e^{it M_{n,k_n}}\big] \longrightarrow \exp\!\Big(-\tfrac{\sigma^2 t^2}{2}\Big)
+  \qquad\text{for every } t\in\R.
+\]
+\end{lemma}
+
+\begin{proof}
+\uses{lem:clt_cond_char, lem:qv_incr}
+Write $e^{itM_{n,k_n}} = \prod_i e^{it\Delta_{n,i}}$ and compare with the
+predictable product $\prod_i(1 - \tfrac{t^2}{2}\E[\Delta_{n,i}^2\mid\filt_{i-1}])
+\approx \exp(-\tfrac{t^2}{2}\langle M_n\rangle_{k_n})$. The telescoping bound uses
+$|\prod a_i - \prod b_i| \le \sum_i |a_i - b_i|$ for terms of modulus $\le1$,
+with $a_i - b_i = r_{n,i}$ from Lemma~\ref{lem:clt_cond_char}, whose sum vanishes
+by Lindeberg. Then $\langle M_n\rangle_{k_n}\xrightarrow{\Prob}\sigma^2$ gives the
+limit $\exp(-\sigma^2 t^2/2)$.
+\end{proof}
+
+\begin{lemma}[Characteristic functions determine the limit]\label{lem:levy}
+The map sending a probability measure to its characteristic function is injective,
+and if $\E[e^{itX_n}]\to\exp(-\sigma^2 t^2/2)$ for all $t$, then $X_n$ converges in
+distribution to $\mathcal{N}(0,\sigma^2)$.
+\end{lemma}
+
+\begin{proof}
+Injectivity is \texttt{MeasureTheory.Measure.ext\_of\_charFun} in Mathlib. The
+target $\exp(-\sigma^2 t^2/2)$ is the characteristic function of
+$\mathcal{N}(0,\sigma^2)$ (\texttt{Distributions/Gaussian/CharFun.lean}). The
+implication ``pointwise charFun convergence to a continuous limit charFun
+$\Rightarrow$ convergence in distribution'' is Lévy's continuity theorem; Mathlib
+has the special case used in its i.i.d.\ CLT
+(\texttt{Probability/CentralLimitTheorem.lean}), which is exactly what is needed
+here since the limit is a fixed Gaussian.
+\end{proof}
+
+\textbf{Formalization note.} A fully general Lévy continuity theorem (arbitrary
+tight limits) is not yet in Mathlib, but is not required: we only need
+convergence to a fixed, known Gaussian limit, which the CLT file already handles.
+
+\section{The theorem}
+\label{sec:pre_clt_thm}
+
+\begin{theorem}[Martingale CLT, Lindeberg form]\label{thm:mart_clt}
+\uses{lem:clt_product, lem:levy}
+Let $(M_{n,i})_{i \le k_n}$ be a martingale array (with respect to filtrations
+$(\filt_{n,i})_i$) with $M_{n,0}=0$, predictable quadratic variation
+$\langle M_n\rangle_{k_n}\xrightarrow{\Prob}\sigma^2$, and satisfying the
+conditional Lindeberg condition: for every $\varepsilon>0$,
+\[
+  \sum_{i}\E\big[\Delta_{n,i}^2\indic_{\{|\Delta_{n,i}|>\varepsilon\}}\mid\filt_{n,i-1}\big]
+  \xrightarrow{\Prob} 0.
+\]
+Then $M_{n,k_n}\eqdist\mathcal{N}(0,\sigma^2)$.
+\end{theorem}
+
+\begin{proof}
+Combine Lemma~\ref{lem:clt_product} (convergence of characteristic functions) with
+Lemma~\ref{lem:levy} (the limit is $\mathcal{N}(0,\sigma^2)$).
+\end{proof}
+
+\begin{corollary}[Self-normalized componentwise form]\label{cor:mart_clt_componentwise}
+\uses{thm:mart_clt, lem:qv_orthogonal}
+Let $M_{n,k}=\sum_{i\le n}X_{i,k}(\xi_{i,k}-\theta_k)$ as in
+Definition~\ref{def:M}--\ref{def:Q}, with $N_{n,k}\to\infty$ a.s.\ for each $k$.
+Then, with $D_n=\mathrm{diag}(\sqrt{N_{n,1}},\dots,\sqrt{N_{n,K}})$,
+$D_n(\estParams_n-\Params)\eqdist\mathcal{N}(0,\mathrm{diag}(V_1,\dots,V_K))$.
+\end{corollary}
+
+\begin{proof}
+\uses{thm:mart_clt, lem:qv_orthogonal}
+Apply Theorem~\ref{thm:mart_clt} to the time-changed martingale
+$i\mapsto Q_{\tau_k(i),k}$ stopped when $N_{\cdot,k}=i$; its quadratic variation
+normalized by $N_{n,k}$ tends to $V_k$, and the conditional Lindeberg condition
+holds because the $\xi_{i,k}$ are i.i.d.\ with finite variance (dominated
+convergence, cf.\ the proof sketch of Lemma~\ref{lem:componentwise}). Distinct
+coordinates have vanishing cross-variation by Lemma~\ref{lem:qv_orthogonal}, so
+the joint limit is the stated diagonal Gaussian.
+\end{proof}

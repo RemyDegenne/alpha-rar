@@ -1,0 +1,217 @@
+\chapter{Strong consistency and rates}
+\label{chap:consistency}
+
+This chapter proves the first main theorem: under the generic conditions and
+Conditions~\textbf{A}--\textbf{B}, the allocation proportions converge almost
+surely to the target and the estimators converge at the law-of-iterated-logarithm
+rate. The proof is decomposed into small steps, each a candidate Lean lemma. It
+corresponds to Theorem~3.1 and Appendix~A.2 of the paper.
+
+Throughout the chapter we fix a RAR procedure satisfying the generic conditions
+(Definition~\ref{def:generic_cond}) with some $\ell_{n,k}$, and we assume
+Conditions~\textbf{A}--\textbf{B}. By Proposition~\ref{prop:aRTS_generic} this
+covers every $\aRTS$ design.
+
+\section{Convergence of the plug-in target}
+\label{sec:cons_rho_limit}
+
+\begin{lemma}[Dichotomy for the estimator limit]\label{lem:theta_limit_dichotomy}
+\uses{def:estimator, def:condA, def:attainable}
+Under Condition~\textbf{A}, for each $k$ the estimator $\hat{\theta}_{n,k}$
+converges a.s.\ to a limit in $I_k$: on $\{N_{n,k}\to\infty\}$ it converges to
+$\theta_k$ by the strong law of large numbers; on $\{\sup_n N_{n,k} < \infty\}$
+it is eventually constant and its limit lies in $V_k^{\mathrm{att}}$.
+\end{lemma}
+
+\begin{proof}
+On $\{N_{n,k}\to\infty\}$, the average $\frac1{N_{n,k}}\sum_j X_{j,k}\xi_{j,k}$ is
+a subsequence average of i.i.d.\ variables with mean $\theta_k$, hence converges
+a.s.\ to $\theta_k$ by the SLLN, and the regularization term vanishes. On
+$\{\sup_n N_{n,k}<\infty\}$, only finitely many responses on arm $k$ are ever
+observed, so $\hat{\theta}_{n,k}$ is eventually constant with a value in
+$V_k^{\mathrm{att}}$.
+\end{proof}
+
+\begin{lemma}[Non-sparse limit of $\estTarget$]\label{lem:rho_converges}
+\uses{def:condB, def:plugin_target}
+Under Conditions~\textbf{A}--\textbf{B} there is a random $u \in (0,1)^K$ with
+$\estTarget_n \to u$ a.s. Concretely $u = \Target(z)$ where $z\in I_1\times\dots\times I_K$
+is the a.s.\ limit of $\estParams_n$.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:theta_limit_dichotomy}
+By Lemma~\ref{lem:theta_limit_dichotomy}, $\estParams_n \to z$ a.s.\ with
+$z \in I_1\times\dots\times I_K$. By Condition~\textbf{B}, $\Target$ is
+continuous on the open set $\hilb \supseteq I_1\times\dots\times I_K$ and maps
+$I_1\times\dots\times I_K$ into $(0,1)^K$; hence
+$\estTarget_n = \Target(\estParams_n) \to \Target(z) =: u \in (0,1)^K$.
+\end{proof}
+
+\section{Convergence of the auxiliary process}
+\label{sec:cons_U}
+
+\begin{lemma}[LLN for the assignment martingale]\label{lem:M_lln}
+\uses{def:M}
+$M_{n,k} = o(n)$ a.s.\ for each $k$.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:M_martingale, cor:mart_slln_bounded}
+$(M_{n,k})$ is a martingale with bounded increments $|\Delta M_{m,k}|\le1$, so its
+increments have summable normalized variances $\sum_m \frac{\Var(\Delta M_{m,k})}{m^2}<\infty$;
+the strong law of large numbers for martingales gives $M_{n,k}/n \to 0$ a.s.
+\end{proof}
+
+\begin{lemma}[Limit of $U/n$]\label{lem:U_over_n}
+\uses{def:U}
+Under Conditions~\textbf{A}--\textbf{B}, for each $k$,
+$\displaystyle \lim_{n\to\infty} \frac{U_{n,k}}{n} = -(1-\alpha)\,u_k$ a.s.,
+where $u$ is the limit from Lemma~\ref{lem:rho_converges}.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:M_lln, lem:rho_converges}
+From Definition~\ref{def:U},
+$\frac{U_{n,k}}{n} = \frac{\alpha}{n}\sum_{m=0}^{n-1}\hat{\rho}_{m,k}
+ - \hat{\rho}_{n,k} + \frac{M_{n,k}}{n}$.
+By Lemma~\ref{lem:M_lln} the last term is $o(1)$; by Lemma~\ref{lem:rho_converges}
+$\hat{\rho}_{n,k}\to u_k$, and by Cesàro
+$\frac1n\sum_{m<n}\hat{\rho}_{m,k}\to u_k$. Hence
+$\frac{U_{n,k}}{n} \to \alpha u_k - u_k = -(1-\alpha)u_k$.
+\end{proof}
+
+\section{Matching of proportions and target}
+\label{sec:cons_match}
+
+\begin{lemma}[Positive part vanishes]\label{lem:pos_part_vanishes}
+\uses{def:generic_cond}
+Under the generic conditions and Conditions~\textbf{A}--\textbf{B}, for each $k$,
+$\big(\frac{N_{n,k}}{n} - \hat{\rho}_{n,k}\big)^+ \to 0$ a.s.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:convergence, lem:U_over_n}
+Apply Lemma~\ref{lem:convergence} with $X_n := U_{n,k}$, $a_n := \ell_{n,k}$
+(non-decreasing, $\le n$ by the generic conditions), and
+$\varepsilon_n := \frac1n + \frac{N_{\ell_{n,k},k}-\ell_{n,k}\hat{\rho}_{\ell_{n,k},k}}{n}$,
+which satisfies $\limsup\varepsilon_n \le 0$ by \eqref{eq:generic_small}. Since
+$\frac{U_{n,k}}{n}\to -(1-\alpha)u_k$ (Lemma~\ref{lem:U_over_n}), the lemma yields
+$\big(\varepsilon_n + \frac{U_{n,k}-U_{\ell_{n,k},k}}{n}\big)^+ \to 0$. Combined
+with the generic inequality \eqref{eq:generic_ineq}, which bounds
+$\frac{N_{n,k}}{n}-\hat{\rho}_{n,k}$ by that quantity, we get
+$\big(\frac{N_{n,k}}{n}-\hat{\rho}_{n,k}\big)^+\to0$.
+\end{proof}
+
+\begin{lemma}[Negative part vanishes]\label{lem:neg_part_vanishes}
+\uses{def:counts, def:plugin_target}
+Under the same hypotheses, for each $k$,
+$\big(\hat{\rho}_{n,k} - \frac{N_{n,k}}{n}\big)^+ \to 0$ a.s.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:pos_part_vanishes, lem:counts_sum}
+Using $\sum_j N_{n,j}/n = 1$ (Lemma~\ref{lem:counts_sum}) and
+$\sum_j \hat{\rho}_{n,j} = 1$,
+$\big(\hat{\rho}_{n,k} - \frac{N_{n,k}}{n}\big)^+
+ = \big(\sum_{j\ne k}(\frac{N_{n,j}}{n} - \hat{\rho}_{n,j})\big)^+
+ \le \sum_{j\ne k}\big(\frac{N_{n,j}}{n} - \hat{\rho}_{n,j}\big)^+ \to 0$
+by Lemma~\ref{lem:pos_part_vanishes}.
+\end{proof}
+
+\begin{lemma}[Proportions match the plug-in target]\label{lem:match}
+\uses{def:counts, def:plugin_target}
+Under the same hypotheses, for each $k$,
+$\frac{N_{n,k}}{n} - \hat{\rho}_{n,k} \to 0$ and
+$\frac{N_{n,k}}{n} \to u_k \in (0,1)$ a.s.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:pos_part_vanishes, lem:neg_part_vanishes, lem:rho_converges}
+The absolute value $|\frac{N_{n,k}}{n}-\hat{\rho}_{n,k}|$ is the sum of the two
+positive parts, both tending to $0$ by
+Lemmas~\ref{lem:pos_part_vanishes}--\ref{lem:neg_part_vanishes}. Since
+$\hat{\rho}_{n,k}\to u_k$ (Lemma~\ref{lem:rho_converges}), also
+$\frac{N_{n,k}}{n}\to u_k$.
+\end{proof}
+
+\section{Identification of the limit and consistency}
+\label{sec:cons_final}
+
+\begin{lemma}[All arms sampled infinitely often]\label{lem:all_arms_infinite}
+\uses{def:counts}
+Under the same hypotheses, $N_{n,k}\to\infty$ a.s.\ for every $k$.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:match}
+Since $\frac{N_{n,k}}{n}\to u_k > 0$ (Lemma~\ref{lem:match}), $N_{n,k}\sim u_k n
+\to\infty$.
+\end{proof}
+
+\begin{lemma}[Estimator consistency]\label{lem:theta_consistent}
+\uses{def:estimator, def:target}
+Under the same hypotheses, $\estParams_n \to \Params$ a.s., and consequently
+$\hat{\rho}_n \to v = \Target(\Params)$ and $\frac{N_{n,k}}{n}\to v_k$ a.s.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:all_arms_infinite, lem:theta_limit_dichotomy, lem:match}
+By Lemma~\ref{lem:all_arms_infinite} every arm is sampled infinitely often, so
+the first branch of Lemma~\ref{lem:theta_limit_dichotomy} applies to every $k$:
+$\hat{\theta}_{n,k}\to\theta_k$. Continuity of $\Target$ gives
+$\hat{\rho}_n\to\Target(\Params)=v$, and by Lemma~\ref{lem:match} the limit $u$ of
+$N_n/n$ equals $v$.
+\end{proof}
+
+\section{Convergence rates}
+\label{sec:cons_rates}
+
+\begin{lemma}[LIL rate for the estimator]\label{lem:theta_LIL}
+\uses{def:estimator}
+Under the same hypotheses,
+$\estParams_n - \Params = O\!\big(\sqrt{\tfrac{\log\log n}{n}}\big)$ a.s.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:all_arms_infinite, lem:Q_quad_var, lem:theta_error_Q, lem:lil_truncation}
+By Lemma~\ref{lem:theta_error_Q}, $\hat{\theta}_{n,k}-\theta_k = Q_{n,k}/N_{n,k}
+ + o(N_{n,k}^{-1/2})$. The martingale $Q_{\cdot,k}$ has quadratic variation
+$V_k N_{n,k}$ (Lemma~\ref{lem:Q_quad_var}), so the law of the iterated logarithm
+for martingales gives $Q_{n,k} = O(\sqrt{N_{n,k}\log\log N_{n,k}})$ a.s. Since
+$N_{n,k}\sim v_k n$, this is $O(\sqrt{n\log\log n})$, and dividing by
+$N_{n,k}\sim v_k n$ gives $\hat{\theta}_{n,k}-\theta_k = O(\sqrt{\log\log n / n})$.
+\end{proof}
+
+\begin{lemma}[Rate for the plug-in target]\label{lem:rho_rate}
+\uses{def:plugin_target}
+Under the same hypotheses,
+$\hat{\rho}_n - v = O\!\big(\sqrt{\tfrac{\log\log n}{n}}\big)$ and hence
+$n(\hat{\rho}_n - v) = O(\sqrt{n\log\log n})$ a.s.
+\end{lemma}
+
+\begin{proof}
+\uses{lem:theta_LIL, def:condB, lem:taylor_rho}
+A first-order Taylor expansion of $\Target$ around $\Params$ (twice
+differentiable by Condition~\textbf{B}) gives
+$\hat{\rho}_n - v = G(\estParams_n-\Params) + O(\|\estParams_n-\Params\|^2)$
+with $G := \nabla\Target|_\Params$. Both terms are
+$O(\sqrt{\log\log n / n})$ by Lemma~\ref{lem:theta_LIL}.
+\end{proof}
+
+\begin{theorem}[Strong consistency and rates]\label{thm:LLN}
+\uses{def:generic_cond, def:condA, def:condB, def:counts, def:plugin_target}
+Under the generic conditions and Conditions~\textbf{A}--\textbf{B}, for every
+$k\in[K]$, as $n\to\infty$,
+\[
+  \frac{N_{n,k}}{n}\xrightarrow{a.s.} v_k, \qquad
+  \estParams_n - \Params = O\!\Big(\sqrt{\tfrac{\log\log n}{n}}\Big)\ \text{a.s.},\qquad
+  n(\hat{\rho}_n - v) = O(\sqrt{n\log\log n})\ \text{a.s.}
+\]
+\end{theorem}
+
+\begin{proof}
+\uses{lem:theta_consistent, lem:theta_LIL, lem:rho_rate}
+Combine Lemma~\ref{lem:theta_consistent} (first statement), Lemma~\ref{lem:theta_LIL}
+(second) and Lemma~\ref{lem:rho_rate} (third).
+\end{proof}
