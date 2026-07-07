@@ -9,16 +9,32 @@ first formalization targets. It corresponds to Appendix~C of the paper.
 \label{sec:tech_prob}
 
 \begin{lemma}[Bounded expectation gives $O_p$]\label{lem:expectation_to_O}
+\lean{AlphaRAR.isBigOpOne_of_lintegral_le}\leanok
 \uses{def:op_Op}
 Let $(u_n)_{n\ge1}$ be positive reals and $(X_n)_{n\ge1}$ real random variables.
 If there is $C > 0$ with $\E|X_n| \le C u_n$ for all $n$, then $X_n = O_p(u_n)$.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 By Markov's inequality, $\Prob(|X_n| > M u_n) \le \E|X_n|/(M u_n) \le C/M$.
 Given $\varepsilon > 0$, take $M \ge C/\varepsilon$ to get
 $\Prob(|X_n| > M u_n) \le \varepsilon$ for all $n$, which is the definition of
 $X_n = O_p(u_n)$.
+\end{proof}
+
+\begin{lemma}[Bounded second moment gives $O_p$]\label{lem:sq_expectation_to_O}
+\lean{AlphaRAR.isBigOpOne_of_lintegral_sq_le}\leanok
+\uses{def:op_Op}
+Let $(u_n)_{n\ge1}$ be positive reals and $(X_n)_{n\ge1}$ real random variables.
+If there is $C \ge 0$ with $\E[X_n^2] \le C u_n^2$ for all $n$, then $X_n = O_p(u_n)$.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:expectation_to_O}
+By Chebyshev's inequality, $\Prob(|X_n| > M u_n) = \Prob(X_n^2 > M^2 u_n^2)
+\le \E[X_n^2]/(M^2 u_n^2) \le C/M^2$, which is $\le \varepsilon$ once
+$M \ge \sqrt{C/\varepsilon}$. Equivalently, apply Lemma~\ref{lem:expectation_to_O}
+to $X_n^2$ with rate $u_n^2$ to get $X_n^2 = O_p(u_n^2)$, then take square roots.
 \end{proof}
 
 \begin{lemma}[Doob $L^2$ maximal bound for martingale differences]\label{lem:mart_maximal}
@@ -62,15 +78,16 @@ $12\sqrt{C_0/L}$.
 \end{proof}
 
 \begin{lemma}[Increment control from maximal bounds]\label{lem:increment_control}
+\lean{AlphaRAR.norm_sub_le_increment_control}\leanok
 For any sequence $(Q_n)_{n\ge0}$ in a normed space, any $\ell$ with
-$0 \le \ell \le n$ and any $L < n$,
+$0 \le \ell \le n$ and any $1 \le L < n$,
 \[
   \|Q_n - Q_\ell\| \le (n - \ell)\max_{L \le m \le n}\frac{\|Q_n - Q_{n-m}\|}{m}
    + \max_{m < L}\|Q_n - Q_{n-m}\|.
 \]
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 Let $d := n - \ell$. If $d < L$, then $\|Q_n - Q_\ell\| = \|Q_n - Q_{n-d}\| \le
 \max_{m<L}\|Q_n-Q_{n-m}\|$. If $d \ge L$, then
 $\|Q_n - Q_\ell\| = d\cdot \frac{\|Q_n-Q_{n-d}\|}{d}
@@ -99,19 +116,33 @@ $\frac{\Var(X_n)}{\Var(X_n)+\lambda^2}$.
 \end{proof}
 
 \begin{corollary}[Martingale is $O_p(\sqrt n)$]\label{cor:mart_Op}
+\lean{AlphaRAR.isBigOpOne_martingale_div_sqrt}\leanok
 \uses{def:op_Op}
-Let $\{X_n\}$ be a square-integrable martingale with $\E[X_1]=0$ and stationary
-increment variances, i.e.\ $\Var(X_n) = n\sigma^2$ for some $\sigma^2 < \infty$.
-Then $X_n = O_p(\sqrt n)$.
+Let $\{X_n\}$ be a square-integrable martingale with $X_0 = 0$ and increment
+second moments bounded, $\E[(\Delta X_{n+1})^2] \le \sigma^2$ (in particular
+stationary increment variances $\Var(X_n) = n\sigma^2$). Then $X_n = O_p(\sqrt n)$.
 \end{corollary}
 
-\begin{proof}
-\uses{lem:chebyshev_mart}
-By Lemma~\ref{lem:chebyshev_mart},
-$\Prob(X_n \ge M\sqrt n) \le \frac{n\sigma^2}{n\sigma^2 + M^2 n}
- = \frac{\sigma^2}{\sigma^2 + M^2}$, uniformly in $n$; the right-hand side is
-$\le \varepsilon$ for $M$ large. Applying the same to $-X_n$ gives boundedness in
-probability of $X_n/\sqrt n$.
+\begin{proof}\leanok
+\uses{lem:mart_sq_growth, lem:sq_expectation_to_O}
+By Lemma~\ref{lem:mart_sq_growth}, $\E[X_n^2] \le \sigma^2 n$. Chebyshev's
+inequality (Lemma~\ref{lem:sq_expectation_to_O}) with rate $u_n = \sqrt n$ then
+gives $X_n = O_p(\sqrt n)$: $\Prob(|X_n| > M\sqrt n) \le \E[X_n^2]/(M^2 n)
+\le \sigma^2/M^2 \le \varepsilon$ for $M$ large, uniformly in $n$.
+\end{proof}
+
+\begin{lemma}[Bounded-increment martingale is $O_p(\sqrt n)$]\label{lem:mart_bdd_incr_Op}
+\lean{AlphaRAR.isBigOpOne_of_bdd_increments}\leanok
+\uses{def:op_Op, cor:mart_Op}
+Let $M$ be a martingale with $M_0 = 0$ whose increments are bounded,
+$|\Delta M_{n+1}| \le c$ a.s.\ for all $n$. Then $M_n = O_p(\sqrt n)$.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:mart_sq_growth}
+Bounded increments give square-integrability of $M_n$ (indeed $|M_n| \le cn$ a.s.)
+and $\E[(\Delta M_{n+1})^2] \le c^2$, so Corollary~\ref{cor:mart_Op} applies with
+$\sigma^2 = c^2\,\Prob(\Omega)$.
 \end{proof}
 
 \section{Exponential families}
@@ -138,6 +169,7 @@ so $\Var(\xi_{1,k}) = I_k(\theta_k)^{-1}$.
 \label{sec:tech_analytic}
 
 \begin{lemma}[Positive-part convergence]\label{lem:convergence}
+\lean{AlphaRAR.tendsto_posPart_sub_div}\leanok
 Let $(a_n)_{n\ge1}$ be a non-decreasing sequence with $a_n \le n$, let
 $\alpha, v \in [0,1]$, and let $(X_n)_{n\ge1}$ be real with
 $\lim_{n\to\infty} \frac{X_n}{n} = -\alpha v$. Then for any real sequence
@@ -147,7 +179,7 @@ $\varepsilon_n$ with $\limsup_n \varepsilon_n \le 0$,
 \]
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 If $(a_n)$ is bounded, it is eventually constant, so $X_{a_n}/n \to 0$ and
 $\varepsilon_n + \frac{X_n - X_{a_n}}{n} \to -\alpha v \le 0$, whence the positive
 part tends to $0$. If $a_n \to \infty$, then $X_{a_n}/a_n \to -\alpha v$; for

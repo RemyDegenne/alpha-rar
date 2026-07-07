@@ -62,6 +62,7 @@ design. The proof of the key inequality \eqref{eq:generic_ineq} is isolated into
 a telescoping identity.
 
 \begin{lemma}[Telescoping identity for $U$]\label{lem:U_telescope}
+\lean{AlphaRAR.auxU_telescope}\leanok
 \uses{def:U, def:hitting, def:aRTS}
 For any $\aRTS$ design and any $n,k$,
 \[
@@ -73,7 +74,7 @@ For any $\aRTS$ design and any $n,k$,
 \]
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:U_increment}
 Summing the increment identity of Lemma~\ref{lem:U_increment} from
 $m = \ell_{n,k}+1$ to $n$ gives
@@ -84,6 +85,7 @@ Rearranging and splitting off the $m=\ell_{n,k}+1$ term yields the claim.
 \end{proof}
 
 \begin{lemma}[Key inequality for $\aRTS$]\label{lem:preliminary_ineq}
+\lean{AlphaRAR.preliminary_ineq}\leanok
 \uses{def:aRTS, def:hitting, def:U}
 For any $\aRTS$ design, inequality \eqref{eq:generic_ineq} holds with the last
 under-sampling time of Definition~\ref{def:hitting}:
@@ -94,7 +96,7 @@ under-sampling time of Definition~\ref{def:hitting}:
 \]
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:U_telescope, lem:hitting_sign}
 In Lemma~\ref{lem:U_telescope}, each summand $p_{m,k} - \alpha\hat{\rho}_{m-1,k}$
 with $\ell_{n,k}+2 \le m \le n$ is $\le 0$: indeed $m-1 > \ell_{n,k}$ so arm $k$
@@ -105,6 +107,7 @@ $p_{\ell_{n,k}+1,k} \le 1$ gives the inequality.
 \end{proof}
 
 \begin{lemma}[Smallness at the hitting time for $\aRTS$]\label{lem:preliminary_small}
+\lean{AlphaRAR.preliminary_small}\leanok
 \uses{def:hitting, def:aRTS}
 For any $\aRTS$ design, \eqref{eq:generic_small} holds:
 $N_{\ell_{n,k},k} - \ell_{n,k}\hat{\rho}_{\ell_{n,k},k} \le Km_0 = o(\sqrt n)$.
@@ -116,6 +119,7 @@ $N_{\ell_{n,k},k}/\ell_{n,k} \le \hat{\rho}_{\ell_{n,k},k}$, so the difference i
 $\le 0$. If $\ell_{n,k} < Km_0+1$, then $N_{\ell_{n,k},k} \le \ell_{n,k} \le Km_0$,
 so the difference is $\le Km_0$. Either way it is bounded by the constant $Km_0$,
 which is $o(\sqrt n)$.
+\leanok
 \end{proof}
 
 \begin{proposition}[$\aRTS$ satisfies the generic conditions]\label{prop:aRTS_generic}

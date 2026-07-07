@@ -21,6 +21,7 @@ component of the vector used to draw $X_m$.
 \end{definition}
 
 \begin{definition}[Assignment martingale]\label{def:M}
+\lean{AlphaRAR.assignMG}\leanok
 \uses{def:cond_prob}
 For $k \in [K]$ set $\Delta M_{m,k} := X_{m,k} - p_{m,k}$ and
 \[
@@ -29,24 +30,39 @@ For $k \in [K]$ set $\Delta M_{m,k} := X_{m,k} - p_{m,k}$ and
 \end{definition}
 
 \begin{lemma}[$M$ is a martingale]\label{lem:M_martingale}
+\lean{AlphaRAR.martingale_assignMart}\leanok
 \uses{def:M, def:filtration}
 For each $k \in [K]$, $(M_{n,k})_{n\ge0}$ is an $(\filt_n)$-martingale with
 $M_{0,k}=0$ and bounded increments $|\Delta M_{m,k}| \le 1$.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{def:cond_prob}
 $\E[\Delta M_{m,k}\mid\filt_{m-1}] = \E[X_{m,k}\mid\filt_{m-1}] - p_{m,k} = 0$
 by Definition~\ref{def:cond_prob}, and $X_{m,k},p_{m,k}\in[0,1]$.
 \end{proof}
 
+\begin{lemma}[The assignment martingale is $O_p(\sqrt n)$]\label{lem:M_Op}
+\lean{AlphaRAR.isBigOpOne_assignMart_div_sqrt}\leanok
+\uses{def:M, lem:M_martingale}
+For each $k \in [K]$, $M_{n,k} = O_p(\sqrt n)$.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:mart_bdd_incr_Op}
+$M_{\cdot,k}$ is a martingale with $M_{0,k}=0$ and increments bounded by $1$
+(Lemma~\ref{lem:M_martingale}), so Lemma~\ref{lem:mart_bdd_incr_Op} applies with
+$c = 1$.
+\end{proof}
+
 \begin{lemma}[Count decomposition]\label{lem:count_decomp}
+\lean{AlphaRAR.count_eq}\leanok
 \uses{def:M, def:counts}
 For all $n\ge1$ and $k\in[K]$,
 $\displaystyle N_{n,k} = \sum_{m=1}^n p_{m,k} + M_{n,k}$.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 Sum the identity $X_{m,k} = p_{m,k} + \Delta M_{m,k}$ over $m \le n$.
 \end{proof}
 
@@ -54,6 +70,7 @@ Sum the identity $X_{m,k} = p_{m,k} + \Delta M_{m,k}$ over $m \le n$.
 \label{sec:aux_response}
 
 \begin{definition}[Centered response martingale]\label{def:Q}
+\lean{AlphaRAR.respMG}\leanok
 \uses{def:assignment, def:responses}
 For $k \in [K]$ set $Y_{m,k} := \xi_{m,k} - \theta_k$ and
 \[
@@ -92,6 +109,7 @@ $X_{m,k}X_{m,j} = 0$ for $k \ne j$ (each patient is assigned to one arm).
 \end{proof}
 
 \begin{lemma}[Estimator error via $Q$]\label{lem:theta_error_Q}
+\lean{AlphaRAR.theta_error_Q}\leanok
 \uses{def:estimator, def:Q, def:bahadur}
 On $\{N_{m,k}\ge1\}$, the leading term of the estimator error is
 $\dfrac{1}{N_{m,k}}\sum_{j=1}^m X_{j,k}\xi_{j,k} - \theta_k
@@ -105,12 +123,14 @@ $\hat{\theta}_{m,k} - \theta_k = \dfrac{Q_{m,k}}{N_{m,k}} + o(N_{m,k}^{-1/2})$.
 $\frac{1}{N_{m,k}}\sum_j X_{j,k}\xi_{j,k} - \theta_k
 = \frac{1}{N_{m,k}}\sum_j X_{j,k}(\xi_{j,k}-\theta_k)
 = \frac{Q_{m,k}}{N_{m,k}}$, using $\sum_j X_{j,k} = N_{m,k}$.
+\leanok
 \end{proof}
 
 \section{The auxiliary process \texorpdfstring{$U$}{U} and the last hitting time}
 \label{sec:aux_U}
 
 \begin{definition}[Auxiliary process $U$]\label{def:U}
+\lean{AlphaRAR.auxU}\leanok
 \uses{def:M, def:plugin_target}
 For a fixed $\alpha \in [0,1)$, $k \in [K]$ and $n \ge 1$,
 \[
@@ -119,6 +139,7 @@ For a fixed $\alpha \in [0,1)$, $k \in [K]$ and $n \ge 1$,
 \end{definition}
 
 \begin{lemma}[Increment of $U$]\label{lem:U_increment}
+\lean{AlphaRAR.auxU_succ_sub}\leanok
 \uses{def:U}
 For all $n \ge 1$ and $k \in [K]$,
 \[
@@ -128,12 +149,13 @@ For all $n \ge 1$ and $k \in [K]$,
 where we used $\Delta M_{n,k} = X_{n,k} - p_{n,k}$ and $\Delta N_{n,k} = X_{n,k}$.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 Direct computation from Definition~\ref{def:U}, expanding
 $M_{n,k} - M_{n-1,k} = X_{n,k} - p_{n,k}$ and telescoping.
 \end{proof}
 
 \begin{definition}[Last under-sampling time]\label{def:hitting}
+\lean{AlphaRAR.hitting}\leanok
 \uses{def:counts, def:plugin_target}
 For $k \in [K]$ and $n \ge 1$, the \emph{last under-sampling time} before $n$ is
 \[
@@ -144,11 +166,12 @@ is at most its estimated target).
 \end{definition}
 
 \begin{lemma}[Basic properties of the hitting time]\label{lem:hitting_basic}
+\lean{AlphaRAR.hitting_basic}\leanok
 \uses{def:hitting}
 For each $k$, $(\ell_{n,k})_{n\ge1}$ is non-decreasing and $\ell_{n,k} \le n$.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 Immediate from the definition: enlarging $n$ enlarges the set over which the max
 is taken, and the max is bounded by $n$.
 \end{proof}
@@ -161,12 +184,13 @@ The proofs only use Lemma~\ref{lem:hitting_basic} together with the sign
 property of the next lemma.
 
 \begin{lemma}[Sign at the hitting time]\label{lem:hitting_sign}
+\lean{AlphaRAR.hitting_sign}\leanok
 \uses{def:hitting, def:aRTS}
 For $m > \ell_{n,k}$ (and $m \le n$), $\frac{N_{m,k}}{m} > \hat{\rho}_{m,k}$;
 in particular, for an $\aRTS$ design with $m \ge Km_0$, $p_{m+1,k} \le \alpha\hat{\rho}_{m,k}$.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 By maximality of $\ell_{n,k}$, no $m$ with $\ell_{n,k} < m \le n$ satisfies
 $N_{m,k}/m \le \hat{\rho}_{m,k}$. The second statement is the throttling
 condition \eqref{eq:throttle}.

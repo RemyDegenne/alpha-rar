@@ -43,12 +43,13 @@ into Definition~\ref{def:pearson_stat} gives the quadratic form.
 \end{proof}
 
 \begin{lemma}[Idempotent projection]\label{lem:projection}
+\lean{AlphaRAR.isProjection_one_sub_vecMulVec}\leanok
 For a unit vector $s\in\R^K$ (here $s=(\sqrt{v_1},\dots,\sqrt{v_K})$ with
 $\sum_k v_k=1$), the matrix $I - s s^\top$ is an orthogonal projection of rank
 $K-1$.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 $s^\top s = \sum_k v_k = 1$, so $(I-ss^\top)^2 = I - 2ss^\top + s(s^\top s)s^\top
  = I - ss^\top$, and it is symmetric; its trace $K-1$ equals its rank.
 \end{proof}

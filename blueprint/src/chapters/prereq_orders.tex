@@ -35,6 +35,7 @@ sequence $|X_n|/a_n$.
 \end{proof}
 
 \begin{lemma}[Convergence in probability gives $o_p$]\label{lem:op_of_tendsto}
+\lean{AlphaRAR.isLittleOpOne_of_tendsto_ae}
 \uses{def:op_Op}
 If $X_n \to 0$ in probability (in particular, if $X_n \to 0$ a.s.), then
 $X_n = o_p(1)$. If $X_n \to c$ in distribution for some random variable, then
@@ -48,6 +49,7 @@ second, convergence in distribution implies tightness of the laws
 \end{proof}
 
 \begin{lemma}[Arithmetic of stochastic orders]\label{lem:op_arith}
+\lean{AlphaRAR.IsLittleOpOne.add, AlphaRAR.IsBigOpOne.add, AlphaRAR.IsBigOpOne.add_littleOp, AlphaRAR.IsBigOpOne.mul_littleOp, AlphaRAR.IsBigOpOne.bdd_mul}\leanok
 \uses{def:op_Op}
 For a fixed rate $a_n$:
 \begin{enumerate}
@@ -58,7 +60,7 @@ For a fixed rate $a_n$:
 \end{enumerate}
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:op_factor}
 By Lemma~\ref{lem:op_factor} reduce to $a_n = 1$. Then (i)--(ii) are union bounds
 on the events $\{|X_n| > \varepsilon\}$, $\{|Y_n| > \varepsilon\}$; (iii) follows
@@ -86,6 +88,7 @@ applied to addition.
 \label{sec:pre_qv}
 
 \begin{definition}[Predictable quadratic variation]\label{def:pred_qv}
+\lean{AlphaRAR.predQuadVar}\leanok
 Let $(M_n)_{n\ge0}$ be a square-integrable $(\filt_n)$-martingale with $M_0 = 0$.
 Its \emph{predictable quadratic variation} is
 $\langle M\rangle := \mathrm{predictablePart}(M^2)$, the predictable part of the
@@ -101,13 +104,14 @@ wrapper. The lemmas below are the basic API and are straightforward from that
 decomposition.
 
 \begin{lemma}[Increment of the quadratic variation]\label{lem:qv_incr}
+\lean{AlphaRAR.predQuadVar_succ_sub_eq}\leanok
 \uses{def:pred_qv}
 For a square-integrable martingale $M$ with $M_0=0$,
 $\langle M\rangle_n - \langle M\rangle_{n-1} = \E[(\Delta M_n)^2\mid\filt_{n-1}]$,
 and $\langle M\rangle$ is nondecreasing and predictable.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 The Doob decomposition of the submartingale $M^2$ has predictable part with
 increments $\E[M_n^2 - M_{n-1}^2\mid\filt_{n-1}]
 = \E[(\Delta M_n)^2\mid\filt_{n-1}]$, using that $M$ is a martingale so the cross
@@ -116,13 +120,40 @@ gives monotonicity.
 \end{proof}
 
 \begin{lemma}[$M^2 - \langle M\rangle$ is a martingale]\label{lem:qv_mart}
+\lean{AlphaRAR.martingale_sq_sub_predQuadVar}\leanok
 \uses{def:pred_qv}
 $M^2 - \langle M\rangle$ is an $(\filt_n)$-martingale.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 This is the martingale part in the Doob decomposition of $M^2$
 (\texttt{martingale\_martingalePart}).
+\end{proof}
+
+\begin{lemma}[Expected quadratic variation equals second moment]\label{lem:qv_second_moment}
+\lean{AlphaRAR.integral_sq_eq_integral_predQuadVar}\leanok
+\uses{def:pred_qv, lem:qv_mart}
+For a square-integrable martingale $M$ with $M_0 = 0$ and every $n$,
+$\E[M_n^2] = \E[\langle M\rangle_n]$.
+\end{lemma}
+
+\begin{proof}\leanok
+$M^2 - \langle M\rangle$ is a martingale (Lemma~\ref{lem:qv_mart}) starting at
+$M_0^2 - \langle M\rangle_0 = 0$, so its expectation is constant equal to $0$;
+that is $\E[M_n^2] - \E[\langle M\rangle_n] = 0$.
+\end{proof}
+
+\begin{lemma}[Martingale $L^2$ growth]\label{lem:mart_sq_growth}
+\lean{AlphaRAR.integral_sq_le_of_increment_bound}\leanok
+\uses{def:pred_qv, lem:qv_second_moment, lem:qv_incr}
+Let $M$ be a square-integrable martingale with $M_0 = 0$. If every increment has
+second moment $\E[(\Delta M_{n+1})^2] \le \sigma^2$, then $\E[M_n^2] \le \sigma^2 n$.
+\end{lemma}
+
+\begin{proof}\leanok
+By Lemma~\ref{lem:qv_second_moment}, $\E[M_n^2] = \E[\langle M\rangle_n]$.
+Telescoping and Lemma~\ref{lem:qv_incr},
+$\E[\langle M\rangle_n] = \sum_{i=0}^{n-1}\E[(\Delta M_{i+1})^2] \le n\sigma^2$.
 \end{proof}
 
 \begin{lemma}[Orthogonal martingales]\label{lem:qv_orthogonal}

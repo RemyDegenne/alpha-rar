@@ -37,6 +37,7 @@ We write $V_k := \Var[\xi_{1,k}]$ for the variance of the response of arm $k$.
 \end{definition}
 
 \begin{definition}[Allocation counts]\label{def:counts}
+\lean{AlphaRAR.count}\leanok
 \uses{def:assignment}
 The number of patients assigned to arm $k$ up to time $n$ is
 \[
@@ -46,12 +47,13 @@ The vector $N_n / n$ is the \emph{observed allocation proportion} at time $n$.
 \end{definition}
 
 \begin{lemma}[Counts sum to time]\label{lem:counts_sum}
+\lean{AlphaRAR.counts_sum}\leanok
 \uses{def:counts}
 For all $n \ge 1$, $\sum_{k=1}^K N_{n,k} = n$, and hence
 $\sum_{k=1}^K \frac{N_{n,k}}{n} = 1$.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{def:assignment}
 Immediate from $\sum_{k=1}^K X_{j,k} = 1$ and summing over $j \le n$.
 \end{proof}
@@ -186,6 +188,7 @@ $o_p$ and $O_p$. We record their definitions and the two facts about them that
 are used repeatedly.
 
 \begin{definition}[$o_p$ and $O_p$]\label{def:op_Op}
+\lean{AlphaRAR.IsLittleOpOne, AlphaRAR.IsBigOpOne}\leanok
 Let $(a_n)_{n\ge1}$ be positive reals and $(X_n)_{n\ge1}$ random variables.
 \begin{itemize}
   \item $X_n = o_p(a_n)$ if for all $\varepsilon > 0$,
