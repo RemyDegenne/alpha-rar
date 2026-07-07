@@ -9,8 +9,8 @@ relaxedAutoImplicit = false
 weak.linter.mathlibStandardSet = true
 
 [[require]]
-name = "mathlib"
-scope = "leanprover-community"
+name = "LeanMachineLearning"
+git = "https://github.com/LeanMachineLearning/LML"
 
 [[require]]
 name = "checkdecls"
