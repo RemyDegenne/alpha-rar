@@ -34,3 +34,5 @@ AlphaRAR.predQuadVar_succ_sub_eq
 AlphaRAR.martingale_sq_sub_predQuadVar
 AlphaRAR.integral_sq_eq_integral_predQuadVar
 AlphaRAR.integral_sq_le_of_increment_bound
+AlphaRAR.martingale_mul
+AlphaRAR.predQuadVar_add_of_martingale_mul

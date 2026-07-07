@@ -157,6 +157,7 @@ $\E[\langle M\rangle_n] = \sum_{i=0}^{n-1}\E[(\Delta M_{i+1})^2] \le n\sigma^2$.
 \end{proof}
 
 \begin{lemma}[Orthogonal martingales]\label{lem:qv_orthogonal}
+\lean{AlphaRAR.martingale_mul, AlphaRAR.predQuadVar_add_of_martingale_mul}\leanok
 \uses{def:pred_qv}
 Let $M, N$ be square-integrable martingales such that
 $\E[\Delta M_i\, \Delta N_i \mid \filt_{i-1}] = 0$ for all $i$ (e.g.\ if
@@ -164,12 +165,13 @@ $\Delta M_i\, \Delta N_i = 0$ a.s.). Then $MN$ is a martingale, so the cross
 variation vanishes, and $\langle M + N\rangle = \langle M\rangle + \langle N\rangle$.
 \end{lemma}
 
-\begin{proof}
-\uses{lem:qv_incr}
+\begin{proof}\leanok
 $\E[\Delta(MN)_i\mid\filt_{i-1}] = M_{i-1}\E[\Delta N_i\mid\cdot]
 + N_{i-1}\E[\Delta M_i\mid\cdot] + \E[\Delta M_i\Delta N_i\mid\cdot] = 0$, so $MN$
-is a martingale. Expanding $\langle M+N\rangle$ with Lemma~\ref{lem:qv_incr} and
-using the hypothesis gives additivity.
+is a martingale (\texttt{martingale\_mul}). For additivity, expand
+$(M+N)^2 = M^2 + N^2 + 2MN$; the predictable part is linear and the predictable
+part of the martingale $MN$ vanishes, so
+$\langle M+N\rangle = \langle M\rangle + \langle N\rangle$.
 \end{proof}
 
 \section{A multivariate Taylor remainder}

@@ -207,4 +207,113 @@ theorem integral_sq_le_of_increment_bound [IsFiniteMeasure μ] (hM : Martingale 
   rw [integral_sq_eq_integral_predQuadVar hM.stronglyAdapted hM2 hM0 n]
   exact hqv n
 
+/-- **Product of conditionally orthogonal martingales is a martingale** (blueprint
+`lem:qv_orthogonal`, first part). If `M`, `N` are martingales whose increments are
+conditionally orthogonal, `μ[ΔM (i+1) · ΔN (i+1) | ℱ i] = 0`, then `M · N` is a
+martingale. The integrability of the increment products is taken as hypotheses. -/
+theorem martingale_mul [IsFiniteMeasure μ] {N : ℕ → Ω → ℝ}
+    (hM : Martingale M ℱ μ) (hN : Martingale N ℱ μ)
+    (hMN : ∀ n, Integrable (M n * N n) μ)
+    (hB : ∀ i, Integrable (M i * (N (i + 1) - N i)) μ)
+    (hC : ∀ i, Integrable (N i * (M (i + 1) - M i)) μ)
+    (hD : ∀ i, Integrable ((M (i + 1) - M i) * (N (i + 1) - N i)) μ)
+    (hortho : ∀ i, μ[(M (i + 1) - M i) * (N (i + 1) - N i) | ℱ i] =ᵐ[μ] 0) :
+    Martingale (fun n => M n * N n) ℱ μ := by
+  refine martingale_nat
+    (fun n => (hM.stronglyMeasurable n).mul (hN.stronglyMeasurable n)) hMN (fun i => ?_)
+  -- Increments of `M` and `N` have vanishing conditional expectation.
+  have hcdM : μ[M (i + 1) - M i | ℱ i] =ᵐ[μ] 0 := by
+    have h3 : μ[M i | ℱ i] = M i :=
+      condExp_of_stronglyMeasurable (ℱ.le i) (hM.stronglyMeasurable i) (hM.integrable i)
+    have h1 : μ[M (i + 1) - M i | ℱ i] =ᵐ[μ] μ[M (i + 1) | ℱ i] - μ[M i | ℱ i] :=
+      condExp_sub (hM.integrable (i + 1)) (hM.integrable i) _
+    rw [h3] at h1
+    have h2 : μ[M (i + 1) | ℱ i] =ᵐ[μ] M i := hM.condExp_ae_eq (Nat.le_succ i)
+    filter_upwards [h1, h2] with ω e1 e2
+    simp only [Pi.sub_apply, Pi.zero_apply, e1, e2, sub_self]
+  have hcdN : μ[N (i + 1) - N i | ℱ i] =ᵐ[μ] 0 := by
+    have h3 : μ[N i | ℱ i] = N i :=
+      condExp_of_stronglyMeasurable (ℱ.le i) (hN.stronglyMeasurable i) (hN.integrable i)
+    have h1 : μ[N (i + 1) - N i | ℱ i] =ᵐ[μ] μ[N (i + 1) | ℱ i] - μ[N i | ℱ i] :=
+      condExp_sub (hN.integrable (i + 1)) (hN.integrable i) _
+    rw [h3] at h1
+    have h2 : μ[N (i + 1) | ℱ i] =ᵐ[μ] N i := hN.condExp_ae_eq (Nat.le_succ i)
+    filter_upwards [h1, h2] with ω e1 e2
+    simp only [Pi.sub_apply, Pi.zero_apply, e1, e2, sub_self]
+  -- Conditional expectations of the four pieces of the product increment.
+  have eA : μ[M i * N i | ℱ i] = M i * N i :=
+    condExp_of_stronglyMeasurable (ℱ.le i)
+      ((hM.stronglyMeasurable i).mul (hN.stronglyMeasurable i)) (hMN i)
+  have eB : μ[M i * (N (i + 1) - N i) | ℱ i] =ᵐ[μ] 0 := by
+    have hpull : μ[M i * (N (i + 1) - N i) | ℱ i] =ᵐ[μ] M i * μ[N (i + 1) - N i | ℱ i] :=
+      condExp_mul_of_stronglyMeasurable_left (hM.stronglyMeasurable i) (hB i)
+        ((hN.integrable (i + 1)).sub (hN.integrable i))
+    filter_upwards [hpull, hcdN] with ω ep ec
+    have hz : μ[N (i + 1) - N i | ℱ i] ω = 0 := by simpa using ec
+    simp only [ep, Pi.mul_apply, hz, mul_zero, Pi.zero_apply]
+  have eC : μ[N i * (M (i + 1) - M i) | ℱ i] =ᵐ[μ] 0 := by
+    have hpull : μ[N i * (M (i + 1) - M i) | ℱ i] =ᵐ[μ] N i * μ[M (i + 1) - M i | ℱ i] :=
+      condExp_mul_of_stronglyMeasurable_left (hN.stronglyMeasurable i) (hC i)
+        ((hM.integrable (i + 1)).sub (hM.integrable i))
+    filter_upwards [hpull, hcdM] with ω ep ec
+    have hz : μ[M (i + 1) - M i | ℱ i] ω = 0 := by simpa using ec
+    simp only [ep, Pi.mul_apply, hz, mul_zero, Pi.zero_apply]
+  -- Pointwise decomposition of the product increment.
+  have hdecomp : M (i + 1) * N (i + 1)
+      = M i * N i + M i * (N (i + 1) - N i) + N i * (M (i + 1) - M i)
+        + (M (i + 1) - M i) * (N (i + 1) - N i) := by
+    funext ω
+    simp only [Pi.add_apply, Pi.mul_apply, Pi.sub_apply]
+    ring
+  have hAB : Integrable (M i * N i + M i * (N (i + 1) - N i)) μ := (hMN i).add (hB i)
+  have hABC : Integrable
+      (M i * N i + M i * (N (i + 1) - N i) + N i * (M (i + 1) - M i)) μ := hAB.add (hC i)
+  refine Filter.EventuallyEq.symm ?_
+  rw [hdecomp]
+  filter_upwards [condExp_add hABC (hD i) (ℱ i), condExp_add hAB (hC i) (ℱ i),
+    condExp_add (hMN i) (hB i) (ℱ i), eB, eC, hortho i] with ω h1 h2 h3 hb hc hd
+  simp only [Pi.add_apply, Pi.zero_apply] at h1 h2 h3 hb hc hd
+  rw [h1, h2, h3, congrFun eA ω, hb, hc, hd]
+  ring
+
+/-- **Additivity of the quadratic variation for orthogonal martingales** (blueprint
+`lem:qv_orthogonal`, second part). If `M · N` is a martingale (e.g. `M`, `N` are
+conditionally orthogonal martingales, see `martingale_mul`), then
+`⟨M + N⟩ = ⟨M⟩ + ⟨N⟩`. This is predictable-part linearity together with the fact
+that the predictable part of the martingale `M · N` vanishes. -/
+theorem predQuadVar_add_of_martingale_mul [IsFiniteMeasure μ] {N : ℕ → Ω → ℝ}
+    (hM2 : ∀ n, Integrable (fun ω => M n ω ^ 2) μ)
+    (hN2 : ∀ n, Integrable (fun ω => N n ω ^ 2) μ)
+    (hMN : ∀ n, Integrable (M n * N n) μ)
+    (hmart : Martingale (fun n => M n * N n) ℱ μ) (n : ℕ) :
+    predQuadVar (fun k => M k + N k) ℱ μ n
+      =ᵐ[μ] predQuadVar M ℱ μ n + predQuadVar N ℱ μ n := by
+  have hproc : (fun k => (M k + N k) ^ 2)
+      = (fun k => M k ^ 2) + (fun k => N k ^ 2) + (2 : ℝ) • (fun k => M k * N k) := by
+    funext k ω
+    simp only [Pi.add_apply, Pi.smul_apply, Pi.pow_apply, Pi.mul_apply, smul_eq_mul]
+    ring
+  have hMint : ∀ k, Integrable ((fun k => M k ^ 2) k) μ := hM2
+  have hNint : ∀ k, Integrable ((fun k => N k ^ 2) k) μ := hN2
+  have hMNint : ∀ k, Integrable (((2 : ℝ) • fun k => M k * N k) k) μ := fun k => by
+    simpa using (hMN k).smul (2 : ℝ)
+  -- Split `⟨M+N⟩` by linearity of the predictable part.
+  have h1 : predQuadVar (fun k => M k + N k) ℱ μ n
+      =ᵐ[μ] predictablePart ((fun k => M k ^ 2) + fun k => N k ^ 2) ℱ μ n
+        + predictablePart ((2 : ℝ) • fun k => M k * N k) ℱ μ n := by
+    rw [predQuadVar, hproc]
+    exact predictablePart_add (fun k => (hMint k).add (hNint k)) hMNint n
+  have h2 : predictablePart ((fun k => M k ^ 2) + fun k => N k ^ 2) ℱ μ n
+      =ᵐ[μ] predQuadVar M ℱ μ n + predQuadVar N ℱ μ n := by
+    simpa only [predQuadVar] using predictablePart_add hMint hNint n
+  have h3 : predictablePart ((2 : ℝ) • fun k => M k * N k) ℱ μ n =ᵐ[μ] 0 := by
+    have hs := predictablePart_smul (ℱ := ℱ) (μ := μ) (f := fun k => M k * N k) (2 : ℝ) n
+    have hz := hmart.predictablePart_eq_zero n
+    filter_upwards [hs, hz] with ω es ez
+    simp only [Pi.smul_apply, Pi.zero_apply] at es ez ⊢
+    rw [es, ez, smul_zero]
+  filter_upwards [h1, h2, h3] with ω a1 a2 a3
+  simp only [Pi.add_apply, Pi.zero_apply] at a1 a2 a3 ⊢
+  rw [a1, a2, a3, add_zero]
+
 end AlphaRAR
