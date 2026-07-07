@@ -1,0 +1,197 @@
+\subsection{Probabilistic Technical Lemmas}
+\begin{lemma}\label{lem:mart-1}
+	Suppose $\{M_n, \mathcal{F}_n; n \geq 1\}$ is a martingale with $\mathbb{E}|\Delta M_n|^2 \leq C_0$, where $\Delta M_n = M_n - M_{n-1}$ and $\{\mathcal{F}_n\}$ is a filter of sigma fields with $\mathcal{F}_1 \subset \mathcal{F}_2 \subset \cdots$. Then, for any $L > 4$,
+	\begin{align}
+		\mathbb{E} \left[ \max_{m \leq L} |M_n - M_{n - m}| \right] 
+		&\leq 4\sqrt{C_0 L}\label{eq:A1}\\
+		\mathbb{E} \left[ \max_{m : L \leq m \leq n} \frac{|M_n - M_{n - m}|}{m} \right] 
+		&\leq 12 \sqrt{\frac{C_0}{L}} \label{eq:A2}
+	\end{align}
+\end{lemma}
+\begin{proof}
+	\begin{enumerate}[label=(\roman*)]
+		We first prove the first inequality, we have 
+		\begin{align}
+			\sup_{1 \le m \le L} |M_n - M_{n-m}| 
+			&\le \sup_{1 \le m \le L} |M_n - M_{n-L}| + |M_{n-m} - M_{n-L}|\\
+			&= |M_n - M_{n-L}| + \sup_{1 \le m \le L} |M_{n-m} - M_{n-L}|\notag\\
+			&\le 2 \sup_{k \in \{n-L+1, \dots, n\}} |M_k - M_{n-L}|\notag\\
+			&= 2 \sup_{k \in \{1, \dots, L\}} |S_k|\label{eq:doob-2}
+		\end{align}
+		where \(S_k := M_{n-L+k} - M_{n-L}.\) 
+		
+		Define now the new forward filtration \(\mathcal{G}_k := \mathcal{F}_{n-L+k}\). 
+		We have 
+		\begin{align*}
+			\mathbb{E}[S_k \mid \mathcal{G}_{k-1}] 
+			&= S_{k-1} + \mathbb{E}[\Delta S_k\mid \mathcal{G}_{k-1}]\\
+			&= S_{k-1} + \mathbb{E}[M_{n-L+k} - M_{n-L+k-1} \mid \mathcal{G}_{k-1}]\\
+			&= S_{k-1}
+		\end{align*}
+		so \(\{S_k\}\) is a \(\mathcal{G}_k\)-martingale. Then \(\{S_k^2\}\) is a sub-martingale. Applying Doob's maximal inequality (see Corollary 2.1.6 in \cite{marc-yor}), we obtain
+		\begin{align}
+			\mathbb{P}\!\left( \sup_{k \in \{1,\dots,L\}} S_k^2 \ge x^2 \right)
+			&\le \frac{\mathbb{E}[S_L^2]}{x^2}\notag\\
+			\implies \mathbb{P}\!\left( \sup_{k \in \{1,\dots,L\}} |S_k| \ge x \right)
+			&\le \frac{\mathbb{E}[S_L^2]}{x^2}\label{eq:doob-1}
+		\end{align}
+		\(\{S_k\}\) being a martingale gives that \(\{\Delta S_k\}\) are orthogonal,  
+		i.e. \(\operatorname{Cov}(\Delta S_k, \Delta S_j)=0\). So:
+		\begin{align*}
+			\mathbb{E}[S_L^2]
+			&= \sum_{k=1}^L \mathbb{E}[\,|\Delta S_k|^2\,]\\
+			&= \sum_{k=1}^L \mathbb{E}\!\left[\,|\Delta M_{n-L+k}|^2\,\right]\le L C_0.		
+		\end{align*}	
+		So from \eqref{eq:doob-2} and \eqref{eq:doob-1} we obtain 
+		\[
+		\mathbb{P}\!\left( \sup_{m \in \{1,\dots,L\}} |M_n - M_{n-m}| \ge x \right)
+		\le 4\frac{LC_0}{x^2}
+		\]	
+		Then
+		\begin{align*}
+			\mathbb{E}\left[\sup_{m \in \{1,\dots,L\}} |M_n - M_{n-m}|\right] &= \int_{0}^{+\infty}\mathbb{P}\!\left( \sup_{m \in \{1,\dots,L\}} |M_n - M_{n-m}| \ge x \right) dx\\
+			&\leq \int_{0}^{2\sqrt{LC_0}}1 \dot dx + 4\int_{2\sqrt{LC_0}}^{+\infty}\frac{LC_0}{x^2} \dot dx = 4\sqrt{LC_0}
+		\end{align*}
+		
+		\item \begin{align*}
+			\mathbb{E} \left[ \max_{L \leq m \leq n} \frac{|M_n - M_{n - m}|}{m} \right]
+			&\leq \sum_{\log_2(L) \leq j \leq \log_2(n)} 
+			\frac{1}{2^{j - 1}} \sqrt{2} \, \mathbb{E} \left[ 
+			\max_{2^{j - 1} \leq m < 2^j} |M_n - M_{n - m}| \right] \\
+			&\leq \sum_{j \geq \log_2(L)} 
+			\frac{1}{2^{j - 1}} \, \mathbb{E} \left[ 
+			\max_{m < 2^j} |M_n - M_{n - m}| \right] \\
+			&\leq \sum_{j \geq \log_2(L)} 
+			\frac{4\sqrt{C_0 \cdot 2^j}}{2^{j - 1}} \\
+			&= 4\sum_{j \geq \log_2(L)} \frac{\sqrt{C_0}}{\sqrt{2^{j - 2}}}
+			\leq 12 \sqrt{\frac{C_0}{L}}	
+		\end{align*}
+	\end{enumerate}
+	
+\end{proof}
+
+
+\begin{lemma}\label{lem:expectation-to-O}
+	Let $(u_n)_{n\ge1}$ be a sequence of positive numbers and let $\{X_n\}_{n\ge1}$ be real-valued random variables such that there exists $C>0$ for which \(\forall n \geq 1, \ \mathbb{E}|X_n|\le C u_n\). 
+	Then 
+	\[X_n = O_p(u_n).\]
+\end{lemma}
+
+\begin{proof}
+	By Markov's inequality applied to the non-negative random variable $|X_n|$,
+	\[
+	\mathbb{P}\big(|X_n|> M u_n\big)
+	\;\le\; \frac{\mathbb{E}|X_n|}{M u_n}
+	\;\le\; \frac{C}{M}.
+	\]
+	Given $\varepsilon>0$, choose $M\ge C/\varepsilon$. Then, for all $n$,
+	\[
+	\mathbb{P}\big(|X_n|> M u_n\big)\le \varepsilon.
+	\]
+	This is precisely the definition of $X_n=O_p(u_n)$.
+\end{proof}
+
+\begin{lemma}\label{lem:chebychev-mart}
+	Suppose  \(\{X_n\}_{n \geq 1}\) is a square-integrable martingale with \(\mathbb{E}[X_1]=0\). Then for \(\lambda > 0\):
+	\[
+	\mathbb{P}\left(\sup_{1\leq i \leq n} X_i \geq \lambda\right)\leq \frac{\mathbb{V}ar(X_n)}{\mathbb{V}ar(X_n)+ \lambda^2}
+	\]
+\end{lemma}
+\begin{proof}
+	For \(\alpha > 0\) we have
+	\[
+	\mathbb{P}\left(\sup_{0 \leq k \leq n} X_k \geq c \right) = \mathbb{P}\left(\sup_{0 \leq k \leq n} (X_k + \alpha)^2 \geq (c+\alpha)^2 \right)
+	\]
+	As \(\{X_n\}\) is a martingale then \(\{X_n^2\}\) is a sub-martingale, so we can apply maximal Doob's inequality (see Theorem 12.4.2 in \cite{jf-le-gall}), which gives
+	
+	\begin{align*}
+		\mathbb{P}\left(\sup_{0 \leq k \leq n} (X_k + \alpha)^2 \geq (c + \alpha) \right) &\leq \frac{\mathbb{E}\left[(X_n + c)^2\right]}{(c + \alpha)^2}\\
+		&= \frac{\mathbb{V}ar\left[X_n\right] + \alpha^2}{(c + \alpha)^2}\\
+		&= \frac{\mathbb{V}ar\left[X_n\right] + \left(\frac{\mathbb{V}ar\left[X_n\right]}{c}\right)^2}{\left(c + \frac{\mathbb{V}ar\left[X_n\right]}{c}\right)^2} \text{; Taking \(\alpha = \frac{\mathbb{V}ar\left[X_n\right]}{c}\)}\\
+		&= \frac{\mathbb{V}ar\left[X_n\right]}{\mathbb{V}ar\left[X_n\right] + c^2}
+	\end{align*}
+	which proves the claim.		
+\end{proof}
+
+\begin{proposition}\label{prop:exp-fam}
+	For regular one-parameter exponential families with the parameter of interest $\theta_k$ being the mean parameter, we have $\mathbb{V}ar(\xi_{1,k}) = I_k(\theta_k)^{-1}$.
+\end{proposition}
+\begin{proof}
+	Consider the response of treatment $k$ following a natural exponential family
+	\[
+	f(y \mid \eta_k)
+	=
+	\exp\{\eta_k y - A(\eta_k)\} h(y),
+	\]
+	so that \(\mathbb{E}_{\eta_k}[Y] = A'(\eta_k) \text{ and }
+	\mathbb{V}ar_{\eta_k}(Y) = A''(\eta_k).\) If the parameter of interest is the mean \(\theta_k = A'(\eta_k),\)
+	and we take $\xi_{1,k}=Y$, then
+	\[
+	\mathbb{E}[\xi_{1,k}] = \theta_k,
+	\qquad
+	\mathbb{V}ar(\xi_{1,k}) = A''(\eta_k).
+	\]
+	Moreover, by the Fisher information reparameterization formula,
+	\[
+	I_k(\theta_k)
+	=
+	I_{\eta_k}(\eta_k)
+	\left(\frac{d\eta_k}{d\theta_k}\right)^2
+	=
+	A''(\eta_k)\left(\frac{1}{A''(\eta_k)}\right)^2
+	=
+	\frac{1}{A''(\eta_k)},
+	\]
+	which yields \(\mathbb{V}ar(\xi_{1,k}) = I_k(\theta_k)^{-1}.\)
+	This includes, for example, Bernoulli, Poisson, exponential, and normal models with known variance.
+\end{proof}
+
+\subsection{Analytical Technical Lemmas}
+\begin{lemma}\label{lem:convergence}
+	Let $(a_n)_{n \geq 1}$ a positive increasing sequence such that $\forall n \in \mathbb{N}: a_n \leq n$ and $\alpha, v \in [0,1]$, $(X_n)_{n \geq 1}$ a real sequence such that $\lim\limits_{n \to +\infty} \frac{X_n}{n} = -\alpha v$, then for any \(\epsilon_n \leq o(1)\) we have
+\begin{align*}
+		\lim\limits_{n \to +\infty}\left( \epsilon_n + \frac{X_n - X_{a_n}}{n} \right)^+ &= 0 
+\end{align*}
+\end{lemma}
+
+\begin{proof}	
+	\textbf{Case 1:} $(a_n)_{n \in \mathbb{N}}$ is bounded
+	
+	As \((a_n)\) is increasing sequence then \(a_n\) is stationary so \(\frac{X_{a_n}}{n} \longrightarrow 0\) , which gives
+	\begin{align*}
+		\lim_{n \to +\infty} \epsilon_n + \frac{X_n - X_{a_n}}{n} = -\alpha v
+		&\implies \lim_{n \to +\infty} \left(\epsilon_n + \frac{X_n - X_{a_n}}{n}\right)^+ = 0
+	\end{align*}	
+	\textbf{Case 2:} $a_n \to +\infty$
+	
+	In this case we have \(\lim\limits_{n \to +\infty} \frac{X_{a_n}}{a_n} = -\alpha v\), then:
+	\begin{align*}
+		\forall \varepsilon > 0,\ \exists N \in \mathbb{N},\ \forall n \geq N &,\quad -\varepsilon \leq \frac{X_{a_n}}{a_n} + \alpha v \leq \varepsilon \quad \text{a.s.}\\		
+		&\Rightarrow -\varepsilon - \alpha v \leq \frac{X_{a_n}}{a_n} \leq \varepsilon - \alpha v \quad \text{a.s.}\\
+		&\Rightarrow -\frac{X_{a_n}}{n} \leq \varepsilon \frac{a_n}{n} + \alpha v \frac{a_n}{n} \leq \varepsilon + \alpha v \quad \text{a.s.}\\
+		&\Rightarrow \epsilon_n + \frac{X_n - X_{a_n}}{n} \leq \epsilon_n + \frac{X_n}{n} + \varepsilon + \alpha v \quad \text{a.s.}		
+	\end{align*}	
+	So as \(\lim\limits_{n \to +\infty} \frac{X_n}{n} + \alpha v = 0\,\) and \(\lim\limits_{n \to +\infty} \epsilon_n \leq 0\), we obtain that \(\lim\limits_{n \to +\infty} \epsilon_n + \frac{X_n - X_{a_n}}{n} \leq 0 \,\), then 
+	\[\lim\limits_{n \to +\infty} \left(\epsilon_n +\frac{X_n - X_{a_n}}{n}\right)^+ = 0 \]
+\end{proof}
+
+\begin{lemma}\label{lem:mart-2}
+	For all \( \ell \geq 1, L < n \) and any sequence \( (Q_n)_{n \geq 0} \in \mathbb{R}^d \), we have
+	\[
+	\|Q_n - Q_\ell\| \leq (n - \ell) \max_{L \leq m \leq n} \frac{\|Q_n - Q_{n - m}\|}{m} + \max_{m < L} \|Q_n - Q_{n - m}\|.
+	\]
+\end{lemma}
+
+\begin{proof}
+	Let \( d = n - \ell \), we consider two cases. If \( d < L \) then \(\|Q_n - Q_\ell\| = \|Q_n - Q_{n - d}\| \leq \max_{m < L} \|Q_n - Q_{n - m}\|.\)
+	Otherwise if \( d \geq L \) then
+	\begin{align*}
+		\|Q_n - Q_\ell\| &= d.\,\frac{\|Q_n - Q_{n-d}\|}{d} \\		
+		& \leq \left(n - \ell\right) \max_{L \leq m \leq n} \frac{\|Q_n - Q_{n-m}\|}{m}
+	\end{align*}
+	So gathering the two upper bounds for both cases we get:	
+	\begin{align*}
+		\|Q_n - Q_\ell\| &\leq (n - \ell) \max_{L \leq m \leq n} \frac{\|Q_n - Q_{n - m}\|}{m} + \max_{m < L} \|Q_n - Q_{n - m}\|,
+	\end{align*}	
+\end{proof}
+

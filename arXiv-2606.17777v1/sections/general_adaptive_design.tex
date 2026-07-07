@@ -1,0 +1,252 @@
+We now introduce our main algorithmic contribution: a general family of adaptive targeting mechanisms that extend the ERADE design to $K> 2$ arms. Its first ingredient is an estimator of the unknown parameters and target allocation.
+
+\paragraph*{Sequential estimation} 
+Since $\Theta$ is unknown, the parameters $\theta_k$ are estimated online. Given some initial value $\theta_{0,k}$, the sequential estimator for treatment $k$ at stage $m$ is
+\begin{equation}\label{eq:dbcd-estimator}
+	\hat{\theta}_{m,k} := \frac{\sum_{j=1}^m X_{j,k}\xi_{j,k} + \theta_{0,k}}{N_{m,k}+1}.
+\end{equation}
+The role of the initial values $\theta_{0,k}$ is to regularize the estimator when few or no patients have yet been assigned to treatment $k$. In practice, the initial values $\theta_{0,k}$ can be chosen either as a common constant across all treatments, i.e., $\theta_{0,k} = \theta_0$, or in a treatment-specific manner.
+
+Letting \(\hat{\Theta}_m := (\hat{\theta}_{m,1}, \ldots, \hat{\theta}_{m,K}),\) our estimate of the target allocation $v=\rho(\Theta)$ is the plug-in estimator $\hat{\rho}_m := \rho(\hat{\Theta}_m).$
+
+%\todoe{Possible values for $\theta_{0,k}$? Don't we always have $\theta_{0,k}=\theta_0$ (common value)? \textcolor{red}{DONE}}
+
+\begin{remark}
+For our analysis to go through, an alternative estimator of $\theta_k$ can be used, as long as it has the Bahadur-type representation, i.e., it can be written
+\begin{equation}\label{eq:bahadur-estimator}
+	\hat{\theta}_{m,k} = \frac{1}{N_{m,k}}\sum_{j=1}^{m}X_{j,k}\xi_{j,k} + o(N_{m,k}^{-1/2}),\quad \text{as } m\to\infty.
+\end{equation}
+\end{remark}
+
+The ERADE design, introduced by \cite{hu2009efficient} for $K=2$ uses a parameter $\alpha \in [0,1)$ and works as follows. It compares the current empirical allocation to arm $1$, $N_{m,1}/m$ to its estimated target $\hat{\rho}_{m,1}$ and whenever $\frac{N_{m,1}}{m}>\hat\rho_{m,1}$ it reduces the probability to select arm $1$ in the next round by setting $p_{m+1,1}=\alpha \hat\rho_{m,1}$.
+More precisely, it sets
+	\begin{equation*} \label{eq:erade}
+		p_{m+1,1} =
+		\begin{cases}
+			\alpha \hat{\rho}_{m,1}, & \text{if } N_{m,1}/m > \hat{\rho}_m, \\[6pt]
+			\hat{\rho}_{m,1}, & \text{if } N_{m,1}/m = \hat{\rho}_m, \\[6pt]
+			1 - \alpha(1 - \hat{\rho}_{m,1}), & \text{if } N_{m,1}/m < \hat{\rho}_m,
+		\end{cases}
+	\end{equation*}
+and $p_{m+1,2}=1-p_{m+1,1}$. Hence, the philosophy of ERADE is to use for $p_{m+1}$ a rebalanced version of the allocation vector $\hat{\rho}_m$ that reduces the probability to select an arm that has already be selected more than its current target estimate. This idea can in fact be generalized to more than $2$ arms, leading to our proposed $\alpha$RTS family.
+
+
+
+\begin{definition} Let $K\geq 2$ and $\alpha\in[0,1)$. A design is an $\alpha$-Rebalancing Targeting Strategy ($\alpha$RTS) if it a RAR procedure whose allocation probabilities $p_{m+1}=(p_{m+1,1},\dots,p_{m+1,K}) \in \Delta_K$ satisfy the following: for all $m \geq Km_0$,
+	\begin{align}
+		&\forall k \in [K], \  \left(\frac{N_{m,k}}{m}>\hat\rho_{m,k}\quad \Longrightarrow\quad p_{m+1,k}\le \alpha\,\hat\rho_{m,k}\right) \label{eq:throttle}
+		% &\sum_{k=1}^K p_{m+1,k}=1\;.\label{eq:simplex}
+	\end{align}
+\end{definition}
+\begin{remark}
+	The parameter $m_0$ (sometimes called burn-in in a clinical trial context) is the number of initial samples from each arm that may be taken before starting adaptive randomization. It is included for practical purposes only and doesn't influence the proofs. We can safely take $m_0 = 0$ if $\theta_0$, the regularization parameter of the estimator, is chosen in an appropriate way.
+\end{remark}
+We now present a few examples of $\alpha$RTS with $K > 2$ arms. $\alpha$RTS imposes how the probability of over-sampled arms has to decrease (as in \eqref{eq:throttle}), but gives some flexibility in how to correspondingly increase the probability of some under-sampled arms. We first propose a design that increases these probabilities in proportion to their distance to the target.
+
+\begin{example}[Distance Based Allocation]
+	Given $\alpha \in [0,1)$, for all $m\geq Km_0$, for all $k \in [K]$,
+	\begin{equation*}\label{eq:example}
+		p_{m+1,k} \;=\; \alpha \hat{\rho}_{m,k} \;+\; (1-\alpha)\,
+		\frac{\delta_{m,k}}{\sum_{i=1}^K \delta_{m,i}},
+		\ \text{ where } \
+		\delta_{m,k} \;=\; \max\!\left(0,\ \hat{\rho}_{m,k} - \frac{N_{m,k}}{m}\right)\;.
+	\end{equation*}
+	If for all $j$, $\delta_{m,j}=0$, then for every $j \in \{1,\ldots,K\}$, we choose \(p_{m+1,j} \;=\; \hat{\rho}_{m,j}.\) We use a distance-based design to ensure that arms that deviates the most from their target allocation are corrected more aggressively.
+\end{example}
+
+
+\smallskip
+
+Instead of relying on the distance to the target, an independent work by \citep{alkhnefr2025efficient} proposed an extension of ERADE to $K>2$ that boosts the probability of under-sampled arms by adding the same quantity to all of them.
+
+\begin{example}[ERADE 2025 \citep{alkhnefr2025efficient}]
+	Given $\alpha \in [0,1)$\footnote{The paper actually set $\alpha \in (0,1)$ but there is no need for that}, for all $m\geq Km_0$, $k \in [K]$,
+	%	To start, allocate $K \times m_0$ patients to $K$ treatments via restricted randomization. Consider that $m$ ($m \ge K m_0$) patients have been assigned, and their responses are observed.
+	%	We compute $\widehat{\Theta}_m$ and $\hat{\rho}_m = \rho(\widehat{\Theta}_m)$ based on previous $m$ patients’ responses and treatment assignments.
+	
+	%	The probability of assigning the $(m+1)$th patient to treatment $k \in \{1,2,\ldots,K\}$ is given by:
+	\[
+	p_{m+1,k} =
+	\begin{cases}
+		\alpha \hat{\rho}_{m,k} &
+		\text{ if } \ \dfrac{N_{m,k}}{m} > \hat{\rho}_{m,k}, \\[6pt]
+		\hat{\rho}_{m,k} &
+		\text{ if } \ \dfrac{N_{m,k}}{m} = \hat{\rho}_{m,k}, \\[6pt]
+		\hat{\rho}_{m,k} + (1-\alpha)\displaystyle\frac{\sum_{j \in S}\hat{\rho}_{m,j}}{|T|} &
+		\text{ if } \ \dfrac{N_{m,k}}{m} < \hat{\rho}_{m,k}.
+	\end{cases}
+	\]
+	where $S = \left\{ j \; \middle| \; \dfrac{N_{m,j}}{m} > \rho_{m,j} \right\}$ is the set of over-sampled arms,  $T = \left\{ j \; \middle| \; \dfrac{N_{m,j}}{m} < \rho_{m,j} \right\}$ is the set of under-sampled arms and $|T|$ denotes the cardinal of set $T$.
+\end{example}
+
+\smallskip
+
+While \citet{alkhnefr2025efficient} proposed a specific extension of ERADE to $K>2$ arms, our $\alpha$RTS family provides more flexibility in how the sampling budget can be re-allocated to under-sampled arms. This flexibility also reveals an interesting connection with the
+	multi-armed bandit literature. Indeed, by concentrating the rebalancing
+	effort on a single under-sampled arm, one obtains a family of targeting
+	rules that contains the D-Tracking sampling rule of \cite{garivier2016optimal} as a particular case.
+	
+	\begin{example}[Interpolated D-Tracking]
+		Inspired by the D-Tracking rule of \cite{garivier2016optimal}, we define for a parameter $\alpha \geq 0$ the \textit{Interpolated D-tracking} rule by
+		\begin{equation}\label{eq:alpha-d-tracking}
+			p_{m+1,k}
+			=
+			\alpha \hat \rho_{m,k}
+			+
+			(1-\alpha)\mathbf 1_{\{k=k^\star\}},
+		\end{equation}
+		where \(k^\star
+		=
+		\arg\max_{a\in[K]}
+		\left\{
+		m\hat \rho_{m,a}-N_{m,a}
+		\right\}
+		\). The quantity $m\hat \rho_{m,a}-N_{m,a}$ measures the deficit of arm $a$
+		relative to its target allocation. Hence, $k^\star$ is the arm whose
+		current number of draws is furthest below its prescribed proportion.
+		
+		For all $\alpha$, we can easily verify that this design belongs to the $\alpha$RTS family. It clearly satisfies $\sum_{k=1}^{K} p_{m+1,k}=1$. Then, for any arm $k$ that is over-sampled, i.e. for which $N_{m,k}/m > \hat \rho_{m,k}$, we have $m\hat \rho_{m,k}-N_{m,k} < 0$, which implies that $k\neq k^\star$ and \(p_{m+1,k}
+		=
+		\alpha \hat \rho_{m,k}\).
+		
+		
+		In the special case where $\alpha=0$, \eqref{eq:alpha-d-tracking} reduces to \(p_{m+1,k}
+		=
+		\mathbf 1_{\{k=k^\star\}},\)
+		which coincides with the original D-tracking rule of
+		\citet{garivier2016optimal} without including its forced exploration component (which will be discussed again in Section~\ref{sec:alpha-rts-fe}).
+\end{example}
+
+\section{Asymptotic analysis of $\alpha$RTS} \label{sec:proof_vanilla}
+
+We now present our theoretical guarantees for $\alpha$RTS.
+
+\subsection{Main Asymptotic Results}
+
+In this section, we establish that any design belonging to the $\alpha$RTS family satisfies certain asymptotic properties under mild regularity conditions. More precisely, we show that the allocation proportions converge almost surely to the target allocation, while the parameter estimators and plug-in targets converge at explicit rates. We further characterize the asymptotic fluctuations of both the estimators and the allocation proportions through central limit theorems, and we prove that the resulting allocation proportions achieve the asymptotic efficiency lower bound.
+
+Our analysis relies on two assumptions: one on the response distributions (Condition \hyperlink{CA}{\textbf{A}}) and one on the target allocation (Condition \hyperlink{CB}{\textbf{B}}). The latter explicitly excludes sparse targets, i.e. target allocations for which $\rho_k(z)=0$ for some coordinate $k$, for any value value $z$ that is a candidate estimated value for the parameter $\Theta$ under any allocation strategy.
+
+\begin{description}
+	\item[\hypertarget{CA}{\textbf{Condition A}}] For treatment \(k \in [K]\) the corresponding response \(\xi_{1,k}\) satisfies  $
+	E|\xi_{1,k}|^{2} < \infty $. \\
+	
+	\item[\hypertarget{CB}{\textbf{Condition B}}] The target function $\rho$ and the regularization parameter $\theta_0$ of the estimator satisfy the following. Let $I_k = \{\theta_k\} \bigcup V_k$ where $V_k$ is the set of all possible values that can be observed for the estimator $\hat\theta_{n,k}$, for all $n$ and all realizations of the responses $\{\xi_{j,k}\}$. The domain $\mathcal{H} \subseteq \mathbb{R}^K$ of the target function is open and contains $I_1\times \dots \times I_K$. Moreover:
+	\begin{itemize}
+		\item \(\rho\) is twice differentiable on $\mathcal{H}$,
+		\item for all $z \in I_1\times \dots \times I_k$, \ \(\rho(z) \in (0,1)^K\).
+	\end{itemize}
+\end{description}
+
+In the following we present asymptotic results that are valid for any design belonging to the \(\alpha\)RTS family for \(\alpha \in [0,1)\). We first establish the fundamental convergence properties of the procedure. We show that the allocation proportions converge to the target allocation almost surely, while the parameter estimators and plug-in target estimator converge at explicit rates.
+
+\begin{theorem}[Strong consistency and rates]\label{thm:LLN}
+	Under conditions \hyperlink{CA}{\textbf{A}}--\hyperlink{CB}{\textbf{B}}, for \(n \to \infty\),
+	\[
+	\frac{N_{n,k}}{n}\xrightarrow{\text{a.s.}}v_k,\qquad
+	\hat\Theta_n-\Theta = O\!\Big(\sqrt{\frac{\log\log n}{n}}\Big)\text{ a.s.},\qquad
+	n(\hat\rho_n-v)=O\!\big(\sqrt{n\log\log n}\big)\text{ a.s.}
+	\]
+\end{theorem}
+
+%\begin{proposition}[Deviation bounds]\label{prop:deviation}
+%	For each $k$,
+%	\[
+%	|N_{n,k}-n\hat\rho_{n,k}|=o_p(\sqrt n),\quad
+%	|N_{n,k}-n\hat\rho_{n,k}|=O\!\big(\sqrt{n\log\log n}\big)\text{ a.s.},\quad
+%	N_{n,k}-nv_k=O\!\big(\sqrt{n\log\log n}\big)\text{ a.s.}.
+%	\]
+%\end{proposition}
+%
+%\begin{theorem}[Joint CLT for proportions and plug-in target]\label{thm:jointCLT}
+%	Let $G=\nabla\rho(\Theta)$ and $V=\mathrm{diag}(V_1/v_1,\dots,V_K/v_K)$ with $V_k=\mathbb{V}ar(\xi_{1,k})$.
+%	Then under conditions \hyperlink{CA}{\textbf{A}}--\hyperlink{CB}{\textbf{B}}, for any design in $\mathcal{G}$ 
+%	\[
+%	\sqrt{n}
+%	\begin{pmatrix}
+%		N_n/n - v\\[2mm]
+%		\hat\rho_n - v
+%	\end{pmatrix}
+%	\ \Rightarrow\
+%	\mathcal N(0,\Omega),
+%	\qquad 
+%	\Omega=\begin{pmatrix}
+%		GVG^\top & GVG^\top\\
+%		GVG^\top & GVG^\top
+%	\end{pmatrix}.
+%	\]
+%\end{theorem}
+
+
+%\(V = diag(I(\theta))\), \( G = \nabla (\rho)\big|_{\Theta} \) and \(\quad
+%\Omega = 
+%\begin{pmatrix}
+%	GVG^{\top } & GVG^{\top } \\
+%	GVG^{\top } & GVG^{\top }
+%\end{pmatrix}\)
+
+We now refine these results by characterizing the fluctuations around the limit. The following theorem establishes asymptotic normality for both the estimators and the allocation proportions, as well as their joint distribution.
+
+\begin{theorem}\label{thm:normality-gen-erade}
+	We introduce the following notation
+	\begin{itemize}
+		\item \(G := \nabla (\rho)\big|_{\Theta}\) denotes the gradient of the target allocation $\rho$ with respect to $\Theta$
+		\item \(V_k := \mathbb{V}ar[\xi_{1,k}]\)  is the variance for treatment \(k\) response
+		\item \(V := diag\left(\frac{1}{v_1}V_1, \dots, \frac{1}{v_K}V_K\right)\) is a diagonal matrix collecting the scaled variances
+		\item \(\Omega := 
+		\begin{pmatrix}
+			GVG^{\top } & GVG^{\top } \\
+			GVG^{\top } & GVG^{\top }
+		\end{pmatrix}\) is a block matrix built from \(GVG^{\top }\)
+	\end{itemize}
+	Under conditions \hyperlink{CA}{\textbf{A}}--\hyperlink{CB}{\textbf{B}}, we have as \(n \to \infty\)
+	
+	\begin{enumerate}[label=(\roman*)]
+		\item  For every \(k \in [K]\),
+		\begin{align}
+			|N_{n,k} - n\hat{\rho}_{n,k}| &= o_P(\sqrt{n})\label{eq:thm-res-1}\\
+			|N_{n,k} - n\hat{\rho}_{n,k}| &= O(\sqrt{n \log\log n})\quad a.s.\label{eq:thm-res-2}\\
+			N_{n,k}-n v_k&=O(\sqrt{n\log\log n})\quad a.s.\label{eq:thm-res-3}
+		\end{align}
+		\item The asymptotic normality results:
+		\begin{align}\label{eq:thm-res-4}
+			\sqrt{n}(\hat{\Theta}_n - \Theta) &\xrightarrow{\mathcal{D}} N(0,V),\\
+			\label{eq:thm-res-5}
+			\begin{pmatrix}
+				\sqrt{n} \left( \frac{N_n}{n} - v \right)\\
+				\sqrt{n} (\hat{\rho}_n - v)
+			\end{pmatrix}
+			&\xrightarrow{\mathcal{D}} \mathcal{N}(0,\Omega).
+		\end{align}		
+	\end{enumerate}
+\end{theorem}
+
+
+\begin{remark}[asymptotic efficiency] A direct consequence of Theorem~\ref{thm:normality-gen-erade} is that the empirical allocation proportion $N_n/n$ is an asymptotically efficient estimator of the target $v$, at least when the arms distribution belong to an exponential family. Indeed, under this assumption, Theorem 1 of \cite{hu2006asymptotically} provides a lower bound on the asymptotic variance of $N_n/n$ as an estimator of $v$ under any RAR procedure, that is
+\[G\,I(\Theta)^{-1}\,G^{\top }\]
+where  \(I(\Theta) = \mathrm{diag}\left(v_1 I_1(\theta_1), \dots, v_K I_K(\theta_K)\right)\) and \(I_k(\theta_k)\) is the Fisher information for a single observation from treatment \(k \in [K]\). The condition $\mathbb{V}ar(\xi_{1,k}) = I_k(\theta_k)^{-1}$ is naturally satisfied for regular one-parameter exponential families when the parameter of interest $\theta_k$ is the mean parameter (see Proposition~\ref{prop:exp-fam} in Appendix~\ref{appnC}). Hence the minimal asymptotic variance is equal to $GVG^{\top}$, which is the asymptotic variance under any $\alpha$RTS design when conditions \hyperlink{CA}{\textbf{A}}--\hyperlink{CB}{\textbf{B}} are satisfied.
+\end{remark}
+
+%
+%
+% As a direct consequence of the preceding results, we obtain the asymptotic efficiency of the allocation proportions, when the arms distribution belong to an exponential family. In words, asymptotic efficiency means that the allocation proportions achieve the smallest possible asymptotic variance among all designs satisfying the same conditions. This is of interest because it ensures that no alternative procedure can yield more precise allocation proportions in large samples.
+%
+% \revision{\begin{corollary}[Asymptotic efficiency]\label{thm:efficiency}
+% 		Under conditions \hyperlink{CA}{\textbf{A}}--\hyperlink{CB}{\textbf{B}}, if the treatment responses belong to
+% 		one-parameter exponential families parameterized by their means, then the asymptotic variance of \(\frac{N_n}{\sqrt{n}}\) reaches the lower bound specified by \cite{hu2006asymptotically} as
+% 		\begin{equation*}
+% 			G\,I(\Theta)^{-1}\,G^{\top }
+% 		\end{equation*}
+% 		where \(I(\Theta) = diag\left(v_1 I_1(\theta_1), \dots, v_K I_K(\theta_K)\right)\) and \(I_k(\theta_k)\) is the fisher information for a single observation on treatment \(k \in [K]\).
+% 	\end{corollary}
+%
+% 	\begin{remark}
+% 		The condition $\mathbb{V}ar(\xi_{1,k}) = I_k(\theta_k)^{-1}$ is naturally satisfied for regular one-parameter exponential families when the parameter of interest $\theta_k$ is the mean parameter (see Proposition~\ref{prop:exp-fam} in Appendix~\ref{appnC}).
+%
+% 		This setting encompasses many standard models used in practice, including the normal distribution with known variance, the Poisson, exponential, and Bernoulli distributions. More broadly, exponential families cover a large majority of classical parametric models encountered in statistics and applications.
+% 	\end{remark}
+% }
+
+
+Theorem~\ref{thm:normality-gen-erade} allows to perform asymptotic inference based on the data collected adaptively with our RAR procedures. Indeed, CLTs for both the estimated parameters and the proportions permit to give the asymptotic distributions of some test statistics that are transformations of these quantities (using the Delta method). In a two-armed case we are typically interested in the asymptotic calibration of a Wald test for testing the equality of two treatments. In Section~\ref{sec:simulation} we provide another example of calibration of an homogeneity test with 3 arms, see Lemma~\ref{lem:pearson}.
+

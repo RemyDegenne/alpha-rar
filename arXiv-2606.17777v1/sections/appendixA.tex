@@ -1,0 +1,483 @@
+
+We fix a design that belongs to the \(\alpha\)RTS family for some \(0\leq\alpha <1\) and introduce the following notation for \(k \in [K]\):
+\begin{itemize}
+	\item $p_{m,k} = \mathbb{E}[X_{m,k} \mid \mathcal{F}_{m-1}]$	
+	\item $\Delta M_{m,k} = X_{m,k} - \mathbb{E}[X_{m,k} \mid \mathcal{F}_{m-1}] = X_{m,k} - p_{m,k}$
+	\item $Q_{n,k} = \sum_{m=1}^{n}X_{m,k}(\xi_{m,k} - \theta_{k})$ and denote \(\mathbf{Q_n} := (\mathbf{Q_{n,1}}, \dots, \mathbf{Q_{n,K}})\)	
+\end{itemize}
+and
+	\[U_{n,k} = \sum_{m=1}^{n-1} \alpha \hat{\rho}_{m,k} + M_{n,k} - n \hat{\rho}_{n,k}\;.\]
+We define the last hitting time $\ell_{n,k}$ as
+\begin{equation}\label{eq:stopping-time-def}
+	\ell_{n,k} := \max \left\{\, m \leq n ; \, \frac{N_{m,k}}{m} \leq \hat{\rho}_{m,k}  \;.\right\}
+\end{equation}
+We first prove a key lemma that is central to establish our main theorems.
+
+\begin{lemma}\label{lem:preliminary}
+	For any \(k \in [K]\) we have the following results:
+	\begin{enumerate}[label=(\roman*)]
+		\item \(\left(\ell_{n,k}\right)_{n \geq 1}\) is a non-decreasing sequence and \(\forall n \in \mathbb{N}: \,\ell_{n,k} \leq n\)
+		\item for all $k\in [K]$, $n \in \mathbb{N}$,\begin{equation}\label{eq:prelim-4}
+			N_{n,k} - n\hat{\rho}_{n,k} \leq 1+N_{\ell_{n,k},k} - \ell_{n,k} \hat{\rho}_{\ell_{n,k},k} + U_{n,k} - U_{\ell_{n,k},k}	
+		\end{equation}
+		\item for all $k\in [K]$, $n \in \mathbb{N}$,
+		\begin{equation}\label{eq:condition}
+			N_{\ell_{n,k},k} - \ell_{n,k} \hat{\rho}_{\ell_{n,k},k} \leq o(\sqrt{n}), \ a.s.
+			\quad 
+		\end{equation}
+	\end{enumerate}
+\end{lemma}
+\begin{proof}
+	\begin{enumerate}[label=(\roman*)]
+		\item Obvious from definition \eqref{eq:stopping-time-def}.
+		\item By definition of \(U_{n,k}\) we have \(\Delta U_{m,k} = \alpha \hat{\rho}_{m-1,k} - p_{m,k} 
+		+ \Delta \Big( N_{m,k} - m \hat{\rho}_{m,k} \Big)\).
+%		\begin{align*}
+%						
+%		\end{align*}
+		Then 
+		\begin{align*}
+			U_{n,k} - U_{\ell_{n,k},k}
+			&= \sum_{m=\ell_{n,k}+1}^n \Big( \alpha \hat{\rho}_{m-1,k} - p_{m,k} \Big)
+			+ N_{n,k} - n \hat{\rho}_{n,k}
+			- \Big( N_{\ell_{n,k},k} - \ell_{n,k} \hat{\rho}_{\ell_{n,k},k} \Big)
+		\end{align*}
+		So 
+		\begin{align*}
+			N_{n,k} - n \hat{\rho}_{n,k}
+			&= N_{\ell_{n,k},k} - \ell_{n,k} \hat{\rho}_{\ell_{n,k},k}
+			+ p_{\ell_{n,k}+1,k} - \alpha \hat{\rho}_{\ell_{n,k},k} \\&\,\,+ \sum_{m=\ell_{n,k}+2}^n \underbrace{\Big( p_{m,k} - \alpha \hat{\rho}_{m-1,k} \Big)}_{\leq 0 \quad}
+			+ U_{n,k} - U_{\ell_{n,k}, k}\\					
+			&\leq p_{\ell_{n,k}+1,k} + N_{\ell_{n,k},k} - \ell_{n,k} \hat{\rho}_{\ell_{n,k},k}
+			+ U_{n,k} - U_{\ell_{n,k}, k}
+		\end{align*}
+		So we conclude 	
+		\[N_{n,k} - n\hat{\rho}_{n,k} \leq 1 + N_{\ell_{n,k},k} - \ell_{n,k} \hat{\rho}_{\ell_{n,k},k} + U_{n,k} - U_{\ell_{n,k},k}\;.\]
+		
+		\item It is easy to check that if $\ell_{n,k} < K m_0+1$ then \(N_{\ell_{n,k},k} - \ell_{n,k} \hat{\rho}_{\ell_{n,k},k} \leq K m_0\),
+		and if \(\ell_{n,k} \geq Km_0 + 1\) then \(N_{\ell_{n,k},k} - \ell_{n,k} \hat{\rho}_{\ell_{n,k},k} \leq 0\).
+		So by combining the two inequalities we obtain that \(N_{\ell_{n,k},k} - \ell_{n,k} \hat{\rho}_{\ell_{n,k},k} \leq K m_0 = o(\sqrt{n})\)\;.
+	\end{enumerate}
+\end{proof}
+
+\subsection{Proof of Theorem \ref{thm:LLN}}\label{proof:thm1}
+
+We now explain how Lemma~\ref{lem:preliminary} leads to Theorem~\ref{thm:LLN}.
+
+\begin{proof}[Proof of Theorem \ref{thm:LLN}]	
+The first step of the proof, as in the work of \cite{hu2004asymptotic}, is to establish that $\hat{\rho}_{n}$ has a finite (non-sparse) limit.
+	
+	For \(k \in [K]\), if \(N_{n,k} \to +\infty\), then using  Condition \hyperlink{CA}{\textbf{A}} and the law of large numbers % \cite{Doob1936}
+	we get \(\hat\theta_{n,k} \to \theta_k\). Otherwise if \(\sup_{n \geq 1}N_{n,k} < +\infty\) then \(\left(\hat\theta_{n,k}\right)_{n \geq 1}\) takes finite values and also has a limit, that belong to $V_k$ (which is defined in our statement of Condition  \hyperlink{CB}{\textbf{B}}). Hence $\hat\theta_{n}$ converges to some element $z$ in $I_1\times \dots \times I_K$.  By continuity of $\rho$ and from Condition \hyperlink{CB}{\textbf{B}} we obtain
+	\begin{equation}\label{eq:conv-rho}
+		\exists u \in (0,1)^K: \quad \hat{\rho}_n \to u:= \rho(z)\;.
+	\end{equation}
+	
+	As \(M_n\) is a martingale, we have by LLN for martingales (see \cite{Chow1967}) that $M_{n,k} = o(n)$ a.s. so
+	\begin{align*}
+		\frac{U_{n,k}}{n} &= \frac{1}{n} \sum_{m=0}^{n-1} \alpha \hat{\rho}_{m,k} - \hat{\rho}_{n,k} + o(1) \\
+		\implies \lim_{n \to \infty} \frac{U_{n,k}}{n} &= - (1 - \alpha) u_k \quad a.s. \quad\text{; combining \eqref{eq:conv-rho} and the Cesaro lemma}
+	\end{align*}
+	%	Using the Lemma \ref{lem:convergence} and condition \hyperlink{CC}{\textbf{C}} we obtain that:
+	Using Lemma \ref{lem:convergence} and Inequality \eqref{eq:condition} from Lemma \ref{lem:preliminary} we obtain that
+	\[
+	\left(\frac{1}{n}+\frac{N_{\ell_{n,k},k} - \ell_{n,k} \hat{\rho}_{\ell_{n,k},k}}{n} + \frac{U_{n,k} - U_{\ell_{n,k},k}}{n} \right)^+ \to 0 \quad a.s.
+	\]
+	So by injecting the previous result in Inequality \eqref{eq:prelim-4} from Lemma \ref{lem:preliminary}, we obtain
+	\[
+	\forall k \in [K]: \, \left(\frac{N_{n,k}}{n} - \hat{\rho}_{n,k}\right)^+ \to 0 \quad a.s.
+	\]
+	and we have
+	\begin{align*}
+		\left(\hat{\rho}_{n,k} - \frac{N_{n,k}}{n}\right)^+ &= \left(1 - \frac{N_{n,k}}{n} - (1 - \hat{\rho}_{n,k})\right)^+ \\
+		&= \left(\sum_{j=1; j \neq k}^K \frac{N_{n,j}}{n} - \hat{\rho}_{n,j}\right)^+ \\
+		&\leq \sum_{j=1; j \neq k}^K \left(\frac{N_{n,j}}{n} - \hat{\rho}_{n,j}\right)^+  \to 0
+	\end{align*}
+	
+	So we obtain that \(\frac{N_{n,k}}{n} - \hat{\rho}_{n,k} \to 0\),  and then \(\lim_{n \to \infty} \frac{N_{n,k}}{n} = \lim\limits_{n \to \infty} \hat{\rho}_{n,k} = u_k \in (0,1)\)
+	
+	A straightforward consequence is that $\forall k \in [K], N_{n,k} \to \infty$ a.s., hence $\hat{\Theta}_n \to \Theta$ and by continuity of \(\rho\) we obtain that \(\hat{\rho}_n = \rho(\hat{\Theta}_n) \to \rho(\Theta) = v \in (0,1)^K\), hence
+	\[
+	\lim_{n \to \infty} \frac{N_{n,k}}{n} = \lim_{n \to \infty} \hat{\rho}_{n,k} = v_k
+	\]
+	Using further Lemma A.4 \cite{hu2004asymptotic} and the Law of Iterated Logarithm we get
+	\[
+	\hat{\Theta}_n - \Theta = O\left(\sqrt{\frac{\log\!\log n}{n}}\right) \quad \text{a.s.}
+	\]
+	
+	In addition, the second order Taylor expansion of \(\rho\)  gives that
+	\begin{align*}
+		\hat{\rho}_n - v  &= (\hat{\Theta}_n-\Theta)\frac{\partial \rho}{\partial y}\Big|_{\Theta} + O(\|\hat{\Theta}_n-\Theta\|^2) \\
+		&= O\left(\sqrt{\frac{\log\!\log n}{n}}\right) \quad \text{a.s.}
+	\end{align*}
+	
+\end{proof}
+
+\subsection{Proof of Theorem~\ref{thm:normality-gen-erade}}\label{proof:thm2}To prove Theorem~\ref{thm:normality-gen-erade}, we need a more precise characterization of the behavior of $U_{n,k} - U_{\ell_{n,k},n}$, established in a series of lemma. We observe that the proofs of these lemmas only use the conclusions of Lemma~\ref{lem:preliminary}.
+
+\begin{lemma}\label{lem:diff-U-approx}
+	Let $(\ell_n)_{n \geq 1}$ a positive increasing sequence such that $\forall n \in \mathbb{N}: \ell_n \leq n$. Under conditions \hyperlink{CA}{\textbf{A}} and \hyperlink{CB}{\textbf{B}} we have the following
+	\begin{enumerate}[label=(\roman*)]
+		\item For all \(k \in [K]\) 
+		\begin{equation}\label{eq:prelim-2}
+			U_{n,k} - U_{\ell_{n},k} = (n - \ell_{n})[-(1 - \alpha)v_k + o(1)] + M_{n,k} - M_{\ell_{n},k} + \ell_{n} (\hat{\rho}_{\ell_{n},k} - \hat{\rho}_{n,k})
+		\end{equation}
+		\item There exists a constant \(C \geq 0\) such that
+		\begin{equation}\label{eq:prelim-22}
+			|\ell_n(\hat{\rho}_n - \hat{\rho}_{\ell_n})| \le o(1)(n-\ell_n) + C\|Q_n - Q_{\ell_n}\|  + o_p(\sqrt{n})
+		\end{equation}		
+	\end{enumerate}
+\end{lemma}
+\begin{proof}
+	\begin{enumerate}[label=(\roman*)]
+		\item \begin{align*}
+			&U_{n,k} - U_{\ell_{n},k} = \sum_{m=\ell_{n}}^{n-1} \alpha \hat{\rho}_{m,k} - n \hat{\rho}_{n,k} + \ell_{n} \hat{\rho}_{\ell_{n},k} + M_{n,k} - M_{\ell_{n,k},k} \\
+			=& \sum_{m=\ell_{n}}^{n-1} \alpha (\hat{\rho}_{m,k} - v_k) + \alpha(n - \ell_{n}) v_k - (n - \ell_{n}) \hat{\rho}_{n,k} + \ell_{n} (\hat{\rho}_{\ell_{n},k} - \hat{\rho}_{n,k}) \\ 
+			&\quad + M_{n,k} - M_{\ell_{n},k} \\
+			=& -(1 - \alpha)(n - \ell_{n}) v_k + \sum_{m=\ell_{n}}^{n-1} \alpha (\hat{\rho}_{m,k} - v_k) - (n - \ell_{n})(\hat{\rho}_{n,k} - v_k) + M_{n,k} - M_{\ell_{n},k} \\
+			&\quad + \ell_{n} (\hat{\rho}_{\ell_{n},k} - \hat{\rho}_{n,k}) \\ 
+			=& (n-\ell_{n})\left[-(1 - \alpha)v_k - (\hat{\rho}_{n,k} - v_k) + \frac{\alpha}{n - \ell_{n}}\sum_{m=\ell_{n}}^{n-1} (\hat{\rho}_{m,k} - v_k)\right]+ M_{n,k} - M_{\ell_{n},k} \\
+			&\quad + \ell_{n} (\hat{\rho}_{\ell_{n},k} - \hat{\rho}_{n,k}) \\
+		\end{align*}
+		Theorem \ref{thm:LLN} applies here and gives that \(\lim_{n \to +\infty} \hat{\rho}_n = v\). If \(\left(\ell_{n}\right)_{n \geq 1}\) is bounded then it is stationary, so the Cesaro yields \(\frac{1}{n - \ell_{n}}\sum_{m=\ell_{n}}^{n-1} (\hat{\rho}_{m,k} - v_k) = o(1)\). Otherwise if \(\ell_{n} \to +\infty\), we have
+		\begin{align*}
+			\frac{1}{n - \ell_{n}}\left|\sum_{m=\ell_{n}}^{n-1} \hat{\rho}_{m,k} - v_k\right| &\leq \frac{1}{n - \ell_{n}}\sum_{m=\ell_{n}}^{n-1} |\hat{\rho}_{m,k} - v_k| \\
+			&\leq \sup_{\ell_{n} \leq m \leq n}|\hat{\rho}_{m,k} - v_k| \to 0\;.
+		\end{align*}		
+		In both cases we obtain
+		\begin{equation*}
+			U_{n,k} - U_{\ell_{n},k} = (n - \ell_{n})[-(1 - \alpha)v_k + o(1)] + M_{n,k} - M_{\ell_{n},k} + \ell_{n} (\hat{\rho}_{\ell_{n},k} - \hat{\rho}_{n,k})
+		\end{equation*}
+		\item 
+		Let \( D_{n,k} := \sum_{j=1}^{n} X_{j,k}(\xi_{j,k}-\theta_k) \), then using Lemma \ref{lem:chebychev-mart} we have for \( M>0 \)		
+		\begin{align*}
+			\sup_{n\geq 1} \mathbb{P}(D_{n,k} > M\sqrt{n})
+			&\leq \sup_{n\geq 1}
+			\mathbb{P}\!\left(\max_{1\leq i\leq n} D_{i,k} \geq M\sqrt{n}\right) \\
+			&\leq \sup_{n\geq 1}
+			\frac{\mathbb{V}ar\left[D_{n,k}\right]}
+			{\mathbb{V}ar\left[D_{n,k}\right] + M^2 n} \\
+			&\leq
+			\frac{\mathbb{V}ar[\xi_{1,k}]}
+			{\mathbb{V}ar[\xi_{1,k}] + M^2}.
+		\end{align*}
+		
+		It follows that \( D_{n,k} = O_p(\sqrt{n}) \). Moreover, we have \(\frac{\sqrt{n}}{N_{n,k}}  =\frac{1}{\sqrt{n}}\frac{n}{N_{n,k}} = \frac{1}{\sqrt{n}} O_p(1) = O_p\left(\frac{1}{\sqrt{n}}\right)\) and \(N_{n,k}^{-1/2} = \frac{1}{\sqrt{n}}\sqrt{n}N_{n,k}^{-1/2} = O_p\left(\frac{1}{\sqrt{n}}\right)\). Using the Bahadur representation of the estimator in \eqref{eq:bahadur-estimator} we obtain
+			\begin{align*}
+				\hat{\theta}_{n,k} - \theta_k
+				&=
+				\frac{D_{n,k}}{N_{n,k}}
+				+ o_p\!\left(N_{n,k}^{-1/2}\right) \\
+				&=
+				O_p\!\left(\frac{\sqrt{n}}{N_{n,k}}\right)
+				+ o_p\!\left(N_{n,k}^{-1/2}\right) \\
+				&=
+				O_p\!\left(\frac{1}{\sqrt{n}}\right) + o_p\!\left(\frac{1}{\sqrt{n}}\right)\\
+				&=
+				O_p\!\left(\frac{1}{\sqrt{n}}\right).
+		\end{align*}
+		
+		So the second order Taylor expansion of \(\rho\) gives
+		\begin{align}
+			\hat{\rho}_n - v  &= (\hat{\Theta}_n-\Theta)\frac{\partial \rho}{\partial y}\Big|_{\Theta} + O(\|\hat{\Theta}_n-\Theta\|^2) \\
+			&= (\hat{\Theta}_n-\Theta)\frac{\partial \rho}{\partial y}\Big|_{\Theta} + O_p\left(\frac{1}{n}\right) \label{eq:approx-rho-Op}
+		\end{align}
+		Similarly we obtain \(		\hat{\rho}_{\ell_n} - v = (\hat{\Theta}_{\ell_n}-\Theta)\frac{\partial \rho}{\partial y}\Big|_{\Theta} + O_p\left(\frac{1}{\ell_n}\right)
+		\).	Combining the two previous equations gives
+		\begin{eqnarray*}
+			\ell_n(\hat{\rho}_{\ell_n}-\hat{\rho}_n) = \ell_n(\hat{\Theta}_{\ell_n}-\hat{\Theta}_n)\frac{\partial \rho}{\partial y}\Big|_{\Theta} + \left(O_p\left(\frac{\ell_n}{n}\right)+O_p(1)\right) \\
+			\implies |\ell_n(\hat{\rho}_{\ell_n}-\hat{\rho}_n)| \le C \ell_n \|\hat{\Theta}_{\ell_n}-\hat{\Theta}_n\| + O_p(1)
+		\end{eqnarray*}
+		And we have	
+		\begin{align*}
+			\hat{\theta}_{n,k}-\hat{\theta}_{\ell_n,k} &= \frac{1}{N_{n,k}}\sum_{j=1}^{n}X_{j,k}(\xi_{j,k}-\theta_k)-\frac{1}{N_{\ell_n,k}}\sum_{j=1}^{\ell_n}X_{j,k}(\xi_{j,k}-\theta_k)\\
+			&= \frac{1}{N_{n,k}}\sum_{j=\ell_n+1}^{n} X_{j,k}(\xi_{j,k}-\theta_k) + \left(\frac{1}{N_{n,k}} - \frac{1}{N_{\ell_n,k}}\right)\sum_{j=1}^{\ell_n}X_{j,k}(\xi_{j,k}-\theta_k)\\[8pt]
+			&= \frac{1}{N_{n,k}}\sum_{j=\ell_n+1}^{n}X_{j,k}(\xi_{j,k}-\theta_k) + \frac{N_{\ell_n,k}-N_{n,k}}{N_{n,k}}\cdot\frac{1}{N_{\ell_n,k}}\sum_{j=1}^{\ell_n}X_{j,k}(\xi_{j,k}-\theta_k)\\[8pt]
+			&\quad +\, o\left(N_{n,k}^{-1/2}\right) + o\left(N_{\ell_n,k}^{-1/2}\right)
+		\end{align*}
+		So
+		\begin{align*}
+			|\ell_n(\hat{\rho}_{\ell_n}-\hat{\rho}_n)| &\le C\sum_{k=1}^{K}\frac{\ell_n}{N_{n,k}}\left\|\sum_{j=\ell_n+1}^{n}X_{j,k}(\xi_{j,k}-\theta_k)\right\|\\
+			&\quad + C\sum_{k=1}^{K}\frac{\ell_n|N_{\ell_n,k}-N_{n,k}|}{N_{n,k}}\left\|\frac{1}{N_{\ell_n,k}}\sum_{j=1}^{\ell_n}X_{j,k}(\xi_{j,k}-\theta_k)\right\|\\
+			&\quad + \ell_n \cdot o\left(N_{n,k}^{-1/2}\right) + \ell_n \cdot o\left(N_{\ell_n,k}^{-1/2}\right)
+		\end{align*}
+		And for some two sequences $a_n$ and $b_n$ converging to $0$ as $n \to + \infty$
+		\begin{align*}
+			\ell_n\cdot o\left(N_{n,k}^{-1/2}\right)+\ell_n\cdot o\left(N_{\ell_n,k}^{-1/2}\right)
+			&= \ell_n\,N_{n,k}^{-1/2}a_n + \ell_n \,N_{\ell_n,k}^{-1/2}b_n\\
+			&= \sqrt{n}\left(\frac{\ell_n}{n}\left(\frac{N_{n,k}}{n}\right)^{-\frac{1}{2}}a_{n} + \sqrt{\frac{\ell_n}{n}}\left(\frac{N_{\ell_n,k}}{\ell_n}\right)^{-\frac{1}{2}}b_{n}\right)\\
+			&= o_p(\sqrt{n})
+		\end{align*}	
+		as \quad \(\lim\limits_{n\to+\infty} \frac{\ell_n}{n}\left(\frac{N_{n,k}}{n}\right)^{-1/2}a_n + \sqrt{\frac{\ell_n}{n}}\left(\frac{N_{\ell_n,k}}{\ell_n}\right)^{-1/2}b_n=0\)\;. Since \(\ell_n \le n\) and \(\frac{n}{N_{n,k}}\to v_k^{-1}\) we have
+		\begin{align*}
+			C\sum_{k=1}^{K}\frac{\ell_n}{N_{n,k}}\left\|\sum_{m=\ell_n+1}^{n}X_{m,k}(\xi_{m,k}-\theta_k)\right\|
+			&=C\sum_{k=1}^{K}\frac{\ell_n}{n}\frac{n}{N_{n,k}}\|Q_{n,k}-Q_{\ell_n,k}\|\\
+			&\le C\sum_{k=1}^{K}\|Q_{n,k}-Q_{\ell_n,k}\|\\
+			&= C\|Q_n-Q_{\ell_n}\|
+		\end{align*}	
+		On the second part of the inequality we use that \(N_{n,k} - N_{\ell_{n}, k} \leq n - \ell_n\):
+		\begin{align*}
+			&C\sum_{k=1}^{K}\frac{\ell_n|N_{\ell_n,k}-N_{n,k}|}{N_{n,k}}\left\|\frac{1}{N_{\ell_n,k}}\sum_{m=1}^{\ell_n}X_{m,k}(\xi_{m,k}-\theta_k)\right\|\\&= C\sum_{k=1}^{K}\frac{\ell_n|N_{\ell_n,k}-N_{n,k}|}{N_{\ell_n,k}N_{n,k}}\left\|\sum_{m=1}^{\ell_n}X_{m,k}(\xi_{m,k}-\theta_k)\right\|\\
+			& \leq C(n-\ell_n) \sum_{k=1}^{K}\frac{\ell_n}{N_{\ell_n,k}}\frac{n}{N_{n,k}} \left\|\frac{1}{n}\sum_{m=1}^{\ell_n}X_{m,k}(\xi_{m,k}-\theta_k)\right\|
+		\end{align*}
+		If \((\ell_{n})_{n\geq1}\) is bounded, then \(\frac{1}{n}\left\|\sum_{m=1}^{\ell_n}X_{m,k}(\xi_{m,k}-\theta_k)\right\| = o(1)\). Otherwise if \(\ell_n \to +\infty\) then we can use the argument of \cite{Doob1936} and conclude that
+		\[\frac{1}{\ell_n}\left\|\sum_{m=1}^{\ell_n}X_{m,k}(\xi_{m,k}-\theta_k)\right\| = o(1)\]
+		Combined with the fact that \(N_{n,k} \sim v_k.n\), we obtain that
+		\begin{align*}
+			\frac{\ell_n}{N_{\ell_n,k}}\frac{n}{N_{n,k}}\left\|\frac{1}{n}\sum_{m=1}^{\ell_n}X_{m,k}(\xi_{m,k}-\theta_k)\right\| = o(1)
+		\end{align*}
+		So
+		\begin{equation*}
+			C\sum_{k=1}^{K}\frac{\ell_n|N_{\ell_n,k}-N_{n,k}|}{N_{n,k}}\left\|\frac{1}{N_{\ell_n,k}}\sum_{m=1}^{\ell_n}X_{m,k}(\xi_{m,k}-\theta_k)\right\| \leq (n-\ell_n) o(1)
+		\end{equation*}
+		Combining the previous results we obtain
+		\[
+		|\ell_n(\hat{\rho}_n - \hat{\rho}_{\ell_n})| \le o(1)(n-\ell_n) + C\|Q_n - Q_{\ell_n}\| + o_p(\sqrt{n})
+		\]
+	\end{enumerate}
+\end{proof}
+
+\begin{lemma}\label{lem:U-ineq}
+	Under conditions \hyperlink{CA}{\textbf{A}}--\hyperlink{CB}{\textbf{B}} , we have for every \(k \in [K]\) as \(n \to +\infty\)	
+	\begin{align}
+		U_{n,k} - U_{\ell_{n,k},k} &\leq o_p(\sqrt{n})\label{eq:ineq-U-1}\\
+		U_{n,k} - U_{\ell_{n,k},k} &\leq O(\sqrt{n \log \log(n)}) \quad \text{a.s.}\label{eq:ineq-U-2}
+	\end{align}
+\end{lemma}	
+\begin{proof}
+	Let \((L_n)_{n \geq 1}\) a positive sequence such that $L_n \to \infty$ and $L_n = o(n)$. From Lemma \ref{lem:mart-1} we have
+	\begin{equation*}
+		\mathbb{E}\left[\max_{m \leq L_n} \|Q_n - Q_{n-m}\| \right] \leq 2\sqrt{L_n C_0}
+		\quad \text{and} \quad \mathbb{E}\left[\max_{L_n \leq m < n} \frac{\|Q_n - Q_{n-m}\|}{m} \right] \leq 3\sqrt{\frac{C_0}{L_n}}  
+	\end{equation*}
+	Applying Lemma \ref{lem:expectation-to-O} we obtain,
+	\begin{align*}
+		\max_{L_n \leq m < n} \frac{\|Q_m - Q_{n-m}\|}{m} &= O_p\left(\frac{1}{\sqrt{L_n}}\right) = o_p(1)\\ 
+		\max_{L_n \leq m < n} \|Q_m - Q_{n-m}\| &= O_p(\sqrt{L_n}) \leq o_p(\sqrt{n})
+	\end{align*}
+	From Lemma \ref{lem:mart-2}, we have that for all \(L < n\):
+	\begin{equation}\label{eq:ineq-proof-1}
+		\|Q_n - Q_{\ell_{n,k}}\| \leq (n - \ell_{n,k}) \max_{L \leq m < n} \frac{\|Q_n - Q_{n-m}\|}{m} + \max_{m < L} \|Q_n - Q_{n-m}\|
+	\end{equation}
+	So using \eqref{eq:ineq-proof-1}, and applying the same steps on the martingale \(\{M_n\}_{n \geq 1}\), we obtain
+	\begin{equation}\label{eq:ineq-M-U}
+		\|Q_n - Q_{\ell_{n,k}}\| \leq o_p(1)(n - \ell_{n,k}) + o_p(\sqrt{n}), \quad |M_{n,k} - M_{\ell_{n,k},k}| \leq o_p(1)(n - \ell_{n,k}) + o_p(\sqrt{n})
+	\end{equation}	
+	From inequality \eqref{eq:prelim-22} of Lemma \ref{lem:diff-U-approx} and \eqref{eq:ineq-M-U}
+	\begin{align}
+		|\ell_{n,k} (\hat{\rho}_{\ell_{n,k},k} - \hat{\rho}_{n,k})| &\leq o(1)(n - \ell_{n,k}) + C \|Q_n - Q_{\ell_{n,k}}\| + o_p(\sqrt{n})\notag\\
+		&\leq o_p(1)(n - \ell_{n,k}) + o_p(\sqrt{n})\label{eq:ineq_ell}
+	\end{align}
+	As \(\left(\ell_{n,k}\right)_{n \geq 0}\) is a non-decreasing sequence of positive integers, and that \(\ell_{n,k} \leq n\), we can apply \eqref{eq:prelim-2} of Lemma \ref{lem:diff-U-approx} and we get
+	\begin{align*}
+		U_{n,k} - U_{\ell_{n,k},k} &= (n - \ell_{n,k})[-(1 - \alpha)v_k + o(1)] + M_{n,k} - M_{\ell_{n,k},k} + \ell_{n,k} (\hat{\rho}_{\ell_{n,k},k} - \hat{\rho}_{n,k})\\
+		&\leq (n - \ell_{n,k})[-(1 - \alpha)v_k + o(1)] + |M_{n,k} - M_{\ell_{n,k},k}| + \ell_{n,k} |\hat{\rho}_{\ell_{n,k},k} - \hat{\rho}_{n,k}|\\
+		&= (n - \ell_{n,k})[-(1 - \alpha)v_k + o_p(1)] + o_p(\sqrt{n})\\
+		&\leq o_p(\sqrt{n}) 
+	\end{align*}
+	Which prove \eqref{eq:ineq-U-1}. For the second inequality, we proved in Theorem \ref{thm:LLN} that \(n(\hat{\rho}_n - v) = O\left(\sqrt{n \log \log n}\right) \quad \text{a.s.}\) which also gives that
+	\begin{align*}
+		\ell_{n,k}(\hat{\rho}_{\ell_{n,k}} - \hat{\rho}_{n,k}) &= O\left(\sqrt{n \log \log n}\right) + O\left(\sqrt{\ell_{n,k} \log \log \ell_{n,k}}\right) \\
+		&= O\left(\sqrt{n \log \log n}\right) \quad \text{a.s.}
+	\end{align*}
+	Also, $\{M_{n,k}\}_{n \geq 1}$ is a martingale, so by LIL for martingales (see \cite{Stout1970}) we have \(M_{n,k} = O\left(\sqrt{n \log\!\log n}\right)\) then
+	\begin{align*}
+		M_{n,k} - M_{\ell_{n,k},k} &= O\left(\sqrt{n \log\!\log n}\right) + O\left(\sqrt{\ell_{n,k} \log\!\log \ell_{n,k}}\right)\\
+		&= O\left(\sqrt{n \log\!\log n}\right) \quad \text{a.s.}
+	\end{align*}
+	So we obtain the second inequality \eqref{eq:ineq-U-2}
+	\begin{align*}
+		U_{n,k} - U_{\ell_{n,k},k} &\leq (n - \ell_{n,k})[-(1 - \alpha)v_k + o(1)] + |M_{n,k} - M_{\ell_{n,k},k}| + \ell_{n,k} |\hat{\rho}_{\ell_{n,k},k} - \hat{\rho}_{n,k}|\\			
+		&\leq O\left(\sqrt{n \log \log n}\right) \quad a.s.
+	\end{align*}
+\end{proof}
+
+Finally, we recall Lemma~\ref{lem:componentwise} and give its proof below.
+
+\jointcltlemma*
+\begin{proof}
+	This proof is based on the central limit theorem for martingales.
+	
+	\textbf{Step 1. Defining the martingale.}
+	
+	For \(k \in [K]\) we define \( Y_{i,k} = \xi_{i,k} - \theta_k \) and \(M_{n,k} = \sum_{i=1}^{n} X_{i,k} Y_{i,k}.\) So \(\{M_{n,k}\}_{n \geq 0}\) is a martingale as we have
+	\begin{align*}
+		\mathbb{E}[\Delta M_{i,k} \mid \mathcal{F}_{i-1}] 
+		&= \mathbb{E}[M_{i,k} - M_{i-1,k} \mid \mathcal{F}_{i-1}]\\
+		&= \mathbb{E}[X_{i,k} Y_{i,k} \mid \mathcal{F}_{i-1}]\\
+		&= X_{i,k} \, \mathbb{E}[Y_{i,k}]\\
+		&= 0
+	\end{align*}
+	The quadratic variation of \( \{M_{n,k}\}_{n \geq 0} \) can be expressed as:
+	\begin{align*}
+		\langle M_{.,k} \rangle_n &= \sum_{i=1}^{n} \mathbb{E}\left[ (\Delta M_i)^2 \mid \mathcal{F}_{i-1} \right]\\
+		&= \sum_{i=1}^{n} \mathbb{E}\left[ X_{i,k} Y_{i,k}^2 \mid \mathcal{F}_{i-1} \right]\\
+		&= \sum_{i=1}^{n} X_{i,k}\mathbb{E}\left[Y_{i,k}^2 \mid \mathcal{F}_{i-1} \right]\\
+		&= V_k N_{n,k}
+	\end{align*}
+	And for \(k \neq j \in [K]\) we have
+	\[ \left<M_{.,k}, M_{.,j}\right>_n = \sum_{s=1}^{n} \mathbb{E}\left[\left(\xi_{s,k} - \theta_{k}\right)\left(\xi_{s,j} - \theta_{j}\right)\underbrace{X_{s,k}X_{s,j}}_{= 0}\mid \mathcal{F}_{s-1}\right] = 0\]	
+	\textbf{Step 2. Lindeberg Condition for the martingale.}
+	
+	Let $\varepsilon > 0$, we need to prove that for all \(k \in [K]\)
+	\begin{equation*}
+		L_{n,k}(\varepsilon) 
+		:= \frac{1}{\langle M_{.,k} \rangle_n} 
+		\sum_{i=1}^n 
+		\mathbb{E}\!\left[
+		(\Delta M_{i,k})^2 
+		\mathbf{1}_{\{|\Delta M_{i,k}| > \varepsilon \sqrt{\langle M_{.,k} \rangle_n}\}}
+		\mid \mathcal{F}_{i-1}
+		\right]
+		\overset{\mathbb{P}}{\longrightarrow} 0 
+		\quad \text{as } n \to +\infty.
+	\end{equation*}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	By dominated convergence theorem and the fact that $\mathbb{E}\!\left[ |Y_{1,k}|^{2} \right] < +\infty$ we have that 
+	\[\mathbb{E}\!\left[Y_{1,k}^2  \mathbf{1}_{\{|Y_{1,k}| > t\}}
+	\right] \underset{t \to +\infty}{\longrightarrow} 0\]
+	For \(\eta > 0\), choose \(m := m(\eta)\) such that 
+	\[
+	\frac{1}{V_k}
+	\, \mathbb{E}\!\left[
+	Y_{1,k}^2 
+	\mathbf{1}_{\{|Y_{1,k}| > \varepsilon \sqrt{V_k} \sqrt{m}\}}
+	\right] \leq \eta
+	\]
+	Now consider the event \(\left\{N_{n,k} \geq m\right\}\), we 
+	have \(\mathbf{1}_{\{|Y_{1,k}| > \epsilon \sqrt{V_k} \sqrt{N_{n,k}}\}} \leq \mathbf{1}_{\{|Y_{1,k}| > \epsilon \sqrt{V_k} \sqrt{m}\}}\). So we have 	
+	\begin{align*}
+		L_{n,k}(\varepsilon)
+		&\le 
+		\frac{1}{V_k N_{n,k}} 
+		\sum_{i=1}^n 
+		X_{i,k} 
+		\mathbb{E}\!\left[
+		Y_{i,k}^2 
+		\mathbf{1}_{\{|Y_{i,k}| > \varepsilon \sqrt{V_k} \sqrt{N_{n,k}}\}}
+		\mid \mathcal{F}_{i-1}
+		\right] \\
+		&\leq 
+		\frac{1}{V_k}
+		\, \mathbb{E}\!\left[
+		Y_{1,k}^2 
+		\mathbf{1}_{\{|Y_{1,k}| > \varepsilon \sqrt{V_k} \sqrt{m}\}}
+		\right] \\
+		&\leq \eta
+	\end{align*}
+	So \(\mathbb{P}\left(L_{n,k}(\epsilon) \leq \eta\right) \leq \mathbb{P}\left(N_{n,k} \leq m\right) \underset{n \to +\infty}{\longrightarrow} 0\)	
+	.Therefore, the Lindeberg condition is verified, and by the martingale CLT theorem, we have:
+	\begin{equation}\label{eq:martingale-clt}
+		\frac{M_n}{\sqrt{\langle M \rangle_n}} 
+		\overset{\mathcal{D}}{\longrightarrow} 
+		\mathcal{N}(0,I_K)
+	\end{equation}
+	
+	And we have from the estimator definition \(D_n\left(\hat{\Theta}_n - \Theta\right) = \mathrm{diag}\left(\sqrt{V_1}, \ldots, \sqrt{V_K}\right)\frac{M_n}{\sqrt{\langle M \rangle_n}}\), then using \eqref{eq:martingale-clt} we get
+	\begin{equation*}
+		D_n\left(\hat{\Theta}_n - \Theta\right)
+		\overset{\mathcal{D}}{\longrightarrow} 
+		\mathcal{N}\left(0,\mathrm{diag}\left(V_1, \ldots, V_K\right)\right)
+	\end{equation*}
+\end{proof}
+
+
+We are now ready to prove Theorem~\ref{thm:normality-gen-erade}.
+
+\begin{proof}[Proof of Theorem \ref{thm:normality-gen-erade}]
+	\begin{enumerate}[label=(\roman*)]
+		\item Using Lemma \ref{lem:U-ineq} and inequalities \eqref{eq:prelim-4} and \eqref{eq:condition} from Lemma \ref{lem:preliminary} give that	
+		\begin{equation}\label{eq:ineq-proof-4}
+			\forall k \in [K]: \, N_{n,k} - n\hat{\rho}_{n,k} \leq o_p(\sqrt{n}) \quad \text{and} \quad N_{n,k} - n\hat{\rho}_{n,k} \leq O(\sqrt{n \log \log n}) \quad \text{a.s.}
+		\end{equation}
+		And we have that 
+		\begin{align*}
+			n\hat{\rho}_{n,k} - N_{n,k} &= n - N_{n,k} - n (1 - \hat{\rho}_{n,k})\\
+			&= \sum_{j=1; j\neq k}^{K} \left(N_{n,j} - n \hat\rho_{n,j}\right)\\
+			&\leq \sum_{j=1; j\neq k}^{K} o_p(\sqrt{n}) = o_p(\sqrt{n}) 
+		\end{align*}
+		Similarly for the second inequality we obtain that
+		 \(\,n\hat{\rho}_{n,k} - N_{n,k} \leq O\left(\!\sqrt{n \log\!\log(n)}\right)\) \textit{a.s.}, so with \eqref{eq:ineq-proof-4} we obtain \eqref{eq:thm-res-1} and \eqref{eq:thm-res-2},
+		\[
+		|N_{n,k} - n\hat{\rho}_{n,k}| = o_p(\sqrt{n}) \quad \text{and} \quad  |N_{n,k} - n\hat{\rho}_{n,k}| = O(\sqrt{n \log\!\log n}) \quad \text{a.s.}
+		\]
+		now using Theorem \ref{thm:LLN} we have
+		\begin{align*}
+			N_{n,k} - n v_k &= N_{n,k} - n \hat{\rho}_{n,k} + n(\hat{\rho}_{n,k} - v_k)\\
+			&= O(\sqrt{n \log \log n}) \quad a.s.
+		\end{align*}
+		which proves \eqref{eq:thm-res-3}.
+
+		\item Using the fact that \(\sqrt n D_n^{-1}\) converges to \(\mathrm{diag}\left(\frac{1}{\sqrt{v_1}},\ldots,\frac{1}{\sqrt{v_K}}\right)\), the CLT result of Lemma \ref{lem:componentwise} combined with Slutsky's lemma yields the first asymptotic normality result:
+		\begin{align*}
+			\sqrt n(\hat\Theta_n-\Theta) &= \sqrt n D_n^{-1} D_n(\hat\Theta_n-\Theta)\\
+			&\xrightarrow{\mathcal{D}}\mathrm{diag}\left(\frac{1}{\sqrt{v_1}},\ldots,\frac{1}{\sqrt{v_K}}\right) \mathcal N\!\big(0,\mathrm{diag}\left(V_1,\dots,V_K\right)\big)\\
+			&= \mathcal N(0,V) 
+		\end{align*}
+		
+		And by using \eqref{eq:approx-rho-Op} we obtain that \(\sqrt{n} (\hat{\rho}_n - v) = \sqrt{n} (\hat{\Theta}_n - \Theta) G + O_p\!\left(\frac{1}{\sqrt{n}}\right)\), now from \(O_p\!\left(\frac{1}{\sqrt{n}}\right) \xrightarrow{\mathbb{P}} 0\) and the CLT result above on \(\sqrt n(\hat\Theta_n-\Theta)\), we can apply Slutsky theorem giving
+		\begin{equation}\label{eq:normality-1}
+			\sqrt{n} (\hat{\rho}_n - v) \xrightarrow{\mathcal{D}} \mathcal{N}(0, GVG^{\top})
+		\end{equation}
+		And we have
+		\begin{align*}
+			\sqrt{n} \left( \frac{N_n}{n} - v \right) 
+			&= \sqrt{n} \left( \frac{N_n}{n} - \hat{\rho}_n \right)
+			+ \sqrt{n} (\hat{\rho}_n - \nu)\\
+			&= \sqrt{n} (\hat{\rho}_n - \nu) + o_p(1)
+		\end{align*}
+		Again with \eqref{eq:normality-1} we can apply the Slutsky lemma:
+		\[
+		\sqrt{n} \left( \frac{N_n}{n} - v \right) \xrightarrow{\mathcal{D}} \mathcal{N}(0,GVG^{\top})
+		\]
+		Noting \(W_n := \sqrt{n} \left( \frac{N_n}{n} - \nu \right) 
+		\quad \text{and} \quad Y_n := \sqrt{n} (\hat{\rho}_n - \nu)\), then
+		\[
+		\begin{pmatrix}
+			W_n \\
+			Y_n
+		\end{pmatrix}
+		=
+		\begin{pmatrix}
+			Y_n \\
+			Y_n
+		\end{pmatrix}
+		+
+		\underbrace{\begin{pmatrix}
+				o_p(1) \\
+				0
+		\end{pmatrix}}_{\xrightarrow{\mathbb{P}} 0}
+		\]
+		And as we have
+		\[
+		\begin{pmatrix}
+			Y_n \\
+			Y_n
+		\end{pmatrix}
+		\xrightarrow{\mathcal{D}} 
+		\mathcal{N}\left(0,\begin{pmatrix}
+			GVG^{\top} & GVG^{\top} \\
+			GVG^{\top} & GVG^{\top}
+		\end{pmatrix}
+		\right),
+		\]
+		we can use the Slutsky lemma again and get
+		\[
+		\begin{pmatrix}
+			W_n \\
+			Y_n
+		\end{pmatrix}
+		\xrightarrow{\mathcal{D}} \mathcal{N}(0,\Omega).
+		\]
+	\end{enumerate}	
+\end{proof}
+
+% \revision{\subsection{Proof of Corollary \ref{thm:efficiency}}
+%
+% 	\begin{proof}[Proof of Corollary \ref{thm:efficiency}]
+% 		In Theorem 1 of \cite{hu2006asymptotically}, they prove that there is a lower bound on the asymptotic variance of \(\frac{N_n}{\sqrt{n}}\) which is \(G\,I(\Theta)^{-1}\,G^{\top}\) where
+% 		\(I(\Theta) = diag\left(v_1\,I_1(\theta_1), \dots, v_K\,I_K(\theta_K)\right)\).
+% 		For regular one-parameter exponential families when the parameter of interest $\theta_k$ is the mean parameter we show that $\mathbb{V}ar[\xi_{1,k}] = I_k(\theta_k)^{-1}$ (see Proposition~\ref{prop:exp-fam} in Appendix~\ref{appnC}), so combined with Theorem \ref{thm:normality-gen-erade} we obtain that the asymptotic variance of \(\frac{N}{\sqrt{n}}\) is equal to \(G\,I(\Theta)^{-1}\,G^{\top}\) which proves the claim.
+% 	\end{proof}
+%
+% }

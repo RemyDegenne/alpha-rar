@@ -1,0 +1,192 @@
+
+\subsection{Proof of Theorem \ref{thm:forced}}
+In this part we redefine the last hitting time $\ell_{n,k}$ for \(\alpha\)RTS-FE designs family as follow
+\begin{equation}\label{eq:stopping-time-def-fe}
+	\ell_{n,k} := \max \left\{\, m \leq n : \frac{N_{m,k}}{m} \leq \hat{\rho}_{m,k} \text{ or } \left(k \in arg\!\min_{j \in U_m} N_{m,j}\text{ and } \mathbf{U}_m \neq \emptyset\right) \,\right\}
+\end{equation}
+
+We prove below that the conditions in Lemma~\ref{lem:generic-conditions-main} are valid for any design in the \(\alpha\)RTS-FE family and for the last hitting time defined as in \eqref{eq:stopping-time-def-fe}, which preserves the results of all Theorems for their counterparts without forced exploration.
+
+\begin{lemma}\label{lem:preliminary2}
+	For any \(k \in [K]\) we have the following results
+	\begin{enumerate}[label=(\roman*)]
+		\item \(\left(\ell_{n,k}\right)_{n \geq 1}\) is a non-decreasing sequence and \(\forall n \in \mathbb{N}: \,\ell_{n,k} \leq n\)
+		\item for all $k\in [K]$, $n \in \mathbb{N}$,\begin{equation}\label{eq:prelim-4}
+			N_{n,k} - n\hat{\rho}_{n,k} \leq 1+N_{\ell_{n,k},k} - \ell_{n,k} \hat{\rho}_{\ell_{n,k},k} + U_{n,k} - U_{\ell_{n,k},k}
+		\end{equation}
+		\item for all $k\in [K]$, $n \in \mathbb{N}$,
+		\begin{equation}\label{eq:condition}
+			N_{\ell_{n,k},k} - \ell_{n,k} \hat{\rho}_{\ell_{n,k},k} \leq o(\sqrt{n}), \ a.s.
+			\quad
+		\end{equation}
+	\end{enumerate}
+\end{lemma}
+
+\begin{proof}[Proof of Lemma \ref{lem:preliminary2}]
+	Consider \(\ell_{n,k}\) as defined in \eqref{eq:stopping-time-def-fe}, we have
+	\begin{enumerate}[label=(\roman*)]
+		\item Obvious from definition.
+		\item Let \(k \in [K]\), if \(m \geq \ell_{n,k} + 1\) then
+		\[
+		\frac{N_{m,k}}{m} > \hat{\rho}_{m,k} \text{ and } \left\{k \notin arg\!\min_{j \in U_m} N_{m,j}\text{ or } \mathbf{U}_m = \emptyset\right\}
+		\]
+		If \(\mathbf{U}_m \neq \emptyset\) then \(k \notin arg\!\min_{j \in U_m} N_{m,j}\), so \(p_{m+1,k} = 0\) following \eqref{eq:fe-phase} . Otherwise if \(\mathbf{U}_m = \emptyset\) then \(p_{m+1,k} \leq \alpha \hat{\rho}_{m,k}\) following \eqref{eq:fe-phase}, so the result follows using the same arguments as in the previous case.
+		\item At \(m = \ell_{n,k}\), if \(\frac{N_{\ell_{n,k},k}}{\ell_{n,k}} \leq \hat{\rho}_{\ell_{n,k},k}\) then \(	N_{\ell_{n,k},k} - \ell_{n,k} \hat{\rho}_{\ell_{n,k},k} \leq 0
+		\),
+		otherwise if \(\mathbf{U}_{\ell_{n,k}} \neq \emptyset\) and \(k \in arg\!\min_{j \in \mathbf{U}_{\ell_{n,k}}} N_{\ell_{n,k},j}\), then for \(a \in \mathbf{U}_{\ell_{n,k}}\) we have
+		\begin{align*}
+			N_{\ell_{n,k},k} - \ell_{n,k} \hat{\rho}_{\ell_{n,k},k}
+			&\leq N_{\ell_{n,k},k}\\
+			&\leq N_{\ell_{n,k},a}\\
+			&\leq h(\ell_{n,k})
+		\end{align*}
+		So either way \(N_{\ell_{n,k},k} - \ell_{n,k} \hat{\rho}_{\ell_{n,k},k} \leq o(\sqrt{n}) \quad \text{a.s.}\)
+	\end{enumerate}
+\end{proof}
+
+\subsection{$\alpha$RTS-FE with Sparse Allocations}\label{proofs:sparse-case}
+
+\begin{proof}[Proof of Theorem \ref{thm:sparse-rate}]
+	We first prove that \(N_{n,k} \to +\infty\). Let us assume towards contradiction that
+	\[
+	\exists i \in [K],\ \exists M \in \mathbb{N},\ \exists N \in \mathbb{N}: \, \forall n \geq N:\ N_{n,i} = M
+	\]
+	As \(h(n) \to +\infty\) we can select \(N\) such that \(\forall n \geq N: \, h(n) \geq M \). Now consider \( n \geq N \), we have
+	\begin{align*}
+		N_{n,i} \leq h(n) 
+		& \Rightarrow \ i \in U_n \\
+		& \Rightarrow U_n \neq \emptyset \\
+		& \Rightarrow I_{n+1} \in \arg\min_{j \in U_n} N_j(n) \\
+		& \Rightarrow N_{n, I_{n+1}} \leq N_{n,i} = M
+	\end{align*}
+	Since \( I_{n+1} \) has been selected at round \( n+1 \), we have \(N_{n+1, I_{n+1}} = N_{n, I_{n+1}} + 1 \leq M + 1\), and for \( j \neq I_{n+1} \) we have \(N_{n+1,j} = N_{n,j}\). 
+	
+	Now define \(D(n) := \sum_{j=1}^K \left(M + 1 - N_j(n)\right)^+\), then we have
+	\begin{align*}
+		D(n+1) - D(n)
+		&= \sum_{j=1}^K \left(M + 1 - N_{n+1, j}\right)^+ 
+		- \sum_{j=1}^K \left(M + 1 - N_{n,j}\right)^+ \\
+		&= \left(M + 1 - N_{n+1, I_{n+1}}\right)^+ 
+		- \left(M + 1 - N_{n, I_{n+1}}\right)^+ \\
+		&= \left(M - N_{n, I_{n+1}}\right)^+ 
+		- \left(M - N_{n, I_{n+1}} + 1\right)^+ \\
+		&= -1.
+	\end{align*}
+	Thus \(D\left(n + D(n) + 1\right) = -1\) which is a contradiction as \(D \geq 0\). Therefore,
+	\[
+	\forall i \in [K], \quad N_{n,i} \xrightarrow[n\to\infty]{} +\infty.
+	\]
+	From the result above we have that \(\hat{\theta}_{n,k}-\theta_k \to 0\) using the law of large numbers. Additionally, by using the Law of Iterated Logarithm for martingales we obtain that
+	\[\hat{\Theta}_n - \Theta = O\left(\sqrt{\frac{\log\log(N_{n,k})}{N_{n,k}}}\right) \quad a.s.\]
+	In the same spirit of the proof of Theorem \ref{thm:LLN}, we use the continuity of \(\rho\) and Lemma \ref{lem:convergence} to obtain that \(\lim\limits_{n \to +\infty} \frac{N_{n,k}}{n} = \lim\limits_{n \to +\infty} \hat{\rho}_{n,k} = v_k\)
+\end{proof}
+
+%\begin{proof}[Proof of Theorem \ref{thm:componentwise}]
+%	This proof is based on the central limit theorem for martingales.
+%	
+%	\textbf{Step 1. Defining the martingale.}
+%	
+%	For \(k \in [K]\) we define \( Y_{i,k} = \xi_{i,k} - \theta_k \) and \(M_{n,k} = \sum_{i=1}^{n} X_{i,k} Y_{i,k}.\) So \(\{M_{n,k}\}_{n \geq 0}\) is a martingale as we have
+%	\begin{align*}
+%		\mathbb{E}[\Delta M_{i,k} \mid \mathcal{F}_{i-1}] 
+%		&= \mathbb{E}[M_{i,k} - M_{i-1,k} \mid \mathcal{F}_{i-1}]\\
+%		&= \mathbb{E}[X_{i,k} Y_{i,k} \mid \mathcal{F}_{i-1}]\\
+%		&= X_{i,k} \, \mathbb{E}[Y_{i,k}]\\
+%		&= 0
+%	\end{align*}
+%	The quadratic variation of \( \{M_{n,k}\}_{n \geq 0} \) can be expressed as:
+%	\begin{align*}
+%		\langle M_{.,k} \rangle_n &= \sum_{i=1}^{n} \mathbb{E}\left[ (\Delta M_i)^2 \mid \mathcal{F}_{i-1} \right]\\
+%		&= \sum_{i=1}^{n} \mathbb{E}\left[ X_{i,k} Y_{i,k}^2 \mid \mathcal{F}_{i-1} \right]\\
+%		&= \sum_{i=1}^{n} X_{i,k}\mathbb{E}\left[Y_{i,k}^2 \mid \mathcal{F}_{i-1} \right]\\
+%		&= \sigma_k^2 N_{n,k}
+%	\end{align*}
+%	And for \(k \neq j \in [K]\) we have
+%	\[ \left<M_{.,k}, M_{.,j}\right>_n = \sum_{s=1}^{n} \mathbb{E}\left[\left(\xi_{s,k} - \theta_{k}\right)\left(\xi_{s,j} - \theta_{j}\right)\underbrace{X_{s,k}X_{s,j}}_{= 0}\mid \mathcal{F}_{s-1}\right] = 0\]	
+%	\textbf{Step 2. Lindeberg Condition for the martingale.}
+%
+%	Let $\varepsilon > 0$, we need to prove that for all \(k \in [K]\)
+%	\begin{equation*}
+%		L_{n,k}(\varepsilon) 
+%		:= \frac{1}{\langle M_{.,k} \rangle_n} 
+%		\sum_{i=1}^n 
+%		\mathbb{E}\!\left[
+%		(\Delta M_{i,k})^2 
+%		\mathbf{1}_{\{|\Delta M_{i,k}| > \varepsilon \sqrt{\langle M_{.,k} \rangle_n}\}}
+%		\mid \mathcal{F}_{i-1}
+%		\right]
+%		\overset{\mathbb{P}}{\longrightarrow} 0 
+%		\quad \text{as } n \to +\infty.
+%	\end{equation*}
+%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%	By dominated convergence theorem and the fact that $\mathbb{E}\!\left[ |Y_{1,k}|^{2} \right] < +\infty$ we have that 
+%	\[\mathbb{E}\!\left[Y_{1,k}^2  \mathbf{1}_{\{|Y_{1,k}| > t\}}
+%	\right] \underset{t \to +\infty}{\longrightarrow} 0\]
+%	For \(\eta > 0\), choose \(m := m(\eta)\) such that 
+%	\[
+%	\frac{1}{\sigma_k^2}
+%	\, \mathbb{E}\!\left[
+%	Y_{1,k}^2 
+%	\mathbf{1}_{\{|Y_{1,k}| > \varepsilon \sigma_k \sqrt{m}\}}
+%	\right] \leq \eta
+%	\]
+%	Now consider the event \(\left\{N_{n,k} \geq m\right\}\), we 
+%	have \(\mathbf{1}_{\{|Y_{1,k}| > \epsilon \sigma_k \sqrt{N_{n,k}}\}} \leq \mathbf{1}_{\{|Y_{1,k}| > \epsilon \sigma_k \sqrt{m}\}}\). So we have 	
+%	\begin{align*}
+%		L_{n,k}(\varepsilon)
+%		&\le 
+%		\frac{1}{\sigma_k^2 N_{n,k}} 
+%		\sum_{i=1}^n 
+%		X_{i,k} 
+%		\mathbb{E}\!\left[
+%		Y_{i,k}^2 
+%		\mathbf{1}_{\{|Y_{i,k}| > \varepsilon \sigma_k \sqrt{N_{n,k}}\}}
+%		\mid \mathcal{F}_{i-1}
+%		\right] \\
+%		&\leq 
+%		\frac{1}{\sigma_k^2}
+%		\, \mathbb{E}\!\left[
+%		Y_{1,k}^2 
+%		\mathbf{1}_{\{|Y_{1,k}| > \varepsilon \sigma_k \sqrt{m}\}}
+%		\right] \\
+%		&\leq \eta
+%	\end{align*}
+%	So \(\mathbb{P}\left(L_{n,k}(\epsilon) \leq \eta\right) \leq \mathbb{P}\left(N_{n,k} \leq m\right) \underset{n \to +\infty}{\longrightarrow} 0\)	
+%	.Therefore, the Lindeberg condition is verified, and by the martingale CLT theorem, we have:
+%	\begin{equation}\label{eq:martingale-clt}
+%		\frac{M_n}{\sqrt{\langle M \rangle_n}} 
+%		\overset{\mathcal{D}}{\longrightarrow} 
+%		\mathcal{N}(0,I_K)
+%	\end{equation}
+%	
+%	And we have from the estimator definition \(D_n\left(\hat{\Theta}_n - \Theta\right) = \Sigma^{1/2}\frac{M_n}{\sqrt{\langle M \rangle_n}}\), then using \eqref{eq:martingale-clt} we get
+%	\begin{equation*}
+%		D_n\left(\hat{\Theta}_n - \Theta\right)
+%		\overset{\mathcal{D}}{\longrightarrow} 
+%		\mathcal{N}(0,\Sigma)
+%	\end{equation*}
+%\end{proof}
+\subsection{Asymptotic Distribution of the Pearson Test Statistic}
+\begin{proof}[Proof of Lemma \ref{lem:pearson}]
+	Let \(Y_n := \left( \sqrt{N_{n,k}}(\hat{\theta}_{n,k} - \theta)\right)_{k \in [K]}\) and \(s_n:=\left(\sqrt{\omega_{n,k}}\right)_{k \in [K]}\) where \(\omega_{n,j}:=\frac{N_{n,j}}{n}\), then we rewrite \(\mathcal{X}_n = \frac{1}{\tilde{\theta}_n (1 - \tilde{\theta}_n)} 
+	\sum_{k=1}^K N_{n,k} (\hat{\theta}_{n,k} - \tilde{\theta}_n)^2\)
+	and we have
+	\begin{align*}
+		\sqrt{N_{n,k}} (\tilde{\theta}_n - \theta)
+		&= \sqrt{N_{n,k}} \sum_{j=1}^K \omega_{n,j} (\hat{\theta}_{n,j} - \theta)\\
+		&= \sqrt{\frac{N_{n,k}}{n}} \sum_{j=1}^K \sqrt{\omega_{n,j}}\sqrt{N_{n,j}} (\hat{\theta}_{n,j} - \theta)\\
+		&= \sqrt{\omega_{n,k}} \sum_{j=1}^K \sqrt{\omega_{n,j}} \, [Y_n]_j
+	\end{align*}
+	so 
+	\begin{align*}
+		\sqrt{N_{n,k}} (\hat{\theta}_{n,k} - \tilde{\theta}_n) &= \sqrt{N_{n,k}} (\hat{\theta}_{n,k} - \theta) 
+		- \sqrt{N_{n,k}} (\tilde{\theta}_n - \theta)\\
+		&= [Y_n - s_n s_n^\top Y_n]_k
+	\end{align*}
+	then \(\mathcal{X}_n = \frac{1}{\tilde{\theta}_n (1 - \tilde{\theta}_n)} 
+	Y_n^\top (I - s_n s_n^\top) Y_n\)
+	, and we have from Lemma \ref{lem:componentwise} that \(\frac{1}{\sqrt{\theta(1-\theta)}} Y_n \xrightarrow{\mathcal{D}} \mathcal{N}(0, I_K)\) and from Theorem \ref{thm:LLN} we have \(\tilde{\theta}_n \to \theta\) and \(I - s_n s_n^\top \to I - s s^\top
+	\) with \(s := (\sqrt{\nu_1}, \dots, \sqrt{\nu_K})\). So as $I - s s^\top$ is an orthogonal projection matrix with rank $K-1$, we obtain by Slutsky argument that \(\mathcal{X}_n \xrightarrow{\mathcal{D}} \chi^2_{K-1}\)
+\end{proof}
+
+

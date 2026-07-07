@@ -1,0 +1,110 @@
+\documentclass[11pt]{article}
+
+% Packages
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{booktabs}
+%\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{makecell}
+\usepackage{adjustbox}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{thmtools}
+\usepackage[colorlinks=true,
+linkcolor=blue,
+citecolor=blue,
+urlcolor=blue]{hyperref}
+
+%% Packages
+\RequirePackage{amsthm,amsmath,amsfonts,amssymb,enumitem}
+\usepackage[a4paper,margin=1in]{geometry}
+
+\theoremstyle{plain}
+\newtheorem{axiom}{Axiom}
+\newtheorem{claim}[axiom]{Claim}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem*{fact}{Fact}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+
+\title{On Response-Adaptive Targeting Strategies for Multi-Treatment Experiments}
+\author{
+	\textbf{Redouane Yagouti}\\
+	Univ. Lille, Inria,  CNRS, Centrale Lille\\ 
+	UMR 9189-CRIStAL, France\\
+	\texttt{redouane.yagouti@inria.fr}
+	\and
+	\textbf{Rémy Degenne}\\
+	Univ. Lille, Inria,  CNRS, Centrale Lille\\ 
+	UMR 9189-CRIStAL, France\\
+	\texttt{remy.degenne@inria.fr}
+	\and
+	\textbf{Emilie Kaufmann}\\
+	Univ. Lille, CNRS, Inria,  Centrale Lille\\
+	UMR 9189-CRIStAL, France\\
+	\texttt{emilie.kaufmann@univ-lille.fr}
+}
+
+\date{\today}
+
+\begin{document}
+	
+	\maketitle
+	
+	\begin{abstract}		
+		\input{sections/abstract.tex}
+	\end{abstract}
+	
+	\section{Introduction}
+	\input{sections/introduction_emilie.tex}
+	
+	
+	\section{Model, Notation, and Assumptions}\label{sec:notations}
+	\input{sections/model_and_assumptions.tex}
+	
+	\section{$\alpha$-Rebalancing Targeting Strategy (\(\alpha\)RTS)}\label{sec:alpha-rts}
+	\input{sections/general_adaptive_design.tex}
+	\input{sections/proof_sketch_emilie.tex}
+	
+	\section{$\alpha$RTS with Forced Exploration ($\alpha$RTS-FE)}\label{sec:alpha-rts-fe}
+	\input{sections/forced_exploration.tex}
+	
+	\section{Simulation study}\label{sec:simulation}
+	\input{sections/simulation_parent.tex}
+	
+	\section{Conclusion}\label{sec:conclusion}
+	In this paper, we introduced a unified theoretical framework for response-adaptive targeting in multi-treatment experiments. Rather than focusing on a specific allocation rule, we defined a broad class of adaptive designs, the $\alpha$RTS family, encompassing several existing procedures while allowing for new algorithmic variations.
+	
+	We established that all designs within this class share the same fundamental asymptotic properties, including strong consistency, asymptotic normality of both estimators and allocation proportions, and asymptotic efficiency. A key insight of our analysis is that these properties are structural and do not depend on the specific form of the allocation rule within the class. To address sparse target regimes, we proposed a forced-exploration extension and showed that it preserves the asymptotic guarantees while ensuring sufficient sampling of all treatments. Our simulation results illustrate that, while different designs may exhibit distinct finite-sample behaviors, they remain asymptotically equivalent, and highlight the importance of forced exploration in sparse settings.
+	
+	Overall, our work provides a flexible and robust foundation for designing and analyzing response-adaptive procedures in multi-arm trials.
+	
+	\subsection*{Acknowledgments}
+		The PhD of Redouane Yagouti is founded by an Inria Action Exploration grant called BETA-3$K$. The authors acknowledge Sof\'ia Villar and Lukas Pin for interesting discussions on Response Adaptive Randomization.
+
+	\bibliographystyle{plainnat}
+	\bibliography{references}
+	
+	\newpage
+	\begin{appendix}
+		\section{Supporting Proofs for $\alpha$RTS}\label{appnA}
+		\input{sections/appendixA.tex}
+		
+		\section{Supporting Proofs for $\alpha$RTS-FE}\label{appnB}
+		\input{sections/appendixB.tex}
+		
+		\section{Technical Lemmas}\label{appnC}
+		\input{sections/appendixC.tex}
+	\end{appendix}
+	
+	
+\end{document}

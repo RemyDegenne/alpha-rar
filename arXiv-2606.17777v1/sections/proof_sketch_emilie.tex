@@ -1,0 +1,104 @@
+\subsection{Proof Sketch}\label{sec:rts-proof}
+Our analysis follows a similar template as the analysis of ERADE by \cite{hu2009efficient}. We first introduce the natural extension to $k$ arms of the quantities introduced in the analysis of ERADE:
+	\begin{itemize}
+		\item $p_{m,k} := \mathbb{E}[X_{m,k} \mid \mathcal{F}_{m-1}]$, the conditional probability of assigning treatment $k$ at step $m$
+		\item $M_{n,k} := \sum_{m=1}^{n}(X_{m,k} - p_{m,k})$, a martingale capturing the deviation of the actual assignment from its conditional expectation
+		%\item $Q_{n,k} := \sum_{m=1}^{n}X_{m,k}(\xi_{m,k} - \theta_{k})$, a martingale capturing the deviation between the samples from treatment $k$ and their average
+		%and denote \(\mathbf{Q_n} := (\mathbf{Q_{n,1}}, \dots, \mathbf{Q_{n,K}})\)
+	\end{itemize}
+as well as
+\[U_{n,k} = \sum_{m=1}^{n-1} \alpha \hat{\rho}_{m,k} + M_{n,k} - n \hat{\rho}_{n,k}\;.\]
+
+Our first contribution is to identify some sufficient conditions under which the conclusions of Theorem~\ref{thm:LLN} and Theorem~\ref{thm:normality-gen-erade} follow.
+
+\begin{lemma} \label{lem:generic-conditions-main} Consider a RAR procedure under which there exists a sequence of random variables $(\ell_{n,k})_{n,k}$ satisfying the following properties:
+\begin{enumerate}[label=(\roman*)]
+		\item for all $k\in [K]$, \(\left(\ell_{n,k}\right)_{n \geq 1}\) is a non-decreasing sequence and for all \(n \in \mathbb{N}: \,\ell_{n,k} \leq n\)
+		\item for all $k\in [K]$, $n \in \mathbb{N}$,
+		\begin{equation}\label{eq:prelim-sketch}
+			N_{n,k} - n\hat{\rho}_{n,k} \leq 1+N_{\ell_{n,k},k} - \ell_{n,k} \hat{\rho}_{\ell_{n,k},k} + U_{n,k} - U_{\ell_{n,k},k}
+		\end{equation}
+		\item for all $k\in [K]$, $n \in \mathbb{N}$,
+		\begin{equation}\label{eq:condition-sketch}
+			N_{\ell_{n,k},k} - \ell_{n,k} \hat{\rho}_{\ell_{n,k},k} = o(\sqrt{n}) \ a.s.
+			\quad
+		\end{equation}
+	\end{enumerate}
+Then the conclusions of Theorem~\ref{thm:LLN} and Theorem~\ref{thm:normality-gen-erade} hold.
+\end{lemma}
+
+We obtained these conditions by isolating the key arguments that are used in the ERADE analysis for $K=2$ arms, and by showing that they can actually be naturally be extended to $K$ arms. In Lemma~\ref{lem:preliminary} in Appendix~\ref{appnA}, we show that these conditions are satisfied for the random sequence
+\[\ell_{n,k} := \max \left\{\, m \leq n ; \, \frac{N_{m,k}}{m} \leq \hat{\rho}_{m,k}  \,\right\}\]
+for any $\alpha$RTS design. In words $\ell_{n,k}$ is the last time before \(n\) at which treatment \(k\) is under-sampled: its allocation proportion is less than or equal to the estimated target proportion.
+
+\smallskip
+
+We now briefly sketch the proof of Lemma~\ref{lem:generic-conditions-main}. The detailed proof that Theorem~\ref{thm:LLN} holds can be found in Appendix~\ref{proof:thm1}. The first step to establish the convergence of the empirical proportions is to show that the sequence $\hat{\rho}_n$ has a limit $u \in \Delta_K$ that is non-sparse, i.e. that satisfies $u_k \neq 0$ for all $k$. The argument there relies on both Condition \hyperlink{CA}{\textbf{A}} (to apply the law of large number) and Condition \hyperlink{CB}{\textbf{B}}.
+
+Then, combining Inequalities~\eqref{eq:prelim-sketch} and \eqref{eq:condition-sketch} yields that for all $k$
+\begin{equation}\label{step-main}\frac{N_{n,k}}{n} - \hat{\rho}_{n,k} \leq \frac{U_{n,k}- U_{\ell_{n,k},k}}{n} + o\left(\frac{1}{\sqrt{n}}\right).\end{equation}
+Starting from the definition of $U_{n,k}$, we can now apply the law of large number to the martingale $M_n$ and use the convergence of $\hat{\rho}_{n}$ to prove that $\lim_{n\rightarrow \infty} \frac{U_{n,k}}{n} = -(1-\alpha)u_k \in (0,1)$. Some algebra (Lemma~\ref{lem:convergence}) further permits to show that the right-hand side of Equation~\eqref{step-main} tends to zero. Using that both $N_n/n$ and $\hat{\rho}_n$ are probability vectors, it follows that $\lim_{n\rightarrow 0} \frac{N_{n,k}}{n} - \hat{\rho}_{n,k} = 0$ and that ${N_{n}}/{n}$ also converges to $u \in (0,1)^K$.
+
+A straightforward consequence is that $\forall k \in [K], N_{n,k} \to \infty$ a.s., hence $\hat{\Theta}_n$ converges to $\Theta$ and by continuity of \(\rho\) we obtain that \(\hat{\rho}_n = \rho(\hat{\Theta}_n) \to \rho(\Theta) = v \in (0,1)^K\), hence for all $k$,
+	\[
+	\lim_{n \to \infty} \frac{N_{n,k}}{n} = \lim_{n \to \infty} \hat{\rho}_{n,k} = v_k\;.
+	\]
+	The convergence rates follows from the Law of Iterated Logarithm.
+
+	\smallskip
+
+	The detailed proof that Theorem~\ref{thm:normality-gen-erade} holds can be found in Appendix~\ref{proof:thm2}. To get the more precise rates in statement (i), we need a more careful control on the increment of the auxiliary process $U_{n,k}$. Namely, we prove through a series of (rather technical) lemmas that
+	\[
+	U_{n,k}-U_{\ell_{n,k},k}\leq o_p(\sqrt n),
+	\qquad
+	U_{n,k}-U_{\ell_{n,k},k}\leq O(\sqrt{n\log\log n}) \quad a.s.
+	\]
+	which yields the following using the identities $\sum_{k=1}^K N_{n,k}=n$ and $\sum_{k=1}^K \hat\rho_{n,k}=1$:
+	\[
+	N_{n,k}-n\hat\rho_{n,k}=o_p(\sqrt n)\;.
+	\]
+    This proves the statements \eqref{eq:thm-res-1}--\eqref{eq:thm-res-2}. 	Combined with the rate \(n(\hat\rho_n-v)=O(\sqrt{n\log\log n})\)
+	from Theorem \ref{thm:LLN} yields \eqref{eq:thm-res-3}.
+	
+	To establish the asymptotic normality in (ii), we prove the following lemma that gives the joint CLT of the components of the estimator \(\hat{\Theta}_n\) scaled with \(\sqrt{N_{n,k}}\). The proof of Lemma \ref{lem:componentwise} relies on a martingale-CLT argument and is given in Appendix~\ref{proof:thm2}.
+	
+		\begin{restatable}{lemma}{jointcltlemma}[Joint CLT with Componentwise Scaling]\label{lem:componentwise} 
+			Consider a RAR procedure under which $N_{n,k}\to\infty$ a.s. for all $k \in [K]$, then we have
+			\[
+			D_n(\hat\Theta_n-\Theta)\xrightarrow{\mathcal{D}}
+			\mathcal N\!\big(0,\mathrm{diag}\left(V_1,\dots,V_K\right)\big)
+			\]
+			where $D_n:=\mathrm{diag}(\sqrt{N_{n,1}},\dots,\sqrt{N_{n,K}})\;.$
+		\end{restatable}
+		
+		Using the fact that \(\sqrt n D_n^{-1}\) converges to \(\mathrm{diag}\left(\frac{1}{\sqrt{v_1}},\ldots,\frac{1}{\sqrt{v_K}}\right)\), the CLT result of Lemma \ref{lem:componentwise} combined with Slutsky's lemma yields the first asymptotic normality result:
+		\begin{align*}
+			\sqrt n(\hat\Theta_n-\Theta) &= \sqrt n D_n^{-1} D_n(\hat\Theta_n-\Theta)\\
+			&\xrightarrow{\mathcal{D}}\mathrm{diag}\left(\frac{1}{\sqrt{v_1}},\ldots,\frac{1}{\sqrt{v_K}}\right) \mathcal N\!\big(0,\mathrm{diag}\left(V_1,\dots,V_K\right)\big)\\ 
+			&= \mathcal N(0,V).
+		\end{align*}
+
+	
+	A first-order Taylor expansion of the target function around $\Theta$ gives
+	\[
+	\hat\rho_n-v
+	= G(\hat\Theta_n-\Theta) + O_p(n^{-1/2}),
+	\]
+	and hence
+	\[
+	\sqrt n(\hat\rho_n-v)\xrightarrow{\mathcal{D}}\mathcal N(0,GVG^\top).
+	\]
+	Finally, the bound \eqref{eq:thm-res-1} implies
+	\[
+	\sqrt n\!\left(\frac{N_n}{n}-\hat\rho_n\right)=o_p(1),
+	\]
+	so Slutsky’s lemma yields the CLT for $\sqrt n(N_n/n-v)$ as well as the joint convergence stated in \eqref{eq:thm-res-4} and \eqref{eq:thm-res-5}.
+	
+	\begin{remark}
+			We emphasize that one component of the proof, Lemma \ref{lem:componentwise}, only requires that each treatment is sampled
+			infinitely often. The normalization in this CLT result is performed componentwise through
+			\(D_n\), allowing each estimator \(\hat\theta_{n,k}\) to be scaled according
+			to its own sample size \(N_{n,k}\). As a result, this Lemma provides a general asymptotic normality result for the treatment effect estimators that
+			does not rely on any assumption on the limiting allocation proportions. This result will be particularly relevant to tackle sparse target allocations, as we do in the next section.
+	\end{remark}
+	
