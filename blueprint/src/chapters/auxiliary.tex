@@ -109,18 +109,65 @@ the two filtrations $\filt$ and $\mathcal{G}$ are \texttt{filtration} and
 \texttt{filtrationAction}.
 \end{proof}
 
+\begin{lemma}[Conditional second moment of $\Delta Q$]\label{lem:Q_cond_second_moment}
+\lean{AlphaRAR.condExp_respMart_increment_sq}\leanok
+\uses{def:Q, def:condA}
+For each $k \in [K]$, conditioning on the action-augmented $\sigma$-algebra
+$\mathcal{G}_n = \filt_{n-1}\vee\sigma(A_n)$ (\texttt{filtrationAction}),
+\[
+  \E\big[(\Delta Q_{n,k})^2 \mid \mathcal{G}_n\big] = X_{n,k}\, V_k,
+\]
+where $V_k = \Var[\xi_{1,k}] = \int (x-\theta_k)^2\,\nu_k(dx)$ is the variance of arm $k$
+(Mathlib's \texttt{variance}, wrapped as \texttt{AlphaRAR.armVar}).
+\end{lemma}
+
+\begin{proof}\leanok
+Since $X_{n,k}$ is a $\{0,1\}$-indicator, $X_{n,k}^2 = X_{n,k}$ and hence
+$(\Delta Q_{n,k})^2 = X_{n,k}(\xi_{n,k}-\theta_k)^2$. The factor $X_{n,k}$ is
+$\mathcal{G}_n$-measurable, so it pulls out of the conditional expectation; by the same
+conditional-distribution computation as in Lemma~\ref{lem:Q_martingale} --- now applied to
+$g(x) = (x-\theta_k)^2$ (\texttt{condExp\_feedback\_comp}) --- the response's conditional
+second central moment given $\mathcal{G}_n$ is $\int (x-\theta_k)^2\,\nu_{A_n}(dx)$. On the
+event $\{A_n = k\}$ this integral equals $V_k$, while off it $X_{n,k}=0$; in either case
+the product is $X_{n,k} V_k$.
+\end{proof}
+
 \begin{lemma}[Quadratic variation of $Q$]\label{lem:Q_quad_var}
+\lean{AlphaRAR.predQuadVar_respMart_eq, AlphaRAR.martingale_sq_sub_predQuadVar_respMart}\leanok
+\uses{def:Q, def:counts, def:condA, def:pred_qv}
+Under Condition~\textbf{A}, the predictable quadratic variation of $Q_{\cdot,k}$ is
+$\langle Q_{\cdot,k}\rangle_n = V_k N_{n,k}$: the process $Q_{\cdot,k}^2 - V_k N_{\cdot,k}$ is a
+martingale, with $V_k N_{\cdot,k}$ its predictable compensator.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:Q_cond_second_moment, lem:qv_mart}
+The key point is again the filtration convention. $Q_{\cdot,k}$ is a martingale not only for
+$\filt$ but for the half-step-finer filtration
+$\mathcal{K}_n := \mathcal{G}_{n+1} = \filt_n\vee\sigma(A_{n+1})$ (\texttt{shiftFiltration} of
+\texttt{filtrationAction}), because its increment is unpredictable \emph{even given the current
+assignment} (\texttt{condExp\_respMart\_increment\_filtrationAction}). For that filtration the
+paper's $V_k N_{n,k}$ is the \emph{ordinary} predictable quadratic variation
+(Definition~\ref{def:pred_qv}): its increment is
+$\E[(\Delta Q_{m+1,k})^2\mid\mathcal{K}_m] = \E[(\Delta Q_{m+1,k})^2\mid\mathcal{G}_{m+1}]
+= V_k X_{m+1,k}$ (Lemma~\ref{lem:Q_cond_second_moment}), and summing over $m<n$ gives
+$V_k\sum_{m\le n} X_{m,k} = V_k N_{n,k}$ --- the indicator survives the sum because it is
+$\mathcal{K}_m$-measurable. That $Q^2-\langle Q\rangle$ is a martingale (for $\mathcal{K}$) is
+Lemma~\ref{lem:qv_mart}. The sole hypothesis is finite arm variance (Condition~\textbf{A}),
+formalized as $\xi_{\cdot,k}\in L^2$.
+\end{proof}
+
+\begin{lemma}[Cross variation of $Q$]\label{lem:Q_cross_var}
 \uses{def:Q, def:counts}
-Under Condition~\textbf{A}, the predictable quadratic variation of $Q_{\cdot,k}$
-is $\langle Q_{\cdot,k}\rangle_n = V_k N_{n,k}$, and for $k \ne j$ the cross
-variation $\langle Q_{\cdot,k}, Q_{\cdot,j}\rangle_n = 0$.
+For $k \ne j$, the cross variation vanishes:
+$\langle Q_{\cdot,k}, Q_{\cdot,j}\rangle_n = 0$.
 \end{lemma}
 
 \begin{proof}
-\uses{lem:Q_martingale, lem:qv_incr, lem:qv_orthogonal}
-Sum the conditional second moments of Lemma~\ref{lem:Q_martingale} using
-$\sum_{m\le n} X_{m,k} = N_{n,k}$. The cross terms vanish because
-$X_{m,k}X_{m,j} = 0$ for $k \ne j$ (each patient is assigned to one arm).
+\uses{lem:qv_orthogonal}
+The increments $\Delta Q_{\cdot,k}$ and $\Delta Q_{\cdot,j}$ are conditionally orthogonal
+because $X_{m,k}X_{m,j} = 0$ for $k \ne j$ (each patient is assigned to exactly one arm), so
+every cross term $\Delta Q_{m,k}\,\Delta Q_{m,j}$ is identically zero.
 \end{proof}
 
 \begin{lemma}[Estimator error via $Q$]\label{lem:theta_error_Q}
