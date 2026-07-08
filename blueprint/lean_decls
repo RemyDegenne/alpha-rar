@@ -12,6 +12,8 @@ AlphaRAR.martingale_respMart
 AlphaRAR.condExp_respMart_increment_sq
 AlphaRAR.predQuadVar_respMart_eq
 AlphaRAR.martingale_sq_sub_predQuadVar_respMart
+AlphaRAR.martingale_respMart_mul
+AlphaRAR.isBigOpOne_respMart_div_sqrt
 AlphaRAR.theta_error_Q
 AlphaRAR.auxU
 AlphaRAR.auxU_succ_sub

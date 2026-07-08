@@ -5,6 +5,7 @@ Authors: Rémy Degenne
 -/
 import AlphaRAR.Mathlib.HasCondDistrib
 import AlphaRAR.Probability.QuadraticVariation
+import AlphaRAR.Probability.MartingaleRate
 import LeanMachineLearning.SequentialLearning.StationaryEnv
 
 /-!
@@ -292,6 +293,31 @@ lemma respMart_succ (k : 𝓐) (n : ℕ) :
   funext ω
   simp only [respMart, Finset.sum_range_succ, Pi.add_apply]
 
+omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] in
+/-- The response-martingale increment: `Q k (n+1) - Q k n = 𝟙{A (n+1)=k}(Y (n+1) - (ν k)[id])`. -/
+lemma respMart_succ_sub (k : 𝓐) (n : ℕ) (ω : Ω) :
+    respMart ν A Y k (n + 1) ω - respMart ν A Y k n ω
+      = Set.indicator {ω | A (n + 1) ω = k} (fun _ ↦ (1 : ℝ)) ω * (Y (n + 1) ω - (ν k)[id]) := by
+  rw [respMart_succ]; simp only [Pi.add_apply]; ring
+
+omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] in
+/-- **The increments of `Q_k` and `Q_j` have identically-zero product for `k ≠ j`.**
+A patient is assigned to exactly one arm, so the indicators `𝟙{A = k}` and `𝟙{A = j}` are
+disjoint (`𝟙{A = k}·𝟙{A = j} = 0`); hence `ΔQ_{·,k} · ΔQ_{·,j} = 0`. This is the (unconditional)
+orthogonality behind the vanishing cross variation. -/
+lemma respMart_increment_mul_eq_zero {k j : 𝓐} (hkj : k ≠ j) (n : ℕ) :
+    (respMart ν A Y k (n + 1) - respMart ν A Y k n)
+      * (respMart ν A Y j (n + 1) - respMart ν A Y j n) = 0 := by
+  funext ω
+  simp only [Pi.mul_apply, Pi.sub_apply, Pi.zero_apply, respMart_succ_sub]
+  rcases eq_or_ne (A (n + 1) ω) k with hak | hak
+  · rw [Set.indicator_of_notMem
+      (show ω ∉ {ω | A (n + 1) ω = j} by simp only [Set.mem_setOf_eq]; rw [hak]; exact hkj)]
+    ring
+  · rw [Set.indicator_of_notMem
+      (show ω ∉ {ω | A (n + 1) ω = k} by simpa using hak)]
+    ring
+
 omit [IsMarkovKernel ν] in
 /-- Each `Q k n` is integrable (a finite sum of integrable increments). -/
 lemma integrable_respMart (hA : ∀ n, Measurable (A n)) (hint : ∀ n, Integrable (Y n) P)
@@ -354,7 +380,15 @@ the compensator increment `V_k X_{n,k}` keeps the indicator because the arm is `
 -/
 
 /-- The number of assignments to arm `k` among the first `n` patients, as a real-valued random
-variable: `N_{n,k} = ∑_{m < n} 𝟙{A (m+1) = k}`. -/
+variable: `N_{n,k} = ∑_{m < n} 𝟙{A (m+1) = k}`.
+
+This is morally LML's `Learning.pullCount`, but deliberately kept separate: it is real-valued
+(it appears as the multiplicative factor `armVar ν k * respCount …`), and it is indexed to match
+the response martingale, which sums over `A (m+1)` (patients `1, …, n`). Precisely,
+`respCount A k n ω = (Learning.pullCount (fun i ↦ A (i+1)) k n ω : ℝ)`, i.e. the real-cast
+`pullCount` of the *shifted* action process — equivalently `pullCount A k (n+1) − 𝟙{A 0 = k}`. So
+it is not definitionally equal to `pullCount A k n` (that counts `A 0, …, A (n-1)`), and the
+`A 0` assignment is intentionally not counted here. -/
 noncomputable def respCount (A : ℕ → Ω → 𝓐) (k : 𝓐) (n : ℕ) : Ω → ℝ :=
   ∑ m ∈ Finset.range n, fun ω ↦ Set.indicator {ω | A (m + 1) ω = k} (fun _ ↦ (1 : ℝ)) ω
 
@@ -530,5 +564,99 @@ theorem martingale_sq_sub_predQuadVar_respMart (h : IsAlgEnvSeq A Y alg (station
       P :=
   martingale_sq_sub_predQuadVar (stronglyAdapted_respMart_shift h k)
     (fun n ↦ (memLp_respMart h.measurable_action hY2 k n).integrable_sq)
+
+/-- **The cross variation of `Q_k` and `Q_j` vanishes for `k ≠ j`** (blueprint `lem:Q_cross_var`):
+`Q_k · Q_j` is a martingale (for the shifted filtration `𝒦`), hence its predictable compensator —
+the cross variation `⟨Q_k, Q_j⟩` — is `0`. The orthogonality is not merely conditional: since each
+patient is assigned to exactly one arm, the increment indicators `𝟙{A = k}` and `𝟙{A = j}` are
+disjoint, so the product of increments `ΔQ_{·,k} · ΔQ_{·,j}` is *identically* `0`. -/
+theorem martingale_respMart_mul (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hY2 : ∀ n, MemLp (Y n) 2 P) {k j : 𝓐} (hkj : k ≠ j) :
+    Martingale (fun n ↦ respMart ν A Y k n * respMart ν A Y j n)
+      (shiftFiltration (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback))
+      P := by
+  have hint : ∀ n, Integrable (Y n) P := fun n ↦ (hY2 n).integrable one_le_two
+  have hMN : ∀ n, Integrable (respMart ν A Y k n * respMart ν A Y j n) P := fun n ↦
+    (memLp_respMart h.measurable_action hY2 k n).integrable_mul
+      (memLp_respMart h.measurable_action hY2 j n)
+  have hB : ∀ i, Integrable
+      (respMart ν A Y k i * (respMart ν A Y j (i + 1) - respMart ν A Y j i)) P := fun i ↦
+    (memLp_respMart h.measurable_action hY2 k i).integrable_mul
+      ((memLp_respMart h.measurable_action hY2 j (i + 1)).sub
+        (memLp_respMart h.measurable_action hY2 j i))
+  have hC : ∀ i, Integrable
+      (respMart ν A Y j i * (respMart ν A Y k (i + 1) - respMart ν A Y k i)) P := fun i ↦
+    (memLp_respMart h.measurable_action hY2 j i).integrable_mul
+      ((memLp_respMart h.measurable_action hY2 k (i + 1)).sub
+        (memLp_respMart h.measurable_action hY2 k i))
+  exact martingale_mul (martingale_respMart_shift h hint k) (martingale_respMart_shift h hint j)
+    hMN hB hC (fun i ↦ by rw [respMart_increment_mul_eq_zero hkj i]; exact integrable_zero _ _ _)
+    (fun i ↦ by rw [respMart_increment_mul_eq_zero hkj i]; simp)
+
+/-- **The increment second moment of `Q` is bounded by the arm variance `V_k`.**
+`∫ (ΔQ_{n+1})² ∂P = V_k · P{A (n+1) = k} ≤ V_k`: the `𝒦`-conditional second moment is
+`𝟙{A (n+1) = k}·V_k` (`condExp_respMart_increment_sq`), so by the tower property the integral is
+`V_k` times the probability of assigning arm `k`, which is `≤ 1`. This is the increment bound
+feeding `cor:mart_Op` (`isBigOpOne_respMart_div_sqrt`). -/
+lemma integral_respMart_increment_sq_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
+    (n : ℕ) (hY2 : MemLp (Y (n + 1)) 2 P) :
+    ∫ ω, (respMart ν A Y k (n + 1) ω - respMart ν A Y k n ω) ^ 2 ∂P ≤ armVar ν k := by
+  have hcent2 : Integrable (fun ω ↦ (Y (n + 1) ω - (ν k)[id]) ^ 2) P :=
+    (hY2.sub (memLp_const _)).integrable_sq
+  have hdiff : (fun ω ↦ (respMart ν A Y k (n + 1) ω - respMart ν A Y k n ω) ^ 2)
+      = fun ω ↦ (Set.indicator {ω | A (n + 1) ω = k} (fun _ ↦ (1 : ℝ)) ω
+        * (Y (n + 1) ω - (ν k)[id])) ^ 2 := by
+    funext ω; rw [respMart_succ]; simp only [Pi.add_apply]; ring
+  have hGle : IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback (n + 1)
+      ≤ mΩ :=
+    (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback).le (n + 1)
+  have hset : MeasurableSet {ω | A (n + 1) ω = k} :=
+    h.measurable_action (n + 1) (measurableSet_singleton k)
+  have hσ2 : (0 : ℝ) ≤ armVar ν k := by rw [armVar]; exact variance_nonneg _ _
+  rw [hdiff, ← integral_condExp hGle,
+    integral_congr_ae (condExp_respMart_increment_sq h k n hcent2),
+    integral_mul_const (armVar ν k), integral_indicator_const (1 : ℝ) hset,
+    smul_eq_mul, mul_one]
+  have hprob : (P {ω | A (n + 1) ω = k}).toReal ≤ 1 := by
+    rw [← ENNReal.toReal_one]; exact ENNReal.toReal_mono ENNReal.one_ne_top prob_le_one
+  exact mul_le_of_le_one_left hσ2 hprob
+
+/-- **The response martingale is `O_p(√n)`** (blueprint `cor:mart_Op` applied to `Q`).
+For each arm `k`, under Condition **A** (square-integrable responses, `hY2 : MemLp (Y n) 2 P`),
+`Q_{n,k} / √n = O_p(1)`, i.e. `Q_{n,k} = O_p(√n)`.
+
+`Q k` is a martingale for the shifted filtration `𝒦` (`martingale_respMart_shift`) with `Q k 0 = 0`,
+and its increment second moments are bounded by the arm variance: `∫ (ΔQ)² ≤ V_k`. Indeed the
+`𝒦`-conditional second moment is `𝟙{A (n+1) = k}·V_k` (`condExp_respMart_increment_sq`), so by the
+tower property `∫ (ΔQ)² = V_k · P{A (n+1) = k} ≤ V_k`. Then `isBigOpOne_martingale_div_sqrt`
+(`cor:mart_Op`) applies with `σ² = V_k`. -/
+theorem isBigOpOne_respMart_div_sqrt (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hY2 : ∀ n, MemLp (Y n) 2 P) (k : 𝓐) :
+    IsBigOpOne P (fun n ω ↦ respMart ν A Y k n ω / Real.sqrt n) := by
+  have hint : ∀ n, Integrable (Y n) P := fun n ↦ (hY2 n).integrable one_le_two
+  have hcent2 : ∀ n, Integrable (fun ω ↦ (Y n ω - (ν k)[id]) ^ 2) P :=
+    fun n ↦ ((hY2 n).sub (memLp_const _)).integrable_sq
+  -- The martingale increment `ΔQ` squares to the squared centered response.
+  have hdiff : ∀ m, (fun ω ↦ (respMart ν A Y k (m + 1) ω - respMart ν A Y k m ω) ^ 2)
+      = fun ω ↦ (Set.indicator {ω | A (m + 1) ω = k} (fun _ ↦ (1 : ℝ)) ω
+        * (Y (m + 1) ω - (ν k)[id])) ^ 2 := by
+    intro m; funext ω; rw [respMart_succ]; simp only [Pi.add_apply]; ring
+  have hM := martingale_respMart_shift h hint k
+  have hM2 : ∀ n, Integrable (fun ω ↦ respMart ν A Y k n ω ^ 2) P :=
+    fun n ↦ (memLp_respMart h.measurable_action hY2 k n).integrable_sq
+  have hM0 : respMart ν A Y k 0 =ᵐ[P] 0 := by filter_upwards with ω; simp [respMart]
+  have hd2 : ∀ m, Integrable
+      (fun ω ↦ (respMart ν A Y k (m + 1) ω - respMart ν A Y k m ω) ^ 2) P := by
+    intro m; rw [hdiff m]
+    exact integrable_respMart_increment_sq k (h.measurable_action (m + 1)) (hcent2 (m + 1))
+  have hprod : ∀ n, Integrable (respMart ν A Y k n
+      * (respMart ν A Y k (n + 1) - respMart ν A Y k n)) P := fun n ↦
+    (memLp_respMart h.measurable_action hY2 k n).integrable_mul
+      ((memLp_respMart h.measurable_action hY2 k (n + 1)).sub
+        (memLp_respMart h.measurable_action hY2 k n))
+  have hσ2 : (0 : ℝ) ≤ armVar ν k := by rw [armVar]; exact variance_nonneg _ _
+  have hinc : ∀ n, ∫ ω, (respMart ν A Y k (n + 1) ω - respMart ν A Y k n ω) ^ 2 ∂P
+      ≤ armVar ν k := fun n ↦ integral_respMart_increment_sq_le h k n (hY2 (n + 1))
+  exact isBigOpOne_martingale_div_sqrt hM hM2 hM0 (armVar ν k) hσ2 hd2 hprod hinc
 
 end AlphaRAR

@@ -158,16 +158,36 @@ formalized as $\xi_{\cdot,k}\in L^2$.
 \end{proof}
 
 \begin{lemma}[Cross variation of $Q$]\label{lem:Q_cross_var}
+\lean{AlphaRAR.martingale_respMart_mul}\leanok
 \uses{def:Q, def:counts}
-For $k \ne j$, the cross variation vanishes:
-$\langle Q_{\cdot,k}, Q_{\cdot,j}\rangle_n = 0$.
+For $k \ne j$, the cross variation vanishes: $\langle Q_{\cdot,k}, Q_{\cdot,j}\rangle_n = 0$.
+Equivalently, $Q_{\cdot,k}\,Q_{\cdot,j}$ is a martingale (for the filtration $\mathcal{K}$).
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:qv_orthogonal}
-The increments $\Delta Q_{\cdot,k}$ and $\Delta Q_{\cdot,j}$ are conditionally orthogonal
-because $X_{m,k}X_{m,j} = 0$ for $k \ne j$ (each patient is assigned to exactly one arm), so
-every cross term $\Delta Q_{m,k}\,\Delta Q_{m,j}$ is identically zero.
+The increments $\Delta Q_{\cdot,k}$ and $\Delta Q_{\cdot,j}$ are orthogonal --- indeed their
+product is \emph{identically} zero, since $X_{m,k}X_{m,j} = 0$ for $k \ne j$ (each patient is
+assigned to exactly one arm, \texttt{respMart\_increment\_mul\_eq\_zero}). Hence
+$Q_{\cdot,k}\,Q_{\cdot,j}$ is a martingale by Lemma~\ref{lem:qv_orthogonal}
+(\texttt{martingale\_mul}), so its predictable compensator --- the cross variation --- is $0$.
+\end{proof}
+
+\begin{lemma}[The response martingale is $O_p(\sqrt n)$]\label{lem:Q_Op}
+\lean{AlphaRAR.isBigOpOne_respMart_div_sqrt}\leanok
+\uses{def:Q, lem:Q_martingale}
+For each $k \in [K]$, if the responses are square-integrable (Condition~\textbf{A}), then
+$Q_{n,k} = O_p(\sqrt n)$.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{cor:mart_Op, lem:Q_cond_second_moment}
+$Q_{\cdot,k}$ is a martingale (for $\mathcal{K}$) with $Q_{0,k}=0$, and its increment second
+moments are bounded by the arm variance: taking expectations in
+Lemma~\ref{lem:Q_cond_second_moment} via the tower property,
+$\E[(\Delta Q_{n+1,k})^2] = \E[X_{n+1,k}\,V_k] = V_k\,\Prob(X_{n+1,k}=1) \le V_k$
+(\texttt{integral\_respMart\_increment\_sq\_le}). So Corollary~\ref{cor:mart_Op} applies with
+$\sigma^2 = V_k$.
 \end{proof}
 
 \begin{lemma}[Estimator error via $Q$]\label{lem:theta_error_Q}
