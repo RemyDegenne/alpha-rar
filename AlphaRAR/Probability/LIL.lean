@@ -26,6 +26,15 @@ property `μ[ΔM_i | ℱ_i] = 0`.
 * `AlphaRAR.predQuadVar_nonneg`: the predictable quadratic variation is nonnegative.
 * `AlphaRAR.supermartingale_expProcess`: `Z_n(θ)` is a supermartingale
   (blueprint `lem:lil_exp_supermart`).
+* `AlphaRAR.smul_measure_sup_le_integral_zero`: Ville's maximal inequality for a nonnegative
+  supermartingale (fills a Mathlib gap).
+* `AlphaRAR.measure_exists_ge_le_exp`, `measure_exists_ge_le_exp_optimized`,
+  `measure_exists_ge_le_exp_all`: the Freedman-type tail bound (blueprint `lem:lil_freedman`),
+  and its `θ`-optimized finite- and infinite-horizon forms (blueprint `cor:lil_freedman_opt`).
+* `AlphaRAR.ae_eventually_forall_lt_of_summable`: the Borel–Cantelli step over a block schedule
+  (blueprint `lem:lil_bc`).
+* `AlphaRAR.ae_eventually_forall_lt_dyadic`: the one-sided LIL upper bound with the dyadic
+  schedule (blueprint `thm:lil_bounded`).
 -/
 
 open MeasureTheory Filter
@@ -359,5 +368,139 @@ theorem measure_exists_ge_le_exp [IsProbabilityMeasure μ] (hM : Martingale M �
         have hexp : Real.exp (-θ * lam + θ ^ 2 * v) = a⁻¹ := by
           rw [hadef, ← Real.exp_neg]; congr 1; ring
         rw [hexp, ENNReal.ofReal_inv_of_pos ha_pos]
+
+/-- **Freedman inequality with the optimal `θ = λ/(2v)`** (finite horizon).
+For a square-integrable martingale `M` with `M 0 = 0`, increments bounded by `c > 0`, and
+`0 < λ`, `0 < v` with `λ c ≤ 2 v` (so the optimizer `θ = λ/(2v)` is admissible, `θ c ≤ 1`),
+`μ{ω : ∃ k ≤ n, λ ≤ M_k ω ∧ ⟨M⟩_k ω ≤ v} ≤ exp(-λ²/(4v))`.
+This is `measure_exists_ge_le_exp` evaluated at `θ = λ/(2v)`, where
+`-θλ + θ² v = -λ²/(4v)`. The variance proxy is `2v` rather than the sharp `v` because the
+one-step bound uses `eˣ ≤ 1 + x + x²`; this costs a factor `√2` in the eventual LIL constant. -/
+theorem measure_exists_ge_le_exp_optimized [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ}
+    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {lam v : ℝ} (hlam : 0 < lam) (hv : 0 < v)
+    (hadm : lam * c ≤ 2 * v) (n : ℕ) :
+    μ {ω | ∃ k ≤ n, lam ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v}
+      ≤ ENNReal.ofReal (Real.exp (-lam ^ 2 / (4 * v))) := by
+  set θ := lam / (2 * v) with hθdef
+  have hθ0 : 0 < θ := by rw [hθdef]; positivity
+  have hθc : |θ| * c ≤ 1 := by
+    rw [abs_of_pos hθ0, hθdef, div_mul_eq_mul_div, div_le_one (by positivity)]
+    exact hadm
+  have h := measure_exists_ge_le_exp hM hM0 hM2 hθc hθ0 hb lam v n
+  have hexp : -θ * lam + θ ^ 2 * v = -lam ^ 2 / (4 * v) := by
+    rw [hθdef]; field_simp; ring
+  rwa [hexp] at h
+
+/-- **Freedman inequality with the optimal `θ`, infinite horizon.**
+Taking `n → ∞` in `measure_exists_ge_le_exp_optimized` (the events increase with `n`):
+`μ{ω : ∃ k, λ ≤ M_k ω ∧ ⟨M⟩_k ω ≤ v} ≤ exp(-λ²/(4v))`. This is the form fed to Borel–Cantelli
+in the one-sided law of the iterated logarithm. -/
+theorem measure_exists_ge_le_exp_all [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ}
+    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {lam v : ℝ} (hlam : 0 < lam) (hv : 0 < v)
+    (hadm : lam * c ≤ 2 * v) :
+    μ {ω | ∃ k, lam ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v}
+      ≤ ENNReal.ofReal (Real.exp (-lam ^ 2 / (4 * v))) := by
+  set A : ℕ → Set Ω := fun n ↦ {ω | ∃ k ≤ n, lam ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v} with hA
+  have hmono : Monotone A := fun a b hab ω ⟨k, hk, h⟩ ↦ ⟨k, hk.trans hab, h⟩
+  have hUnion : (⋃ n, A n) = {ω | ∃ k, lam ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v} := by
+    ext ω
+    simp only [hA, Set.mem_iUnion, Set.mem_setOf_eq]
+    exact ⟨fun ⟨_, k, _, h⟩ ↦ ⟨k, h⟩, fun ⟨k, h⟩ ↦ ⟨k, k, le_rfl, h⟩⟩
+  rw [← hUnion, hmono.measure_iUnion]
+  exact iSup_le fun n ↦ measure_exists_ge_le_exp_optimized hM hM0 hM2 hb hlam hv hadm n
+
+/-- **Borel–Cantelli step of the one-sided LIL.**
+Given a block schedule `(v_k)`, `(λ_k)` of thresholds with `λ_k c ≤ 2 v_k` (admissibility) whose
+optimized Freedman tail bounds are summable, `∑_k exp(-λ_k²/(4 v_k)) < ∞`, almost surely only
+finitely many blocks are "bad": for a.e. `ω`, eventually in `k`, no time `n` has both
+`M_n ≥ λ_k` and `⟨M⟩_n ≤ v_k`. Equivalently, for large `k`, `⟨M⟩_n ≤ v_k ⇒ M_n < λ_k` for all `n`.
+This is the first Borel–Cantelli lemma (`ae_eventually_notMem`) applied to the sets
+`s_k = {∃ n, M_n ≥ λ_k ∧ ⟨M⟩_n ≤ v_k}`, whose measures are bounded via
+`measure_exists_ge_le_exp_all`. -/
+theorem ae_eventually_forall_lt_of_summable [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ}
+    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {lam v : ℕ → ℝ} (hlam : ∀ k, 0 < lam k)
+    (hv : ∀ k, 0 < v k) (hadm : ∀ k, lam k * c ≤ 2 * v k)
+    (hsum : Summable fun k ↦ Real.exp (-lam k ^ 2 / (4 * v k))) :
+    ∀ᵐ ω ∂μ, ∀ᶠ k in atTop, ∀ n, predQuadVar M ℱ μ n ω ≤ v k → M n ω < lam k := by
+  set s : ℕ → Set Ω := fun k ↦ {ω | ∃ n, lam k ≤ M n ω ∧ predQuadVar M ℱ μ n ω ≤ v k} with hs_def
+  have hμs : ∀ k, μ (s k) ≤ ENNReal.ofReal (Real.exp (-lam k ^ 2 / (4 * v k))) := fun k ↦
+    measure_exists_ge_le_exp_all hM hM0 hM2 hb (hlam k) (hv k) (hadm k)
+  have hfin : (∑' k, μ (s k)) ≠ ∞ := by
+    have h1 : (∑' k, μ (s k)) ≤ ∑' k, ENNReal.ofReal (Real.exp (-lam k ^ 2 / (4 * v k))) :=
+      ENNReal.tsum_le_tsum hμs
+    rw [← ENNReal.ofReal_tsum_of_nonneg (fun k ↦ (Real.exp_pos _).le) hsum] at h1
+    exact ne_top_of_le_ne_top ENNReal.ofReal_ne_top h1
+  filter_upwards [ae_eventually_notMem hfin] with ω hω
+  filter_upwards [hω] with k hk
+  simp only [hs_def, Set.mem_setOf_eq, not_exists, not_and] at hk
+  intro n hn
+  by_contra hcon
+  rw [not_lt] at hcon
+  exact hk n hcon hn
+
+/-- **One-sided LIL with a dyadic schedule** (formalized content of blueprint `thm:lil_bounded`).
+Instantiating the Borel–Cantelli step (`ae_eventually_forall_lt_of_summable`) with dyadic blocks
+`v_k = 2^k` and thresholds `λ_k = K √(2^k (k+1))`, where `0 < K` and `K c ≤ 2`. Admissibility
+`λ_k c ≤ 2 v_k` then holds for *every* `k` (via `k + 1 ≤ 2^k`, so `√(2^k(k+1)) ≤ 2^k`), and the
+tail bounds telescope to a geometric series,
+`exp(-λ_k²/(4 v_k)) = exp(-K²(k+1)/4)`. Conclusion: almost surely, for all large `k` and every
+time `n`, `⟨M⟩_n ≤ 2^k ⇒ M_n < K √(2^k (k+1))`. Since on the block `⟨M⟩_n ∈ (2^{k-1}, 2^k]` one has
+`√(2^k(k+1)) ≍ √(⟨M⟩_n log ⟨M⟩_n)`, this is the `O(√(⟨M⟩_n log ⟨M⟩_n))` upper bound — a `log`
+(not `log log`) rate, which suffices for the `o(⟨M⟩_n)` uses downstream. -/
+theorem ae_eventually_forall_lt_dyadic [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c K : ℝ} (hc : 0 ≤ c)
+    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) (hK : 0 < K) (hKc : K * c ≤ 2) :
+    ∀ᵐ ω ∂μ, ∀ᶠ (k : ℕ) in atTop, ∀ n, predQuadVar M ℱ μ n ω ≤ (2 : ℝ) ^ k →
+      M n ω < K * Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1)) := by
+  have hv : ∀ k : ℕ, (0 : ℝ) < (2 : ℝ) ^ k := fun k ↦ by positivity
+  have hkle : ∀ k : ℕ, (k : ℝ) + 1 ≤ (2 : ℝ) ^ k := fun k ↦ by
+    have h : k + 1 ≤ 2 ^ k := k.lt_two_pow_self
+    calc (k : ℝ) + 1 = ((k + 1 : ℕ) : ℝ) := by push_cast; ring
+      _ ≤ ((2 ^ k : ℕ) : ℝ) := by exact_mod_cast h
+      _ = (2 : ℝ) ^ k := by push_cast; ring
+  have hlam : ∀ k : ℕ, 0 < K * Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1)) := fun k ↦
+    mul_pos hK (Real.sqrt_pos.mpr (by positivity))
+  have hadm : ∀ k : ℕ, K * Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1)) * c ≤ 2 * (2 : ℝ) ^ k :=
+    fun k ↦ by
+      have hsqrt_le : Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1)) ≤ (2 : ℝ) ^ k := by
+        calc Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1))
+            ≤ Real.sqrt ((2 : ℝ) ^ k * (2 : ℝ) ^ k) :=
+              Real.sqrt_le_sqrt (mul_le_mul_of_nonneg_left (hkle k) (hv k).le)
+          _ = (2 : ℝ) ^ k := Real.sqrt_mul_self (hv k).le
+      calc K * Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1)) * c
+          ≤ K * (2 : ℝ) ^ k * c :=
+            mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hsqrt_le hK.le) hc
+        _ = K * c * (2 : ℝ) ^ k := by ring
+        _ ≤ 2 * (2 : ℝ) ^ k := mul_le_mul_of_nonneg_right hKc (hv k).le
+  have hsum : Summable fun k : ℕ ↦
+      Real.exp (-(K * Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1))) ^ 2 / (4 * (2 : ℝ) ^ k)) := by
+    have hkey : ∀ k : ℕ,
+        Real.exp (-(K * Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1))) ^ 2 / (4 * (2 : ℝ) ^ k))
+          = Real.exp (-(K ^ 2 / 4)) ^ (k + 1) := by
+      intro k
+      have hsq : (K * Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1))) ^ 2
+          = K ^ 2 * ((2 : ℝ) ^ k * ((k : ℝ) + 1)) := by
+        rw [mul_pow, Real.sq_sqrt (by positivity)]
+      rw [hsq, ← Real.exp_nat_mul]
+      congr 1
+      push_cast
+      rw [div_eq_iff (by positivity : (0 : ℝ) < 4 * 2 ^ k).ne']
+      ring
+    rw [summable_congr hkey]
+    have hr1 : Real.exp (-(K ^ 2 / 4)) < 1 := by
+      rw [Real.exp_lt_one_iff]
+      have : 0 < K ^ 2 := by positivity
+      linarith
+    have hgeo : Summable fun k : ℕ ↦ Real.exp (-(K ^ 2 / 4)) ^ k :=
+      summable_geometric_of_lt_one (Real.exp_pos _).le hr1
+    exact (hgeo.mul_right (Real.exp (-(K ^ 2 / 4)))).congr fun k ↦ (pow_succ _ k).symm
+  refine ae_eventually_forall_lt_of_summable hM hM0 hM2 hb ?_ ?_ ?_ ?_
+  · exact hlam
+  · exact hv
+  · exact hadm
+  · exact hsum
 
 end AlphaRAR

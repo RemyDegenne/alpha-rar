@@ -68,11 +68,51 @@ follows from the conditionally sub-Gaussian MGF machinery of
 \texttt{Probability/Moments/SubGaussian.lean}.
 \end{proof}
 
+\begin{corollary}[Optimized Freedman bound]\label{cor:lil_freedman_opt}
+\lean{AlphaRAR.measure_exists_ge_le_exp_optimized, AlphaRAR.measure_exists_ge_le_exp_all}\leanok
+\uses{lem:lil_freedman}
+Under the hypotheses of Lemma~\ref{lem:lil_freedman}, for $\lambda, v > 0$ with the
+admissibility condition $\lambda c \le 2v$ (so that the optimizer $\theta=\lambda/(2v)$
+satisfies $\theta c\le 1$),
+\[
+  \Prob\!\Big(\exists n:\ M_n \ge \lambda \ \text{and}\ \langle M\rangle_n \le v\Big)
+  \le \exp\!\Big(-\frac{\lambda^2}{4v}\Big).
+\]
+The variance proxy $2v$ (rather than the sharp $v$) comes from the one-step bound
+$e^x\le 1+x+x^2$, costing a factor $\sqrt2$ in the eventual constant.
+\end{corollary}
+
+\begin{proof}\leanok
+\uses{lem:lil_freedman}
+Evaluate Lemma~\ref{lem:lil_freedman} at $\theta=\lambda/(2v)$, giving exponent
+$-\theta\lambda+\theta^2 v = -\lambda^2/(4v)$. The finite-horizon events increase to the
+event over all $n$, so their measures pass to the limit
+(\texttt{measure\_exists\_ge\_le\_exp\_all}).
+\end{proof}
+
+\begin{lemma}[Borel--Cantelli over blocks]\label{lem:lil_bc}
+\lean{AlphaRAR.ae_eventually_forall_lt_of_summable}\leanok
+\uses{cor:lil_freedman_opt}
+Fix threshold schedules $(v_k)_{k}$, $(\lambda_k)_k$ with $v_k,\lambda_k>0$ and
+$\lambda_k c\le 2v_k$, such that $\sum_k \exp(-\lambda_k^2/(4v_k))<\infty$. Then almost
+surely only finitely many blocks are ``bad'': for a.e.\ $\omega$, for all large $k$ and
+every $n$, $\langle M\rangle_n\le v_k \Rightarrow M_n < \lambda_k$.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{cor:lil_freedman_opt}
+By Corollary~\ref{cor:lil_freedman_opt}, $\Prob(s_k)\le\exp(-\lambda_k^2/(4v_k))$ where
+$s_k=\{\exists n:\ M_n\ge\lambda_k,\ \langle M\rangle_n\le v_k\}$. The right-hand sides are
+summable, so $\sum_k\Prob(s_k)<\infty$, and the first Borel--Cantelli lemma gives that a.e.\
+$\omega$ lies in only finitely many $s_k$.
+\end{proof}
+
 \section{The upper bound}
 \label{sec:pre_lil_upper}
 
 \begin{theorem}[One-sided LIL, bounded increments]\label{thm:lil_bounded}
-\uses{lem:lil_freedman}
+\lean{AlphaRAR.ae_eventually_forall_lt_dyadic}
+\uses{lem:lil_bc}
 Let $(M_n)$ be a martingale with $M_0=0$ and $|\Delta M_i|\le c$, and suppose
 $\langle M\rangle_n \to \infty$ a.s. Then
 \[
@@ -85,13 +125,30 @@ a.s.
 \end{theorem}
 
 \begin{proof}
-\uses{lem:lil_freedman}
-Fix $\eta>1$ and set $v_k = \eta^k$. Apply Lemma~\ref{lem:lil_freedman} on the
-event $\{\langle M\rangle_n\in[v_{k-1},v_k]\}$ with
-$\lambda_k=(1+\varepsilon)\sqrt{2v_k\log\log v_k}$: the resulting probabilities
-are summable in $k$, so Borel--Cantelli implies that a.s.\ only finitely many of
-the events $\{M_n \ge \lambda_k,\ \langle M\rangle_n \le v_k\}$ occur. Letting
+\uses{lem:lil_bc}
+Fix $\eta>1$ and set $v_k = \eta^k$. Apply Lemma~\ref{lem:lil_bc} with
+$\lambda_k=(1+\varepsilon)\sqrt{2v_k\log\log v_k}$: the tail bounds
+$\exp(-\lambda_k^2/(4v_k))$ are summable in $k$, so a.s.\ only finitely many blocks are
+bad. On the block $\{\langle M\rangle_n\in(v_{k-1},v_k]\}$ this yields
+$M_n < \lambda_k \le C\sqrt{\langle M\rangle_n\log\log\langle M\rangle_n}$; letting
 $\eta\downarrow1$ and $\varepsilon\downarrow0$ yields the $\limsup$ bound.
+
+\textbf{Formalization status.} The formalized statement
+\texttt{AlphaRAR.ae\_eventually\_forall\_lt\_dyadic} is the dyadic-block form: with the schedule
+$v_k=2^k$ and $\lambda_k = K\sqrt{v_k(k+1)}$ (where $0<K$ and $Kc\le2$, so admissibility
+$\lambda_k c\le 2v_k$ holds for \emph{every} $k$ via $k+1\le 2^k$, and the tail bounds
+$\exp(-\lambda_k^2/(4v_k))=\exp(-K^2(k+1)/4)$ form a geometric series), almost surely for all
+large $k$ and every $n$, $\langle M\rangle_n\le 2^k \Rightarrow M_n < K\sqrt{2^k(k+1)}$. This is
+the complete probabilistic content, built from Ville's inequality, the optimized Freedman bound
+(Corollary~\ref{cor:lil_freedman_opt}), and Borel--Cantelli (Lemma~\ref{lem:lil_bc}). Since on the
+block $\langle M\rangle_n\in(2^{k-1},2^k]$ one has $\sqrt{2^k(k+1)}\asymp
+\sqrt{\langle M\rangle_n\log\langle M\rangle_n}$, it gives the displayed
+$O(\sqrt{\langle M\rangle_n\log\langle M\rangle_n})$ upper bound. Two deliberate deviations from
+the displayed statement remain unformalized: the purely deterministic repackaging into the
+normalized $\limsup$, and the $\log\log$ (rather than $\log$) rate with sharp constant $1$, which
+would require refining the one-step MGF bound $e^x\le1+x+x^2$ to variance proxy $1$ (valid only as
+the increment $\to0$). The $\log$ rate already gives $M_n=o(\langle M\rangle_n)$, which suffices
+for all downstream uses.
 \end{proof}
 
 \begin{lemma}[Truncation to finite variance]\label{lem:lil_truncation}
