@@ -50,3 +50,5 @@ AlphaRAR.martingale_ae_tendsto_of_eLpNorm_two_le
 AlphaRAR.kronecker
 AlphaRAR.martingale_div_atTop_ae_tendsto_zero
 AlphaRAR.martingale_div_atTop_ae_tendsto_zero_of_bdd
+AlphaRAR.supermartingale_expProcess
+AlphaRAR.measure_exists_ge_le_exp

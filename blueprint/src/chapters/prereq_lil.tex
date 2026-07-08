@@ -21,6 +21,7 @@ additional truncation step.
 \label{sec:pre_lil_tail}
 
 \begin{lemma}[Exponential supermartingale]\label{lem:lil_exp_supermart}
+\lean{AlphaRAR.supermartingale_expProcess}\leanok
 Let $(M_n)$ be a martingale with $M_0=0$ and increments bounded by
 $|\Delta M_i| \le c$. For $|\theta| \le 1/c$, the process
 \[
@@ -30,7 +31,7 @@ is a supermartingale, where $\langle M\rangle$ is the predictable quadratic
 variation (Definition~\ref{def:pred_qv}).
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{def:pred_qv}
 Using $e^x \le 1 + x + x^2$ for $|x| \le 1$ and $\E[\Delta M_i\mid\filt_{i-1}]=0$,
 \[
@@ -42,6 +43,7 @@ Hence $\E[Z_i(\theta)\mid\filt_{i-1}] \le Z_{i-1}(\theta)$.
 \end{proof}
 
 \begin{lemma}[Freedman-type inequality]\label{lem:lil_freedman}
+\lean{AlphaRAR.measure_exists_ge_le_exp}
 \uses{lem:lil_exp_supermart}
 Under the hypotheses of Lemma~\ref{lem:lil_exp_supermart}, for all $\lambda > 0$
 and $v > 0$,
@@ -49,6 +51,12 @@ and $v > 0$,
   \Prob\!\Big(\exists n:\ M_n \ge \lambda \ \text{and}\ \langle M\rangle_n \le v\Big)
   \le \exp\!\Big(-\frac{\lambda^2}{2(v + c\lambda)}\Big).
 \]
+The formalized statement \texttt{AlphaRAR.measure\_exists\_ge\_le\_exp} is the pre-optimization,
+finite-horizon form: for each $n$ and each admissible $0<\theta\le 1/c$,
+$\Prob(\exists k\le n:\ M_k\ge\lambda,\ \langle M\rangle_k\le v)\le \exp(-\theta\lambda+\theta^2 v)$,
+obtained from Ville's maximal inequality
+(\texttt{AlphaRAR.smul\_measure\_sup\_le\_integral\_zero}) applied to the exponential
+supermartingale. Optimizing over $\theta$ and letting $n\to\infty$ recovers the displayed bound.
 \end{lemma}
 
 \begin{proof}

@@ -17,6 +17,9 @@ For a fixed arm we work with real sequences `X` (assignment indicator), `p`
 (selection probability) and `ρ` (plug-in target), and define the count `N`, the
 assignment martingale `M`, and the auxiliary process `U` by their defining sums.
 
+Indexing follows the `IsAlgEnvSeq` convention: patient `0` is the first patient,
+so all processes sum over `Finset.range n` = patients `0, …, n-1`.
+
 ## Main results
 
 * `AlphaRAR.count_eq`: count decomposition `N n = ∑ p + M n` (blueprint
@@ -27,54 +30,57 @@ assignment martingale `M`, and the auxiliary process `U` by their defining sums.
   bounded by `n` (blueprint `lem:hitting_basic`).
 -/
 
-open Finset
+open Finset Filter
+
+open scoped Topology
 
 namespace AlphaRAR
 
 variable (X p ρ : ℕ → ℝ) (α : ℝ)
 
-/-- Allocation count of a fixed arm, `N n = ∑_{j=1}^n X j` (blueprint `def:counts`). -/
-def count (n : ℕ) : ℝ := ∑ j ∈ Icc 1 n, X j
+/-- Allocation count of a fixed arm, `N n = ∑_{j<n} X j` (blueprint `def:counts`). -/
+def count (n : ℕ) : ℝ := ∑ j ∈ range n, X j
 
-/-- Assignment martingale of a fixed arm, `M n = ∑_{j=1}^n (X j - p j)`
+/-- Assignment martingale of a fixed arm, `M n = ∑_{j<n} (X j - p j)`
 (blueprint `def:M`). -/
-def assignMG (n : ℕ) : ℝ := ∑ j ∈ Icc 1 n, (X j - p j)
+def assignMG (n : ℕ) : ℝ := ∑ j ∈ range n, (X j - p j)
 
 /-- **Count decomposition** (blueprint `lem:count_decomp`).
-`N n = ∑_{m=1}^n p m + M n`. -/
-theorem count_eq (n : ℕ) : count X n = (∑ m ∈ Icc 1 n, p m) + assignMG X p n := by
+`N n = ∑_{m<n} p m + M n`. -/
+theorem count_eq (n : ℕ) : count X n = (∑ m ∈ range n, p m) + assignMG X p n := by
   simp only [count, assignMG, Finset.sum_sub_distrib]
   grind
 
-/-- Increment of the count: `N (n+1) = N n + X (n+1)`. -/
-theorem count_succ (n : ℕ) : count X (n + 1) = count X n + X (n + 1) := by
+/-- Increment of the count: `N (n+1) = N n + X n`. -/
+theorem count_succ (n : ℕ) : count X (n + 1) = count X n + X n := by
   unfold count
-  rw [Finset.sum_Icc_succ_top (Nat.le_add_left 1 n)]
+  rw [Finset.sum_range_succ]
 
-/-- Increment of the assignment martingale: `M (n+1) = M n + (X (n+1) - p (n+1))`. -/
+/-- Increment of the assignment martingale: `M (n+1) = M n + (X n - p n)`. -/
 theorem assignMG_succ (n : ℕ) :
-    assignMG X p (n + 1) = assignMG X p n + (X (n + 1) - p (n + 1)) := by
+    assignMG X p (n + 1) = assignMG X p n + (X n - p n) := by
   unfold assignMG
-  rw [Finset.sum_Icc_succ_top (Nat.le_add_left 1 n)]
+  rw [Finset.sum_range_succ]
 
-/-- Auxiliary process `U n = ∑_{m=1}^{n-1} α ρ m + M n - n ρ n` (blueprint `def:U`). -/
-def auxU (n : ℕ) : ℝ := (∑ m ∈ Icc 1 (n - 1), α * ρ m) + assignMG X p n - (n : ℝ) * ρ n
+/-- Auxiliary process `U n = ∑_{m<n-1} α ρ m + M n - n ρ n` (blueprint `def:U`). The
+`α ρ` sum has one fewer term than `M`, so it runs over `range (n-1)`. -/
+def auxU (n : ℕ) : ℝ := (∑ m ∈ range (n - 1), α * ρ m) + assignMG X p n - (n : ℝ) * ρ n
 
 /-- Increment of the leading `α ρ` sum, for `n ≥ 1`. -/
 theorem alphaSum_succ (n : ℕ) (hn : 1 ≤ n) :
-    (∑ m ∈ Icc 1 n, α * ρ m) = (∑ m ∈ Icc 1 (n - 1), α * ρ m) + α * ρ n := by
+    (∑ m ∈ range n, α * ρ m) = (∑ m ∈ range (n - 1), α * ρ m) + α * ρ (n - 1) := by
   obtain ⟨k, rfl⟩ : ∃ k, n = k + 1 := ⟨n - 1, by omega⟩
-  rw [Nat.add_sub_cancel, Finset.sum_Icc_succ_top (Nat.le_add_left 1 k)]
+  rw [Nat.add_sub_cancel, Finset.sum_range_succ]
 
 /-- **Increment of the auxiliary process** (blueprint `lem:U_increment`).
 
 For `n ≥ 1`, writing `D n := N n - n ρ n`,
-`U (n+1) - U n = α ρ n - p (n+1) + (D (n+1) - D n)`.
-(This is the blueprint identity at time `n+1`; the leading term `α ρ_{n}`
-requires `n ≥ 1`, since at `n = 0` the `α ρ`-sum does not yet grow.) -/
+`U (n+1) - U n = α ρ_{n-1} - p n + (D (n+1) - D n)`.
+(The leading term `α ρ_{n-1}` requires `n ≥ 1`, since at `n = 0` the `α ρ`-sum
+does not yet grow.) -/
 theorem auxU_succ_sub (n : ℕ) (hn : 1 ≤ n) :
     auxU X p ρ α (n + 1) - auxU X p ρ α n
-      = α * ρ n - p (n + 1)
+      = α * ρ (n - 1) - p n
         + (((count X (n + 1) - (n + 1 : ℝ) * ρ (n + 1)) - (count X n - (n : ℝ) * ρ n))) := by
   unfold auxU
   simp only [Nat.add_sub_cancel]
@@ -82,55 +88,49 @@ theorem auxU_succ_sub (n : ℕ) (hn : 1 ≤ n) :
   push_cast
   grind
 
-/-- A telescoping identity for a real sequence over `Icc (ℓ+1) n`. -/
-theorem sum_Icc_succ_sub (f : ℕ → ℝ) (ℓ : ℕ) :
-    ∀ n, ℓ ≤ n → ∑ m ∈ Icc (ℓ + 1) n, (f m - f (m - 1)) = f n - f ℓ := by
+/-- A telescoping identity for a real sequence over `Ico ℓ n`. -/
+theorem sum_Ico_succ_sub (f : ℕ → ℝ) (ℓ : ℕ) :
+    ∀ n, ℓ ≤ n → ∑ m ∈ Ico ℓ n, (f (m + 1) - f m) = f n - f ℓ := by
   intro n
   induction n with
   | zero =>
     intro h
     have : ℓ = 0 := Nat.le_zero.mp h
     subst this
-    rw [Finset.Icc_eq_empty (by omega)]
     simp
   | succ k ih =>
     intro h
     rcases Nat.lt_or_ge ℓ (k + 1) with hlt | hge
-    · rw [Finset.sum_Icc_succ_top (by omega : ℓ + 1 ≤ k + 1), ih (by omega),
-        Nat.add_sub_cancel]
-      grind
+    · rw [Finset.sum_Ico_succ_top (by omega : ℓ ≤ k), ih (by omega)]
+      ring
     · have he : ℓ = k + 1 := by omega
       subst he
-      rw [Finset.Icc_eq_empty (by omega)]
       simp
 
 /-- **Telescoping identity for the auxiliary process** (blueprint `lem:U_telescope`).
 
 For `1 ≤ ℓ ≤ n`, writing `D m := N m - m ρ m`,
-`U n - U ℓ = ∑_{m=ℓ+1}^n (α ρ_{m-1} - p m) + (D n - D ℓ)`.
+`U n - U ℓ = ∑_{m=ℓ}^{n-1} (α ρ_{m-1} - p m) + (D n - D ℓ)`.
 Rearranged, this is the blueprint's identity expressing `D n` in terms of `D ℓ`,
 the summed throttling terms, and the increment of `U`. -/
 theorem auxU_telescope (n ℓ : ℕ) (hℓ : 1 ≤ ℓ) (hℓn : ℓ ≤ n) :
     auxU X p ρ α n - auxU X p ρ α ℓ
-      = (∑ m ∈ Icc (ℓ + 1) n, (α * ρ (m - 1) - p m))
+      = (∑ m ∈ Ico ℓ n, (α * ρ (m - 1) - p m))
         + ((count X n - (n : ℝ) * ρ n) - (count X ℓ - (ℓ : ℝ) * ρ ℓ)) := by
-  have hterm : ∀ m ∈ Icc (ℓ + 1) n,
-      auxU X p ρ α m - auxU X p ρ α (m - 1)
+  have hterm : ∀ m ∈ Ico ℓ n,
+      auxU X p ρ α (m + 1) - auxU X p ρ α m
         = (α * ρ (m - 1) - p m)
-          + ((count X m - (m : ℝ) * ρ m) - (count X (m - 1) - ((m - 1 : ℕ) : ℝ) * ρ (m - 1))) := by
+          + ((count X (m + 1) - ((m + 1 : ℕ) : ℝ) * ρ (m + 1))
+            - (count X m - (m : ℝ) * ρ m)) := by
     intro m hm
-    rw [Finset.mem_Icc] at hm
-    have hm1 : 1 ≤ m - 1 := by omega
-    have hmm : m - 1 + 1 = m := by omega
-    have hcast : ((m - 1 : ℕ) : ℝ) + 1 = (m : ℝ) := by
-      rw [Nat.cast_sub (by omega : 1 ≤ m)]; push_cast; ring
-    have h := auxU_succ_sub X p ρ α (m - 1) hm1
-    rw [hmm, hcast] at h
+    rw [Finset.mem_Ico] at hm
+    have h := auxU_succ_sub X p ρ α m (by omega)
+    push_cast at h ⊢
     exact h
-  rw [← sum_Icc_succ_sub (auxU X p ρ α) ℓ n hℓn, Finset.sum_congr rfl hterm,
+  rw [← sum_Ico_succ_sub (auxU X p ρ α) ℓ n hℓn, Finset.sum_congr rfl hterm,
     Finset.sum_add_distrib]
   congr 1
-  exact sum_Icc_succ_sub (fun m => count X m - (m : ℝ) * ρ m) ℓ n hℓn
+  exact sum_Ico_succ_sub (fun m => count X m - (m : ℝ) * ρ m) ℓ n hℓn
 
 /-- **Counts sum to time** (blueprint `lem:counts_sum`).
 If the assignment vector sums to one at each time, then the arm counts sum to the
@@ -139,7 +139,7 @@ theorem counts_sum {K : ℕ} (Y : ℕ → Fin K → ℝ) (hY : ∀ j, ∑ k, Y j
     (∑ k, count (fun j => Y j k) n) = n := by
   simp only [count]
   rw [Finset.sum_comm]
-  simp only [hY, Finset.sum_const, Nat.card_Icc, Nat.add_sub_cancel, nsmul_eq_mul, mul_one]
+  simp only [hY, Finset.sum_const, Finset.card_range, nsmul_eq_mul, mul_one]
 
 /-- Last under-sampling time (blueprint `def:hitting`): the largest `m ≤ n` at
 which the arm is under-sampled, encoded via `Nat.findGreatest` (which returns `0`
@@ -161,32 +161,32 @@ theorem hitting_sign (P : ℕ → Prop) [DecidablePred P] {n m : ℕ}
 
 /-- **Key inequality** (blueprint `lem:preliminary_ineq`).
 
-Whenever the throttling condition `p m ≤ α ρ_{m-1}` holds for all `ℓ+2 ≤ m ≤ n`,
-`p (ℓ+1) ≤ 1`, and `0 ≤ α ρ_ℓ`, the gap `D n = N n - n ρ n` is controlled by its
+Whenever the throttling condition `p m ≤ α ρ_{m-1}` holds for all `ℓ+1 ≤ m ≤ n-1`,
+`p ℓ ≤ 1`, and `0 ≤ α ρ_{ℓ-1}`, the gap `D n = N n - n ρ n` is controlled by its
 value at `ℓ` plus the increment of `U`:
 `D n ≤ 1 + D ℓ + (U n - U ℓ)`. -/
 theorem preliminary_ineq (n ℓ : ℕ) (hℓ : 1 ≤ ℓ) (hℓn : ℓ ≤ n)
-    (hp1 : p (ℓ + 1) ≤ 1) (hαρ : 0 ≤ α * ρ ℓ)
-    (hthrottle : ∀ m ∈ Icc (ℓ + 2) n, p m ≤ α * ρ (m - 1)) :
+    (hp1 : p ℓ ≤ 1) (hαρ : 0 ≤ α * ρ (ℓ - 1))
+    (hthrottle : ∀ m ∈ Ico (ℓ + 1) n, p m ≤ α * ρ (m - 1)) :
     (count X n - (n : ℝ) * ρ n)
       ≤ 1 + (count X ℓ - (ℓ : ℝ) * ρ ℓ) + (auxU X p ρ α n - auxU X p ρ α ℓ) := by
   rcases hℓn.lt_or_eq with hlt | heq
   · -- `ℓ < n`: split off the first term of the telescoped sum.
     have htel := auxU_telescope X p ρ α n ℓ hℓ hℓn
-    set T := ∑ m ∈ Icc (ℓ + 1) n, (α * ρ (m - 1) - p m) with hT
+    set T := ∑ m ∈ Ico ℓ n, (α * ρ (m - 1) - p m) with hT
     have hTge : -1 ≤ T := by
-      have hmemL : (ℓ + 1) ∈ Icc (ℓ + 1) n := Finset.mem_Icc.mpr ⟨le_rfl, by omega⟩
-      have hsplit := Finset.add_sum_erase (Icc (ℓ + 1) n)
-        (fun m => α * ρ (m - 1) - p m) hmemL
-      have hrest : 0 ≤ ∑ m ∈ (Icc (ℓ + 1) n).erase (ℓ + 1), (α * ρ (m - 1) - p m) := by
+      have hmemL : ℓ ∈ Ico ℓ n := Finset.mem_Ico.mpr ⟨le_rfl, hlt⟩
+      have hsplit := Finset.add_sum_erase (Ico ℓ n) (fun m => α * ρ (m - 1) - p m) hmemL
+      have hrest : 0 ≤ ∑ m ∈ (Ico ℓ n).erase ℓ, (α * ρ (m - 1) - p m) := by
         apply Finset.sum_nonneg
         intro m hm
-        rw [Finset.mem_erase, Finset.mem_Icc] at hm
-        have hmem2 : m ∈ Icc (ℓ + 2) n := Finset.mem_Icc.mpr ⟨by omega, hm.2.2⟩
-        have := hthrottle m hmem2
+        rw [Finset.mem_erase, Finset.mem_Ico] at hm
+        have := hthrottle m (Finset.mem_Ico.mpr ⟨by omega, hm.2.2⟩)
         linarith
-      rw [hT, ← hsplit]
-      simp only [Nat.add_sub_cancel]
+      have hval : T = (α * ρ (ℓ - 1) - p ℓ)
+          + ∑ m ∈ (Ico ℓ n).erase ℓ, (α * ρ (m - 1) - p m) := by
+        rw [hT, ← hsplit]
+      rw [hval]
       linarith
     linarith
   · -- `ℓ = n`: the increment of `U` vanishes and `D n = D ℓ`.
@@ -212,12 +212,12 @@ theorem preliminary_small (P : ℕ → Prop) [DecidablePred P] (n : ℕ)
     linarith
 
 /-- Centered response martingale of a fixed arm,
-`Q n = ∑_{j=1}^n X j (ξ j - θ)` (blueprint `def:Q`). -/
-def respMG (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) : ℝ := ∑ j ∈ Icc 1 n, X j * (ξ j - θ)
+`Q n = ∑_{j<n} X j (ξ j - θ)` (blueprint `def:Q`). -/
+def respMG (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) : ℝ := ∑ j ∈ range n, X j * (ξ j - θ)
 
 /-- `Q n = ∑ X ξ - θ N n`: the response martingale rewritten via the count. -/
 theorem respMG_eq (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) :
-    respMG X ξ θ n = (∑ j ∈ Icc 1 n, X j * ξ j) - θ * count X n := by
+    respMG X ξ θ n = (∑ j ∈ range n, X j * ξ j) - θ * count X n := by
   unfold respMG count
   rw [Finset.mul_sum, ← Finset.sum_sub_distrib]
   apply Finset.sum_congr rfl
@@ -229,7 +229,52 @@ theorem respMG_eq (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) :
 On `{N n ≠ 0}`, the leading term of the estimator error equals `Q n / N n`:
 `(∑ X ξ) / N n - θ = Q n / N n`. -/
 theorem theta_error_Q (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) (hN : count X n ≠ 0) :
-    (∑ j ∈ Icc 1 n, X j * ξ j) / count X n - θ = respMG X ξ θ n / count X n := by
+    (∑ j ∈ range n, X j * ξ j) / count X n - θ = respMG X ξ θ n / count X n := by
   rw [respMG_eq, sub_div, mul_div_assoc, div_self hN, mul_one]
+
+/-- **Deterministic core of the limit of `U/n`** (blueprint `lem:U_over_n`).
+
+If the plug-in target converges, `ρ n → u`, and the normalized assignment martingale vanishes,
+`M n / n → 0`, then `U n / n → -(1-α) u`. Since
+`U n / n = α · (average of ρ over the first n-1 patients) + M n / n - ρ n`, and the average tends
+to `u` by Cesàro convergence (`Filter.Tendsto.cesaro`), the limit is `α u + 0 - u = -(1-α) u`.
+Applied pathwise (with the a.s. limits from `lem:M_lln` and `lem:rho_converges`), this yields the
+almost-sure statement `lem:U_over_n`. -/
+theorem auxU_div_tendsto (u : ℝ) (hρ : Tendsto ρ atTop (𝓝 u))
+    (hM : Tendsto (fun n => assignMG X p n / (n : ℝ)) atTop (𝓝 0)) :
+    Tendsto (fun n => auxU X p ρ α n / (n : ℝ)) atTop (𝓝 (-(1 - α) * u)) := by
+  -- `(n)⁻¹ → 0`, and the once-shifted sequence `ρ (n-1) → u`.
+  have hinv : Tendsto (fun n : ℕ => (n : ℝ)⁻¹) atTop (𝓝 0) :=
+    tendsto_inv_atTop_zero.comp tendsto_natCast_atTop_atTop
+  have hpred : Tendsto (fun n : ℕ => n - 1) atTop atTop :=
+    tendsto_atTop_atTop.mpr fun b => ⟨b + 1, fun n hn => by omega⟩
+  have hρpred : Tendsto (fun n => ρ (n - 1)) atTop (𝓝 u) := hρ.comp hpred
+  -- Cesàro average of `ρ` over `range n` tends to `u`.
+  have hcesaro : Tendsto (fun n => (∑ m ∈ range n, ρ m) / (n : ℝ)) atTop (𝓝 u) := by
+    simpa [smul_eq_mul, div_eq_inv_mul] using hρ.cesaro
+  -- `ρ (n-1) / n → 0`.
+  have hshift0 : Tendsto (fun n => ρ (n - 1) / (n : ℝ)) atTop (𝓝 0) := by
+    have h := hρpred.mul hinv
+    simpa [div_eq_mul_inv] using h
+  -- The average over `range (n-1)` also tends to `u` (it differs by the vanishing `ρ (n-1)/n`).
+  have hshort : Tendsto (fun n => (∑ m ∈ range (n - 1), ρ m) / (n : ℝ)) atTop (𝓝 u) := by
+    have hsub := hcesaro.sub hshift0
+    rw [sub_zero] at hsub
+    refine hsub.congr' ?_
+    filter_upwards [eventually_ge_atTop 1] with n hn
+    obtain ⟨k, rfl⟩ : ∃ k, n = k + 1 := ⟨n - 1, by omega⟩
+    rw [Nat.add_sub_cancel, Finset.sum_range_succ]
+    ring
+  -- Combine the three pieces.
+  have hlim : Tendsto (fun n => α * ((∑ m ∈ range (n - 1), ρ m) / (n : ℝ))
+      + assignMG X p n / (n : ℝ) - ρ n) atTop (𝓝 (α * u + 0 - u)) :=
+    ((hshort.const_mul α).add hM).sub hρ
+  rw [show α * u + 0 - u = -(1 - α) * u by ring] at hlim
+  refine hlim.congr' ?_
+  filter_upwards [eventually_ge_atTop 1] with n hn
+  have hn0 : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
+  unfold auxU
+  rw [← Finset.mul_sum (range (n - 1)) ρ α]
+  field_simp
 
 end AlphaRAR
