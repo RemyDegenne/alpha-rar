@@ -52,11 +52,12 @@ $\estTarget_n = \Target(\estParams_n) \to \Target(z) =: u \in (0,1)^K$.
 \label{sec:cons_U}
 
 \begin{lemma}[LLN for the assignment martingale]\label{lem:M_lln}
+\lean{AlphaRAR.assignMart_div_atTop_ae_tendsto_zero}\leanok
 \uses{def:M}
 $M_{n,k} = o(n)$ a.s.\ for each $k$.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:M_martingale, cor:mart_slln_bounded}
 $(M_{n,k})$ is a martingale with bounded increments $|\Delta M_{m,k}|\le1$, so its
 increments have summable normalized variances $\sum_m \frac{\Var(\Delta M_{m,k})}{m^2}<\infty$;

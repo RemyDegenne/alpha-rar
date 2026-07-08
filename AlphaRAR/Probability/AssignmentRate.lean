@@ -5,16 +5,21 @@ Authors: Rémy Degenne
 -/
 import AlphaRAR.Probability.Assignment
 import AlphaRAR.Probability.MartingaleRate
+import AlphaRAR.Probability.MartingaleSLLN
 
 /-!
-# The assignment martingale is `O_p(√n)`
+# Rates for the assignment martingale
 
 The assignment martingale `M` (the martingale part of a `[0,1]`-valued assignment
-count process) has increments bounded by `1`, so the bounded-increment rate bound
-`isBigOpOne_of_bdd_increments` gives `M n = O_p(√n)`. This is blueprint `lem:M_Op`.
+count process) has increments bounded by `1`. Feeding this into the bounded-increment
+rate bound `isBigOpOne_of_bdd_increments` gives `M n = O_p(√n)` (blueprint `lem:M_Op`),
+and into the martingale strong law `martingale_div_atTop_ae_tendsto_zero_of_bdd` gives
+`M n / n → 0` a.e. (blueprint `lem:M_lln`).
 -/
 
 open MeasureTheory Filter
+
+open scoped Topology
 
 namespace AlphaRAR
 
@@ -36,5 +41,22 @@ theorem isBigOpOne_assignMart_div_sqrt [IsFiniteMeasure μ]
     filter_upwards [abs_assignMart_succ_sub_le hX_int h0X h1X n] with ω h
     simpa only [Pi.sub_apply] using h
   exact isBigOpOne_of_bdd_increments (martingale_assignMart hX hX_int) hM0 1 zero_le_one hΔ
+
+/-- **LLN for the assignment martingale** (blueprint `lem:M_lln`). For a `[0,1]`-valued adapted
+integrable assignment indicator `X` on a probability space, the assignment martingale `M` satisfies
+`M n / n → 0` almost everywhere. The increments are bounded by `1`, so the martingale strong law of
+large numbers `martingale_div_atTop_ae_tendsto_zero_of_bdd` applies. -/
+theorem assignMart_div_atTop_ae_tendsto_zero [IsProbabilityMeasure μ]
+    (hX : StronglyAdapted ℱ X) (hX_int : ∀ n, Integrable (X n) μ)
+    (h0X : ∀ n, 0 ≤ᵐ[μ] X n) (h1X : ∀ n, X n ≤ᵐ[μ] fun _ => (1 : ℝ)) :
+    ∀ᵐ ω ∂μ, Tendsto (fun n ↦ assignMart X ℱ μ n ω / n) atTop (𝓝 0) := by
+  have h0 : assignMart X ℱ μ 0 = 0 := by rw [assignMart, martingalePart_zero, acount_zero]
+  have hM0 : assignMart X ℱ μ 0 =ᵐ[μ] 0 := by filter_upwards with ω; rw [h0]
+  have hΔ : ∀ k, ∀ᵐ ω ∂μ,
+      |assignMart X ℱ μ (k + 1) ω - assignMart X ℱ μ k ω| ≤ 1 := by
+    intro k
+    filter_upwards [abs_assignMart_succ_sub_le hX_int h0X h1X k] with ω h
+    simpa only [Pi.sub_apply] using h
+  exact martingale_div_atTop_ae_tendsto_zero_of_bdd (martingale_assignMart hX hX_int) hM0 hΔ
 
 end AlphaRAR
