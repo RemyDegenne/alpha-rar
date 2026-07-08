@@ -5,6 +5,7 @@ import AlphaRAR.Mathlib.Kronecker
 import AlphaRAR.Probability.Assignment
 import AlphaRAR.Probability.AssignmentRate
 import AlphaRAR.Probability.MartingaleRate
+import AlphaRAR.Probability.MartingaleSLLN
 import AlphaRAR.Probability.QuadraticVariation
 import AlphaRAR.Probability.Response
 import AlphaRAR.Probability.StochasticOrder

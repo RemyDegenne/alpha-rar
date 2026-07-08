@@ -74,4 +74,23 @@ theorem kronecker {x : ℕ → ℝ} {s : ℝ}
   rw [hbp, hreindex, Nat.cast_sub hn, Nat.cast_one]
   field_simp
 
+/-- Kronecker's lemma with weights `k + 1`: if `∑_{k<n} x k` converges, then
+`(1/n) ∑_{k<n} (k+1)·x k → 0`. This is the form used for the martingale SLLN, where
+`x_k = ΔM_k / (k+1)` makes `∑_{k<n} (k+1)·x_k = M n` telescope. It follows from the identity-weight
+case together with `(1/n) ∑_{k<n} x k → 0` (the partial sums are bounded). -/
+theorem kronecker' {x : ℕ → ℝ} {s : ℝ}
+    (hx : Tendsto (fun n ↦ ∑ k ∈ range n, x k) atTop (𝓝 s)) :
+    Tendsto (fun n : ℕ ↦ (n : ℝ)⁻¹ * ∑ k ∈ range n, ((k : ℝ) + 1) * x k) atTop (𝓝 0) := by
+  have hinv : Tendsto (fun n : ℕ ↦ (n : ℝ)⁻¹) atTop (𝓝 0) :=
+    tendsto_inv_atTop_zero.comp tendsto_natCast_atTop_atTop
+  have h2 : Tendsto (fun n : ℕ ↦ (n : ℝ)⁻¹ * ∑ k ∈ range n, x k) atTop (𝓝 0) := by
+    simpa using hinv.mul hx
+  have hsum : Tendsto (fun n : ℕ ↦ (n : ℝ)⁻¹ * ∑ k ∈ range n, (k : ℝ) * x k
+      + (n : ℝ)⁻¹ * ∑ k ∈ range n, x k) atTop (𝓝 0) := by
+    simpa using (kronecker hx).add h2
+  refine hsum.congr' (Eventually.of_forall fun n ↦ ?_)
+  rw [← mul_add, ← Finset.sum_add_distrib]
+  refine congrArg _ (Finset.sum_congr rfl fun k _ ↦ ?_)
+  ring
+
 end AlphaRAR

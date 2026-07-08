@@ -30,6 +30,7 @@ $M_n^2 = (\sum_i \Delta M_i)^2$ and using orthogonality kills the cross terms.
 \end{proof}
 
 \begin{lemma}[Weighted increment martingale is $L^2$-bounded]\label{lem:slln_weighted}
+\lean{AlphaRAR.martingale_weightedSeries}
 \uses{lem:slln_orthogonal}
 Let $(M_n)$ be a square-integrable martingale with $M_0=0$ and
 $\sum_{k\ge1}\frac{\E[(\Delta M_k)^2]}{k^2} < \infty$. Then
@@ -45,14 +46,16 @@ which is bounded by the convergent series.
 \end{proof}
 
 \begin{lemma}[$L^2$-bounded martingales converge a.s.]\label{lem:slln_l2_conv}
-A square-integrable martingale $(S_n)$ with $\sup_n \E[S_n^2] < \infty$ converges
-a.s.\ to an integrable limit.
+\lean{AlphaRAR.martingale_ae_tendsto_of_eLpNorm_two_le}\leanok
+A martingale $(S_n)$ with $\sup_n \|S_n\|_{L^2} < \infty$ converges a.s.\ to a finite limit.
 \end{lemma}
 
-\begin{proof}
-This is the $L^2$ (hence $L^1$-bounded) martingale convergence theorem, available
-in Mathlib as \texttt{MeasureTheory.Submartingale.ae\_tendsto\_limitProcess}
-applied to the $L^1$-bounded martingale $S_n$.
+\begin{proof}\leanok
+On a probability space $\|\cdot\|_{L^1}\le\|\cdot\|_{L^2}$
+(\texttt{eLpNorm\_le\_eLpNorm\_of\_exponent\_le}), so the uniform $L^2$ bound gives a uniform
+$L^1$ bound, and $(S_n)$ is an $L^1$-bounded (sub)martingale. The $L^1$ martingale convergence
+theorem (Mathlib's \texttt{Submartingale.exists\_ae\_tendsto\_of\_bdd}) then gives a.s.\ convergence
+to a finite limit.
 \end{proof}
 
 \begin{lemma}[Kronecker's lemma, identity weights]\label{lem:kronecker}
@@ -80,13 +83,14 @@ is a natural standalone contribution, deferred as it is not needed here.
 \label{sec:pre_slln_thm}
 
 \begin{theorem}[Martingale SLLN]\label{thm:mart_slln}
+\lean{AlphaRAR.martingale_div_atTop_ae_tendsto_zero}\leanok
 \uses{lem:slln_weighted, lem:slln_l2_conv, lem:kronecker}
 Let $(M_n)$ be a square-integrable martingale with $M_0 = 0$ and
 $\sum_{k\ge1}\frac{\E[(\Delta M_k)^2]}{k^2} < \infty$. Then $\frac{M_n}{n}\to 0$
 a.s.
 \end{theorem}
 
-\begin{proof}
+\begin{proof}\leanok
 By Lemmas~\ref{lem:slln_weighted} and \ref{lem:slln_l2_conv}, the series
 $S_n = \sum_{k\le n}\Delta M_k/k$ converges a.s. Apply Kronecker's lemma
 (Lemma~\ref{lem:kronecker}) pathwise with $b_k = k$ and $x_k = \Delta M_k/k$:
@@ -94,12 +98,13 @@ $\frac{1}{n}\sum_{k\le n} k\cdot\frac{\Delta M_k}{k} = \frac{M_n}{n}\to 0$ a.s.
 \end{proof}
 
 \begin{corollary}[Bounded increments]\label{cor:mart_slln_bounded}
+\lean{AlphaRAR.martingale_div_atTop_ae_tendsto_zero_of_bdd}\leanok
 \uses{thm:mart_slln}
 If $(M_n)$ is a martingale with $M_0=0$ and uniformly bounded increments
 $|\Delta M_k| \le c$, then $\frac{M_n}{n}\to 0$ a.s.
 \end{corollary}
 
-\begin{proof}
+\begin{proof}\leanok
 $\E[(\Delta M_k)^2]\le c^2$, so $\sum_k \E[(\Delta M_k)^2]/k^2 \le c^2\sum_k k^{-2}
 < \infty$; apply Theorem~\ref{thm:mart_slln}.
 \end{proof}
