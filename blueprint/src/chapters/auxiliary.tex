@@ -83,30 +83,32 @@ For $k \in [K]$ set $Y_{m,k} := \xi_{m,k} - \theta_k$ and
 \begin{lemma}[$Q$ is a martingale]\label{lem:Q_martingale}
 \lean{AlphaRAR.martingale_respMart}\leanok
 \uses{def:Q, def:filtration}
-For each $k \in [K]$, if the responses are integrable then $(Q_{n,k})_{n\ge0}$ is an
+For each $k \in [K]$, if the responses are integrable then $(Q_{n,k})_{n\ge0}$ is a
+$(\mathcal{G}_n)$-martingale, where $\mathcal{G}_n := \filt_{n-1}\vee\sigma(A_n)$ is the
+action-augmented filtration (\texttt{filtrationAction}); a fortiori it is an
 $(\filt_n)$-martingale.
 \end{lemma}
 
 \begin{proof}\leanok
 Write $\Delta Q_{n,k} = X_{n,k}(\xi_{n,k} - \theta_k)$, where $X_{n,k}$ is the
-indicator that the assignment $A_n$ equals arm $k$. The subtle point is the
-\emph{filtration convention}: $X_{n,k}$ is measurable with respect to the
-action-augmented $\sigma$-algebra $\mathcal{G}_n := \filt_{n-1}\vee\sigma(A_n)$
-(\texttt{filtrationAction}) but \emph{not} with respect to $\filt_{n-1}$ --- indeed,
-if it were, the assignment martingale $M_{n,k}$ of Definition~\ref{def:M} would be
-identically zero. Conditioning on $\mathcal{G}_n$, the response $\xi_{n,k}$ is drawn
-from the arm's reward kernel independently of the past given the arm, so its
-conditional mean is $\theta_k$; pulling out the $\mathcal{G}_n$-measurable factor
-$X_{n,k}$ gives $\E[\Delta Q_{n,k}\mid\mathcal{G}_n] = X_{n,k}(\theta_k-\theta_k)=0$.
-The tower property ($\filt_{n-1}\subseteq\mathcal{G}_n$) yields
-$\E[\Delta Q_{n,k}\mid\filt_{n-1}] = 0$.
+indicator that the assignment $A_n$ equals arm $k$. The natural filtration is the
+\emph{action-augmented} one $\mathcal{G}_n = \filt_{n-1}\vee\sigma(A_n)$
+(\texttt{filtrationAction}): the assignment $X_{n,k}$ is $\mathcal{G}_n$-measurable
+(the arm is known) while the response $\xi_{n,k}$ is not (it is revealed afterwards).
+Conditioning on $\mathcal{G}_n$, the response is drawn from the arm's reward kernel
+independently of the past given the arm, so its conditional mean is $\theta_k$;
+pulling out the $\mathcal{G}_n$-measurable factor $X_{n,k}$ gives
+$\E[\Delta Q_{n,k}\mid\mathcal{G}_n] = X_{n,k}(\theta_k-\theta_k)=0$, so $Q_{\cdot,k}$ is
+a $\mathcal{G}$-martingale. Since $Q_{n,k}$ is $\filt_{n-1}\subseteq\mathcal{G}_n$-measurable,
+the tower property also gives $\E[\Delta Q_{n,k}\mid\filt_{n-1}] = 0$, the paper's
+$\filt$-martingale statement.
 
 This is formalized in the \texttt{LeanMachineLearning} algorithm--environment
 framework: the arm is the action and the response is the feedback of a stationary
 environment with per-arm reward kernel $\nu$, and $\theta_k = \int x\,\nu_k(dx)$ is
-the kernel mean. The conditional-mean computation is \texttt{condExp\_feedback}, and
-the two filtrations $\filt$ and $\mathcal{G}$ are \texttt{filtration} and
-\texttt{filtrationAction}.
+the kernel mean. The conditional-mean computation is \texttt{condExp\_feedback}
+(which handles the first patient and the general step via the two conditional-distribution
+fields of the framework), and the filtration $\mathcal{G}$ is \texttt{filtrationAction}.
 \end{proof}
 
 \begin{lemma}[Conditional second moment of $\Delta Q$]\label{lem:Q_cond_second_moment}
@@ -142,26 +144,24 @@ martingale, with $V_k N_{\cdot,k}$ its predictable compensator.
 
 \begin{proof}\leanok
 \uses{lem:Q_cond_second_moment, lem:qv_mart}
-The key point is again the filtration convention. $Q_{\cdot,k}$ is a martingale not only for
-$\filt$ but for the half-step-finer filtration
-$\mathcal{K}_n := \mathcal{G}_{n+1} = \filt_n\vee\sigma(A_{n+1})$ (\texttt{shiftFiltration} of
-\texttt{filtrationAction}), because its increment is unpredictable \emph{even given the current
-assignment} (\texttt{condExp\_respMart\_increment\_filtrationAction}). For that filtration the
-paper's $V_k N_{n,k}$ is the \emph{ordinary} predictable quadratic variation
-(Definition~\ref{def:pred_qv}): its increment is
-$\E[(\Delta Q_{m+1,k})^2\mid\mathcal{K}_m] = \E[(\Delta Q_{m+1,k})^2\mid\mathcal{G}_{m+1}]
-= V_k X_{m+1,k}$ (Lemma~\ref{lem:Q_cond_second_moment}), and summing over $m<n$ gives
-$V_k\sum_{m\le n} X_{m,k} = V_k N_{n,k}$ --- the indicator survives the sum because it is
-$\mathcal{K}_m$-measurable. That $Q^2-\langle Q\rangle$ is a martingale (for $\mathcal{K}$) is
-Lemma~\ref{lem:qv_mart}. The sole hypothesis is finite arm variance (Condition~\textbf{A}),
-formalized as $\xi_{\cdot,k}\in L^2$.
+Since $Q_{\cdot,k}$ is a martingale for the action-augmented filtration
+$\mathcal{G} = \texttt{filtrationAction}$ (Lemma~\ref{lem:Q_martingale}), the paper's
+$V_k N_{n,k}$ is the \emph{ordinary} predictable quadratic variation of $Q_{\cdot,k}$ for
+$\mathcal{G}$ (Definition~\ref{def:pred_qv}): its increment is
+$\E[(\Delta Q_{m+1,k})^2\mid\mathcal{G}_m] = V_k X_{m,k}$
+(Lemma~\ref{lem:Q_cond_second_moment}), and summing over $m<n$ gives
+$V_k\sum_{m<n} X_{m,k} = V_k N_{n,k}$ --- the indicator survives the sum because the current
+arm $A_m$ is $\mathcal{G}_m$-measurable. That $Q^2-\langle Q\rangle$ is a martingale (for
+$\mathcal{G}$) is Lemma~\ref{lem:qv_mart}. The sole hypothesis is finite arm variance
+(Condition~\textbf{A}), formalized as $\xi_{\cdot,k}\in L^2$.
 \end{proof}
 
 \begin{lemma}[Cross variation of $Q$]\label{lem:Q_cross_var}
 \lean{AlphaRAR.martingale_respMart_mul}\leanok
 \uses{def:Q, def:counts}
 For $k \ne j$, the cross variation vanishes: $\langle Q_{\cdot,k}, Q_{\cdot,j}\rangle_n = 0$.
-Equivalently, $Q_{\cdot,k}\,Q_{\cdot,j}$ is a martingale (for the filtration $\mathcal{K}$).
+Equivalently, $Q_{\cdot,k}\,Q_{\cdot,j}$ is a martingale (for the action-augmented filtration
+$\mathcal{G}$).
 \end{lemma}
 
 \begin{proof}\leanok
@@ -182,10 +182,10 @@ $Q_{n,k} = O_p(\sqrt n)$.
 
 \begin{proof}\leanok
 \uses{cor:mart_Op, lem:Q_cond_second_moment}
-$Q_{\cdot,k}$ is a martingale (for $\mathcal{K}$) with $Q_{0,k}=0$, and its increment second
-moments are bounded by the arm variance: taking expectations in
-Lemma~\ref{lem:Q_cond_second_moment} via the tower property,
-$\E[(\Delta Q_{n+1,k})^2] = \E[X_{n+1,k}\,V_k] = V_k\,\Prob(X_{n+1,k}=1) \le V_k$
+$Q_{\cdot,k}$ is a martingale (for the action-augmented filtration $\mathcal{G}$) with
+$Q_{0,k}=0$, and its increment second moments are bounded by the arm variance: taking
+expectations in Lemma~\ref{lem:Q_cond_second_moment} via the tower property,
+$\E[(\Delta Q_{n+1,k})^2] = \E[X_{n,k}\,V_k] = V_k\,\Prob(X_{n,k}=1) \le V_k$
 (\texttt{integral\_respMart\_increment\_sq\_le}). So Corollary~\ref{cor:mart_Op} applies with
 $\sigma^2 = V_k$.
 \end{proof}

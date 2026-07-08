@@ -316,21 +316,4 @@ theorem predQuadVar_add_of_martingale_mul {N : ℕ → Ω → ℝ}
   simp only [Pi.add_apply, Pi.zero_apply] at a1 a2 a3 ⊢
   rw [a1, a2, a3, add_zero]
 
-/-- **Shift a filtration by one step**: `(shiftFiltration 𝒢) n = 𝒢 (n+1)`.
-
-For a response-adaptive design the response martingale `Q` is a martingale not only for the history
-filtration `ℱ` but also for the *half-step-finer* filtration `𝒢 (n+1) = ℱ n ⊔ σ(A (n+1))` — its
-increment is unpredictable even given the current assignment. Reindexing that filtration as
-`𝒦 n = 𝒢 (n+1)` makes `Q` an ordinary `𝒦`-martingale, so the paper's quadratic variation `V_k N` is
-just the ordinary predictable quadratic variation `predQuadVar Q 𝒦`. This is the mechanism behind
-`⟨Q_k⟩_n = V_k N_{n,k}` (the count, not the compensated count `V_k ∑ p`): the `𝒦`-predictable
-increment `V_k X_{n,k}` keeps the indicator because the arm is `𝒦 n`-measurable. -/
-def shiftFiltration (𝒢 : Filtration ℕ m0) : Filtration ℕ m0 where
-  seq n := 𝒢 (n + 1)
-  mono' _ _ hij := 𝒢.mono (Nat.succ_le_succ hij)
-  le' n := 𝒢.le (n + 1)
-
-@[simp] theorem shiftFiltration_apply (𝒢 : Filtration ℕ m0) (n : ℕ) :
-    shiftFiltration 𝒢 n = 𝒢 (n + 1) := rfl
-
 end AlphaRAR
