@@ -511,6 +511,19 @@ theorem martingale_sq_sub_predQuadVar_respMart (h : IsAlgEnvSeq A Y alg (station
   martingale_sq_sub_predQuadVar (stronglyAdapted_respMart h k)
     (fun n ↦ (memLp_respMart h.measurable_action hY2 k n).integrable_sq)
 
+/-- **The second moment of `Q` is `V_k` times the expected assignment count** (blueprint
+`lem:Q_second_moment`): `𝔼[Q_{n,k}²] = V_k · 𝔼[N_{n,k}]`. This is the discrete Itô isometry
+(`integral_sq_eq_integral_predQuadVar`, `lem:qv_second_moment`) specialized to `Q`, using
+`⟨Q_k⟩ = V_k N` (`predQuadVar_respMart_eq`): `𝔼[Q²] = 𝔼[⟨Q⟩] = V_k 𝔼[N]`. The only hypothesis is
+Condition **A**. -/
+theorem integral_respMart_sq_eq [DecidableEq 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (k : 𝓐) (hY2 : ∀ n, MemLp (Y n) 2 P) (n : ℕ) :
+    ∫ ω, respMart ν A Y k n ω ^ 2 ∂P = armVar ν k * ∫ ω, (pullCount A k n ω : ℝ) ∂P := by
+  rw [integral_sq_eq_integral_predQuadVar (stronglyAdapted_respMart h k)
+      (fun m ↦ (memLp_respMart h.measurable_action hY2 k m).integrable_sq)
+      (by filter_upwards with ω; simp [respMart]) n,
+    integral_congr_ae (predQuadVar_respMart_eq h k hY2 n), integral_const_mul]
+
 /-- **The cross variation of `Q_k` and `Q_j` vanishes for `k ≠ j`** (blueprint `lem:Q_cross_var`):
 `Q_k · Q_j` is a martingale (for the action-augmented filtration `𝒢 = filtrationAction`), hence its
 predictable compensator — the cross variation `⟨Q_k, Q_j⟩` — is `0`. The orthogonality is not

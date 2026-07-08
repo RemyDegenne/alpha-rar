@@ -12,6 +12,7 @@ AlphaRAR.martingale_respMart
 AlphaRAR.condExp_respMart_increment_sq
 AlphaRAR.predQuadVar_respMart_eq
 AlphaRAR.martingale_sq_sub_predQuadVar_respMart
+AlphaRAR.integral_respMart_sq_eq
 AlphaRAR.martingale_respMart_mul
 AlphaRAR.isBigOpOne_respMart_div_sqrt
 AlphaRAR.theta_error_Q
@@ -43,3 +44,4 @@ AlphaRAR.integral_sq_eq_integral_predQuadVar
 AlphaRAR.integral_sq_le_of_increment_bound
 AlphaRAR.martingale_mul
 AlphaRAR.predQuadVar_add_of_martingale_mul
+AlphaRAR.kronecker

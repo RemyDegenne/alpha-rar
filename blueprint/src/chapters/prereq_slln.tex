@@ -55,23 +55,26 @@ in Mathlib as \texttt{MeasureTheory.Submartingale.ae\_tendsto\_limitProcess}
 applied to the $L^1$-bounded martingale $S_n$.
 \end{proof}
 
-\begin{lemma}[Kronecker's lemma]\label{lem:kronecker}
-Let $(b_n)$ be a positive nondecreasing sequence with $b_n \to \infty$, and let
-$(x_n)$ be reals such that $\sum_n x_n$ converges. Then
-$\frac{1}{b_n}\sum_{k=1}^n b_k x_k \to 0$.
+\begin{lemma}[Kronecker's lemma, identity weights]\label{lem:kronecker}
+\lean{AlphaRAR.kronecker}\leanok
+Let $(x_n)$ be reals such that the partial sums $\sum_{k<n} x_k$ converge (to some $s$). Then
+$\frac{1}{n}\sum_{k<n} k\,x_k \to 0$.
 \end{lemma}
 
-\begin{proof}
-Let $s_n = \sum_{k\le n} x_k \to s$. Abel summation gives
-$\frac{1}{b_n}\sum_{k\le n} b_k x_k = s_n - \frac{1}{b_n}\sum_{k=1}^{n-1}(b_{k+1}-b_k)s_k$.
-The weights $(b_{k+1}-b_k)/b_n$ are nonnegative, sum to $(b_n - b_1)/b_n \to 1$,
-and concentrate on large $k$; since $s_k \to s$, the weighted average tends to
-$s$, so the whole expression tends to $s - s = 0$.
+\begin{proof}\leanok
+This is the special case $b_k = k$ of Kronecker's lemma, which is the only case used below
+(Theorem~\ref{thm:mart_slln}). Write $s_n = \sum_{k<n} x_k \to s$. Summation by parts
+(\texttt{Finset.sum\_range\_by\_parts}) gives
+$\sum_{k<n} k\,x_k = (n-1)s_n - \sum_{k<n} s_k$, so
+$\frac{1}{n}\sum_{k<n} k\,x_k = \big(1-\tfrac1n\big)s_n - \frac{1}{n}\sum_{k<n} s_k$.
+The first term tends to $s$ and the second is a Cesàro average of the convergent sequence $(s_n)$,
+hence also tends to $s$ (\texttt{Filter.Tendsto.cesaro}); the difference tends to $0$.
 \end{proof}
 
 \textbf{Formalization note.} Kronecker's lemma is not in Mathlib (only unrelated
-``Kronecker'' matrix results exist). It is a short, self-contained real-analysis
-lemma and a natural standalone contribution.
+``Kronecker'' matrix results exist). The identity-weight case above is a short, self-contained
+real-analysis lemma; the general positive-nondecreasing-weight version (via Silverman--Toeplitz)
+is a natural standalone contribution, deferred as it is not needed here.
 
 \section{The theorem}
 \label{sec:pre_slln_thm}

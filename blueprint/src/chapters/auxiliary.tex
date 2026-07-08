@@ -156,6 +156,21 @@ $\mathcal{G}$) is Lemma~\ref{lem:qv_mart}. The sole hypothesis is finite arm var
 (Condition~\textbf{A}), formalized as $\xi_{\cdot,k}\in L^2$.
 \end{proof}
 
+\begin{lemma}[Second moment of $Q$]\label{lem:Q_second_moment}
+\lean{AlphaRAR.integral_respMart_sq_eq}\leanok
+\uses{def:Q, def:counts, lem:Q_quad_var}
+Under Condition~\textbf{A}, for each $k \in [K]$,
+$\E[Q_{n,k}^2] = V_k\,\E[N_{n,k}]$.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:qv_second_moment}
+The discrete Itô isometry (Lemma~\ref{lem:qv_second_moment}) gives
+$\E[Q_{n,k}^2] = \E[\langle Q_{\cdot,k}\rangle_n]$ for the martingale $Q_{\cdot,k}$ (which starts at
+$0$), and $\langle Q_{\cdot,k}\rangle_n = V_k N_{n,k}$ by Lemma~\ref{lem:Q_quad_var}; taking
+expectations, $\E[Q_{n,k}^2] = V_k\,\E[N_{n,k}]$.
+\end{proof}
+
 \begin{lemma}[Cross variation of $Q$]\label{lem:Q_cross_var}
 \lean{AlphaRAR.martingale_respMart_mul}\leanok
 \uses{def:Q, def:counts}
