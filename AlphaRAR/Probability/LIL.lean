@@ -50,18 +50,6 @@ namespace AlphaRAR
 variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
   {ℱ : Filtration ℕ m0} {M : ℕ → Ω → ℝ}
 
-/-- **The predictable quadratic variation is nonnegative.** Since `⟨M⟩ 0 = 0` and `⟨M⟩` is
-nondecreasing (its increments are conditional second moments), `0 ≤ ⟨M⟩ n` a.e. -/
-theorem predQuadVar_nonneg [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
-    (hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
-    (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ) (n : ℕ) :
-    0 ≤ᵐ[μ] predQuadVar M ℱ μ n := by
-  induction n with
-  | zero => rw [predQuadVar_zero]
-  | succ k ih =>
-    filter_upwards [ih, predQuadVar_le_succ hM k (hd2 k) (hprod k)] with ω hik hstep
-    simp only [Pi.zero_apply] at hik ⊢
-    exact le_trans hik hstep
 
 /-- **Conditional MGF bound for a bounded martingale increment.**
 If `|ΔM_i| ≤ c` a.e. and `|θ| c ≤ 1`, then

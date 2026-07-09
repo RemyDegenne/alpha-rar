@@ -76,8 +76,77 @@ hence also tends to $s$ (\texttt{Filter.Tendsto.cesaro}); the difference tends t
 
 \textbf{Formalization note.} Kronecker's lemma is not in Mathlib (only unrelated
 ``Kronecker'' matrix results exist). The identity-weight case above is a short, self-contained
-real-analysis lemma; the general positive-nondecreasing-weight version (via Silverman--Toeplitz)
-is a natural standalone contribution, deferred as it is not needed here.
+real-analysis lemma; the general positive-nondecreasing-weight version
+(Lemma~\ref{lem:kronecker_general}) is a natural standalone contribution, needed for the
+bracket-normalized strong law below.
+
+\section{Bracket-normalized strong law}
+\label{sec:pre_slln_bracket}
+
+The $n$-normalized law $M_n/n\to0$ (Theorem~\ref{thm:mart_slln}) is not enough for the estimator
+dichotomy (Lemma~\ref{lem:theta_limit_dichotomy}): there the martingale $Q_{\cdot,k}$ must be divided
+by its own (random) sample size $N_{n,k}$, which can grow slower than $n$. What is needed is the
+\emph{bracket-normalized} strong law $M_n/\langle M\rangle_n\to0$ on $\{\langle M\rangle_n\to\infty\}$
+--- a general, reusable martingale theorem absent from Mathlib. Its proof is the martingale-transform
+argument, and it consumes the general Kronecker lemma.
+
+\begin{lemma}[Kronecker's lemma, general weights]\label{lem:kronecker_general}
+\lean{AlphaRAR.kronecker_general}\leanok
+Let $(b_n)$ be positive and nondecreasing with $b_n\to\infty$, and let $(y_n)$ be reals whose partial
+sums $\sum_{k<n} y_k$ converge (to some $s$). Then $\dfrac1{b_n}\sum_{k<n} b_{k+1}\,y_k \to 0$.
+\end{lemma}
+
+\begin{proof}\leanok
+Summation by parts: with $S_n=\sum_{k<n}y_k$,
+$\sum_{k<n} b_{k+1}y_k = b_n S_n - \sum_{k<n-1}(b_{k+2}-b_{k+1})S_{k+1}$. Dividing by $b_n$, the first
+term is $S_n\to s$; the second is a Toeplitz-weighted average of the convergent sequence
+$(S_{k+1})$ with nonnegative weights $(b_{k+2}-b_{k+1})/b_n$ summing to $(b_n-b_1)/b_n\to1$, each
+tending to $0$. Writing $S_{k+1}=s+\varepsilon_k$ with $\varepsilon_k\to0$ and splitting the sum at a
+threshold beyond which $|\varepsilon_k|<\delta$, the weighted average tends to $s$; the difference
+tends to $0$.
+\end{proof}
+
+\begin{lemma}[Bracket-weighted transform is $L^2$-bounded]\label{lem:slln_bracket_weighted}
+\lean{AlphaRAR.martingale_bracketSeries, AlphaRAR.predQuadVar_bracketSeries_le_one}\leanok
+\uses{def:pred_qv}
+For a square-integrable martingale $(M_n)$ with $M_0=0$, the transform
+\[
+  T_n := \sum_{k<n} \frac{\Delta M_k}{1+\langle M\rangle_{k+1}}
+\]
+is a martingale (the weights $1/(1+\langle M\rangle_{k+1})$ are $\filt_k$-measurable, as
+$\langle M\rangle$ is predictable), and it is $L^2$-bounded:
+$\E[T_n^2] = \sum_{k<n} \E\!\big[\tfrac{\Delta\langle M\rangle_k}{(1+\langle M\rangle_{k+1})^2}\big]
+\le \E\!\big[\tfrac1{1+\langle M\rangle_0}-\tfrac1{1+\langle M\rangle_n}\big] \le 1$,
+using $\E[(\Delta M_k)^2\mid\filt_k]=\Delta\langle M\rangle_k$ and the telescoping bound
+$\tfrac{\Delta\langle M\rangle_k}{(1+\langle M\rangle_{k+1})^2}\le
+\tfrac1{1+\langle M\rangle_k}-\tfrac1{1+\langle M\rangle_{k+1}}$.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:qv_incr, lem:slln_orthogonal}
+The martingale property and Itô isometry give
+$\E[T_n^2]=\sum_{k<n}\E[(\Delta T_k)^2]=\sum_{k<n}\E[(\Delta M_k)^2/(1+\langle M\rangle_{k+1})^2]$;
+pull the $\filt_k$-measurable weight out of the conditional expectation and use
+$\E[(\Delta M_k)^2\mid\filt_k]=\Delta\langle M\rangle_k$ (Lemma~\ref{lem:qv_incr}). The telescoping
+bound holds because $(1+\langle M\rangle_k)(1+\langle M\rangle_{k+1})\le(1+\langle M\rangle_{k+1})^2$.
+\end{proof}
+
+\begin{theorem}[Bracket-normalized martingale SLLN]\label{thm:mart_slln_bracket}
+\lean{AlphaRAR.martingale_div_predQuadVar_ae_tendsto_zero}\leanok
+\uses{lem:slln_bracket_weighted, lem:slln_l2_conv, lem:kronecker_general}
+Let $(M_n)$ be a square-integrable martingale with $M_0=0$. Then almost surely on
+$\{\langle M\rangle_n\to\infty\}$, $\dfrac{M_n}{\langle M\rangle_n}\to0$.
+\end{theorem}
+
+\begin{proof}\leanok
+\uses{lem:slln_bracket_weighted, lem:slln_l2_conv, lem:kronecker_general}
+By Lemma~\ref{lem:slln_bracket_weighted} the transform $T_n$ is an $L^2$-bounded martingale, so
+$T_n\to T_\infty$ a.s.\ (Lemma~\ref{lem:slln_l2_conv}). Apply the general Kronecker lemma
+(Lemma~\ref{lem:kronecker_general}) pathwise with $b_k=1+\langle M\rangle_k$ (nondecreasing, and
+$\to\infty$ on the event) and $y_k=\Delta M_k/(1+\langle M\rangle_{k+1})=\Delta T_k$:
+$\frac1{b_n}\sum_{k<n} b_{k+1}\,y_k=\frac{M_n}{1+\langle M\rangle_n}\to0$, hence
+$M_n/\langle M\rangle_n\to0$.
+\end{proof}
 
 \section{The theorem}
 \label{sec:pre_slln_thm}

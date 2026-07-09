@@ -112,6 +112,27 @@ theorem predQuadVar_le_succ [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (n :
   simp only [Pi.sub_apply, Pi.zero_apply] at e hn
   linarith
 
+/-- **`⟨M⟩` is monotone** (blueprint `lem:qv_incr`, monotonicity part). Almost surely the whole
+path `n ↦ ⟨M⟩ n ω` is nondecreasing, since each increment is a conditional second moment (hence
+nonnegative, `predQuadVar_le_succ`). -/
+theorem predQuadVar_mono [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
+    (hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
+    (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ) :
+    ∀ᵐ ω ∂μ, Monotone (fun n ↦ predQuadVar M ℱ μ n ω) := by
+  filter_upwards [ae_all_iff.mpr fun n ↦ predQuadVar_le_succ hM n (hd2 n) (hprod n)] with ω hω
+  exact monotone_nat_of_le_succ fun n ↦ hω n
+
+/-- **The predictable quadratic variation is nonnegative.** Since `⟨M⟩ 0 = 0` and `⟨M⟩` is
+nondecreasing (`predQuadVar_mono`), `0 ≤ ⟨M⟩ n` a.e. -/
+theorem predQuadVar_nonneg [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
+    (hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
+    (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ) (n : ℕ) :
+    0 ≤ᵐ[μ] predQuadVar M ℱ μ n := by
+  filter_upwards [predQuadVar_mono hM hd2 hprod] with ω hmono
+  have h0n : predQuadVar M ℱ μ 0 ω ≤ predQuadVar M ℱ μ n ω := hmono (Nat.zero_le n)
+  rw [show predQuadVar M ℱ μ 0 ω = 0 from by rw [predQuadVar_zero]; rfl] at h0n
+  simpa using h0n
+
 /-- **Linear upper bound on `⟨M⟩` for bounded increments.** If `|ΔM_i| ≤ c` a.e., then each
 increment `⟨M⟩_{k+1} - ⟨M⟩_k` equals `μ[(ΔM_k)² | ℱ_k] ≤ c²`, so telescoping from `⟨M⟩_0 = 0`
 gives `⟨M⟩_n ≤ c² n` a.e. -/
