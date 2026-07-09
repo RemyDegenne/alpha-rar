@@ -68,6 +68,32 @@ lemma assignMG_path_div_ae_tendsto_zero [IsProbabilityMeasure μ]
   filter_upwards [assignMart_div_atTop_ae_tendsto_zero hX hX_int h0X h1X] with ω hω
   exact hω.congr fun n ↦ by rw [assignMart_eq_assignMG]
 
+/-- **Positive part vanishes a.s.** (blueprint `lem:pos_part_vanishes`, a.s. form).
+The a.s. wrapper of the pathwise `pos_part_vanishes`, over general per-path processes
+`Xp, pp, ρp : ℕ → Ω → ℝ` (assignment indicator, selection probability, plug-in target) and a
+per-path last-under-sampling schedule `ℓ : Ω → ℕ → ℕ`. Given the plug-in-target limit (`hρ`,
+from `rho_converges`), the vanishing normalized martingale (`hM`, from
+`assignMG_path_div_ae_tendsto_zero`), and the two generic conditions (`hgen`, `hgs`, discharged
+separately for the specific design) all a.s., the positive gap `(N_{n,k}/n - ρ̂_{n,k})⁺ → 0`
+a.s. Each is `filter_upwards` + the pathwise `pos_part_vanishes`. -/
+theorem pos_part_vanishes_ae {Xp pp ρp : ℕ → Ω → ℝ} {α : ℝ} {ℓ : Ω → ℕ → ℕ} {u : Ω → ℝ}
+    (hℓle : ∀ᵐ ω ∂μ, ∀ n, ℓ ω n ≤ n) (hα : α ∈ Set.Icc (0 : ℝ) 1)
+    (hu : ∀ᵐ ω ∂μ, u ω ∈ Set.Icc (0 : ℝ) 1)
+    (hρ : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ ρp n ω) atTop (𝓝 (u ω)))
+    (hM : ∀ᵐ ω ∂μ,
+      Tendsto (fun n ↦ assignMG (fun j ↦ Xp j ω) (fun j ↦ pp j ω) n / (n : ℝ)) atTop (𝓝 0))
+    (hgen : ∀ᵐ ω ∂μ, ∀ n, count (fun j ↦ Xp j ω) n - (n : ℝ) * ρp n ω
+      ≤ 1 + (count (fun j ↦ Xp j ω) (ℓ ω n) - (ℓ ω n : ℝ) * ρp (ℓ ω n) ω)
+        + (auxU (fun j ↦ Xp j ω) (fun j ↦ pp j ω) (fun j ↦ ρp j ω) α n
+          - auxU (fun j ↦ Xp j ω) (fun j ↦ pp j ω) (fun j ↦ ρp j ω) α (ℓ ω n)))
+    (hgs : ∀ᵐ ω ∂μ, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
+      (count (fun j ↦ Xp j ω) (ℓ ω n) - (ℓ ω n : ℝ) * ρp (ℓ ω n) ω) / (n : ℝ) < δ) :
+    ∀ᵐ ω ∂μ,
+      Tendsto (fun n ↦ max (count (fun j ↦ Xp j ω) n / (n : ℝ) - ρp n ω) 0) atTop (𝓝 0) := by
+  filter_upwards [hℓle, hu, hρ, hM, hgen, hgs] with ω h1 h2 h3 h4 h5 h6
+  exact pos_part_vanishes (fun j ↦ Xp j ω) (fun j ↦ pp j ω) (fun j ↦ ρp j ω) α
+    h1 hα h2 h3 h4 h5 h6
+
 /-! ### Almost-sure matching of proportions
 
 These are the a.s. forms of the deterministic matching lemmas: each is a `filter_upwards` over the
@@ -108,5 +134,54 @@ theorem all_arms_infinite_ae {Y : ℕ → Ω → ι → ℝ} {u : Ω → ℝ} (k
     ∀ᵐ ω ∂μ, Tendsto (fun n ↦ count (fun i ↦ Y i ω k) n) atTop atTop := by
   filter_upwards [hu, hmatch] with ω huω hmω
   exact all_arms_infinite (fun n ↦ Y n ω) k huω hmω
+
+/-- **A.s. consistency of the proportions** (blueprint `lem:consistency_matching`, the first
+conclusion of `thm:LLN`). Given the a.s. vanishing positive gaps for every arm (from
+`pos_part_vanishes_ae`) and the plug-in-target limits `ρ̂_{n,k} → u_k` (from `rho_converges`),
+together with the simplex constraints (assignments and target both sum to `1`), the proportions
+converge a.s. to the target: `N_{n,k}/n → u_k` for all arms `k` simultaneously. The per-arm
+negative gaps vanish by `neg_part_vanishes_ae`, and `match_proportion_ae` then closes each arm;
+`ae_all_iff` bundles the finitely many arms into a single a.s. event. -/
+theorem consistency_ae [Fintype ι] {Y r : ℕ → Ω → ι → ℝ} {u : Ω → ι → ℝ}
+    (hY : ∀ᵐ ω ∂μ, ∀ j, ∑ k, Y j ω k = 1) (hr : ∀ᵐ ω ∂μ, ∀ n, ∑ k, r n ω k = 1)
+    (hpos : ∀ k, ∀ᵐ ω ∂μ,
+      Tendsto (fun n ↦ max (count (fun i ↦ Y i ω k) n / (n : ℝ) - r n ω k) 0) atTop (𝓝 0))
+    (hru : ∀ k, ∀ᵐ ω ∂μ, Tendsto (fun n ↦ r n ω k) atTop (𝓝 (u ω k))) :
+    ∀ᵐ ω ∂μ, ∀ k, Tendsto (fun n ↦ count (fun i ↦ Y i ω k) n / (n : ℝ)) atTop (𝓝 (u ω k)) := by
+  have hpos_all : ∀ᵐ ω ∂μ, ∀ j : ι,
+      Tendsto (fun n ↦ max (count (fun i ↦ Y i ω j) n / (n : ℝ) - r n ω j) 0) atTop (𝓝 0) :=
+    ae_all_iff.mpr hpos
+  have hmatch : ∀ k, ∀ᵐ ω ∂μ,
+      Tendsto (fun n ↦ count (fun i ↦ Y i ω k) n / (n : ℝ)) atTop (𝓝 (u ω k)) := fun k ↦
+    match_proportion_ae k (hpos k) (neg_part_vanishes_ae hY hr hpos_all k) (hru k)
+  exact ae_all_iff.mpr hmatch
+
+/-- **Generic conditions imply a.s. consistency** (blueprint `thm:generic_main`, consistency
+direction). This is the modular main theorem: under the generic conditions (`hℓle`, `hgen`,
+`hgs` — the a.s. forms of Definition `def:generic_cond`) and the plug-in-target convergence
+`hru` (from `rho_converges`), the vanishing normalized martingale `hM` (from the assignment
+martingale, `assignMG_path_div_ae_tendsto_zero`), and the simplex constraints, the allocation
+proportions converge a.s. to the target for every arm: `N_{n,k}/n → u_k`. The positive gaps
+vanish arm-by-arm via `pos_part_vanishes_ae`, and `consistency_ae` closes the argument. The
+generic conditions themselves are discharged separately for each design (e.g. aRTS, via
+`preliminary_ineq`/`preliminary_small`), so this theorem never uses the specific form of the
+procedure. -/
+theorem consistency_of_generic_ae [Fintype ι] {Y pp r : ℕ → Ω → ι → ℝ} {u : Ω → ι → ℝ} {α : ℝ}
+    {ℓ : ι → Ω → ℕ → ℕ} (hα : α ∈ Set.Icc (0 : ℝ) 1)
+    (hY : ∀ᵐ ω ∂μ, ∀ j, ∑ k, Y j ω k = 1) (hr : ∀ᵐ ω ∂μ, ∀ n, ∑ k, r n ω k = 1)
+    (hℓle : ∀ k, ∀ᵐ ω ∂μ, ∀ n, ℓ k ω n ≤ n)
+    (hu : ∀ k, ∀ᵐ ω ∂μ, u ω k ∈ Set.Icc (0 : ℝ) 1)
+    (hru : ∀ k, ∀ᵐ ω ∂μ, Tendsto (fun n ↦ r n ω k) atTop (𝓝 (u ω k)))
+    (hM : ∀ k, ∀ᵐ ω ∂μ, Tendsto (fun n ↦ assignMG (fun j ↦ Y j ω k) (fun j ↦ pp j ω k) n
+      / (n : ℝ)) atTop (𝓝 0))
+    (hgen : ∀ k, ∀ᵐ ω ∂μ, ∀ n, count (fun j ↦ Y j ω k) n - (n : ℝ) * r n ω k
+      ≤ 1 + (count (fun j ↦ Y j ω k) (ℓ k ω n) - (ℓ k ω n : ℝ) * r (ℓ k ω n) ω k)
+        + (auxU (fun j ↦ Y j ω k) (fun j ↦ pp j ω k) (fun j ↦ r j ω k) α n
+          - auxU (fun j ↦ Y j ω k) (fun j ↦ pp j ω k) (fun j ↦ r j ω k) α (ℓ k ω n)))
+    (hgs : ∀ k, ∀ᵐ ω ∂μ, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
+      (count (fun j ↦ Y j ω k) (ℓ k ω n) - (ℓ k ω n : ℝ) * r (ℓ k ω n) ω k) / (n : ℝ) < δ) :
+    ∀ᵐ ω ∂μ, ∀ k, Tendsto (fun n ↦ count (fun i ↦ Y i ω k) n / (n : ℝ)) atTop (𝓝 (u ω k)) :=
+  consistency_ae hY hr
+    (fun k ↦ pos_part_vanishes_ae (hℓle k) hα (hu k) (hru k) (hM k) (hgen k) (hgs k)) hru
 
 end AlphaRAR

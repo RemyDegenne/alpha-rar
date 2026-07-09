@@ -186,7 +186,7 @@ $\frac{U_{n,k}}{n} \to \alpha u_k - u_k = -(1-\alpha)u_k$.
 \label{sec:cons_match}
 
 \begin{lemma}[Positive part vanishes]\label{lem:pos_part_vanishes}
-\lean{AlphaRAR.pos_part_vanishes}\leanok
+\lean{AlphaRAR.pos_part_vanishes, AlphaRAR.pos_part_vanishes_ae}\leanok
 \uses{def:generic_cond}
 Under the generic conditions and Conditions~\textbf{A}--\textbf{B}, for each $k$,
 $\big(\frac{N_{n,k}}{n} - \hat{\rho}_{n,k}\big)^+ \to 0$ a.s. (The formalized statement
@@ -259,8 +259,24 @@ Since $\frac{N_{n,k}}{n}\to u_k > 0$ (Lemma~\ref{lem:match}), $N_{n,k}\sim u_k n
 \to\infty$.
 \end{proof}
 
+\begin{lemma}[A.s. consistency of the proportions]\label{lem:consistency_matching}
+\lean{AlphaRAR.consistency_ae}\leanok
+\uses{lem:pos_part_vanishes, lem:neg_part_vanishes, lem:match, lem:rho_converges_cont}
+Given the a.s.\ vanishing positive gaps for every arm (Lemma~\ref{lem:pos_part_vanishes}) and the
+plug-in-target limits $\hat\rho_{n,k}\to u_k$ (Lemma~\ref{lem:rho_converges_cont}), together with
+the simplex constraints ($\sum_k X_{j,k}=1$ and $\sum_k\hat\rho_{n,k}=1$), the proportions converge
+a.s.\ to the target: $N_{n,k}/n \to u_k$ for all arms $k$ simultaneously.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:neg_part_vanishes, lem:match}
+For each arm the negative gap vanishes by Lemma~\ref{lem:neg_part_vanishes}, and
+Lemma~\ref{lem:match} then yields $N_{n,k}/n\to u_k$; intersecting the finitely many a.s.\ events
+over the arms gives the simultaneous statement.
+\end{proof}
+
 \begin{lemma}[Estimator consistency]\label{lem:theta_consistent}
-\uses{def:estimator, def:target}
+\uses{def:estimator, def:target, lem:consistency_matching}
 Under the same hypotheses, $\estParams_n \to \Params$ a.s., and consequently
 $\hat{\rho}_n \to v = \Target(\Params)$ and $\frac{N_{n,k}}{n}\to v_k$ a.s.
 \end{lemma}
@@ -278,7 +294,7 @@ $N_n/n$ equals $v$.
 \label{sec:cons_rates}
 
 \begin{lemma}[LIL rate for the estimator]\label{lem:theta_LIL}
-\lean{AlphaRAR.abs_estimator_sub_le_rate}\leanok
+\lean{AlphaRAR.abs_estimator_sub_le_rate, AlphaRAR.abs_estimator_sub_le_rate_ae}\leanok
 \uses{def:estimator}
 Under the same hypotheses,
 $\estParams_n - \Params = O\!\big(\sqrt{\tfrac{\log n}{n}}\big)$ a.s. (the $\log$, not $\log\log$,

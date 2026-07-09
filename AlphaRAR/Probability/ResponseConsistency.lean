@@ -296,4 +296,75 @@ theorem rho_converges [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv �
         (fun j ↦ Y j ω) (θ₀ k') n)) atTop (𝓝 z) := tendsto_pi_nhds.mpr hz
   exact tendsto_pi_nhds.mp ((hT.tendsto z).comp hvec) k
 
+omit [IsMarkovKernel ν] [IsProbabilityMeasure P] in
+/-- The 1-indexed shifted count `∑_{j<n} 𝟙{A_{j+1}=k}` (used by the assignment martingale, hence
+by the matching lemmas) and the 0-indexed `pullCount = ∑_{j<n} 𝟙{A_j=k}` (used by the estimator)
+differ by at most one term (`𝟙{A_n=k} - 𝟙{A_0=k}`). -/
+lemma abs_count_shift_sub_pullCount_le (k : 𝓐) (n : ℕ) (ω : Ω) :
+    |count (fun j ↦ Set.indicator {ω | A (j + 1) ω = k} (fun _ ↦ (1 : ℝ)) ω) n
+      - (pullCount A k n ω : ℝ)| ≤ 1 := by
+  set f : ℕ → ℝ := fun i ↦ if A i ω = k then 1 else 0 with hf
+  have hg : ∀ i, Set.indicator {ω | A i ω = k} (fun _ ↦ (1 : ℝ)) ω = f i := fun i ↦ by
+    simp [hf, Set.indicator_apply]
+  have hpc : (pullCount A k n ω : ℝ) = ∑ j ∈ Finset.range n, f j := by
+    rw [← count_indicator_eq_pullCount]; simp only [count]
+    exact Finset.sum_congr rfl fun j _ ↦ hg j
+  have hcs : count (fun j ↦ Set.indicator {ω | A (j + 1) ω = k} (fun _ ↦ (1 : ℝ)) ω) n
+      = ∑ j ∈ Finset.range n, f (j + 1) := by
+    simp only [count]; exact Finset.sum_congr rfl fun j _ ↦ hg (j + 1)
+  rw [hcs, hpc, ← Finset.sum_sub_distrib, Finset.sum_range_sub f]
+  have hb : ∀ i, f i = 0 ∨ f i = 1 := fun i ↦ by simp only [hf]; split_ifs <;> simp
+  rcases hb n with hn | hn <;> rcases hb 0 with h0 | h0 <;> rw [hn, h0] <;> norm_num
+
+omit [IsMarkovKernel ν] [IsProbabilityMeasure P] in
+/-- **Count-indexing bridge**: the estimator's `pullCount/n` has the same limit as the matching
+lemmas' shifted count `∑_{j<n} 𝟙{A_{j+1}=k}/n`, since the two differ by `O(1/n)`. This transports
+`N_{n,k}/n → v` from the matching conclusion (1-indexed) to the form the rate lemma needs. -/
+lemma tendsto_pullCount_div_of_tendsto_count_shift (k : 𝓐) (ω : Ω) {v : ℝ}
+    (hac : Tendsto (fun n ↦ count (fun j ↦ Set.indicator {ω | A (j + 1) ω = k}
+      (fun _ ↦ (1 : ℝ)) ω) n / (n : ℝ)) atTop (𝓝 v)) :
+    Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 v) := by
+  have hbdd : Tendsto (fun n ↦ (count (fun j ↦ Set.indicator {ω | A (j + 1) ω = k}
+      (fun _ ↦ (1 : ℝ)) ω) n - (pullCount A k n ω : ℝ)) / (n : ℝ)) atTop (𝓝 0) := by
+    refine squeeze_zero_norm (fun n ↦ ?_) tendsto_one_div_atTop_nhds_zero_nat
+    rw [Real.norm_eq_abs, abs_div, Nat.abs_cast]
+    gcongr
+    exact abs_count_shift_sub_pullCount_le k n ω
+  have h := hac.sub hbdd
+  rw [sub_zero] at h
+  refine h.congr fun n ↦ ?_
+  rw [sub_div]
+  ring
+
+omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] [IsProbabilityMeasure P] in
+/-- **LIL rate for the estimator, a.s.** (blueprint `lem:theta_LIL`, a.s. form). Given the
+proportion limit `N_{n,k}/n → v_k > 0` a.s. (from `match_proportion_ae` via the count-indexing
+bridge) and the two-sided LIL bound `|Q_{n,k}| ≤ C√(n log n)` eventually a.s. (from
+`ae_eventually_abs_respMart_le_sqrt_nat_mul_log`), the estimator error is `O(√(log n / n))` a.s.:
+`|θ̂_{n,k} - θ_k| ≤ C'·√(n log n)/n` for large `n`. Each is the pathwise `abs_estimator_sub_le_rate`
+after the bridges `count(𝟙{A·=k}) = N_{n,k}` and `respMG(𝟙{A·=k}) = Q_{n,k}`; the (random) LIL
+constant is made nonnegative via `max C 0`. -/
+theorem abs_estimator_sub_le_rate_ae (k : 𝓐) (θ₀ : ℝ) {v : Ω → ℝ}
+    (hv : ∀ᵐ ω ∂P, 0 < v ω)
+    (hN : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω)))
+    (hQ : ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
+      |respMart ν A Y k n ω| ≤ C * Real.sqrt ((n : ℝ) * Real.log n)) :
+    ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
+      |estimator (fun j ↦ Set.indicator {ω | A j ω = k} (fun _ ↦ (1 : ℝ)) ω)
+          (fun j ↦ Y j ω) θ₀ n - (ν k)[id]|
+        ≤ C' * (Real.sqrt ((n : ℝ) * Real.log n) / (n : ℝ)) := by
+  filter_upwards [hv, hN, hQ] with ω hvω hNω hQω
+  obtain ⟨C, hCbound⟩ := hQω
+  have hN' : Tendsto (fun n ↦ count (fun j ↦ Set.indicator {ω | A j ω = k}
+      (fun _ ↦ (1 : ℝ)) ω) n / (n : ℝ)) atTop (𝓝 (v ω)) :=
+    hNω.congr fun n ↦ by rw [count_indicator_eq_pullCount]
+  have hQ' : ∀ᶠ n in atTop, |respMG (fun j ↦ Set.indicator {ω | A j ω = k}
+      (fun _ ↦ (1 : ℝ)) ω) (fun j ↦ Y j ω) ((ν k)[id]) n|
+      ≤ max C 0 * Real.sqrt ((n : ℝ) * Real.log n) := by
+    filter_upwards [hCbound] with n hn
+    rw [respMG_indicator_eq_respMart]
+    exact hn.trans (mul_le_mul_of_nonneg_right (le_max_left C 0) (Real.sqrt_nonneg _))
+  exact abs_estimator_sub_le_rate (fun j ↦ Set.indicator {ω | A j ω = k} (fun _ ↦ (1 : ℝ)) ω)
+    (fun j ↦ Y j ω) ((ν k)[id]) θ₀ hvω hN' (le_max_right C 0) hQ'
+
 end AlphaRAR

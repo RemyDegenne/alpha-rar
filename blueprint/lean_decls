@@ -29,6 +29,7 @@ AlphaRAR.norm_sub_le_increment_control
 AlphaRAR.isBigOpOne_martingale_div_sqrt
 AlphaRAR.isBigOpOne_of_bdd_increments
 AlphaRAR.tendsto_posPart_sub_div
+AlphaRAR.consistency_of_generic_ae
 AlphaRAR.auxU_telescope
 AlphaRAR.preliminary_ineq
 AlphaRAR.preliminary_small
@@ -41,13 +42,16 @@ AlphaRAR.rho_converges
 AlphaRAR.assignMart_div_atTop_ae_tendsto_zero
 AlphaRAR.auxU_div_tendsto
 AlphaRAR.pos_part_vanishes
+AlphaRAR.pos_part_vanishes_ae
 AlphaRAR.neg_part_vanishes
 AlphaRAR.neg_part_vanishes_ae
 AlphaRAR.match_proportion
 AlphaRAR.match_proportion_ae
 AlphaRAR.all_arms_infinite
 AlphaRAR.all_arms_infinite_ae
+AlphaRAR.consistency_ae
 AlphaRAR.abs_estimator_sub_le_rate
+AlphaRAR.abs_estimator_sub_le_rate_ae
 AlphaRAR.isProjection_one_sub_vecMulVec
 AlphaRAR.isLittleOpOne_of_tendsto_ae
 AlphaRAR.IsLittleOpOne.add

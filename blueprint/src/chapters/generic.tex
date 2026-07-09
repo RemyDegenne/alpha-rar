@@ -33,11 +33,15 @@ that a RAR procedure \emph{satisfies the generic conditions with $\ell$} if:
 \end{definition}
 
 \begin{theorem}[Generic conditions imply the main theorems]\label{thm:generic_main}
-\uses{def:generic_cond, def:condA, def:condB}
+\lean{AlphaRAR.consistency_of_generic_ae}
+\uses{def:generic_cond, def:condA, def:condB, lem:consistency_matching}
 Suppose a RAR procedure satisfies the generic conditions with some $\ell$, and
 that Conditions~\textbf{A}--\textbf{B} hold. Then the conclusions of the strong
 consistency theorem (Theorem~\ref{thm:LLN}) and of the asymptotic normality
-theorem (Theorem~\ref{thm:normality}) hold.
+theorem (Theorem~\ref{thm:normality}) hold. (The Lean statement
+\texttt{consistency\_of\_generic\_ae} formalizes the strong-consistency direction:
+the generic conditions and the plug-in-target limit imply $N_{n,k}/n \to u_k$ a.s.\ for every
+arm; the asymptotic-normality direction is not yet formalized.)
 \end{theorem}
 
 \begin{proof}\uses{thm:LLN, thm:normality}
