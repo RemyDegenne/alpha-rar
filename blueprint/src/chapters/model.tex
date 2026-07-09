@@ -97,6 +97,7 @@ mechanism} if $N_n/n \to v$.
 \label{sec:model_estimation}
 
 \begin{definition}[Sequential estimator]\label{def:estimator}
+\lean{AlphaRAR.estimator}\leanok
 \uses{def:counts, def:responses}
 Given initial values $\theta_{0,k} \in \R$, the sequential estimator of
 $\theta_k$ at stage $m$ is
@@ -125,19 +126,26 @@ representation} if
 \end{definition}
 
 \begin{lemma}[The sequential estimator is Bahadur]\label{lem:estimator_bahadur}
-\uses{def:estimator, def:bahadur}
+\lean{AlphaRAR.estimator_sub_eq}\leanok
+\uses{def:estimator, def:bahadur, def:Q}
 On the event $\{N_{m,k} \to \infty\}$, the estimator of
 Definition~\ref{def:estimator} admits the Bahadur representation of
-Definition~\ref{def:bahadur}.
+Definition~\ref{def:bahadur}. The formalized statement \texttt{estimator\_sub\_eq} is the sharper
+\emph{exact} error identity
+\[
+  \hat{\theta}_{m,k} - \theta_k = \frac{Q_{m,k} + (\theta_{0,k} - \theta_k)}{N_{m,k} + 1},
+\]
+which holds pathwise for every $m$ (with $N_{m,k}+1 \ne 0$, automatic for $\{0,1\}$-indicators) and
+from which the $o(N^{-1/2})$ Bahadur form is immediate.
 \end{lemma}
 
-\begin{proof}
-Write
-$\hat{\theta}_{m,k} - \frac{1}{N_{m,k}}\sum_{j=1}^m X_{j,k}\xi_{j,k}
- = \frac{\theta_{0,k} - \hat\theta_{m,k}}{N_{m,k}+1}
- = O(N_{m,k}^{-1})$
-on the event $N_{m,k}\to\infty$, since $\hat\theta_{m,k}$ stays bounded.
-This is $o(N_{m,k}^{-1/2})$.
+\begin{proof}\leanok
+The numerator of $\hat{\theta}_{m,k} - \theta_k = \frac{\sum_j X_{j,k}\xi_{j,k} + \theta_{0,k}}{N_{m,k}
++ 1} - \theta_k$ is $\sum_j X_{j,k}\xi_{j,k} + \theta_{0,k} - \theta_k(N_{m,k}+1) = (\sum_j
+X_{j,k}\xi_{j,k} - \theta_k N_{m,k}) + (\theta_{0,k} - \theta_k) = Q_{m,k} + (\theta_{0,k} -
+\theta_k)$, giving the exact identity. On $\{N_{m,k}\to\infty\}$ the offset
+$\frac{\theta_{0,k}-\theta_k}{N_{m,k}+1} = O(N_{m,k}^{-1}) = o(N_{m,k}^{-1/2})$, which is the Bahadur
+form.
 \end{proof}
 
 \textbf{Lean remark.} The Bahadur property (Definition~\ref{def:bahadur}) is the

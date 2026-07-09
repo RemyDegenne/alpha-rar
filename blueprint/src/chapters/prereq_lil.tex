@@ -143,36 +143,346 @@ the complete probabilistic content, built from Ville's inequality, the optimized
 (Corollary~\ref{cor:lil_freedman_opt}), and Borel--Cantelli (Lemma~\ref{lem:lil_bc}). Since on the
 block $\langle M\rangle_n\in(2^{k-1},2^k]$ one has $\sqrt{2^k(k+1)}\asymp
 \sqrt{\langle M\rangle_n\log\langle M\rangle_n}$, it gives the displayed
-$O(\sqrt{\langle M\rangle_n\log\langle M\rangle_n})$ upper bound. Two deliberate deviations from
-the displayed statement remain unformalized: the purely deterministic repackaging into the
-normalized $\limsup$, and the $\log\log$ (rather than $\log$) rate with sharp constant $1$, which
-would require refining the one-step MGF bound $e^x\le1+x+x^2$ to variance proxy $1$ (valid only as
-the increment $\to0$). The $\log$ rate already gives $M_n=o(\langle M\rangle_n)$, which suffices
-for all downstream uses.
+$O(\sqrt{\langle M\rangle_n\log\langle M\rangle_n})$ upper bound, formalized in
+Corollary~\ref{cor:lil_upper} below. One deliberate deviation from the displayed statement remains
+unformalized: the $\log\log$ (rather than $\log$) rate with sharp constant $1$, which would require
+refining the one-step MGF bound $e^x\le1+x+x^2$ to variance proxy $1$ (valid only as the increment
+$\to0$). The $\log$ rate already gives $M_n=o(\langle M\rangle_n)$, which suffices for all
+downstream uses.
 \end{proof}
 
-\begin{lemma}[Truncation to finite variance]\label{lem:lil_truncation}
+\begin{corollary}[Normalized one-sided upper bound]\label{cor:lil_upper}
+\lean{AlphaRAR.ae_eventually_le_sqrt_predQuadVar_mul_log}\leanok
 \uses{thm:lil_bounded}
-Let $(M_n)$ with $M_n = \sum_{i\le n}\xi_i D_i$, where $D_i\in\{0,1\}$ is
-$\filt_{i-1}$-measurable and $\xi_i$ are i.i.d.\ centered with $\E[\xi_1^2]<\infty$,
-so that $\langle M\rangle_n = \Var(\xi_1)\sum_{i\le n}D_i$. Then
-$M_n = O\!\big(\sqrt{\langle M\rangle_n \log\log\langle M\rangle_n}\big)$ a.s.
-\end{lemma}
+Under the hypotheses of Theorem~\ref{thm:lil_bounded} (in particular $\langle M\rangle_n\to\infty$
+a.s.), there is a deterministic constant $C$ (depending only on $c$) such that almost surely
+\[
+  M_n \le C\,\sqrt{\langle M\rangle_n\,\log\langle M\rangle_n}\qquad\text{for all large }n.
+\]
+This is the consumable $O(\sqrt{\langle M\rangle_n\log\langle M\rangle_n})$ a.s.\ upper bound used
+downstream (Lemma~\ref{lem:U_increment_bound}, via the bounded assignment martingale).
+\end{corollary}
 
+\begin{proof}\leanok
+\uses{thm:lil_bounded}
+Repackage Theorem~\ref{thm:lil_bounded}: for large $n$ let $k$ be the least index with
+$\langle M\rangle_n\le 2^k$. Minimality gives $2^k\le 2\langle M\rangle_n$ and
+$k\le\log_2\langle M\rangle_n+1$, so
+$K\sqrt{2^k(k+1)}\le C\sqrt{\langle M\rangle_n\log\langle M\rangle_n}$ with
+$C=K\sqrt{2(1/\log 2+2)}$, using $\log\langle M\rangle_n\ge1$ eventually.
+\end{proof}
+
+\begin{corollary}[Upper bound at scale $\sqrt{n\log n}$]\label{cor:lil_upper_nat}
+\lean{AlphaRAR.ae_eventually_le_sqrt_nat_mul_log}\leanok
+\uses{cor:lil_upper, lem:qv_linear_bound}
+Under the hypotheses of Corollary~\ref{cor:lil_upper}, almost surely
+$M_n \le C\sqrt{n\log n}$ for all large $n$, for a deterministic constant $C$. This is the form
+$M_n = O(\sqrt{n\log n})$ a.s.\ used for the bounded assignment martingale
+$M_{\cdot,k}$ in Lemma~\ref{lem:U_increment_bound}.
+\end{corollary}
+
+\begin{proof}\leanok
+\uses{cor:lil_upper, lem:qv_linear_bound}
+By Lemma~\ref{lem:qv_linear_bound}, $\langle M\rangle_n\le c^2 n$, hence
+$\log\langle M\rangle_n\le\log(c^2 n)\le 2\log n$ once $n\ge c^2$. Substituting into
+Corollary~\ref{cor:lil_upper} bounds $\sqrt{\langle M\rangle_n\log\langle M\rangle_n}
+\le\sqrt{2c^2}\,\sqrt{n\log n}$.
+\end{proof}
+
+\section{The finite-variance case via truncation}
+\label{sec:pre_lil_trunc}
+
+The remaining case is a martingale $M_n = \sum_{i<n}\xi_i D_i$ whose increments are
+\emph{not} bounded: $\xi_i$ are i.i.d.\ centered with only $\E[\xi_0^2]=\sigma^2<\infty$,
+and $D_i\in\{0,1\}$ is predictable (each $\xi_i$ is independent of the past $\filt_{i-1}$,
+while $D_i$ is $\filt_{i-1}$-measurable). Then $\langle M\rangle_n=\sigma^2 N_n$ with
+$N_n:=\sum_{i<n}D_i$. Theorem~\ref{thm:lil_bounded} does not apply directly, so we
+truncate at level $b_i:=\sqrt{i}$ --- the largest level for which the tail is still
+summable under only a second moment --- and control three pieces separately. This section
+records the decomposition into small steps; each is a candidate Lean lemma to be formalized
+in turn. As throughout, we prove the $\log$ (not $\log\log$) rate.
+
+\begin{definition}[Truncated decomposition]\label{def:lil_trunc}
+With $b_i:=\sqrt i$, set
+$\xi_i^{\mathrm t}:=\xi_i\indic_{\{|\xi_i|\le b_i\}}$,
+$\xi_i^{\mathrm r}:=\xi_i\indic_{\{|\xi_i|> b_i\}}$,
+$m_i:=\E[\xi_i^{\mathrm t}]$, $\tilde\xi_i:=\xi_i^{\mathrm t}-m_i$, and
+\[
+  \tilde M_n:=\sum_{i<n}\tilde\xi_i D_i,\quad
+  R_n:=\sum_{i<n}\xi_i^{\mathrm r} D_i,\quad
+  \mathrm{Dr}_n:=\sum_{i<n} m_i D_i,\quad
+  N_n:=\sum_{i<n} D_i,
+\]
+so that $M_n=\tilde M_n+R_n+\mathrm{Dr}_n$.
+\end{definition}
+
+\subsection{The tail term $R_n$}
+
+\begin{lemma}[Summable tail probabilities]\label{lem:trunc_tail_summable}
+\lean{AlphaRAR.tsum_measure_abs_sub_gt_sqrt_ne_top}\leanok
+\uses{def:lil_trunc}
+$\sum_{i}\Prob(|\xi_i|>\sqrt i)<\infty$. (The formalized statement
+\texttt{tsum\_measure\_abs\_sub\_gt\_sqrt\_ne\_top} is the law-level version: for any finite measure
+$\rho$ on $\R$ with $\int(x-\theta)^2\,d\rho<\infty$, $\sum_i\rho(|x-\theta|>\sqrt i)<\infty$; apply
+it to the reward law $\rho=\nu_k$, $\theta=\theta_k$. This rests on a general-measure layer-cake
+bound \texttt{tsum\_measure\_Ioi\_ne\_top}, the $\mu$-general form of Mathlib's
+\texttt{tsum\_prob\_mem\_Ioi\_lt\_top}.)
+\end{lemma}
+\begin{proof}\leanok
+Since $|\xi_i|>\sqrt i \iff (x-\theta_k)^2>i$, the sum equals $\sum_i\nu_k((\cdot-\theta_k)^2>i)$,
+which is finite by the layer-cake bound $\sum_i\mu\{X>i\}\le\int X\,d\mu+\mu(\text{univ})$ applied to
+$X=(\cdot-\theta_k)^2$ (integrable, being the arm-$k$ second central moment $\sigma^2$).
+\end{proof}
+
+\begin{lemma}[Tail is eventually zero]\label{lem:trunc_tail_const}
+\lean{AlphaRAR.ae_eventually_abs_le_of_tsum_ne_top,
+AlphaRAR.measure_action_and_tail_le, AlphaRAR.tsum_measure_action_and_tail_ne_top,
+AlphaRAR.ae_eventually_tailRespPart_const}\leanok
+\uses{lem:trunc_tail_summable}
+Almost surely $|\xi_i|\le b_i$ for all large $i$; consequently $\xi_i^{\mathrm r}=0$ eventually and
+$R_n$ is a.s.\ eventually constant, so $R_n=O(1)$ a.s.
+
+The formalization has two layers. The abstract eventually-bounded clause
+\texttt{ae\_eventually\_abs\_le\_of\_tsum\_ne\_top} is stated for a general level sequence $b$ and
+takes $\sum_i\Prob(|\xi_i|>b_i)<\infty$ as hypothesis. The sampled version
+\texttt{ae\_eventually\_tailRespPart\_const} concludes that the tail remainder
+$R_n=Q_n-\tilde M_n-\mathrm{Dr}_n$ (\texttt{tailRespPart}) is a.s.\ eventually constant, via a
+\emph{conditional bookkeeping} step: the sampled tail event has
+$\Prob(A_i=k,\ \sqrt i\le|Y_i-\theta_k|)\le\nu_k(\sqrt i\le|\cdot-\theta_k|)$
+(\texttt{measure\_action\_and\_tail\_le}, by conditioning on $\filtAction_i$ and
+\texttt{condExp\_feedback\_comp}), so these probabilities are summable
+(\texttt{tsum\_measure\_action\_and\_tail\_ne\_top}, using the closed-window law-level bound
+\texttt{tsum\_measure\_abs\_sub\_ge\_sqrt\_ne\_top}).
+\end{lemma}
+\begin{proof}\leanok
+\uses{lem:trunc_tail_summable}
+By Lemma~\ref{lem:trunc_tail_summable} (in the sampled form above) the summability hypothesis holds,
+and the first Borel--Cantelli lemma (\texttt{ae\_eventually\_notMem}) gives a.s.\ that for all large
+$i$ arm $k$ is not sampled with an off-window response, whence $\xi_i^{\mathrm r}=0$ and the
+increments of $R_n$ (\texttt{tailRespPart\_succ\_sub}, where the truncated mean cancels) vanish for
+large $i$; a sequence with eventually-vanishing increments is eventually constant.
+\end{proof}
+
+\subsection{The drift term $\mathrm{Dr}_n$}
+
+\begin{lemma}[Truncated-mean bound]\label{lem:trunc_mean_bound}
+\lean{AlphaRAR.abs_integral_truncation_le}\leanok
+\uses{def:lil_trunc}
+$|m_i|\le \sigma^2/\sqrt i$ for $i\ge1$. (The formalized statement
+\texttt{abs\_integral\_truncation\_le} is the abstract single-variable bound: for a centred $X$
+with $X^2$ integrable, $|\E[\operatorname{trunc}(X,A)]|\le \E[X^2]/A$; apply it to $X=\xi_0$ and
+$A=\sqrt i$.)
+\end{lemma}
+\begin{proof}\leanok
+Since $\E[\xi_0]=0$, $m_i=\E[\operatorname{trunc}(\xi_0,\sqrt i)]
+=\E[\operatorname{trunc}(\xi_0,\sqrt i)-\xi_0]$, so by the pointwise bound
+$|\operatorname{trunc}(\xi_0,A)-\xi_0|\le\xi_0^2/A$ (the truncation is either $\xi_0$ or, off the
+window where $|\xi_0|\ge A$, is $0$ with $|\xi_0|\le\xi_0^2/A$),
+$|m_i|\le\E[\xi_0^2]/\sqrt i=\sigma^2/\sqrt i$.
+\end{proof}
+
+\begin{lemma}[Drift is $O(\sqrt{n})$]\label{lem:trunc_drift}
+\lean{AlphaRAR.abs_truncDrift_le}\leanok
+\uses{lem:trunc_mean_bound}
+$|\mathrm{Dr}_n|\le 2\sigma^2\sqrt{n}$ (everywhere, with $\sigma^2=V_k$). In particular
+$\mathrm{Dr}_n=O(\sqrt n)=o(\sqrt{N_n\log N_n})$ a.s.\ whenever $N_n$ grows linearly (the case of
+interest). The sharper bound $|\mathrm{Dr}_n|\le 2\sigma^2\sqrt{N_n}$ holds by reindexing to the
+sampled subsequence $i_j\ge j$, but is not needed and not formalized.
+\end{lemma}
+\begin{proof}\leanok
+\uses{lem:trunc_mean_bound}
+By Lemma~\ref{lem:trunc_mean_bound}, $|m_i|\le\sigma^2/\sqrt i$ (and $m_0=0$), so
+$|\mathrm{Dr}_n|\le\sum_{i<n}|m_i|D_i\le\sum_{i<n}|m_i|\le\sigma^2\sum_{i<n}\tfrac1{\sqrt i}
+\le 2\sigma^2\sqrt n$, using $\sum_{i<n}1/\sqrt i\le 2\sqrt n$
+(\texttt{sum\_one\_div\_sqrt\_le}).
+\end{proof}
+
+\subsection{The centred truncated martingale $\tilde M_n$}
+
+\begin{lemma}[$\tilde M$ is a martingale]\label{lem:trunc_mart}
+\lean{AlphaRAR.martingale_truncRespMart}\leanok
+\uses{def:lil_trunc, lem:Q_martingale}
+$\tilde M$ is a martingale with $\tilde M_0=0$: $\E[\tilde\xi_i D_i\mid\filt_{i-1}]
+=D_i\,\E[\tilde\xi_i\mid\filt_{i-1}]=D_i(\E[\xi_i^{\mathrm t}]-m_i)=0$, using that $\xi_i$ is
+independent of $\filt_{i-1}$ and $D_i$ is $\filt_{i-1}$-measurable.
+(Formalized in the \texttt{IsAlgEnvSeq}/\texttt{stationaryEnv} framework: $\tilde M$ is the
+\emph{truncated response martingale} $\tilde Q_{n,k}=\sum_{i<n}\indic_{\{A_i=k\}}
+(\operatorname{trunc}(Y_i-\theta_k,\sqrt i)-m_i)$, a martingale for the action-augmented
+filtration $\filtAction$. It is an instance of a general functional response martingale
+\texttt{genRespMart} --- of which the response martingale $Q$ (Lemma~\ref{lem:Q_martingale}) is the
+$g=\mathrm{id}$ case --- whose martingale property follows from \texttt{condExp\_feedback\_comp}.)
+\end{lemma}
+\begin{proof}\leanok
+\uses{def:lil_trunc}
+Pull out the $\filtAction_i$-measurable indicator $\indic_{\{A_i=k\}}$; the conditional
+expectation of $g(Y_i)$ (with $g=\operatorname{trunc}(\cdot-\theta_k,\sqrt i)$) given
+$\filtAction_i$ is $(\nu(A_i))[g]=m_i$ on $\{A_i=k\}$ (\texttt{condExp\_feedback\_comp}), so the
+centred increment has conditional mean $m_i-m_i=0$.
+\end{proof}
+
+\begin{lemma}[Quadratic variation of $\tilde M$]\label{lem:trunc_qv}
+\lean{AlphaRAR.predQuadVar_truncRespMart_eq}\leanok
+\uses{lem:trunc_mart, def:pred_qv, lem:qv_incr}
+$\langle\tilde M\rangle_n=\sum_{i<n}v_i D_i$, where $D_i=\indic_{\{A_i=k\}}$ and
+$v_i:=\int(\operatorname{trunc}(x-\theta_k,\sqrt i)-m_i)^2\,d\nu_k$ is the truncated-response
+variance of arm $k$.
+\end{lemma}
+\begin{proof}\leanok
+\uses{lem:trunc_mart, def:pred_qv, lem:qv_incr}
+Instance of the general functional quadratic variation
+\texttt{predQuadVar\_genRespMart\_eq}: the compensator increment is the $\filtAction_i$-conditional
+second moment $\E[(\tilde\xi_i D_i)^2\mid\filtAction_i]=v_i D_i$
+(\texttt{condExp\_genRespMart\_increment\_sq}), and these sum to $\sum_{i<n}v_i D_i$. (Unlike the
+response martingale $Q$, whose constant variance gives $V_k N$, the truncated variances $v_i$ vary
+with $i$, so the weighted sum is retained.)
+\end{proof}
+
+\begin{lemma}[Quadratic variation upper bound]\label{lem:trunc_qv_le}
+\lean{AlphaRAR.predQuadVar_truncRespMart_le}\leanok
+\uses{lem:trunc_qv}
+$\langle\tilde M\rangle_n\le V_k N_{n,k}$ a.s., since each $v_i\le V_k$ (truncation reduces the
+absolute value, and variance is at most the second moment). This is the only bound on
+$\langle\tilde M\rangle$ used by the block LIL argument (the matching lower bound and the
+convergence $v_i\to\sigma^2$ of Lemma~\ref{lem:trunc_var_conv} are not needed for the $O$-rate).
+\end{lemma}
+\begin{proof}\leanok
+\uses{lem:trunc_qv}
+By Lemma~\ref{lem:trunc_qv}, $\langle\tilde M\rangle_n=\sum_{i<n}v_i D_i\le V_k\sum_{i<n}D_i
+=V_k N_{n,k}$, using $v_i=\operatorname{Var}_{\nu_k}(\operatorname{trunc})\le
+\E_{\nu_k}[\operatorname{trunc}^2]\le\E_{\nu_k}[(\cdot-\theta_k)^2]=V_k$.
+\end{proof}
+
+\begin{lemma}[Truncated variances converge]\label{lem:trunc_var_conv}
+\uses{lem:trunc_qv}
+(Not needed for the $O$-rate.) $v_i\to\sigma^2$; in particular $\tfrac12\sigma^2\le v_i\le\sigma^2$
+for all large $i$, so
+$\tfrac12\sigma^2 N_n\le\langle\tilde M\rangle_n\le\sigma^2 N_n$ eventually and
+$\langle\tilde M\rangle_n\asymp\sigma^2 N_n$.
+\end{lemma}
 \begin{proof}
-\uses{thm:lil_bounded, thm:mart_slln}
-Split $\xi_i = \xi_i\indic_{\{|\xi_i|\le b_i\}} + \xi_i\indic_{\{|\xi_i|>b_i\}}$
-with a slowly growing truncation level $b_i$. The truncated part gives a
-martingale with bounded increments, to which Theorem~\ref{thm:lil_bounded}
-applies; the tail part is a.s.\ eventually zero (Borel--Cantelli, using
-$\sum_i\Prob(|\xi_i|>b_i)<\infty$ for a suitable $b_i$, guaranteed by
-$\E[\xi_1^2]<\infty$) with a negligible drift correction controlled by the
-martingale SLLN (Theorem~\ref{thm:mart_slln}).
+$v_i=\E[(\xi_i^{\mathrm t})^2]-m_i^2$. As $\sqrt i\to\infty$, $\E[(\xi_i^{\mathrm t})^2]
+=\int\operatorname{trunc}(x-\theta_k,\sqrt i)^2\,d\nu_k\to\int(x-\theta_k)^2\,d\nu_k=\sigma^2$
+by monotone/dominated convergence, and $m_i\to0$ (Lemma~\ref{lem:trunc_mean_bound}), so
+$v_i\to\sigma^2$. The upper bound $v_i\le\sigma^2$ is immediate from
+$|\operatorname{trunc}(\xi_i,\sqrt i)|\le|\xi_i|$.
+\end{proof}
+
+\subsection{Core: the growing-increment LIL for $\tilde M$}
+\label{sec:pre_lil_grow}
+
+The increments $|\tilde\xi_i D_i|\le 2b_i=2\sqrt i$ \emph{grow}, so Theorem~\ref{thm:lil_bounded}
+(fixed $c$) is unavailable. We rerun the dyadic argument with a block-dependent increment bound.
+On block $k$ we use horizon $2^k$, increment bound $c_k:=2\sqrt{2^k}$, and the \emph{constrained}
+exponential parameter $\theta_k:=1/c_k$ (the optimizer is inadmissible). The point is that
+$\theta_k^2\langle\tilde M\rangle_{2^k}\le\theta_k^2\sigma^2 2^k=\sigma^2/4$ stays bounded while
+$\theta_k\lambda_k$ grows like $\sqrt k$.
+
+\begin{lemma}[Per-block Freedman with constrained $\theta$]\label{lem:trunc_block}
+\lean{AlphaRAR.measure_exists_truncRespMart_block}\leanok
+\uses{lem:trunc_mart, lem:lil_freedman}
+Fix $C>0$ and set $\lambda_k:=C\sqrt{2^k\,k}$. For each $k$,
+\[
+  \Prob\!\Big(\exists\,m\le 2^k:\ \tilde M_m\ge\lambda_k,\ \langle\tilde M\rangle_m\le\sigma^2 2^k\Big)
+  \le \exp\!\big(-\tfrac{C}{2}\sqrt k+\tfrac{\sigma^2}{4}\big).
+\]
+Here $\sigma^2=V_k$ is the arm variance and $\langle\tilde M\rangle_m\le V_k 2^k$ uses only the
+upper bound Lemma~\ref{lem:trunc_qv_le}.
+\end{lemma}
+\begin{proof}\leanok
+\uses{lem:lil_freedman, lem:trunc_qv_le}
+Apply the Freedman inequality (Lemma~\ref{lem:lil_freedman}) to the martingale stopped at time
+$2^k$ --- whose increments are bounded by $c_k=2\sqrt{2^k}$, so $\theta_k c_k=1$ is admissible ---
+with $\theta=\theta_k$, $\lambda=\lambda_k$, $v=\sigma^2 2^k$. The exponent is
+$-\theta_k\lambda_k+\theta_k^2\sigma^2 2^k=-\tfrac C2\sqrt k+\tfrac{\sigma^2}4$, since
+$\theta_k\lambda_k=\tfrac{C\sqrt{2^k k}}{2\sqrt{2^k}}=\tfrac C2\sqrt k$ and
+$\theta_k^2\sigma^2 2^k=\tfrac{\sigma^2 2^k}{4\cdot2^k}=\tfrac{\sigma^2}4$. Stopping at $2^k$ is
+needed so the increment bound holds up to the horizon; on the event only times $m\le 2^k$ occur,
+where the stopped process agrees with $\tilde M$.
+
+The formalization packages the stopping into a reusable device
+\texttt{AlphaRAR.measure\_exists\_ge\_le\_exp\_horizon}: a version of the pre-optimization Freedman
+bound (Lemma~\ref{lem:lil_freedman}) whose increment bound $|\Delta M_i|\le c$ is required only for
+$i<N$, and whose event is restricted to $m\le N$. It is proved by applying
+Lemma~\ref{lem:lil_freedman} to the deterministically stopped process
+$M^N_m:=M_{\min(m,N)}$ (\texttt{stopMart}), which is a martingale
+(\texttt{martingale\_stopMart}), whose increments vanish past $N$ hence are globally bounded by
+$c$, and whose predictable quadratic variation agrees with $\langle M\rangle$ below the horizon
+(\texttt{predQuadVar\_stopMart\_of\_le}). Here it is used with $N=2^k$, $c=c_k=2\sqrt{2^k}$, the
+constrained $\theta_k=1/c_k$, and the increment bound $|\Delta\tilde M_i|\le2\sqrt i\le c_k$ for
+$i<2^k$ (\texttt{abs\_truncRespMart\_increment\_le}).
+\end{proof}
+
+\begin{lemma}[Block probabilities are summable]\label{lem:trunc_block_summable}
+\lean{AlphaRAR.summable_block_bound}\leanok
+For every $C>0$, $\sum_k \exp(-\tfrac C2\sqrt k+\tfrac{\sigma^2}4)<\infty$.
+\end{lemma}
+\begin{proof}\leanok
+$\exp(-\tfrac C2\sqrt k)$ is summable in $k$: since $\log=o(\sqrt\cdot)$, eventually
+$2\log k\le \tfrac C2\sqrt k$, so the terms are $\le k^{-2}$.
+\end{proof}
+
+\begin{lemma}[LIL for the truncated martingale]\label{lem:trunc_mart_lil}
+\lean{AlphaRAR.ae_eventually_truncRespMart_lt_block,
+AlphaRAR.ae_eventually_truncRespMart_le_sqrt_nat_mul_log}\leanok
+\uses{lem:trunc_block, lem:trunc_block_summable, lem:trunc_qv_le}
+$\tilde M_n=O(\sqrt{n\log n})$ a.s.
+\end{lemma}
+\begin{proof}\leanok
+\uses{lem:trunc_block, lem:trunc_block_summable, lem:trunc_qv_le}
+Borel--Cantelli over the blocks (Lemmas~\ref{lem:trunc_block}--\ref{lem:trunc_block_summable})
+gives that a.s.\ for all large $k$ and every $m\le 2^k$, $\langle\tilde M\rangle_m\le\sigma^2 2^k
+\Rightarrow \tilde M_m<\lambda_k$ (formalized as
+\texttt{ae\_eventually\_truncRespMart\_lt\_block}, the summable first Borel--Cantelli step). To
+bound a fixed time $n$, take the \emph{least} $k$ with $n\le 2^k$; then $2^k\le 2n$ and
+$k\le\log_2 n+1$, and the quadratic-variation bound $\langle\tilde M\rangle_n\le V_k N_{n,k}\le V_k
+n\le V_k 2^k$ (Lemma~\ref{lem:trunc_qv_le}) supplies the block hypothesis at $m=n\le 2^k$, giving
+$\tilde M_n<\lambda_k=C\sqrt{2^k k}\le C'\sqrt{n\log n}$.
+
+\textbf{Scale.} Because the increment bound $|\Delta\tilde M_i|\le2\sqrt i$ \emph{grows}, the block
+horizon $m\le 2^k$ forces the least admissible $k$ to satisfy $2^k\ge n$, so time-blocking delivers
+the \emph{time} scale $O(\sqrt{n\log n})$ rather than the variance scale
+$O(\sqrt{\langle\tilde M\rangle_n\log\langle\tilde M\rangle_n})=O(\sqrt{N_n\log N_n})$ of the
+displayed statement. The two coincide when arm $k$ is sampled a positive fraction of the time
+($N_{n,k}\asymp n$, the regime of interest); the sharper variance-scale bound would require blocking
+by the quadratic variation rather than by the natural time, and is not formalized. The time-scale
+form is exactly parallel to the bounded-increment Corollary~\ref{cor:lil_upper_nat}
+(\texttt{ae\_eventually\_le\_sqrt\_nat\_mul\_log}).
+\end{proof}
+
+\subsection{Assembling}
+
+\begin{lemma}[Truncation to finite variance]\label{lem:lil_truncation}
+\lean{AlphaRAR.ae_eventually_respMart_le_sqrt_nat_mul_log}\leanok
+\uses{lem:trunc_tail_const, lem:trunc_drift, lem:trunc_mart_lil}
+$M_n = O(\sqrt{n\log n})$ a.s.
+\end{lemma}
+\begin{proof}\leanok
+\uses{lem:trunc_tail_const, lem:trunc_drift, lem:trunc_mart_lil}
+By Definition~\ref{def:lil_trunc}, $M_n=\tilde M_n+R_n+\mathrm{Dr}_n$. The main term is
+$O(\sqrt{n\log n})$ (Lemma~\ref{lem:trunc_mart_lil}); the tail is $O(1)$
+(Lemma~\ref{lem:trunc_tail_const}); the drift is $O(\sqrt{n})$ (Lemma~\ref{lem:trunc_drift}).
+Both remainders are $o(\sqrt{n\log n})$, so $M_n=O(\sqrt{n\log n})$. In the regime of interest
+$N_{n,k}\asymp n$, this is the $O(\sqrt{N_n\log N_n})=O(\sqrt{\langle M\rangle_n\log\langle
+M\rangle_n})$ rate (using $\langle M\rangle_n=\sigma^2 N_n$) required downstream.
 \end{proof}
 
 \textbf{Remark.} Lemma~\ref{lem:lil_truncation} is exactly the shape used in
 Lemma~\ref{lem:theta_LIL}: there $M = Q_{\cdot,k}$, $D_i = X_{i,k}$,
 $\xi_i = \xi_{i,k}-\theta_k$, and $\langle Q_{\cdot,k}\rangle_n = V_k N_{n,k}$, so
-the conclusion reads $Q_{n,k} = O(\sqrt{N_{n,k}\log\log N_{n,k}})$ a.s. The same
+the conclusion reads $Q_{n,k} = O(\sqrt{N_{n,k}\log N_{n,k}})$ a.s. The same
 statement applied to the bounded martingale $M_{\cdot,k}$
-(Definition~\ref{def:M}) covers the use in Lemma~\ref{lem:U_increment_bound}.
+(Definition~\ref{def:M}) covers the use in Lemma~\ref{lem:U_increment_bound}; that direction is
+already formalized as Corollary~\ref{cor:lil_upper_nat}.
+
+\textbf{Formalization status.} All of \S\ref{sec:pre_lil_trunc} is now formalized: the tail
+(Lemmas~\ref{lem:trunc_tail_summable}--\ref{lem:trunc_tail_const}), the drift
+(Lemmas~\ref{lem:trunc_mean_bound}--\ref{lem:trunc_drift}), the martingale and its quadratic
+variation (Lemmas~\ref{lem:trunc_mart}--\ref{lem:trunc_qv_le}), the core growing-increment LIL
+(Lemmas~\ref{lem:trunc_block}--\ref{lem:trunc_mart_lil}), and the assembling
+Lemma~\ref{lem:lil_truncation} (\texttt{ae\_eventually\_respMart\_le\_sqrt\_nat\_mul\_log}). The core
+reuses \texttt{measure\_exists\_ge\_le\_exp} on a \emph{deterministically stopped} martingale --- the
+one genuinely new device, packaged as \texttt{measure\_exists\_ge\_le\_exp\_horizon} --- followed by
+the Borel--Cantelli/repackaging pattern of \S\ref{sec:pre_lil_upper}. The whole chapter delivers the
+time-scale $O(\sqrt{n\log n})$ form (see the scale remark in Lemma~\ref{lem:trunc_mart_lil});
+the variance-scale $O(\sqrt{\langle M\rangle_n\log\langle M\rangle_n})$, which agrees in the regime
+$N_{n,k}\asymp n$, would require blocking by the quadratic variation and is not formalized.

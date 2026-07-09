@@ -65,13 +65,17 @@ the strong law of large numbers for martingales gives $M_{n,k}/n \to 0$ a.s.
 \end{proof}
 
 \begin{lemma}[Limit of $U/n$]\label{lem:U_over_n}
+\lean{AlphaRAR.auxU_div_tendsto}\leanok
 \uses{def:U}
 Under Conditions~\textbf{A}--\textbf{B}, for each $k$,
 $\displaystyle \lim_{n\to\infty} \frac{U_{n,k}}{n} = -(1-\alpha)\,u_k$ a.s.,
-where $u$ is the limit from Lemma~\ref{lem:rho_converges}.
+where $u$ is the limit from Lemma~\ref{lem:rho_converges}. (The formalized statement
+\texttt{auxU\_div\_tendsto} is the deterministic core: for real sequences with $\rho_n\to u$ and
+$M_n/n\to0$, one has $U_n/n\to-(1-\alpha)u$; the a.s.\ statement is the pathwise application with the
+a.s.\ limits from Lemmas~\ref{lem:M_lln} and~\ref{lem:rho_converges}.)
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:M_lln, lem:rho_converges}
 From Definition~\ref{def:U},
 $\frac{U_{n,k}}{n} = \frac{\alpha}{n}\sum_{m=0}^{n-1}\hat{\rho}_{m,k}
@@ -86,12 +90,16 @@ $\frac{U_{n,k}}{n} \to \alpha u_k - u_k = -(1-\alpha)u_k$.
 \label{sec:cons_match}
 
 \begin{lemma}[Positive part vanishes]\label{lem:pos_part_vanishes}
+\lean{AlphaRAR.pos_part_vanishes}\leanok
 \uses{def:generic_cond}
 Under the generic conditions and Conditions~\textbf{A}--\textbf{B}, for each $k$,
-$\big(\frac{N_{n,k}}{n} - \hat{\rho}_{n,k}\big)^+ \to 0$ a.s.
+$\big(\frac{N_{n,k}}{n} - \hat{\rho}_{n,k}\big)^+ \to 0$ a.s. (The formalized statement
+\texttt{pos\_part\_vanishes} is the pathwise core: it takes as hypotheses the plug-in convergence
+$\rho_n\to u$ (\ref{lem:rho_converges}), the vanishing $M_n/n\to0$ (\ref{lem:M_lln}), and the two
+generic conditions \eqref{eq:generic_ineq}--\eqref{eq:generic_small} in operational form.)
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:convergence, lem:U_over_n}
 Apply Lemma~\ref{lem:convergence} with $X_n := U_{n,k}$, $a_n := \ell_{n,k}$
 (non-decreasing, $\le n$ by the generic conditions), and
@@ -105,12 +113,13 @@ $\big(\frac{N_{n,k}}{n}-\hat{\rho}_{n,k}\big)^+\to0$.
 \end{proof}
 
 \begin{lemma}[Negative part vanishes]\label{lem:neg_part_vanishes}
+\lean{AlphaRAR.neg_part_vanishes}\leanok
 \uses{def:counts, def:plugin_target}
 Under the same hypotheses, for each $k$,
 $\big(\hat{\rho}_{n,k} - \frac{N_{n,k}}{n}\big)^+ \to 0$ a.s.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:pos_part_vanishes, lem:counts_sum}
 Using $\sum_j N_{n,j}/n = 1$ (Lemma~\ref{lem:counts_sum}) and
 $\sum_j \hat{\rho}_{n,j} = 1$,
@@ -121,13 +130,16 @@ by Lemma~\ref{lem:pos_part_vanishes}.
 \end{proof}
 
 \begin{lemma}[Proportions match the plug-in target]\label{lem:match}
+\lean{AlphaRAR.match_proportion}\leanok
 \uses{def:counts, def:plugin_target}
 Under the same hypotheses, for each $k$,
 $\frac{N_{n,k}}{n} - \hat{\rho}_{n,k} \to 0$ and
-$\frac{N_{n,k}}{n} \to u_k \in (0,1)$ a.s.
+$\frac{N_{n,k}}{n} \to u_k \in (0,1)$ a.s. (The formalized statement \texttt{match\_proportion}
+delivers $\frac{N_{n,k}}{n}\to u_k$ from the two vanishing positive parts and $\hat{\rho}_{n,k}\to
+u_k$.)
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:pos_part_vanishes, lem:neg_part_vanishes, lem:rho_converges}
 The absolute value $|\frac{N_{n,k}}{n}-\hat{\rho}_{n,k}|$ is the sum of the two
 positive parts, both tending to $0$ by
@@ -140,11 +152,12 @@ $\frac{N_{n,k}}{n}\to u_k$.
 \label{sec:cons_final}
 
 \begin{lemma}[All arms sampled infinitely often]\label{lem:all_arms_infinite}
+\lean{AlphaRAR.all_arms_infinite}\leanok
 \uses{def:counts}
 Under the same hypotheses, $N_{n,k}\to\infty$ a.s.\ for every $k$.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:match}
 Since $\frac{N_{n,k}}{n}\to u_k > 0$ (Lemma~\ref{lem:match}), $N_{n,k}\sim u_k n
 \to\infty$.

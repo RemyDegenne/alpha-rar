@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
 import Mathlib
+import AlphaRAR.Technical.Convergence
 
 /-!
 # Deterministic core of the auxiliary processes
@@ -232,6 +233,34 @@ theorem theta_error_Q (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) (hN : count X n �
     (∑ j ∈ range n, X j * ξ j) / count X n - θ = respMG X ξ θ n / count X n := by
   rw [respMG_eq, sub_div, mul_div_assoc, div_self hN, mul_one]
 
+/-- Sequential estimator of a fixed arm (blueprint `def:estimator`),
+`θ̂ n = (∑_{j<n} X j ξ j + θ₀) / (N n + 1)`, with initial value `θ₀` and the `+1`
+regularization in the denominator. -/
+noncomputable def estimator (ξ : ℕ → ℝ) (θ₀ : ℝ) (n : ℕ) : ℝ :=
+  ((∑ j ∈ range n, X j * ξ j) + θ₀) / (count X n + 1)
+
+/-- **Exact estimator error** (blueprint `lem:estimator_bahadur`, exact form).
+
+The regularized estimator has the *exact* error decomposition
+`θ̂ n - θ = (Q n + (θ₀ - θ)) / (N n + 1)`, valid whenever `N n + 1 ≠ 0` (always, for
+`{0,1}`-valued assignment indicators). Since `Q n = O(√(n \log n))` and the numerator offset
+`θ₀ - θ` is constant, this is the Bahadur representation
+`θ̂ n = \tfrac1{N n}∑ X ξ + o(N n^{-1/2})` in sharp, remainder-free form. -/
+theorem estimator_sub_eq (ξ : ℕ → ℝ) (θ θ₀ : ℝ) (n : ℕ) (hN : count X n + 1 ≠ 0) :
+    estimator X ξ θ₀ n - θ = (respMG X ξ θ n + (θ₀ - θ)) / (count X n + 1) := by
+  rw [estimator, respMG_eq]
+  field_simp
+  ring
+
+/-- **Absolute estimator error bound**: `|θ̂ n - θ| ≤ (|Q n| + |θ₀ - θ|) / (N n + 1)`.
+The pathwise backbone of the LIL rate `lem:theta_LIL`: with `|Q n| = O(√(n \log n))` and
+`N n + 1 ≍ v_k n`, it gives `|θ̂ n - θ| = O(√(\log n / n))`. -/
+theorem abs_estimator_sub_le (ξ : ℕ → ℝ) (θ θ₀ : ℝ) (n : ℕ) (hN : 0 < count X n + 1) :
+    |estimator X ξ θ₀ n - θ| ≤ (|respMG X ξ θ n| + |θ₀ - θ|) / (count X n + 1) := by
+  rw [estimator_sub_eq X ξ θ θ₀ n (ne_of_gt hN), abs_div, abs_of_pos hN]
+  gcongr
+  exact abs_add_le _ _
+
 /-- **Deterministic core of the limit of `U/n`** (blueprint `lem:U_over_n`).
 
 If the plug-in target converges, `ρ n → u`, and the normalized assignment martingale vanishes,
@@ -276,5 +305,143 @@ theorem auxU_div_tendsto (u : ℝ) (hρ : Tendsto ρ atTop (𝓝 u))
   unfold auxU
   rw [← Finset.mul_sum (range (n - 1)) ρ α]
   field_simp
+
+/-- **Positive part of the proportion gap vanishes** (blueprint `lem:pos_part_vanishes`).
+
+Pathwise core, for a fixed arm with assignment indicators `X`, selection probabilities `p`, plug-in
+target `ρ`, throttling parameter `α`, and last under-sampling times `ℓ` (with `ℓ n ≤ n`). Assume:
+* the plug-in target converges, `ρ n → u` with `u ∈ [0,1]` (blueprint `lem:rho_converges`);
+* the normalized assignment martingale vanishes, `M n / n → 0` (blueprint `lem:M_lln`);
+* the generic key inequality `hgen` (blueprint `eq:generic_ineq`, supplied by `preliminary_ineq`);
+* generic smallness `hgs`, the operational form of `limsup (N_ℓ - ℓ ρ_ℓ)/n ≤ 0` (blueprint
+  `eq:generic_small`, supplied by `preliminary_small`).
+
+Then `(N n / n - ρ n)⁺ → 0`. The argument feeds the auxiliary-process limit `U n / n → -(1-α) u`
+(`auxU_div_tendsto`) into the analytic positive-part lemma `tendsto_posPart_sub_div`
+(blueprint `lem:convergence`), then squeezes. -/
+theorem pos_part_vanishes {ℓ : ℕ → ℕ} {u : ℝ} (hℓle : ∀ n, ℓ n ≤ n)
+    (hα : α ∈ Set.Icc (0 : ℝ) 1) (hu : u ∈ Set.Icc (0 : ℝ) 1)
+    (hρ : Tendsto ρ atTop (𝓝 u))
+    (hM : Tendsto (fun n => assignMG X p n / (n : ℝ)) atTop (𝓝 0))
+    (hgen : ∀ n, count X n - (n : ℝ) * ρ n
+      ≤ 1 + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) + (auxU X p ρ α n - auxU X p ρ α (ℓ n)))
+    (hgs : ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
+      (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) / (n : ℝ) < δ) :
+    Tendsto (fun n => max (count X n / (n : ℝ) - ρ n) 0) atTop (𝓝 0) := by
+  have hU : Tendsto (fun n => auxU X p ρ α n / (n : ℝ)) atTop (𝓝 (-((1 - α) * u))) := by
+    have h := auxU_div_tendsto X p ρ α u hρ hM
+    rwa [neg_mul] at h
+  have hα' : (1 - α) ∈ Set.Icc (0 : ℝ) 1 := ⟨by linarith [hα.2], by linarith [hα.1]⟩
+  have hε : ∀ δ : ℝ, 0 < δ → ∀ᶠ n : ℕ in atTop,
+      (1 : ℝ) / (n : ℝ) + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) / (n : ℝ) < δ := by
+    intro δ hδ
+    have h1 : ∀ᶠ n : ℕ in atTop, (1 : ℝ) / (n : ℝ) < δ / 2 :=
+      tendsto_one_div_atTop_nhds_zero_nat.eventually_lt_const (by linarith)
+    filter_upwards [h1, hgs (δ / 2) (by linarith)] with n ha hb
+    linarith
+  have key := tendsto_posPart_sub_div (a := ℓ) (X := auxU X p ρ α)
+    (ε := fun n : ℕ => (1 : ℝ) / (n : ℝ) + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) / (n : ℝ))
+    hℓle hα' hu hU hε
+  refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds key
+    (Eventually.of_forall fun n => le_max_right _ _) ?_
+  filter_upwards [eventually_ge_atTop 1] with n hn
+  have hnR : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hnum : 0 ≤ 1 + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n))
+      + (auxU X p ρ α n - auxU X p ρ α (ℓ n)) - (count X n - (n : ℝ) * ρ n) := by
+    linarith [hgen n]
+  have expand : ((1 : ℝ) / (n : ℝ) + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) / (n : ℝ)
+        + (auxU X p ρ α n - auxU X p ρ α (ℓ n)) / (n : ℝ)) - (count X n / (n : ℝ) - ρ n)
+      = (1 + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n))
+        + (auxU X p ρ α n - auxU X p ρ α (ℓ n)) - (count X n - (n : ℝ) * ρ n)) / (n : ℝ) := by
+    field_simp
+  have hnn : 0 ≤ (1 + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n))
+        + (auxU X p ρ α n - auxU X p ρ α (ℓ n)) - (count X n - (n : ℝ) * ρ n)) / (n : ℝ) :=
+    div_nonneg hnum hnR.le
+  have key2 : count X n / (n : ℝ) - ρ n
+      ≤ (1 : ℝ) / (n : ℝ) + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) / (n : ℝ)
+        + (auxU X p ρ α n - auxU X p ρ α (ℓ n)) / (n : ℝ) := by
+    linarith [expand, hnn]
+  exact max_le_max key2 le_rfl
+
+/-- **Negative part of the proportion gap vanishes** (blueprint `lem:neg_part_vanishes`).
+
+Vector form over `K` arms. If every arm's positive gap `(N_{·,j}/n - r_{·,j})⁺` vanishes
+(`pos_part_vanishes`), and both the allocation proportions and the target `r` lie on the simplex
+(`∑_j Y_· j = 1` per patient, so `∑_j N_{·,j}/n = 1`; and `∑_j r_n j = 1`), then for each arm the
+negative gap `(r_{·,k} - N_{·,k}/n)⁺` also vanishes. Indeed
+`r_k - N_k/n = ∑_{j≠k}(N_j/n - r_j)`, whose positive part is dominated by
+`∑_{j≠k}(N_j/n - r_j)⁺ → 0`. -/
+theorem neg_part_vanishes {K : ℕ} (Y r : ℕ → Fin K → ℝ)
+    (hY : ∀ j, ∑ k, Y j k = 1) (hr : ∀ n, ∑ k, r n k = 1)
+    (hpos : ∀ j : Fin K,
+      Tendsto (fun n => max (count (fun i => Y i j) n / (n : ℝ) - r n j) 0) atTop (𝓝 0))
+    (k : Fin K) :
+    Tendsto (fun n => max (r n k - count (fun i => Y i k) n / (n : ℝ)) 0) atTop (𝓝 0) := by
+  have hsum : Tendsto (fun n => ∑ j ∈ Finset.univ.erase k,
+      max (count (fun i => Y i j) n / (n : ℝ) - r n j) 0) atTop (𝓝 0) := by
+    have h := tendsto_finsetSum (Finset.univ.erase k) (fun j _ => hpos j)
+    simpa using h
+  refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hsum
+    (Eventually.of_forall fun n => le_max_right _ _) ?_
+  filter_upwards [eventually_ge_atTop 1] with n hn
+  have hn0 : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have h1 : (∑ j, count (fun i => Y i j) n / (n : ℝ)) = 1 := by
+    rw [← Finset.sum_div, counts_sum Y hY n, div_self (ne_of_gt hn0)]
+  have htot : (∑ j, (count (fun i => Y i j) n / (n : ℝ) - r n j)) = 0 := by
+    rw [Finset.sum_sub_distrib, h1, hr n, sub_self]
+  have hsplit := Finset.add_sum_erase Finset.univ
+    (fun j => count (fun i => Y i j) n / (n : ℝ) - r n j) (Finset.mem_univ k)
+  have hid2 : (∑ j ∈ Finset.univ.erase k, (count (fun i => Y i j) n / (n : ℝ) - r n j))
+      = r n k - count (fun i => Y i k) n / (n : ℝ) := by
+    have hz : (count (fun i => Y i k) n / (n : ℝ) - r n k)
+        + ∑ j ∈ Finset.univ.erase k, (count (fun i => Y i j) n / (n : ℝ) - r n j) = 0 := by
+      rw [hsplit]; exact htot
+    linarith
+  rw [← hid2]
+  refine max_le (Finset.sum_le_sum fun j _ => le_max_left _ _)
+    (Finset.sum_nonneg fun j _ => le_max_right _ _)
+
+/-- **Proportions match the plug-in target** (blueprint `lem:match`).
+
+Single-arm form. If both the positive gap `(N_k/n - r_k)⁺` and the negative gap `(r_k - N_k/n)⁺`
+vanish (from `pos_part_vanishes`, `neg_part_vanishes`), and the target converges `r_k → u_k`, then
+the allocation proportion converges to the same limit, `N_k/n → u_k`. The gap itself vanishes
+because `x = x⁺ - (-x)⁺`, so `N_k/n - r_k = (N_k/n - r_k)⁺ - (r_k - N_k/n)⁺ → 0`. -/
+theorem match_proportion {K : ℕ} (Y r : ℕ → Fin K → ℝ) {uk : ℝ} (k : Fin K)
+    (hpos : Tendsto (fun n => max (count (fun i => Y i k) n / (n : ℝ) - r n k) 0) atTop (𝓝 0))
+    (hneg : Tendsto (fun n => max (r n k - count (fun i => Y i k) n / (n : ℝ)) 0) atTop (𝓝 0))
+    (hr : Tendsto (fun n => r n k) atTop (𝓝 uk)) :
+    Tendsto (fun n => count (fun i => Y i k) n / (n : ℝ)) atTop (𝓝 uk) := by
+  have hid : ∀ x : ℝ, max x 0 - max (-x) 0 = x := by
+    intro x
+    rcases le_total 0 x with h | h
+    · rw [max_eq_left h, max_eq_right (by linarith : -x ≤ 0), sub_zero]
+    · rw [max_eq_right h, max_eq_left (by linarith : (0 : ℝ) ≤ -x), zero_sub, neg_neg]
+  have hdiff : Tendsto (fun n => count (fun i => Y i k) n / (n : ℝ) - r n k) atTop (𝓝 0) := by
+    have h := hpos.sub hneg
+    rw [sub_zero] at h
+    refine h.congr fun n => ?_
+    rw [show r n k - count (fun i => Y i k) n / (n : ℝ)
+        = -(count (fun i => Y i k) n / (n : ℝ) - r n k) from by ring]
+    exact hid _
+  have hlim := hdiff.add hr
+  rw [zero_add] at hlim
+  refine hlim.congr fun n => ?_
+  ring
+
+/-- **All arms are sampled infinitely often** (blueprint `lem:all_arms_infinite`).
+
+If the allocation proportion converges to a positive limit, `N_k/n → u_k > 0` (from
+`match_proportion`), then the count diverges, `N_k → ∞`. Writing `N_k = (N_k/n) · n`, the first
+factor tends to `u_k > 0` and the second to `∞`. -/
+theorem all_arms_infinite {K : ℕ} (Y : ℕ → Fin K → ℝ) {uk : ℝ} (k : Fin K) (huk : 0 < uk)
+    (hmatch : Tendsto (fun n => count (fun i => Y i k) n / (n : ℝ)) atTop (𝓝 uk)) :
+    Tendsto (fun n => count (fun i => Y i k) n) atTop atTop := by
+  have hmul : Tendsto (fun n : ℕ => count (fun i => Y i k) n / (n : ℝ) * (n : ℝ)) atTop atTop :=
+    hmatch.pos_mul_atTop huk tendsto_natCast_atTop_atTop
+  refine hmul.congr' ?_
+  filter_upwards [eventually_ge_atTop 1] with n hn
+  have hne : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
+  rw [div_mul_cancel₀ _ hne]
 
 end AlphaRAR

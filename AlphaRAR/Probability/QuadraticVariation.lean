@@ -103,6 +103,38 @@ theorem predQuadVar_le_succ [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (n :
   simp only [Pi.sub_apply, Pi.zero_apply] at e hn
   linarith
 
+/-- **Linear upper bound on `⟨M⟩` for bounded increments.** If `|ΔM_i| ≤ c` a.e., then each
+increment `⟨M⟩_{k+1} - ⟨M⟩_k` equals `μ[(ΔM_k)² | ℱ_k] ≤ c²`, so telescoping from `⟨M⟩_0 = 0`
+gives `⟨M⟩_n ≤ c² n` a.e. -/
+theorem predQuadVar_le_of_bound [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) {c : ℝ}
+    (hd2 : ∀ n, Integrable (fun ω => (M (n + 1) ω - M n ω) ^ 2) μ)
+    (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ)
+    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
+    ∀ᵐ ω ∂μ, ∀ n, predQuadVar M ℱ μ n ω ≤ c ^ 2 * n := by
+  have hstep : ∀ k, ∀ᵐ ω ∂μ,
+      predQuadVar M ℱ μ (k + 1) ω - predQuadVar M ℱ μ k ω ≤ c ^ 2 := by
+    intro k
+    have hinc := predQuadVar_succ_sub_eq hM k (hd2 k) (hprod k)
+    have hsqle : (fun ω => (M (k + 1) ω - M k ω) ^ 2) ≤ᵐ[μ] fun _ => c ^ 2 := by
+      filter_upwards [hb k] with ω h
+      nlinarith [neg_le_of_abs_le h, le_of_abs_le h]
+    have hcond : μ[fun ω => (M (k + 1) ω - M k ω) ^ 2 | ℱ k] ≤ᵐ[μ] fun _ => c ^ 2 := by
+      have h := condExp_mono (m := ℱ k) (hd2 k) (integrable_const (c ^ 2)) hsqle
+      rwa [condExp_const (ℱ.le k)] at h
+    filter_upwards [hinc, hcond] with ω e ec
+    rw [Pi.sub_apply] at e; rw [e]; exact ec
+  filter_upwards [ae_all_iff.mpr hstep] with ω hω
+  intro n
+  have htel : ∑ k ∈ Finset.range n,
+      (predQuadVar M ℱ μ (k + 1) ω - predQuadVar M ℱ μ k ω) = predQuadVar M ℱ μ n ω := by
+    rw [Finset.sum_range_sub (fun k => predQuadVar M ℱ μ k ω) n]
+    have h0 : predQuadVar M ℱ μ 0 ω = 0 := by rw [predQuadVar_zero]; rfl
+    rw [h0, sub_zero]
+  rw [← htel]
+  calc ∑ k ∈ Finset.range n, (predQuadVar M ℱ μ (k + 1) ω - predQuadVar M ℱ μ k ω)
+      ≤ ∑ _k ∈ Finset.range n, c ^ 2 := Finset.sum_le_sum fun k _ => hω k
+    _ = c ^ 2 * n := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]; ring
+
 /-- **A martingale has constant expectation**: `∫ N n = ∫ N 0` for every `n`.
 Follows from `N 0 =ᵐ μ[N n | ℱ 0]` and the fact that conditional expectation
 preserves the integral. -/

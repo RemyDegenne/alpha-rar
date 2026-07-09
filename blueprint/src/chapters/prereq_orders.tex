@@ -119,6 +119,18 @@ term $\E[2M_{n-1}\Delta M_n\mid\filt_{n-1}]=0$. Nonnegativity of the increments
 gives monotonicity.
 \end{proof}
 
+\begin{lemma}[Linear bound on $\langle M\rangle$ for bounded increments]\label{lem:qv_linear_bound}
+\lean{AlphaRAR.predQuadVar_le_of_bound}\leanok
+\uses{def:pred_qv, lem:qv_incr}
+If $|\Delta M_i|\le c$ a.s., then $\langle M\rangle_n \le c^2 n$ a.s.
+\end{lemma}
+
+\begin{proof}\leanok
+Each increment satisfies $\langle M\rangle_{k+1}-\langle M\rangle_k
+= \E[(\Delta M_k)^2\mid\filt_k] \le \E[c^2\mid\filt_k] = c^2$; telescoping from
+$\langle M\rangle_0 = 0$ gives $\langle M\rangle_n \le c^2 n$.
+\end{proof}
+
 \begin{lemma}[$M^2 - \langle M\rangle$ is a martingale]\label{lem:qv_mart}
 \lean{AlphaRAR.martingale_sq_sub_predQuadVar}\leanok
 \uses{def:pred_qv}
