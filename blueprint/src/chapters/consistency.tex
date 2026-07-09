@@ -15,8 +15,72 @@ covers every $\aRTS$ design.
 \section{Convergence of the plug-in target}
 \label{sec:cons_rho_limit}
 
+\begin{lemma}[SLLN for the response martingale]\label{lem:respMart_div_count_slln}
+\lean{AlphaRAR.respMart_div_pullCount_ae_tendsto_zero}\leanok
+\uses{def:Q, def:counts, thm:mart_slln_bracket, lem:Q_quad_var}
+For each arm $k$, on the event $\{N_{n,k}\to\infty\}$ the bracket-normalized response
+martingale vanishes: $\dfrac{Q_{n,k}}{N_{n,k}}\to 0$ a.s.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{thm:mart_slln_bracket, lem:Q_quad_var}
+The response martingale $Q_{\cdot,k}$ has predictable quadratic variation
+$\langle Q_k\rangle_n = V_k N_{n,k}$ (Lemma~\ref{lem:Q_quad_var}). If $V_k>0$, then on
+$\{N_{n,k}\to\infty\}$ the bracket $\langle Q_k\rangle_n = V_k N_{n,k}\to\infty$, so the
+bracket-normalized strong law (Theorem~\ref{thm:mart_slln_bracket}) gives
+$Q_{n,k}/\langle Q_k\rangle_n\to0$, whence
+$Q_{n,k}/N_{n,k} = V_k\,(Q_{n,k}/\langle Q_k\rangle_n)\to0$. If $V_k=0$, then
+$\E[Q_{n,k}^2] = V_k\,\E[N_{n,k}] = 0$, so $Q_{n,k}=0$ a.s.\ for every $n$ and the ratio is
+identically $0$.
+\end{proof}
+
+\begin{lemma}[Estimator limit on $\{N\to\infty\}$]\label{lem:theta_limit_infinite}
+\lean{AlphaRAR.estimator_ae_tendsto_of_pullCount_atTop}\leanok
+\uses{def:estimator, lem:estimator_bahadur, lem:respMart_div_count_slln}
+For each arm $k$, on the event $\{N_{n,k}\to\infty\}$ the estimator converges a.s.\ to the arm
+mean: $\hat\theta_{n,k}\to\theta_k$.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:estimator_bahadur, lem:respMart_div_count_slln}
+By the exact error identity (Lemma~\ref{lem:estimator_bahadur}),
+$\hat\theta_{n,k}-\theta_k = (Q_{n,k}+(\theta_{0,k}-\theta_k))/(N_{n,k}+1)$. On
+$\{N_{n,k}\to\infty\}$ the constant offset is $O(N_{n,k}^{-1})\to0$, while
+$\frac{Q_{n,k}}{N_{n,k}+1} = \frac{Q_{n,k}}{N_{n,k}}\cdot\frac{N_{n,k}}{N_{n,k}+1}\to0\cdot1=0$
+by Lemma~\ref{lem:respMart_div_count_slln}. Hence $\hat\theta_{n,k}\to\theta_k$.
+\end{proof}
+
+\begin{lemma}[Estimator eventually constant on $\{\sup_n N<\infty\}$]\label{lem:theta_limit_finite}
+\lean{AlphaRAR.exists_tendsto_estimator_of_not_pullCount_atTop}\leanok
+\uses{def:estimator, def:counts}
+For each arm $k$ and each realization, if $N_{n,k}\not\to\infty$ then $\hat\theta_{n,k}$ is
+eventually constant, and in particular converges.
+\end{lemma}
+
+\begin{proof}\leanok
+The count $N_{\cdot,k}$ is a nondecreasing $\N$-valued sequence, so $N_{n,k}\not\to\infty$
+forces it to be bounded, hence eventually constant at its supremum $N_{N_0,k}$. For $n\ge N_0$
+no further patient is assigned to arm $k$, so both the numerator $\sum_{j<n}X_{j,k}\xi_{j,k}$
+and the denominator $N_{n,k}+1$ of $\hat\theta_{n,k}$ are frozen; hence $\hat\theta_{n,k}$ is
+eventually constant.
+\end{proof}
+
+\begin{lemma}[The sequential estimator converges a.s.]\label{lem:theta_converges}
+\lean{AlphaRAR.estimator_ae_tendsto}\leanok
+\uses{lem:theta_limit_infinite, lem:theta_limit_finite}
+For each arm $k$, the estimator $\hat\theta_{n,k}$ converges a.s.: to $\theta_k$ on
+$\{N_{n,k}\to\infty\}$ and to an eventually-attained value on $\{\sup_n N_{n,k}<\infty\}$.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:theta_limit_infinite, lem:theta_limit_finite}
+The alternative $N_{n,k}\to\infty$ versus $\sup_n N_{n,k}<\infty$ is exhaustive (as $N_{n,k}$
+is monotone in $n$); branch~1 is Lemma~\ref{lem:theta_limit_infinite} and branch~2 is
+Lemma~\ref{lem:theta_limit_finite}.
+\end{proof}
+
 \begin{lemma}[Dichotomy for the estimator limit]\label{lem:theta_limit_dichotomy}
-\uses{def:estimator, def:condA, def:attainable}
+\uses{def:estimator, def:condA, def:attainable, lem:theta_converges}
 Under Condition~\textbf{A}, for each $k$ the estimator $\hat{\theta}_{n,k}$
 converges a.s.\ to a limit in $I_k$: on $\{N_{n,k}\to\infty\}$ it converges to
 $\theta_k$ by the strong law of large numbers; on $\{\sup_n N_{n,k} < \infty\}$
@@ -24,24 +88,56 @@ it is eventually constant and its limit lies in $V_k^{\mathrm{att}}$.
 \end{lemma}
 
 \begin{proof}
-On $\{N_{n,k}\to\infty\}$, the average $\frac1{N_{n,k}}\sum_j X_{j,k}\xi_{j,k}$ is
-a subsequence average of i.i.d.\ variables with mean $\theta_k$, hence converges
-a.s.\ to $\theta_k$ by the SLLN, and the regularization term vanishes. On
+\uses{lem:theta_limit_infinite}
+On $\{N_{n,k}\to\infty\}$, the estimator converges a.s.\ to $\theta_k$ by
+Lemma~\ref{lem:theta_limit_infinite} (the martingale strong law applied to $Q_{\cdot,k}$). On
 $\{\sup_n N_{n,k}<\infty\}$, only finitely many responses on arm $k$ are ever
 observed, so $\hat{\theta}_{n,k}$ is eventually constant with a value in
 $V_k^{\mathrm{att}}$.
 \end{proof}
 
+\begin{lemma}[The estimator vector converges a.s.]\label{lem:theta_converges_vec}
+\lean{AlphaRAR.estimator_ae_tendsto_pi}\leanok
+\uses{lem:theta_converges}
+With finitely many arms, the per-arm a.s.\ limits of Lemma~\ref{lem:theta_converges} combine
+into a single a.s.\ limit vector: almost surely there is $z\in\R^K$ with
+$\estParams_n = (\hat\theta_{n,1},\dots,\hat\theta_{n,K}) \to z$.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:theta_converges}
+Each component converges a.s.\ by Lemma~\ref{lem:theta_converges}; intersecting the finitely
+many almost-sure events and choosing the (unique) limits componentwise gives a single a.s.\
+event on which the whole vector converges.
+\end{proof}
+
+\begin{lemma}[Convergence of $\estTarget$ by continuity]\label{lem:rho_converges_cont}
+\lean{AlphaRAR.rho_converges}\leanok
+\uses{def:plugin_target, lem:theta_converges_vec}
+For any continuous target map $\Target$, the plug-in target $\estTarget_n = \Target(\estParams_n)$
+converges a.s.: almost surely there is $u\in\R^K$ with $\hat\rho_{n,k}\to u_k$ for every $k$,
+where $u = \Target(z)$ and $z$ is the a.s.\ limit of $\estParams_n$.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:theta_converges_vec}
+By Lemma~\ref{lem:theta_converges_vec}, $\estParams_n \to z$ a.s.\ (in the product topology of
+$\R^K$). Continuity of $\Target$ transports this to
+$\estTarget_n = \Target(\estParams_n) \to \Target(z) =: u$, and taking components gives
+$\hat\rho_{n,k}\to u_k$.
+\end{proof}
+
 \begin{lemma}[Non-sparse limit of $\estTarget$]\label{lem:rho_converges}
-\uses{def:condB, def:plugin_target}
+\uses{def:condB, def:plugin_target, lem:rho_converges_cont}
 Under Conditions~\textbf{A}--\textbf{B} there is a random $u \in (0,1)^K$ with
 $\estTarget_n \to u$ a.s. Concretely $u = \Target(z)$ where $z\in I_1\times\dots\times I_K$
 is the a.s.\ limit of $\estParams_n$.
 \end{lemma}
 
 \begin{proof}
-\uses{lem:theta_limit_dichotomy}
-By Lemma~\ref{lem:theta_limit_dichotomy}, $\estParams_n \to z$ a.s.\ with
+\uses{lem:rho_converges_cont, lem:theta_limit_dichotomy}
+By Lemma~\ref{lem:rho_converges_cont} (with $\Target$ continuous on $\hilb$ by Condition~\textbf{B})
+and Lemma~\ref{lem:theta_limit_dichotomy}, $\estParams_n \to z$ a.s.\ with
 $z \in I_1\times\dots\times I_K$. By Condition~\textbf{B}, $\Target$ is
 continuous on the open set $\hilb \supseteq I_1\times\dots\times I_K$ and maps
 $I_1\times\dots\times I_K$ into $(0,1)^K$; hence
@@ -113,7 +209,7 @@ $\big(\frac{N_{n,k}}{n}-\hat{\rho}_{n,k}\big)^+\to0$.
 \end{proof}
 
 \begin{lemma}[Negative part vanishes]\label{lem:neg_part_vanishes}
-\lean{AlphaRAR.neg_part_vanishes}\leanok
+\lean{AlphaRAR.neg_part_vanishes, AlphaRAR.neg_part_vanishes_ae}\leanok
 \uses{def:counts, def:plugin_target}
 Under the same hypotheses, for each $k$,
 $\big(\hat{\rho}_{n,k} - \frac{N_{n,k}}{n}\big)^+ \to 0$ a.s.
@@ -130,7 +226,7 @@ by Lemma~\ref{lem:pos_part_vanishes}.
 \end{proof}
 
 \begin{lemma}[Proportions match the plug-in target]\label{lem:match}
-\lean{AlphaRAR.match_proportion}\leanok
+\lean{AlphaRAR.match_proportion, AlphaRAR.match_proportion_ae}\leanok
 \uses{def:counts, def:plugin_target}
 Under the same hypotheses, for each $k$,
 $\frac{N_{n,k}}{n} - \hat{\rho}_{n,k} \to 0$ and
@@ -152,7 +248,7 @@ $\frac{N_{n,k}}{n}\to u_k$.
 \label{sec:cons_final}
 
 \begin{lemma}[All arms sampled infinitely often]\label{lem:all_arms_infinite}
-\lean{AlphaRAR.all_arms_infinite}\leanok
+\lean{AlphaRAR.all_arms_infinite, AlphaRAR.all_arms_infinite_ae}\leanok
 \uses{def:counts}
 Under the same hypotheses, $N_{n,k}\to\infty$ a.s.\ for every $k$.
 \end{lemma}

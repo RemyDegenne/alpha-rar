@@ -136,7 +136,7 @@ theorem auxU_telescope (n ℓ : ℕ) (hℓ : 1 ≤ ℓ) (hℓn : ℓ ≤ n) :
 /-- **Counts sum to time** (blueprint `lem:counts_sum`).
 If the assignment vector sums to one at each time, then the arm counts sum to the
 time index. -/
-theorem counts_sum {K : ℕ} (Y : ℕ → Fin K → ℝ) (hY : ∀ j, ∑ k, Y j k = 1) (n : ℕ) :
+theorem counts_sum {ι : Type*} [Fintype ι] (Y : ℕ → ι → ℝ) (hY : ∀ j, ∑ k, Y j k = 1) (n : ℕ) :
     (∑ k, count (fun j => Y j k) n) = n := by
   simp only [count]
   rw [Finset.sum_comm]
@@ -419,12 +419,13 @@ Vector form over `K` arms. If every arm's positive gap `(N_{·,j}/n - r_{·,j})�
 negative gap `(r_{·,k} - N_{·,k}/n)⁺` also vanishes. Indeed
 `r_k - N_k/n = ∑_{j≠k}(N_j/n - r_j)`, whose positive part is dominated by
 `∑_{j≠k}(N_j/n - r_j)⁺ → 0`. -/
-theorem neg_part_vanishes {K : ℕ} (Y r : ℕ → Fin K → ℝ)
+theorem neg_part_vanishes {ι : Type*} [Fintype ι] (Y r : ℕ → ι → ℝ)
     (hY : ∀ j, ∑ k, Y j k = 1) (hr : ∀ n, ∑ k, r n k = 1)
-    (hpos : ∀ j : Fin K,
+    (hpos : ∀ j : ι,
       Tendsto (fun n => max (count (fun i => Y i j) n / (n : ℝ) - r n j) 0) atTop (𝓝 0))
-    (k : Fin K) :
+    (k : ι) :
     Tendsto (fun n => max (r n k - count (fun i => Y i k) n / (n : ℝ)) 0) atTop (𝓝 0) := by
+  classical
   have hsum : Tendsto (fun n => ∑ j ∈ Finset.univ.erase k,
       max (count (fun i => Y i j) n / (n : ℝ) - r n j) 0) atTop (𝓝 0) := by
     have h := tendsto_finsetSum (Finset.univ.erase k) (fun j _ => hpos j)
@@ -455,7 +456,7 @@ Single-arm form. If both the positive gap `(N_k/n - r_k)⁺` and the negative ga
 vanish (from `pos_part_vanishes`, `neg_part_vanishes`), and the target converges `r_k → u_k`, then
 the allocation proportion converges to the same limit, `N_k/n → u_k`. The gap itself vanishes
 because `x = x⁺ - (-x)⁺`, so `N_k/n - r_k = (N_k/n - r_k)⁺ - (r_k - N_k/n)⁺ → 0`. -/
-theorem match_proportion {K : ℕ} (Y r : ℕ → Fin K → ℝ) {uk : ℝ} (k : Fin K)
+theorem match_proportion {ι : Type*} (Y r : ℕ → ι → ℝ) {uk : ℝ} (k : ι)
     (hpos : Tendsto (fun n => max (count (fun i => Y i k) n / (n : ℝ) - r n k) 0) atTop (𝓝 0))
     (hneg : Tendsto (fun n => max (r n k - count (fun i => Y i k) n / (n : ℝ)) 0) atTop (𝓝 0))
     (hr : Tendsto (fun n => r n k) atTop (𝓝 uk)) :
@@ -482,7 +483,7 @@ theorem match_proportion {K : ℕ} (Y r : ℕ → Fin K → ℝ) {uk : ℝ} (k :
 If the allocation proportion converges to a positive limit, `N_k/n → u_k > 0` (from
 `match_proportion`), then the count diverges, `N_k → ∞`. Writing `N_k = (N_k/n) · n`, the first
 factor tends to `u_k > 0` and the second to `∞`. -/
-theorem all_arms_infinite {K : ℕ} (Y : ℕ → Fin K → ℝ) {uk : ℝ} (k : Fin K) (huk : 0 < uk)
+theorem all_arms_infinite {ι : Type*} (Y : ℕ → ι → ℝ) {uk : ℝ} (k : ι) (huk : 0 < uk)
     (hmatch : Tendsto (fun n => count (fun i => Y i k) n / (n : ℝ)) atTop (𝓝 uk)) :
     Tendsto (fun n => count (fun i => Y i k) n) atTop atTop := by
   have hmul : Tendsto (fun n : ℕ => count (fun i => Y i k) n / (n : ℝ) * (n : ℝ)) atTop atTop :=
