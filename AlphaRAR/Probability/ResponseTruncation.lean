@@ -528,6 +528,52 @@ lemma abs_truncRespMart_increment_le (k : 𝓐) (i : ℕ) (ω : Ω) :
         mul_le_mul hind habs (abs_nonneg _) zero_le_one
     _ = 2 * √i := by ring
 
+/-! ### The truncated martingale as an instance of the general `√i`-growing-increment LIL
+
+The truncated response martingale `M̃ = truncRespMart` is an `L²` martingale (for the
+action-augmented filtration `𝒢`) starting at `0`, with `√i`-growing increments `|ΔM̃_i| ≤ 2√i` and
+linear quadratic variation `⟨M̃⟩_n ≤ V_k n`. It therefore satisfies the hypotheses of the general
+finite-variance LIL of `AlphaRAR/Probability/LILTruncation.lean`, from which the block bounds below
+are read off directly (with increment scale `a = 2` and variance scale `v = V_k = armVar ν k`). -/
+
+omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] [IsProbabilityMeasure P] in
+/-- The truncated response martingale starts at `0`. -/
+lemma truncRespMart_zero_ae (k : 𝓐) : truncRespMart ν A Y k 0 =ᵐ[P] 0 := by
+  have h0 : truncRespMart ν A Y k 0 = (0 : Ω → ℝ) := by simp [truncRespMart, genRespMart]
+  filter_upwards with ω; rw [h0]
+
+/-- Squares of the truncated response martingale are integrable (from `MemLp 2`). -/
+lemma integrable_truncRespMart_sq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) (n : ℕ) :
+    Integrable (fun ω ↦ truncRespMart ν A Y k n ω ^ 2) P :=
+  (memLp_genRespMart (g := fun i ↦ truncation (fun y ↦ y - (ν k)[id]) (√i))
+    h.measurable_action (fun m ↦ memLp_truncation_comp hint ((ν k)[id]) m) k n).integrable_sq
+
+omit [MeasurableSingletonClass 𝓐] [IsProbabilityMeasure P] in
+/-- The truncated increments obey the `√i`-growing bound `|ΔM̃_i| ≤ 2√i` a.e.
+(`abs_truncRespMart_increment_le`). -/
+lemma ae_abs_truncRespMart_increment_le (k : 𝓐) (i : ℕ) :
+    ∀ᵐ ω ∂P,
+      |truncRespMart ν A Y k (i + 1) ω - truncRespMart ν A Y k i ω| ≤ 2 * √i :=
+  Eventually.of_forall fun ω ↦ abs_truncRespMart_increment_le k i ω
+
+/-- The truncated quadratic variation is bounded by `V_k n`: from
+`predQuadVar_truncRespMart_le` (`⟨M̃⟩_n ≤ V_k ∑_{i<n} 𝟙{A_i=k}`) and `∑_{i<n} 𝟙{A_i=k} ≤ n`. -/
+lemma ae_predQuadVar_truncRespMart_le_nat (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) :
+    ∀ᵐ ω ∂P, ∀ n, predQuadVar (truncRespMart ν A Y k)
+        (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P n ω
+      ≤ armVar ν k * (n : ℝ) := by
+  have harm : (0 : ℝ) ≤ armVar ν k := by rw [armVar]; exact variance_nonneg _ _
+  filter_upwards [ae_all_iff.mpr fun n ↦ predQuadVar_truncRespMart_le h hint k hν2 n] with ω hqv n
+  refine (hqv n).trans (mul_le_mul_of_nonneg_left ?_ harm)
+  calc ∑ i ∈ Finset.range n, Set.indicator {ω | A i ω = k} (fun _ ↦ (1 : ℝ)) ω
+      ≤ ∑ _i ∈ Finset.range n, (1 : ℝ) := Finset.sum_le_sum fun i _ ↦ by
+        by_cases hω : ω ∈ {ω | A i ω = k}
+        · rw [Set.indicator_of_mem hω]
+        · rw [Set.indicator_of_notMem hω]; norm_num
+    _ = (n : ℝ) := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul, mul_one]
+
 /-- **Per-block Freedman bound for the truncated martingale** (blueprint `lem:trunc_block`).
 With horizon `2^j`, increment bound `c_j = 2√(2^j)`, and the *constrained* exponential parameter
 `θ_j = 1/c_j` (the true optimizer `λ/(2v)` is inadmissible), the Freedman inequality on the
@@ -543,42 +589,10 @@ theorem measure_exists_truncRespMart_block (h : IsAlgEnvSeq A Y alg (stationaryE
               (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P m ω
             ≤ armVar ν k * (2 : ℝ) ^ j}
       ≤ ENNReal.ofReal (exp (-(C / 2) * √j + armVar ν k / 4)) := by
-  set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with h𝒢
-  set s := √((2 : ℝ) ^ j) with hs_def
-  have hspos : 0 < s := sqrt_pos.mpr (by positivity)
-  have hs2 : s ^ 2 = (2 : ℝ) ^ j := sq_sqrt (by positivity)
-  set c : ℝ := 2 * s with hc_def
-  have hcpos : 0 < c := by positivity
-  set θ : ℝ := 1 / c with hθ_def
-  have hθ0 : 0 < θ := by positivity
-  have hθc : |θ| * c ≤ 1 := by
-    rw [abs_of_pos hθ0, hθ_def, one_div, inv_mul_cancel₀ hcpos.ne']
-  have hM : Martingale (truncRespMart ν A Y k) 𝒢 P := martingale_truncRespMart h hint k
-  have hM0 : truncRespMart ν A Y k 0 =ᵐ[P] 0 := by
-    have h0 : truncRespMart ν A Y k 0 = (0 : Ω → ℝ) := by simp [truncRespMart, genRespMart]
-    filter_upwards with ω; rw [h0]
-  have hM2 : ∀ n, Integrable (fun ω ↦ truncRespMart ν A Y k n ω ^ 2) P := fun n ↦
-    (memLp_genRespMart (g := fun i ↦ truncation (fun y ↦ y - (ν k)[id]) (√i))
-      h.measurable_action (fun m ↦ memLp_truncation_comp hint ((ν k)[id]) m) k n).integrable_sq
-  have hb : ∀ i < 2 ^ j, ∀ᵐ ω ∂P,
-      |truncRespMart ν A Y k (i + 1) ω - truncRespMart ν A Y k i ω| ≤ c := by
-    intro i hi
-    refine Filter.Eventually.of_forall fun ω ↦ (abs_truncRespMart_increment_le k i ω).trans ?_
-    rw [hc_def, hs_def]
-    have hile : (i : ℝ) ≤ (2 : ℝ) ^ j := by exact_mod_cast hi.le
-    exact mul_le_mul_of_nonneg_left (sqrt_le_sqrt hile) (by norm_num)
-  have hmain := measure_exists_ge_le_exp_horizon hM hM0 hM2 hcpos.le hθc hθ0
-    (C * √((2 : ℝ) ^ j * j)) (armVar ν k * (2 : ℝ) ^ j) (2 ^ j) hb
-  have hexp : -θ * (C * √((2 : ℝ) ^ j * j)) + θ ^ 2 * (armVar ν k * (2 : ℝ) ^ j)
-      = -(C / 2) * √j + armVar ν k / 4 := by
-    have hmul : √((2 : ℝ) ^ j * j) = s * √j := by
-      rw [hs_def]; exact sqrt_mul (by positivity) _
-    have hsne : s ≠ 0 := hspos.ne'
-    rw [hmul, hθ_def, hc_def, ← hs2]
-    field_simp
-    ring
-  rw [hexp] at hmain
-  exact hmain
+  rw [show armVar ν k / 4 = armVar ν k / (2 : ℝ) ^ 2 by norm_num]
+  exact measure_exists_ge_le_exp_block (martingale_truncRespMart h hint k)
+    (truncRespMart_zero_ae k) (integrable_truncRespMart_sq h hint k) (by norm_num : (0 : ℝ) < 2)
+    (ae_abs_truncRespMart_increment_le k) (armVar ν k) C j
 
 /-- **Block Borel–Cantelli for the truncated martingale** (blueprint `lem:trunc_mart_lil`, first
 half). The per-block bounds `P(s_j) ≤ exp(-(C/2)√j + V_k/4)` (`measure_exists_truncRespMart_block`)
@@ -591,28 +605,10 @@ theorem ae_eventually_truncRespMart_lt_block (h : IsAlgEnvSeq A Y alg (stationar
       predQuadVar (truncRespMart ν A Y k)
           (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P m ω
         ≤ armVar ν k * (2 : ℝ) ^ j →
-      truncRespMart ν A Y k m ω < C * √((2 : ℝ) ^ j * j) := by
-  set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with h𝒢
-  set s : ℕ → Set Ω := fun j ↦ {ω | ∃ m ≤ 2 ^ j, C * √((2 : ℝ) ^ j * j)
-    ≤ truncRespMart ν A Y k m ω ∧ predQuadVar (truncRespMart ν A Y k) 𝒢 P m ω
-      ≤ armVar ν k * (2 : ℝ) ^ j} with hs_def
-  have hμs : ∀ j, P (s j) ≤ ENNReal.ofReal (exp (-(C / 2) * √j + armVar ν k / 4)) :=
-    fun j ↦ measure_exists_truncRespMart_block h hint k C j
-  have hsum : Summable (fun j : ℕ ↦ exp (-(C / 2) * √j + armVar ν k / 4)) :=
-    ((summable_exp_neg_mul_sqrt (a := C / 2) (by positivity)).mul_right
-      (exp (armVar ν k / 4))).congr fun j ↦ (exp_add _ _).symm
-  have hfin : (∑' j, P (s j)) ≠ ∞ := by
-    have h1 : (∑' j, P (s j))
-        ≤ ∑' (j : ℕ), ENNReal.ofReal (exp (-(C / 2) * √j + armVar ν k / 4)) :=
-      ENNReal.tsum_le_tsum hμs
-    rw [← ENNReal.ofReal_tsum_of_nonneg (fun j ↦ (exp_pos _).le) hsum] at h1
-    exact ne_top_of_le_ne_top ENNReal.ofReal_ne_top h1
-  filter_upwards [ae_eventually_notMem hfin] with ω hω
-  filter_upwards [hω] with j hj
-  intro m hm hqv
-  by_contra hcon
-  rw [not_lt] at hcon
-  exact hj ⟨m, hm, hcon, hqv⟩
+      truncRespMart ν A Y k m ω < C * √((2 : ℝ) ^ j * j) :=
+  ae_eventually_lt_block_of_growing (martingale_truncRespMart h hint k)
+    (truncRespMart_zero_ae k) (integrable_truncRespMart_sq h hint k) (by norm_num : (0 : ℝ) < 2)
+    (ae_abs_truncRespMart_increment_le k) (armVar ν k) hC
 
 /-- **`O(√(n log n))` LIL for the truncated martingale** (formalized content of blueprint
 `lem:trunc_mart_lil`). From the block exceedance (`ae_eventually_truncRespMart_lt_block`) and the
@@ -631,83 +627,24 @@ theorem ae_eventually_truncRespMart_le_sqrt_nat_mul_log
     (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) :
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
       truncRespMart ν A Y k n ω ≤ C' * √(n * log n) := by
-  classical
-  set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with h𝒢
   have harm : (0 : ℝ) ≤ armVar ν k := by rw [armVar]; exact variance_nonneg _ _
-  have hlog2 : 0 < log 2 := log_pos one_lt_two
-  have hqvle : ∀ᵐ ω ∂P, ∀ n, predQuadVar (truncRespMart ν A Y k) 𝒢 P n ω
-      ≤ armVar ν k * ∑ i ∈ Finset.range n, Set.indicator {ω | A i ω = k} (fun _ ↦ (1 : ℝ)) ω :=
-    ae_all_iff.mpr fun n ↦ predQuadVar_truncRespMart_le h hint k hν2 n
-  filter_upwards [ae_eventually_truncRespMart_lt_block h hint k one_pos, hqvle] with ω hgood hqv
-  have hqvn : ∀ n, predQuadVar (truncRespMart ν A Y k) 𝒢 P n ω ≤ armVar ν k * (n : ℝ) := by
-    intro n
-    refine (hqv n).trans (mul_le_mul_of_nonneg_left ?_ harm)
-    calc ∑ i ∈ Finset.range n, Set.indicator {ω | A i ω = k} (fun _ ↦ (1 : ℝ)) ω
-        ≤ ∑ _i ∈ Finset.range n, (1 : ℝ) := Finset.sum_le_sum fun i _ ↦ by
-          by_cases hω : ω ∈ {ω | A i ω = k}
-          · rw [Set.indicator_of_mem hω]
-          · rw [Set.indicator_of_notMem hω]; norm_num
-      _ = (n : ℝ) := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul, mul_one]
-  rw [eventually_atTop] at hgood
-  obtain ⟨j₀, hj₀⟩ := hgood
-  refine ⟨√(2 * (1 / log 2 + 1)), ?_⟩
-  filter_upwards [eventually_ge_atTop (2 ^ j₀), eventually_ge_atTop 3] with n hn0 hn3
-  have hex : ∃ j : ℕ, n ≤ 2 ^ j := ⟨n, n.lt_two_pow_self.le⟩
-  obtain ⟨j, hjle, hjmin⟩ : ∃ j : ℕ, n ≤ 2 ^ j ∧ ∀ m, m < j → ¬ n ≤ 2 ^ m :=
-    ⟨Nat.find hex, Nat.find_spec hex, fun m hm ↦ Nat.find_min hex hm⟩
-  have hjj0 : j₀ ≤ j := by
-    have hcast : (2 : ℝ) ^ j₀ ≤ (2 : ℝ) ^ j := by exact_mod_cast le_trans hn0 hjle
-    exact (pow_le_pow_iff_right₀ one_lt_two).mp hcast
-  have hnR3 : (3 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn3
-  have hnpos : (0 : ℝ) < (n : ℝ) := by linarith
-  have hlogn1 : (1 : ℝ) ≤ log n :=
-    (le_log_iff_exp_le hnpos).mpr
-      (le_trans exp_one_lt_d9.le (by linarith))
-  have hnleR : (n : ℝ) ≤ (2 : ℝ) ^ j := by exact_mod_cast hjle
-  have hqvcond : predQuadVar (truncRespMart ν A Y k) 𝒢 P n ω ≤ armVar ν k * (2 : ℝ) ^ j :=
-    (hqvn n).trans (mul_le_mul_of_nonneg_left hnleR harm)
-  have hMn : truncRespMart ν A Y k n ω < 1 * √((2 : ℝ) ^ j * j) :=
-    hj₀ j hjj0 n hjle hqvcond
-  rw [one_mul] at hMn
-  have h2j : (2 : ℝ) ^ j ≤ 2 * (n : ℝ) := by
-    obtain _ | m := j
-    · rw [pow_zero]; linarith
-    · have hm : ¬ n ≤ 2 ^ m := hjmin m (Nat.lt_succ_self m)
-      rw [not_le] at hm
-      have hmR : (2 : ℝ) ^ m < (n : ℝ) := by exact_mod_cast hm
-      rw [pow_succ]; linarith
-  have hjlog : (j : ℝ) ≤ log n / log 2 + 1 := by
-    obtain _ | m := j
-    · simp only [Nat.cast_zero]
-      have := div_nonneg (le_trans zero_le_one hlogn1) hlog2.le; linarith
-    · have hm : ¬ n ≤ 2 ^ m := hjmin m (Nat.lt_succ_self m)
-      rw [not_le] at hm
-      have hmR : (2 : ℝ) ^ m < (n : ℝ) := by exact_mod_cast hm
-      have hmlog : (m : ℝ) * log 2 < log n := by
-        rw [← log_pow]; exact log_lt_log (by positivity) hmR
-      have : (m : ℝ) < log n / log 2 := by rw [lt_div_iff₀ hlog2]; linarith
-      push_cast; linarith
-  have hprod_le : (2 : ℝ) ^ j * (j : ℝ)
-      ≤ 2 * (1 / log 2 + 1) * ((n : ℝ) * log n) := by
-    have hb2 : log n / log 2 + 1 ≤ (1 / log 2 + 1) * log n := by
-      have he : (1 / log 2 + 1) * log n = log n / log 2 + log n := by
-        rw [add_mul, one_div, inv_mul_eq_div, one_mul]
-      rw [he]; linarith
-    have step1 : (2 : ℝ) ^ j * (j : ℝ) ≤ 2 * (n : ℝ) * (log n / log 2 + 1) :=
-      mul_le_mul h2j hjlog (by positivity) (by positivity)
-    have step2 : 2 * (n : ℝ) * (log n / log 2 + 1)
-        ≤ 2 * (1 / log 2 + 1) * ((n : ℝ) * log n) := by
-      have hmul := mul_le_mul_of_nonneg_left hb2 (by positivity : (0 : ℝ) ≤ 2 * (n : ℝ))
-      calc 2 * (n : ℝ) * (log n / log 2 + 1)
-          ≤ 2 * (n : ℝ) * ((1 / log 2 + 1) * log n) := hmul
-        _ = 2 * (1 / log 2 + 1) * ((n : ℝ) * log n) := by ring
-    linarith
-  have hDnn : (0 : ℝ) ≤ 2 * (1 / log 2 + 1) := by positivity
-  have hsqrt_le : √((2 : ℝ) ^ j * (j : ℝ))
-      ≤ √(2 * (1 / log 2 + 1)) * √((n : ℝ) * log n) := by
-    rw [← sqrt_mul hDnn]; exact sqrt_le_sqrt hprod_le
-  calc truncRespMart ν A Y k n ω ≤ √((2 : ℝ) ^ j * (j : ℝ)) := hMn.le
-    _ ≤ √(2 * (1 / log 2 + 1)) * √((n : ℝ) * log n) := hsqrt_le
+  exact ae_eventually_le_sqrt_nat_mul_log_of_growing (martingale_truncRespMart h hint k)
+    (truncRespMart_zero_ae k) (integrable_truncRespMart_sq h hint k) (by norm_num : (0 : ℝ) < 2)
+    (ae_abs_truncRespMart_increment_le k) harm (ae_predQuadVar_truncRespMart_le_nat h hint k hν2)
+
+/-- **Two-sided `O(√(n log n))` LIL for the truncated martingale.** The absolute-value companion of
+`ae_eventually_truncRespMart_le_sqrt_nat_mul_log`, obtained by instantiating the general two-sided
+bound `ae_eventually_abs_le_sqrt_nat_mul_log_of_growing` at the truncated martingale. Almost surely
+`|M̃_n| ≤ C' √(n log n)` eventually. -/
+theorem ae_eventually_abs_truncRespMart_le_sqrt_nat_mul_log
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hint : ∀ n, Integrable (Y n) P) (k : 𝓐)
+    (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) :
+    ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
+      |truncRespMart ν A Y k n ω| ≤ C' * √(n * log n) := by
+  have harm : (0 : ℝ) ≤ armVar ν k := by rw [armVar]; exact variance_nonneg _ _
+  exact ae_eventually_abs_le_sqrt_nat_mul_log_of_growing (martingale_truncRespMart h hint k)
+    (truncRespMart_zero_ae k) (integrable_truncRespMart_sq h hint k) (by norm_num : (0 : ℝ) < 2)
+    (ae_abs_truncRespMart_increment_le k) harm (ae_predQuadVar_truncRespMart_le_nat h hint k hν2)
 
 /-! ### Assembling: the finite-variance LIL for the response martingale -/
 
@@ -894,19 +831,19 @@ theorem ae_eventually_tailRespPart_const (h : IsAlgEnvSeq A Y alg (stationaryEnv
     rw [htail, mul_zero]
   · rw [Set.indicator_of_notMem (show ω ∉ {ω | A n ω = k} from hak), zero_mul]
 
-/-- **The response martingale is `O(√(n log n))`** (blueprint `lem:lil_truncation`).
+/-- **The response martingale is two-sided `O(√(n log n))`** (blueprint `lem:lil_truncation`).
 Assembling the truncated decomposition `Q_n = M̃_n + R_n + Dr_n` (Definition `def:lil_trunc`): the
-truncated martingale is `O(√(n log n))` (`ae_eventually_truncRespMart_le_sqrt_nat_mul_log`), the
-tail remainder is `O(1)` (`ae_eventually_tailRespPart_const`), and the drift is `O(√n)`
-(`abs_truncDrift_le`); the last two are `o(√(n log n))`, so almost surely
-`Q_{n,k} ≤ C √(n log n)` eventually. -/
-theorem ae_eventually_respMart_le_sqrt_nat_mul_log
+truncated martingale is two-sided `O(√(n log n))` (an instance of the general growing-increment LIL,
+`ae_eventually_abs_truncRespMart_le_sqrt_nat_mul_log`), the tail remainder is `O(1)`
+(`ae_eventually_tailRespPart_const`), and the drift is `O(√n)` (`abs_truncDrift_le`); the last two
+are `o(√(n log n))`, so almost surely `|Q_{n,k}| ≤ C √(n log n)` eventually. -/
+theorem ae_eventually_abs_respMart_le_sqrt_nat_mul_log
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hint : ∀ n, Integrable (Y n) P) (k : 𝓐)
     (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) :
     ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      respMart ν A Y k n ω ≤ C * √(n * log n) := by
+      |respMart ν A Y k n ω| ≤ C * √(n * log n) := by
   have harm : (0 : ℝ) ≤ armVar ν k := by rw [armVar]; exact variance_nonneg _ _
-  filter_upwards [ae_eventually_truncRespMart_le_sqrt_nat_mul_log h hint k hν2,
+  filter_upwards [ae_eventually_abs_truncRespMart_le_sqrt_nat_mul_log h hint k hν2,
     ae_eventually_tailRespPart_const h k hν2] with ω hMtilde hRconst
   obtain ⟨C₁, hC₁⟩ := hMtilde
   obtain ⟨C₂, hC₂⟩ :=
@@ -927,15 +864,29 @@ theorem ae_eventually_respMart_le_sqrt_nat_mul_log
   have hdecomp : respMart ν A Y k n ω = tailRespPart ν A Y k n ω
       + truncRespMart ν A Y k n ω + truncDrift ν A k n ω := by
     simp only [tailRespPart, Pi.sub_apply]; ring
-  have ht' : tailRespPart ν A Y k n ω ≤ C₂ * √((n : ℝ) * log n) :=
-    ((le_abs_self _).trans hn2).trans (le_mul_of_one_le_right hC₂nn hL1)
-  have hd' : truncDrift ν A k n ω ≤ 2 * armVar ν k * √((n : ℝ) * log n) :=
-    ((le_abs_self _).trans (abs_truncDrift_le k hν2 n ω)).trans
-      (mul_le_mul_of_nonneg_left hsn (by positivity))
+  have ht' : |tailRespPart ν A Y k n ω| ≤ C₂ * √((n : ℝ) * log n) :=
+    hn2.trans (le_mul_of_one_le_right hC₂nn hL1)
+  have hd' : |truncDrift ν A k n ω| ≤ 2 * armVar ν k * √((n : ℝ) * log n) :=
+    (abs_truncDrift_le k hν2 n ω).trans (mul_le_mul_of_nonneg_left hsn (by positivity))
   rw [hdecomp]
-  calc tailRespPart ν A Y k n ω + truncRespMart ν A Y k n ω + truncDrift ν A k n ω
-      ≤ C₂ * √((n : ℝ) * log n) + C₁ * √((n : ℝ) * log n)
+  calc |tailRespPart ν A Y k n ω + truncRespMart ν A Y k n ω + truncDrift ν A k n ω|
+      ≤ |tailRespPart ν A Y k n ω + truncRespMart ν A Y k n ω| + |truncDrift ν A k n ω| :=
+        abs_add_le _ _
+    _ ≤ |tailRespPart ν A Y k n ω| + |truncRespMart ν A Y k n ω| + |truncDrift ν A k n ω| :=
+        add_le_add (abs_add_le _ _) le_rfl
+    _ ≤ C₂ * √((n : ℝ) * log n) + C₁ * √((n : ℝ) * log n)
         + 2 * armVar ν k * √((n : ℝ) * log n) := add_le_add (add_le_add ht' hn1) hd'
     _ = (C₁ + C₂ + 2 * armVar ν k) * √((n : ℝ) * log n) := by ring
+
+/-- **The response martingale is `O(√(n log n))`** (blueprint `lem:lil_truncation`), the one-sided
+consequence of `ae_eventually_abs_respMart_le_sqrt_nat_mul_log` via `Q_n ≤ |Q_n|`. -/
+theorem ae_eventually_respMart_le_sqrt_nat_mul_log
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hint : ∀ n, Integrable (Y n) P) (k : 𝓐)
+    (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) :
+    ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
+      respMart ν A Y k n ω ≤ C * √(n * log n) := by
+  filter_upwards [ae_eventually_abs_respMart_le_sqrt_nat_mul_log h hint k hν2] with ω hω
+  obtain ⟨C, hC⟩ := hω
+  exact ⟨C, hC.mono fun n hn ↦ (le_abs_self _).trans hn⟩
 
 end AlphaRAR

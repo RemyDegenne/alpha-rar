@@ -261,6 +261,54 @@ theorem abs_estimator_sub_le (ξ : ℕ → ℝ) (θ θ₀ : ℝ) (n : ℕ) (hN :
   gcongr
   exact abs_add_le _ _
 
+/-- **LIL rate for the estimator** (blueprint `lem:theta_LIL`, pathwise core).
+
+If the response martingale is `O(√(n log n))` — `|Q_n| ≤ C√(n log n)` eventually, supplied a.s. by
+`lem:lil_truncation` — and the allocation proportion converges to a positive limit `N_n/n → v > 0`
+(supplied a.s. by `lem:match`), then the estimator error is
+`|θ̂_n - θ| ≤ C' · √(n log n)/n` eventually, i.e. `O(√(log n / n))` (since `√(n log n)/n =
+√(log n / n)`). This is the `√(\log n / n)` rate of `lem:theta_LIL` (the `\log`, not `\log\log`,
+form). Combining the exact error `θ̂_n - θ = (Q_n + (θ₀-θ))/(N_n+1)` with `|Q_n| ≤ C√(n log n)` and
+`N_n + 1 ≳ (v/2) n` gives the bound with `C' = (2/v)(C + |θ₀-θ|)`. -/
+theorem abs_estimator_sub_le_rate (ξ : ℕ → ℝ) (θ θ₀ : ℝ) {v : ℝ} (hv : 0 < v)
+    (hN : Tendsto (fun n ↦ count X n / (n : ℝ)) atTop (𝓝 v)) {C : ℝ} (hC : 0 ≤ C)
+    (hQ : ∀ᶠ n in atTop, |respMG X ξ θ n| ≤ C * √((n : ℝ) * Real.log n)) :
+    ∃ C', ∀ᶠ n in atTop,
+      |estimator X ξ θ₀ n - θ| ≤ C' * (√((n : ℝ) * Real.log n) / (n : ℝ)) := by
+  refine ⟨2 / v * (C + |θ₀ - θ|), ?_⟩
+  have hNhalf : ∀ᶠ n : ℕ in atTop, v / 2 < count X n / (n : ℝ) :=
+    (tendsto_order.1 hN).1 (v / 2) (by linarith)
+  filter_upwards [hQ, hNhalf, eventually_ge_atTop 3] with n hq hNh hn3
+  have hn3R : (3 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn3
+  have hnpos : (0 : ℝ) < (n : ℝ) := by linarith
+  have hlogn1 : (1 : ℝ) ≤ Real.log n :=
+    (Real.le_log_iff_exp_le hnpos).mpr (le_trans Real.exp_one_lt_d9.le (by linarith))
+  have hsqrt1 : (1 : ℝ) ≤ √((n : ℝ) * Real.log n) := by
+    rw [show (1 : ℝ) = √1 from Real.sqrt_one.symm]
+    exact Real.sqrt_le_sqrt (by nlinarith)
+  have hvn : 0 < v / 2 * (n : ℝ) := mul_pos (by linarith) hnpos
+  have hNlow : v / 2 * (n : ℝ) < count X n := (lt_div_iff₀ hnpos).1 hNh
+  have hden : v / 2 * (n : ℝ) < count X n + 1 := by linarith
+  have hdenpos : 0 < count X n + 1 := lt_trans hvn hden
+  have hnum : |respMG X ξ θ n + (θ₀ - θ)| ≤ C * √((n : ℝ) * Real.log n) + |θ₀ - θ| :=
+    (abs_add_le _ _).trans (add_le_add hq le_rfl)
+  have hnumnn : 0 ≤ C * √((n : ℝ) * Real.log n) + |θ₀ - θ| :=
+    add_nonneg (mul_nonneg hC (Real.sqrt_nonneg _)) (abs_nonneg _)
+  rw [estimator_sub_eq X ξ θ θ₀ n (ne_of_gt hdenpos), abs_div, abs_of_pos hdenpos]
+  calc |respMG X ξ θ n + (θ₀ - θ)| / (count X n + 1)
+      ≤ (C * √((n : ℝ) * Real.log n) + |θ₀ - θ|) / (v / 2 * (n : ℝ)) :=
+        div_le_div₀ hnumnn hnum hvn hden.le
+    _ ≤ 2 / v * (C + |θ₀ - θ|) * (√((n : ℝ) * Real.log n) / (n : ℝ)) := by
+        rw [div_le_iff₀ hvn]
+        have hexpand : 2 / v * (C + |θ₀ - θ|) * (√((n : ℝ) * Real.log n) / (n : ℝ))
+            * (v / 2 * (n : ℝ))
+            = (C + |θ₀ - θ|) * √((n : ℝ) * Real.log n) := by
+          field_simp
+        rw [hexpand, add_mul]
+        have hkey := mul_le_mul_of_nonneg_left hsqrt1 (abs_nonneg (θ₀ - θ))
+        rw [mul_one] at hkey
+        linarith
+
 /-- **Deterministic core of the limit of `U/n`** (blueprint `lem:U_over_n`).
 
 If the plug-in target converges, `ρ n → u`, and the normalized assignment martingale vanishes,

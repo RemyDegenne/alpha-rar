@@ -34,6 +34,15 @@ noncomputable def predQuadVar (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0)
 
 @[simp] theorem predQuadVar_zero : predQuadVar M ℱ μ 0 = 0 := predictablePart_zero
 
+/-- The predictable quadratic variation is invariant under negation: `⟨-M⟩ = ⟨M⟩`, since
+`(-M)² = M²` pointwise. -/
+theorem predQuadVar_neg (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) :
+    predQuadVar (-M) ℱ μ = predQuadVar M ℱ μ := by
+  unfold predQuadVar
+  congr 1
+  funext n ω
+  simp only [Pi.pow_apply, Pi.neg_apply, neg_sq]
+
 /-- The increment of `⟨M⟩` is the conditional expectation of the increment of `M²`:
 `⟨M⟩ (n+1) - ⟨M⟩ n = μ[M (n+1)² - M n² | ℱ n]` (blueprint `lem:qv_incr`, before the
 martingale simplification of the cross term). -/

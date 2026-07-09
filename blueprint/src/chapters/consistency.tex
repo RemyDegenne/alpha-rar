@@ -182,19 +182,26 @@ $N_n/n$ equals $v$.
 \label{sec:cons_rates}
 
 \begin{lemma}[LIL rate for the estimator]\label{lem:theta_LIL}
+\lean{AlphaRAR.abs_estimator_sub_le_rate}\leanok
 \uses{def:estimator}
 Under the same hypotheses,
-$\estParams_n - \Params = O\!\big(\sqrt{\tfrac{\log\log n}{n}}\big)$ a.s.
+$\estParams_n - \Params = O\!\big(\sqrt{\tfrac{\log n}{n}}\big)$ a.s. (the $\log$, not $\log\log$,
+form; see the LIL chapter's remark on the constant). The formalized statement
+\texttt{abs\_estimator\_sub\_le\_rate} is the pathwise core: from the exact error identity
+(Lemma~\ref{lem:estimator_bahadur}), a two-sided bound $|Q_{n,k}|\le C\sqrt{n\log n}$
+(Lemma~\ref{lem:lil_truncation}) and $N_{n,k}/n\to v_k>0$ (Lemma~\ref{lem:match}), it gives
+$|\hat\theta_{n,k}-\theta_k|\le C'\,\sqrt{n\log n}/n = C'\sqrt{\log n/n}$ for large $n$.
 \end{lemma}
 
-\begin{proof}
-\uses{lem:all_arms_infinite, lem:Q_quad_var, lem:theta_error_Q, lem:lil_truncation}
-By Lemma~\ref{lem:theta_error_Q}, $\hat{\theta}_{n,k}-\theta_k = Q_{n,k}/N_{n,k}
- + o(N_{n,k}^{-1/2})$. The martingale $Q_{\cdot,k}$ has quadratic variation
-$V_k N_{n,k}$ (Lemma~\ref{lem:Q_quad_var}), so the law of the iterated logarithm
-for martingales gives $Q_{n,k} = O(\sqrt{N_{n,k}\log\log N_{n,k}})$ a.s. Since
-$N_{n,k}\sim v_k n$, this is $O(\sqrt{n\log\log n})$, and dividing by
-$N_{n,k}\sim v_k n$ gives $\hat{\theta}_{n,k}-\theta_k = O(\sqrt{\log\log n / n})$.
+\begin{proof}\leanok
+\uses{lem:all_arms_infinite, lem:Q_quad_var, lem:estimator_bahadur, lem:lil_truncation, lem:match}
+By Lemma~\ref{lem:estimator_bahadur} the error is exactly
+$\hat{\theta}_{n,k}-\theta_k = (Q_{n,k}+(\theta_{0,k}-\theta_k))/(N_{n,k}+1)$. The martingale
+$Q_{\cdot,k}$ has quadratic variation $V_k N_{n,k}$ (Lemma~\ref{lem:Q_quad_var}), so the
+finite-variance LIL (Lemma~\ref{lem:lil_truncation}, applied two-sided) gives
+$|Q_{n,k}| = O(\sqrt{n\log n})$ a.s. Since $N_{n,k}\sim v_k n$ (Lemma~\ref{lem:match}), $N_{n,k}+1
+\gtrsim (v_k/2)n$, and dividing bounds $|\hat{\theta}_{n,k}-\theta_k| \le
+(2/v_k)(C+|\theta_{0,k}-\theta_k|)\sqrt{n\log n}/n = O(\sqrt{\log n / n})$.
 \end{proof}
 
 \begin{lemma}[Rate for the plug-in target]\label{lem:rho_rate}

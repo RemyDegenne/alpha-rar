@@ -423,9 +423,22 @@ $2\log k\le \tfrac C2\sqrt k$, so the terms are $\le k^{-2}$.
 
 \begin{lemma}[LIL for the truncated martingale]\label{lem:trunc_mart_lil}
 \lean{AlphaRAR.ae_eventually_truncRespMart_lt_block,
-AlphaRAR.ae_eventually_truncRespMart_le_sqrt_nat_mul_log}\leanok
+AlphaRAR.ae_eventually_truncRespMart_le_sqrt_nat_mul_log,
+AlphaRAR.ae_eventually_abs_truncRespMart_le_sqrt_nat_mul_log}\leanok
 \uses{lem:trunc_block, lem:trunc_block_summable, lem:trunc_qv_le}
 $\tilde M_n=O(\sqrt{n\log n})$ a.s.
+
+\textbf{Reusable tool.} The block argument is formalized \emph{abstractly}, for any $L^2$-martingale
+$M$ with a square-root-growing increment bound $|\Delta M_i|\le a\sqrt i$ and a linear quadratic
+variation bound $\langle M\rangle_n\le v\,n$: the general lemmas
+\texttt{measure\_exists\_ge\_le\_exp\_block} (per-block Freedman),
+\texttt{ae\_eventually\_lt\_block\_of\_growing} (block Borel--Cantelli),
+\texttt{ae\_eventually\_le\_sqrt\_nat\_mul\_log\_of\_growing} (one-sided $O(\sqrt{n\log n})$) and
+\texttt{ae\_eventually\_abs\_le\_sqrt\_nat\_mul\_log\_of\_growing} (\emph{two-sided}, via $\pm M$ and
+$\langle -M\rangle=\langle M\rangle$) live in \texttt{LILTruncation.lean} and belong upstream. The
+truncated martingale $\tilde M$ is the instance $a=2$, $v=V_k$; in particular the two-sided form
+\texttt{ae\_eventually\_abs\_truncRespMart\_le\_sqrt\_nat\_mul\_log} ($|\tilde M_n|\le
+C\sqrt{n\log n}$) is free.
 \end{lemma}
 \begin{proof}\leanok
 \uses{lem:trunc_block, lem:trunc_block_summable, lem:trunc_qv_le}
@@ -452,9 +465,13 @@ form is exactly parallel to the bounded-increment Corollary~\ref{cor:lil_upper_n
 \subsection{Assembling}
 
 \begin{lemma}[Truncation to finite variance]\label{lem:lil_truncation}
-\lean{AlphaRAR.ae_eventually_respMart_le_sqrt_nat_mul_log}\leanok
+\lean{AlphaRAR.ae_eventually_abs_respMart_le_sqrt_nat_mul_log,
+AlphaRAR.ae_eventually_respMart_le_sqrt_nat_mul_log}\leanok
 \uses{lem:trunc_tail_const, lem:trunc_drift, lem:trunc_mart_lil}
-$M_n = O(\sqrt{n\log n})$ a.s.
+$M_n = O(\sqrt{n\log n})$ a.s. The formalized statement is \emph{two-sided},
+\texttt{ae\_eventually\_abs\_respMart\_le\_sqrt\_nat\_mul\_log} ($|M_n|\le C\sqrt{n\log n}$
+eventually, a.s.), with the one-sided form its immediate corollary. The two-sidedness comes for free
+from the reusable growing-increment LIL tool (see Lemma~\ref{lem:trunc_mart_lil}).
 \end{lemma}
 \begin{proof}\leanok
 \uses{lem:trunc_tail_const, lem:trunc_drift, lem:trunc_mart_lil}
