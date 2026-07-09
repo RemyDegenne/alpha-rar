@@ -212,6 +212,46 @@ theorem preliminary_small (P : ℕ → Prop) [DecidablePred P] (n : ℕ)
     have := hPspec _ hP
     linarith
 
+/-- **Generic key inequality from the throttle** (blueprint `eq:generic_ineq`, deterministic
+packaging of `prop:aRTS_generic`). With `ℓ_n = hitting P n` the last under-sampling time, the
+throttle `¬ P m → p m ≤ α ρ_{m-1}` (which holds after the last under-sampling time, since the arm
+is then over-sampled), together with `p ≤ 1`, `0 ≤ α ρ`, and `1 ≤ ℓ_n` for `n ≥ 1`, gives the
+generic inequality for all `n`. For `n ≥ 1` this is `preliminary_ineq` at `ℓ = hitting P n`
+(the throttle on `Ico (ℓ+1) n` follows from `hitting_sign`); for `n = 0` both sides reduce to
+`0 ≤ 1`. -/
+theorem generic_ineq_of_hitting (P : ℕ → Prop) [DecidablePred P]
+    (hthrottle : ∀ m, ¬ P m → p m ≤ α * ρ (m - 1))
+    (hp1 : ∀ m, p m ≤ 1) (hαρ : ∀ m, 0 ≤ α * ρ m)
+    (hP1 : ∀ n, 1 ≤ n → 1 ≤ hitting P n) (n : ℕ) :
+    count X n - (n : ℝ) * ρ n
+      ≤ 1 + (count X (hitting P n) - (hitting P n : ℝ) * ρ (hitting P n))
+        + (auxU X p ρ α n - auxU X p ρ α (hitting P n)) := by
+  rcases Nat.eq_zero_or_pos n with hn0 | hn1
+  · subst hn0
+    have hc : count X 0 = 0 := by simp [count]
+    rw [show hitting P 0 = 0 from Nat.findGreatest_zero, hc]
+    push_cast
+    simp
+  · refine preliminary_ineq X p ρ α n (hitting P n) (hP1 n hn1)
+      (Nat.findGreatest_le n) (hp1 _) (hαρ _) (fun m hm ↦ ?_)
+    rw [Finset.mem_Ico] at hm
+    exact hthrottle m (hitting_sign P (n := n) (by omega) (by omega))
+
+/-- **Generic smallness from the throttle** (blueprint `eq:generic_small`, deterministic packaging).
+If `P` implies under-sampling (`P m → N_m ≤ m ρ_m`), then at the last under-sampling time the gap
+is nonpositive (`preliminary_small`), so `(N_{ℓ_n} - ℓ_n ρ_{ℓ_n})/n < δ` eventually for `δ > 0`. -/
+theorem generic_small_of_hitting (P : ℕ → Prop) [DecidablePred P]
+    (hunder : ∀ m, P m → count X m ≤ (m : ℝ) * ρ m) (δ : ℝ) (hδ : 0 < δ) :
+    ∀ᶠ n in atTop,
+      (count X (hitting P n) - (hitting P n : ℝ) * ρ (hitting P n)) / (n : ℝ) < δ := by
+  filter_upwards [eventually_ge_atTop 1] with n hn
+  have hnR : (0 : ℝ) < n := by exact_mod_cast hn
+  have hnum : count X (hitting P n) - (hitting P n : ℝ) * ρ (hitting P n) ≤ 0 :=
+    preliminary_small X ρ P n hunder
+  have hle : (count X (hitting P n) - (hitting P n : ℝ) * ρ (hitting P n)) / (n : ℝ) ≤ 0 :=
+    div_nonpos_iff.mpr (Or.inr ⟨hnum, hnR.le⟩)
+  linarith
+
 /-- Centered response martingale of a fixed arm,
 `Q n = ∑_{j<n} X j (ξ j - θ)` (blueprint `def:Q`). -/
 def respMG (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) : ℝ := ∑ j ∈ range n, X j * (ξ j - θ)

@@ -127,6 +127,7 @@ which is $o(\sqrt n)$.
 \end{proof}
 
 \begin{proposition}[$\aRTS$ satisfies the generic conditions]\label{prop:aRTS_generic}
+\lean{AlphaRAR.generic_ineq_of_hitting, AlphaRAR.generic_small_of_hitting}
 \uses{def:aRTS, def:generic_cond, def:hitting}
 Every $\aRTS$ design satisfies the generic conditions
 (Definition~\ref{def:generic_cond}) with $\ell_{n,k}$ the last under-sampling
@@ -137,5 +138,10 @@ time of Definition~\ref{def:hitting}.
 \uses{lem:hitting_basic, lem:preliminary_ineq, lem:preliminary_small}
 Condition (i) is Lemma~\ref{lem:hitting_basic}, condition (ii) is
 Lemma~\ref{lem:preliminary_ineq}, and condition (iii) is
-Lemma~\ref{lem:preliminary_small}.
+Lemma~\ref{lem:preliminary_small}. (The Lean lemmas
+\texttt{generic\_ineq\_of\_hitting} and \texttt{generic\_small\_of\_hitting} package
+Lemmas~\ref{lem:preliminary_ineq}--\ref{lem:preliminary_small} at $\ell_{n,k}=\hitting$ into the
+$\forall n$/$\forall\delta$ operational forms \eqref{eq:generic_ineq}--\eqref{eq:generic_small},
+given the throttle $\neg P_m \Rightarrow p_m\le\alpha\hat\rho_{m-1}$; the remaining step is to
+verify that a concrete $\aRTS$ design's selection probabilities satisfy this throttle.)
 \end{proof}
