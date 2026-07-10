@@ -68,12 +68,11 @@ a telescoping identity.
 \begin{lemma}[Telescoping identity for $U$]\label{lem:U_telescope}
 \lean{AlphaRAR.auxU_telescope}\leanok
 \uses{def:U, def:hitting, def:aRTS}
-For any $\aRTS$ design and any $n,k$,
+For any $\aRTS$ design and any $\ell_{n,k} \le n$,
 \[
   N_{n,k} - n\hat{\rho}_{n,k}
   = N_{\ell_{n,k},k} - \ell_{n,k}\hat{\rho}_{\ell_{n,k},k}
-    + \big(p_{\ell_{n,k}+1,k} - \alpha\hat{\rho}_{\ell_{n,k},k}\big)
-    + \sum_{m=\ell_{n,k}+2}^{n}\big(p_{m,k} - \alpha\hat{\rho}_{m-1,k}\big)
+    + \sum_{m=\ell_{n,k}}^{n-1}\big(p_{m,k} - \alpha\hat{\rho}_{m,k}\big)
     + U_{n,k} - U_{\ell_{n,k},k}.
 \]
 \end{lemma}
@@ -81,11 +80,11 @@ For any $\aRTS$ design and any $n,k$,
 \begin{proof}\leanok
 \uses{lem:U_increment}
 Summing the increment identity of Lemma~\ref{lem:U_increment} from
-$m = \ell_{n,k}+1$ to $n$ gives
+$m = \ell_{n,k}$ to $n-1$ gives
 $U_{n,k} - U_{\ell_{n,k},k}
- = \sum_{m=\ell_{n,k}+1}^n (\alpha\hat{\rho}_{m-1,k} - p_{m,k})
+ = \sum_{m=\ell_{n,k}}^{n-1} (\alpha\hat{\rho}_{m,k} - p_{m,k})
    + (N_{n,k}-n\hat{\rho}_{n,k}) - (N_{\ell_{n,k},k}-\ell_{n,k}\hat{\rho}_{\ell_{n,k},k})$.
-Rearranging and splitting off the $m=\ell_{n,k}+1$ term yields the claim.
+Rearranging yields the claim.
 \end{proof}
 
 \begin{lemma}[Key inequality for $\aRTS$]\label{lem:preliminary_ineq}
@@ -102,12 +101,12 @@ under-sampling time of Definition~\ref{def:hitting}:
 
 \begin{proof}\leanok
 \uses{lem:U_telescope, lem:hitting_sign}
-In Lemma~\ref{lem:U_telescope}, each summand $p_{m,k} - \alpha\hat{\rho}_{m-1,k}$
-with $\ell_{n,k}+2 \le m \le n$ is $\le 0$: indeed $m-1 > \ell_{n,k}$ so arm $k$
-is over-sampled at time $m-1$ and the throttling condition
-(Lemma~\ref{lem:hitting_sign}) gives $p_{m,k} \le \alpha\hat{\rho}_{m-1,k}$.
-Dropping this nonpositive sum and bounding the leftover term
-$p_{\ell_{n,k}+1,k} \le 1$ gives the inequality.
+In Lemma~\ref{lem:U_telescope}, each summand $p_{m,k} - \alpha\hat{\rho}_{m,k}$
+with $\ell_{n,k} < m \le n-1$ is $\le 0$: indeed $m > \ell_{n,k}$ so arm $k$
+is over-sampled at time $m$ and the throttling condition
+(Lemma~\ref{lem:hitting_sign}) gives $p_{m,k} \le \alpha\hat{\rho}_{m,k}$.
+Dropping this nonpositive sum and bounding the single leftover boundary term
+$p_{\ell_{n,k},k} \le 1$ gives the inequality.
 \end{proof}
 
 \begin{lemma}[Smallness at the hitting time for $\aRTS$]\label{lem:preliminary_small}
@@ -140,8 +139,72 @@ Condition (i) is Lemma~\ref{lem:hitting_basic}, condition (ii) is
 Lemma~\ref{lem:preliminary_ineq}, and condition (iii) is
 Lemma~\ref{lem:preliminary_small}. (The Lean lemmas
 \texttt{generic\_ineq\_of\_hitting} and \texttt{generic\_small\_of\_hitting} package
-Lemmas~\ref{lem:preliminary_ineq}--\ref{lem:preliminary_small} at $\ell_{n,k}=\hitting$ into the
-$\forall n$/$\forall\delta$ operational forms \eqref{eq:generic_ineq}--\eqref{eq:generic_small},
-given the throttle $\neg P_m \Rightarrow p_m\le\alpha\hat\rho_{m-1}$; the remaining step is to
-verify that a concrete $\aRTS$ design's selection probabilities satisfy this throttle.)
+Lemmas~\ref{lem:preliminary_ineq}--\ref{lem:preliminary_small} at the last under-sampling time
+$\ell_{n,k}$ into the operational forms \eqref{eq:generic_ineq}--\eqref{eq:generic_small},
+given the $\aRTS$ throttle $\neg P_m \Rightarrow p_{m}\le\alpha\hat\rho_m$ (patient $m$ throttled
+by the target at the same index $m$). A single boundary summand $p_{\ell,k}-\alpha\hat\rho_{\ell,k}$
+is uncontrolled by the throttle, so the constant in \eqref{eq:generic_ineq} is $1$. No lower bound
+on $\ell_{n,k}$ is needed: the telescoping identity holds at $\ell_{n,k}=0$ as well (the
+$\alpha\hat\rho$ sum of $U$ grows at every step), so the $0$-indexed edge case is automatic. The
+remaining step is to verify that a concrete $\aRTS$ design's selection probabilities satisfy the
+throttle — this is Definition~\ref{def:aRTS_alg} and Corollary~\ref{cor:aRTS_alg_consistency}.)
+\end{proof}
+
+\begin{corollary}[Strong consistency of the \texorpdfstring{$\aRTS$}{aRTS} proportions]
+\label{cor:aRTS_consistency}
+\lean{AlphaRAR.aRTS_consistency}
+\uses{prop:aRTS_generic, thm:generic_main, lem:rho_converges, lem:M_lln}
+Consider an $\aRTS$ design driven by an algorithm–environment sequence under a stationary
+environment, with $Y_n\in L^2$ (Condition~\textbf{A}) and a continuous simplex-valued target map
+$\Target$. If the design's selection probabilities satisfy the throttle
+$\neg P_{m,k}\Rightarrow p_{m,k}\le\alpha\hat\rho_{m,k}$ a.s., then almost surely there is a common
+limit vector $v$ with $N_{n,k}/n\to v_k$ and $\hat\rho_{n,k}\to v_k$ for every arm $k$.
+\end{corollary}
+
+\begin{proof}
+\uses{prop:aRTS_generic, thm:generic_main}
+Instantiate Theorem~\ref{thm:generic_main} with the assignment indicators
+$Y_{n,k}=\mathbf 1\{A_n=k\}$, the selection probabilities
+$p_{n,k}=P[\mathbf 1\{A_n=k\}\mid\filt_{n-1}]$, the plug-in target
+$\hat\rho_{n,k}=\Target(\estParams_n)_k$, and $\ell_{n,k}$ the last under-sampling time. The generic
+conditions are discharged by Proposition~\ref{prop:aRTS_generic} (the throttle is the stated design
+hypothesis); the vanishing normalized assignment martingale $M_{n,k}/n\to0$ is
+Lemma~\ref{lem:M_lln}, and the plug-in-target convergence $\hat\rho_{n,k}\to v_k$ is
+Lemma~\ref{lem:rho_converges}. The common limit $v_k$ is that of $\hat\rho_{\cdot,k}$.
+\end{proof}
+
+\section{The \texorpdfstring{$\aRTS$}{aRTS} family as a property of an algorithm}
+\label{sec:aRTS_alg}
+
+Corollary~\ref{cor:aRTS_consistency} takes the process-level throttle as a hypothesis. We now
+express it as a membership condition on the driving algorithm and close the loop.
+
+\begin{definition}[$\aRTS$ algorithm]\label{def:aRTS_alg}
+\lean{AlphaRAR.IsARTS}\leanok
+\uses{def:aRTS}
+An algorithm chooses its next action from a history $h$ of action–reward pairs for patients
+$0,\dots,n$ via a Markov kernel; the probability it assigns to arm $k$ is
+$\mathrm{policy}_n(h)(\{k\})$. The algorithm
+is an \emph{$\alpha$-throttled $\aRTS$ design} with offsets $\Params_0$ and target map $\Target$ if
+its policy throttles every over-sampled arm: for every history $h$ and arm $k$, if
+$N_{n+1,k}(h) > (n+1)\,\hat\rho_k(h)$ then $\mathrm{policy}_n(h)(\{k\}) \le \alpha\,\hat\rho_k(h)$,
+where the count $N(h)$ and target $\hat\rho(h)=\Target(\estParams(h))$ are computed from $h$.
+\end{definition}
+
+\begin{corollary}[Consistency of an $\aRTS$ algorithm]\label{cor:aRTS_alg_consistency}
+\lean{AlphaRAR.aRTS_consistency_of_isARTS}\leanok
+\uses{def:aRTS_alg, cor:aRTS_consistency}
+If the driving algorithm is an $\aRTS$ design (Definition~\ref{def:aRTS_alg}), under the hypotheses
+of Corollary~\ref{cor:aRTS_consistency}, then almost surely $N_{n,k}/n\to v_k$ and
+$\hat\rho_{n,k}\to v_k$ for every arm $k$.
+\end{corollary}
+
+\begin{proof}\leanok
+\uses{cor:aRTS_consistency}
+The policy-level throttle discharges the process-level throttle hypothesis of
+Corollary~\ref{cor:aRTS_consistency}. The link is that the selection probability
+$p_{n+1,k}=P[\mathbf 1\{A_{n+1}=k\}\mid\filt_n]$ equals $\mathrm{policy}_n(\text{history}_n)(\{k\})$
+almost surely — a conditional expectation computed from the algorithm's conditional distribution of
+the next action given the history (\texttt{HasCondDistrib.condExp\_comp\_eq}) — and the history-level
+count and target agree with the process count $N_{n+1,k}$ and target $\hat\rho_{n+1,k}$.
 \end{proof}

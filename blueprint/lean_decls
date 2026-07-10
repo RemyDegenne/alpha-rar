@@ -33,6 +33,11 @@ AlphaRAR.consistency_of_generic_ae
 AlphaRAR.auxU_telescope
 AlphaRAR.preliminary_ineq
 AlphaRAR.preliminary_small
+AlphaRAR.generic_ineq_of_hitting
+AlphaRAR.generic_small_of_hitting
+AlphaRAR.aRTS_consistency
+AlphaRAR.IsARTS
+AlphaRAR.aRTS_consistency_of_isARTS
 AlphaRAR.respMart_div_pullCount_ae_tendsto_zero
 AlphaRAR.estimator_ae_tendsto_of_pullCount_atTop
 AlphaRAR.exists_tendsto_estimator_of_not_pullCount_atTop

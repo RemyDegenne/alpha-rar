@@ -63,31 +63,24 @@ theorem assignMG_succ (n : ℕ) :
   unfold assignMG
   rw [Finset.sum_range_succ]
 
-/-- Auxiliary process `U n = ∑_{m<n-1} α ρ m + M n - n ρ n` (blueprint `def:U`). The
-`α ρ` sum has one fewer term than `M`, so it runs over `range (n-1)`. -/
-def auxU (n : ℕ) : ℝ := (∑ m ∈ range (n - 1), α * ρ m) + assignMG X p n - (n : ℝ) * ρ n
-
-/-- Increment of the leading `α ρ` sum, for `n ≥ 1`. -/
-theorem alphaSum_succ (n : ℕ) (hn : 1 ≤ n) :
-    (∑ m ∈ range n, α * ρ m) = (∑ m ∈ range (n - 1), α * ρ m) + α * ρ (n - 1) := by
-  obtain ⟨k, rfl⟩ : ∃ k, n = k + 1 := ⟨n - 1, by omega⟩
-  rw [Nat.add_sub_cancel, Finset.sum_range_succ]
+/-- Auxiliary process `U n = ∑_{m<n} α ρ m + M n - n ρ n` (blueprint `def:U`). The leading `α ρ`
+sum runs over `range n`, so at time `n` it uses the plug-in targets of patients `0, …, n-1`. -/
+def auxU (n : ℕ) : ℝ := (∑ m ∈ range n, α * ρ m) + assignMG X p n - (n : ℝ) * ρ n
 
 /-- **Increment of the auxiliary process** (blueprint `lem:U_increment`).
 
-For `n ≥ 1`, writing `D n := N n - n ρ n`,
-`U (n+1) - U n = α ρ_{n-1} - p n + (D (n+1) - D n)`.
-(The leading term `α ρ_{n-1}` requires `n ≥ 1`, since at `n = 0` the `α ρ`-sum
-does not yet grow.) -/
-theorem auxU_succ_sub (n : ℕ) (hn : 1 ≤ n) :
+Writing `D n := N n - n ρ n`, `U (n+1) - U n = α ρ_n - p n + (D (n+1) - D n)`. The leading term
+`α ρ_n` pairs the selection probability `p_n` with the plug-in target `ρ_n` at the same index, so
+the throttle discharged downstream is `p_n ≤ α ρ_n` (patient `n` uses the target of patients
+`0, …, n-1`). Valid for all `n` (the `α ρ`-sum grows at every step). -/
+theorem auxU_succ_sub (n : ℕ) :
     auxU X p ρ α (n + 1) - auxU X p ρ α n
-      = α * ρ (n - 1) - p n
+      = α * ρ n - p n
         + (((count X (n + 1) - (n + 1 : ℝ) * ρ (n + 1)) - (count X n - (n : ℝ) * ρ n))) := by
   unfold auxU
-  simp only [Nat.add_sub_cancel]
-  rw [assignMG_succ, alphaSum_succ ρ α n hn, count_succ]
+  rw [assignMG_succ, Finset.sum_range_succ, count_succ]
   push_cast
-  grind
+  ring
 
 /-- A telescoping identity for a real sequence over `Ico ℓ n`. -/
 theorem sum_Ico_succ_sub (f : ℕ → ℝ) (ℓ : ℕ) :
@@ -110,22 +103,21 @@ theorem sum_Ico_succ_sub (f : ℕ → ℝ) (ℓ : ℕ) :
 
 /-- **Telescoping identity for the auxiliary process** (blueprint `lem:U_telescope`).
 
-For `1 ≤ ℓ ≤ n`, writing `D m := N m - m ρ m`,
-`U n - U ℓ = ∑_{m=ℓ}^{n-1} (α ρ_{m-1} - p m) + (D n - D ℓ)`.
+For `ℓ ≤ n`, writing `D m := N m - m ρ m`,
+`U n - U ℓ = ∑_{m=ℓ}^{n-1} (α ρ_m - p m) + (D n - D ℓ)`.
 Rearranged, this is the blueprint's identity expressing `D n` in terms of `D ℓ`,
 the summed throttling terms, and the increment of `U`. -/
-theorem auxU_telescope (n ℓ : ℕ) (hℓ : 1 ≤ ℓ) (hℓn : ℓ ≤ n) :
+theorem auxU_telescope (n ℓ : ℕ) (hℓn : ℓ ≤ n) :
     auxU X p ρ α n - auxU X p ρ α ℓ
-      = (∑ m ∈ Ico ℓ n, (α * ρ (m - 1) - p m))
+      = (∑ m ∈ Ico ℓ n, (α * ρ m - p m))
         + ((count X n - (n : ℝ) * ρ n) - (count X ℓ - (ℓ : ℝ) * ρ ℓ)) := by
   have hterm : ∀ m ∈ Ico ℓ n,
       auxU X p ρ α (m + 1) - auxU X p ρ α m
-        = (α * ρ (m - 1) - p m)
+        = (α * ρ m - p m)
           + ((count X (m + 1) - ((m + 1 : ℕ) : ℝ) * ρ (m + 1))
             - (count X m - (m : ℝ) * ρ m)) := by
     intro m hm
-    rw [Finset.mem_Ico] at hm
-    have h := auxU_succ_sub X p ρ α m (by omega)
+    have h := auxU_succ_sub X p ρ α m
     push_cast at h ⊢
     exact h
   rw [← sum_Ico_succ_sub (auxU X p ρ α) ℓ n hℓn, Finset.sum_congr rfl hterm,
@@ -162,30 +154,30 @@ theorem hitting_sign (P : ℕ → Prop) [DecidablePred P] {n m : ℕ}
 
 /-- **Key inequality** (blueprint `lem:preliminary_ineq`).
 
-Whenever the throttling condition `p m ≤ α ρ_{m-1}` holds for all `ℓ+1 ≤ m ≤ n-1`,
-`p ℓ ≤ 1`, and `0 ≤ α ρ_{ℓ-1}`, the gap `D n = N n - n ρ n` is controlled by its
+Whenever the throttling condition `p m ≤ α ρ_m` holds for all `ℓ+1 ≤ m ≤ n-1`,
+`p ℓ ≤ 1`, and `0 ≤ α ρ_ℓ`, the gap `D n = N n - n ρ n` is controlled by its
 value at `ℓ` plus the increment of `U`:
 `D n ≤ 1 + D ℓ + (U n - U ℓ)`. -/
-theorem preliminary_ineq (n ℓ : ℕ) (hℓ : 1 ≤ ℓ) (hℓn : ℓ ≤ n)
-    (hp1 : p ℓ ≤ 1) (hαρ : 0 ≤ α * ρ (ℓ - 1))
-    (hthrottle : ∀ m ∈ Ico (ℓ + 1) n, p m ≤ α * ρ (m - 1)) :
+theorem preliminary_ineq (n ℓ : ℕ) (hℓn : ℓ ≤ n)
+    (hp1 : p ℓ ≤ 1) (hαρ : 0 ≤ α * ρ ℓ)
+    (hthrottle : ∀ m ∈ Ico (ℓ + 1) n, p m ≤ α * ρ m) :
     (count X n - (n : ℝ) * ρ n)
       ≤ 1 + (count X ℓ - (ℓ : ℝ) * ρ ℓ) + (auxU X p ρ α n - auxU X p ρ α ℓ) := by
   rcases hℓn.lt_or_eq with hlt | heq
   · -- `ℓ < n`: split off the first term of the telescoped sum.
-    have htel := auxU_telescope X p ρ α n ℓ hℓ hℓn
-    set T := ∑ m ∈ Ico ℓ n, (α * ρ (m - 1) - p m) with hT
+    have htel := auxU_telescope X p ρ α n ℓ hℓn
+    set T := ∑ m ∈ Ico ℓ n, (α * ρ m - p m) with hT
     have hTge : -1 ≤ T := by
       have hmemL : ℓ ∈ Ico ℓ n := Finset.mem_Ico.mpr ⟨le_rfl, hlt⟩
-      have hsplit := Finset.add_sum_erase (Ico ℓ n) (fun m => α * ρ (m - 1) - p m) hmemL
-      have hrest : 0 ≤ ∑ m ∈ (Ico ℓ n).erase ℓ, (α * ρ (m - 1) - p m) := by
+      have hsplit := Finset.add_sum_erase (Ico ℓ n) (fun m => α * ρ m - p m) hmemL
+      have hrest : 0 ≤ ∑ m ∈ (Ico ℓ n).erase ℓ, (α * ρ m - p m) := by
         apply Finset.sum_nonneg
         intro m hm
         rw [Finset.mem_erase, Finset.mem_Ico] at hm
         have := hthrottle m (Finset.mem_Ico.mpr ⟨by omega, hm.2.2⟩)
         linarith
-      have hval : T = (α * ρ (ℓ - 1) - p ℓ)
-          + ∑ m ∈ (Ico ℓ n).erase ℓ, (α * ρ (m - 1) - p m) := by
+      have hval : T = (α * ρ ℓ - p ℓ)
+          + ∑ m ∈ (Ico ℓ n).erase ℓ, (α * ρ m - p m) := by
         rw [hT, ← hsplit]
       rw [hval]
       linarith
@@ -212,30 +204,47 @@ theorem preliminary_small (P : ℕ → Prop) [DecidablePred P] (n : ℕ)
     have := hPspec _ hP
     linarith
 
-/-- **Generic key inequality from the throttle** (blueprint `eq:generic_ineq`, deterministic
-packaging of `prop:aRTS_generic`). With `ℓ_n = hitting P n` the last under-sampling time, the
-throttle `¬ P m → p m ≤ α ρ_{m-1}` (which holds after the last under-sampling time, since the arm
-is then over-sampled), together with `p ≤ 1`, `0 ≤ α ρ`, and `1 ≤ ℓ_n` for `n ≥ 1`, gives the
-generic inequality for all `n`. For `n ≥ 1` this is `preliminary_ineq` at `ℓ = hitting P n`
-(the throttle on `Ico (ℓ+1) n` follows from `hitting_sign`); for `n = 0` both sides reduce to
-`0 ≤ 1`. -/
+/-- **Generic key inequality from the aRTS throttle** (blueprint `eq:generic_ineq`, deterministic
+packaging of `prop:aRTS_generic`). With `ℓ_n = hitting P n` the last under-sampling time, the aRTS
+throttle `¬ P m → p_m ≤ α ρ_m` (whenever the arm is over-sampled at `m`, its selection probability
+is throttled), together with `p ≤ 1` and `0 ≤ α ρ`, gives the generic inequality with constant `1`.
+From `auxU_telescope`, `D n = D ℓ + (U n - U ℓ) + ∑_{m∈[ℓ,n)} (p_m - α ρ_m)`; each summand with
+`m > ℓ` is `≤ 0` (by the throttle at `m`, over-sampled via `hitting_sign`), and the single boundary
+term `m = ℓ` is `≤ 1` (by `p ≤ 1`), so the sum is `≤ 1`. No lower bound on `ℓ_n` is needed: the
+identity holds at `ℓ_n = 0` too, since the `α ρ`-sum of `U` grows at every step. -/
 theorem generic_ineq_of_hitting (P : ℕ → Prop) [DecidablePred P]
-    (hthrottle : ∀ m, ¬ P m → p m ≤ α * ρ (m - 1))
-    (hp1 : ∀ m, p m ≤ 1) (hαρ : ∀ m, 0 ≤ α * ρ m)
-    (hP1 : ∀ n, 1 ≤ n → 1 ≤ hitting P n) (n : ℕ) :
+    (hthrottle : ∀ m, ¬ P m → p m ≤ α * ρ m)
+    (hp1 : ∀ m, p m ≤ 1) (hαρ : ∀ m, 0 ≤ α * ρ m) (n : ℕ) :
     count X n - (n : ℝ) * ρ n
       ≤ 1 + (count X (hitting P n) - (hitting P n : ℝ) * ρ (hitting P n))
         + (auxU X p ρ α n - auxU X p ρ α (hitting P n)) := by
-  rcases Nat.eq_zero_or_pos n with hn0 | hn1
-  · subst hn0
-    have hc : count X 0 = 0 := by simp [count]
-    rw [show hitting P 0 = 0 from Nat.findGreatest_zero, hc]
-    push_cast
-    simp
-  · refine preliminary_ineq X p ρ α n (hitting P n) (hP1 n hn1)
-      (Nat.findGreatest_le n) (hp1 _) (hαρ _) (fun m hm ↦ ?_)
-    rw [Finset.mem_Ico] at hm
-    exact hthrottle m (hitting_sign P (n := n) (by omega) (by omega))
+  set ℓ := hitting P n with hℓ_def
+  have htel := auxU_telescope X p ρ α n ℓ (Nat.findGreatest_le n)
+  -- Each summand `p m - α ρ m` is `≤ 1` at the boundary index `m = ℓ`, `≤ 0` after.
+  have hbound : ∑ m ∈ Finset.Ico ℓ n, (p m - α * ρ m) ≤ 1 := by
+    have hterm : ∀ m ∈ Finset.Ico ℓ n,
+        p m - α * ρ m ≤ (if m = ℓ then (1 : ℝ) else 0) := by
+      intro m hm
+      rw [Finset.mem_Ico] at hm
+      by_cases hm2 : m = ℓ
+      · rw [if_pos hm2]; linarith [hp1 m, hαρ m]
+      · rw [if_neg hm2]
+        have hnotP : ¬ P m := hitting_sign P (n := n) (by omega) hm.2.le
+        linarith [hthrottle m hnotP]
+    calc ∑ m ∈ Finset.Ico ℓ n, (p m - α * ρ m)
+        ≤ ∑ m ∈ Finset.Ico ℓ n, (if m = ℓ then (1 : ℝ) else 0) := Finset.sum_le_sum hterm
+      _ = (((Finset.Ico ℓ n).filter (· = ℓ)).card : ℝ) := by rw [Finset.sum_boole]
+      _ ≤ 1 := by
+          have hcard : ((Finset.Ico ℓ n).filter (· = ℓ)).card ≤ 1 := by
+            rw [Finset.filter_eq']
+            split <;> simp
+          exact_mod_cast hcard
+  -- The reverse-signed sum, to rewrite `htel`.
+  have hsum0 : (∑ m ∈ Finset.Ico ℓ n, (α * ρ m - p m))
+      + (∑ m ∈ Finset.Ico ℓ n, (p m - α * ρ m)) = 0 := by
+    rw [← Finset.sum_add_distrib]
+    exact Finset.sum_eq_zero fun m _ ↦ by ring
+  linarith [htel, hbound, hsum0]
 
 /-- **Generic smallness from the throttle** (blueprint `eq:generic_small`, deterministic packaging).
 If `P` implies under-sampling (`P m → N_m ≤ m ρ_m`), then at the last under-sampling time the gap
@@ -360,38 +369,19 @@ almost-sure statement `lem:U_over_n`. -/
 theorem auxU_div_tendsto (u : ℝ) (hρ : Tendsto ρ atTop (𝓝 u))
     (hM : Tendsto (fun n => assignMG X p n / (n : ℝ)) atTop (𝓝 0)) :
     Tendsto (fun n => auxU X p ρ α n / (n : ℝ)) atTop (𝓝 (-(1 - α) * u)) := by
-  -- `(n)⁻¹ → 0`, and the once-shifted sequence `ρ (n-1) → u`.
-  have hinv : Tendsto (fun n : ℕ => (n : ℝ)⁻¹) atTop (𝓝 0) :=
-    tendsto_inv_atTop_zero.comp tendsto_natCast_atTop_atTop
-  have hpred : Tendsto (fun n : ℕ => n - 1) atTop atTop :=
-    tendsto_atTop_atTop.mpr fun b => ⟨b + 1, fun n hn => by omega⟩
-  have hρpred : Tendsto (fun n => ρ (n - 1)) atTop (𝓝 u) := hρ.comp hpred
   -- Cesàro average of `ρ` over `range n` tends to `u`.
   have hcesaro : Tendsto (fun n => (∑ m ∈ range n, ρ m) / (n : ℝ)) atTop (𝓝 u) := by
     simpa [smul_eq_mul, div_eq_inv_mul] using hρ.cesaro
-  -- `ρ (n-1) / n → 0`.
-  have hshift0 : Tendsto (fun n => ρ (n - 1) / (n : ℝ)) atTop (𝓝 0) := by
-    have h := hρpred.mul hinv
-    simpa [div_eq_mul_inv] using h
-  -- The average over `range (n-1)` also tends to `u` (it differs by the vanishing `ρ (n-1)/n`).
-  have hshort : Tendsto (fun n => (∑ m ∈ range (n - 1), ρ m) / (n : ℝ)) atTop (𝓝 u) := by
-    have hsub := hcesaro.sub hshift0
-    rw [sub_zero] at hsub
-    refine hsub.congr' ?_
-    filter_upwards [eventually_ge_atTop 1] with n hn
-    obtain ⟨k, rfl⟩ : ∃ k, n = k + 1 := ⟨n - 1, by omega⟩
-    rw [Nat.add_sub_cancel, Finset.sum_range_succ]
-    ring
   -- Combine the three pieces.
-  have hlim : Tendsto (fun n => α * ((∑ m ∈ range (n - 1), ρ m) / (n : ℝ))
+  have hlim : Tendsto (fun n => α * ((∑ m ∈ range n, ρ m) / (n : ℝ))
       + assignMG X p n / (n : ℝ) - ρ n) atTop (𝓝 (α * u + 0 - u)) :=
-    ((hshort.const_mul α).add hM).sub hρ
+    ((hcesaro.const_mul α).add hM).sub hρ
   rw [show α * u + 0 - u = -(1 - α) * u by ring] at hlim
   refine hlim.congr' ?_
   filter_upwards [eventually_ge_atTop 1] with n hn
   have hn0 : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
   unfold auxU
-  rw [← Finset.mul_sum (range (n - 1)) ρ α]
+  rw [← Finset.mul_sum (range n) ρ α]
   field_simp
 
 /-- **Positive part of the proportion gap vanishes** (blueprint `lem:pos_part_vanishes`).
@@ -407,12 +397,12 @@ target `ρ`, throttling parameter `α`, and last under-sampling times `ℓ` (wit
 Then `(N n / n - ρ n)⁺ → 0`. The argument feeds the auxiliary-process limit `U n / n → -(1-α) u`
 (`auxU_div_tendsto`) into the analytic positive-part lemma `tendsto_posPart_sub_div`
 (blueprint `lem:convergence`), then squeezes. -/
-theorem pos_part_vanishes {ℓ : ℕ → ℕ} {u : ℝ} (hℓle : ∀ n, ℓ n ≤ n)
+theorem pos_part_vanishes {ℓ : ℕ → ℕ} {u C : ℝ} (hℓle : ∀ n, ℓ n ≤ n)
     (hα : α ∈ Set.Icc (0 : ℝ) 1) (hu : u ∈ Set.Icc (0 : ℝ) 1)
     (hρ : Tendsto ρ atTop (𝓝 u))
     (hM : Tendsto (fun n => assignMG X p n / (n : ℝ)) atTop (𝓝 0))
     (hgen : ∀ n, count X n - (n : ℝ) * ρ n
-      ≤ 1 + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) + (auxU X p ρ α n - auxU X p ρ α (ℓ n)))
+      ≤ C + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) + (auxU X p ρ α n - auxU X p ρ α (ℓ n)))
     (hgs : ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
       (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) / (n : ℝ) < δ) :
     Tendsto (fun n => max (count X n / (n : ℝ) - ρ n) 0) atTop (𝓝 0) := by
@@ -420,33 +410,36 @@ theorem pos_part_vanishes {ℓ : ℕ → ℕ} {u : ℝ} (hℓle : ∀ n, ℓ n �
     have h := auxU_div_tendsto X p ρ α u hρ hM
     rwa [neg_mul] at h
   have hα' : (1 - α) ∈ Set.Icc (0 : ℝ) 1 := ⟨by linarith [hα.2], by linarith [hα.1]⟩
+  have hCn : Tendsto (fun n : ℕ => C / (n : ℝ)) atTop (𝓝 0) := by
+    have h := tendsto_one_div_atTop_nhds_zero_nat.const_mul C
+    simp only [mul_one_div, mul_zero] at h
+    exact h
   have hε : ∀ δ : ℝ, 0 < δ → ∀ᶠ n : ℕ in atTop,
-      (1 : ℝ) / (n : ℝ) + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) / (n : ℝ) < δ := by
+      C / (n : ℝ) + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) / (n : ℝ) < δ := by
     intro δ hδ
-    have h1 : ∀ᶠ n : ℕ in atTop, (1 : ℝ) / (n : ℝ) < δ / 2 :=
-      tendsto_one_div_atTop_nhds_zero_nat.eventually_lt_const (by linarith)
-    filter_upwards [h1, hgs (δ / 2) (by linarith)] with n ha hb
+    filter_upwards [hCn.eventually_lt_const (show (0 : ℝ) < δ / 2 by linarith),
+      hgs (δ / 2) (by linarith)] with n ha hb
     linarith
   have key := tendsto_posPart_sub_div (a := ℓ) (X := auxU X p ρ α)
-    (ε := fun n : ℕ => (1 : ℝ) / (n : ℝ) + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) / (n : ℝ))
+    (ε := fun n : ℕ => C / (n : ℝ) + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) / (n : ℝ))
     hℓle hα' hu hU hε
   refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds key
     (Eventually.of_forall fun n => le_max_right _ _) ?_
   filter_upwards [eventually_ge_atTop 1] with n hn
   have hnR : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
-  have hnum : 0 ≤ 1 + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n))
+  have hnum : 0 ≤ C + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n))
       + (auxU X p ρ α n - auxU X p ρ α (ℓ n)) - (count X n - (n : ℝ) * ρ n) := by
     linarith [hgen n]
-  have expand : ((1 : ℝ) / (n : ℝ) + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) / (n : ℝ)
+  have expand : (C / (n : ℝ) + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) / (n : ℝ)
         + (auxU X p ρ α n - auxU X p ρ α (ℓ n)) / (n : ℝ)) - (count X n / (n : ℝ) - ρ n)
-      = (1 + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n))
+      = (C + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n))
         + (auxU X p ρ α n - auxU X p ρ α (ℓ n)) - (count X n - (n : ℝ) * ρ n)) / (n : ℝ) := by
     field_simp
-  have hnn : 0 ≤ (1 + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n))
+  have hnn : 0 ≤ (C + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n))
         + (auxU X p ρ α n - auxU X p ρ α (ℓ n)) - (count X n - (n : ℝ) * ρ n)) / (n : ℝ) :=
     div_nonneg hnum hnR.le
   have key2 : count X n / (n : ℝ) - ρ n
-      ≤ (1 : ℝ) / (n : ℝ) + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) / (n : ℝ)
+      ≤ C / (n : ℝ) + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) / (n : ℝ)
         + (auxU X p ρ α n - auxU X p ρ α (ℓ n)) / (n : ℝ) := by
     linarith [expand, hnn]
   exact max_le_max key2 le_rfl

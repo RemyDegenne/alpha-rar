@@ -3,6 +3,8 @@ import AlphaRAR.Example
 import AlphaRAR.Mathlib.HasCondDistrib
 import AlphaRAR.Mathlib.Kronecker
 import AlphaRAR.Mathlib.TsumMeasureIoi
+import AlphaRAR.Probability.ARTSAlgorithm
+import AlphaRAR.Probability.ARTSConsistency
 import AlphaRAR.Probability.Assignment
 import AlphaRAR.Probability.AssignmentRate
 import AlphaRAR.Probability.ConsistencyMatching

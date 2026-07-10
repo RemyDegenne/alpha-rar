@@ -229,26 +229,32 @@ $\frac{1}{N_{m,k}}\sum_j X_{j,k}\xi_{j,k} - \theta_k
 \begin{definition}[Auxiliary process $U$]\label{def:U}
 \lean{AlphaRAR.auxU}\leanok
 \uses{def:M, def:plugin_target}
-For a fixed $\alpha \in [0,1)$, $k \in [K]$ and $n \ge 1$,
+For a fixed $\alpha \in [0,1)$, $k \in [K]$ and $n \ge 0$ (with the $0$-indexed convention,
+patient $0$ first),
 \[
-  U_{n,k} := \sum_{m=1}^{n-1} \alpha\, \hat{\rho}_{m,k} + M_{n,k} - n\, \hat{\rho}_{n,k}.
+  U_{n,k} := \sum_{m=0}^{n-1} \alpha\, \hat{\rho}_{m,k} + M_{n,k} - n\, \hat{\rho}_{n,k}.
 \]
+The leading sum runs over $m < n$, so it uses the plug-in targets of patients $0,\dots,n-1$.
 \end{definition}
 
 \begin{lemma}[Increment of $U$]\label{lem:U_increment}
 \lean{AlphaRAR.auxU_succ_sub}\leanok
 \uses{def:U}
-For all $n \ge 1$ and $k \in [K]$,
+For all $n \ge 0$ and $k \in [K]$,
 \[
-  \Delta U_{n,k} = U_{n,k} - U_{n-1,k}
-  = \alpha\, \hat{\rho}_{n-1,k} - p_{n,k} + \Delta\big(N_{n,k} - n\hat{\rho}_{n,k}\big),
+  \Delta U_{n,k} = U_{n+1,k} - U_{n,k}
+  = \alpha\, \hat{\rho}_{n,k} - p_{n,k} + \Delta\big(N_{n,k} - n\hat{\rho}_{n,k}\big),
 \]
-where we used $\Delta M_{n,k} = X_{n,k} - p_{n,k}$ and $\Delta N_{n,k} = X_{n,k}$.
+where we used $\Delta M_{n,k} = X_{n,k} - p_{n,k}$ and $\Delta N_{n,k} = X_{n,k}$. The selection
+probability $p_{n,k}$ is paired with the target $\hat\rho_{n,k}$ at the \emph{same} index, so the
+throttle discharged downstream is $p_{n,k} \le \alpha\hat\rho_{n,k}$ (patient $n$ is allocated using
+the target of patients $0,\dots,n-1$). The identity holds at $n=0$ too, since the $\alpha\hat\rho$
+sum grows at every step.
 \end{lemma}
 
 \begin{proof}\leanok
 Direct computation from Definition~\ref{def:U}, expanding
-$M_{n,k} - M_{n-1,k} = X_{n,k} - p_{n,k}$ and telescoping.
+$M_{n+1,k} - M_{n,k} = X_{n,k} - p_{n,k}$ and telescoping.
 \end{proof}
 
 \begin{definition}[Last under-sampling time]\label{def:hitting}
