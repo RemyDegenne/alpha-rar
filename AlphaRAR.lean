@@ -2,6 +2,7 @@ import AlphaRAR.Auxiliary.Deterministic
 import AlphaRAR.Example
 import AlphaRAR.Mathlib.HasCondDistrib
 import AlphaRAR.Mathlib.Kronecker
+import AlphaRAR.Mathlib.MartingaleCLT
 import AlphaRAR.Mathlib.TsumMeasureIoi
 import AlphaRAR.Probability.ARTSAlgorithm
 import AlphaRAR.Probability.ARTSConsistency

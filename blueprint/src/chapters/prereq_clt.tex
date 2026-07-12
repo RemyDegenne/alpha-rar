@@ -2,81 +2,348 @@
 \label{chap:pre_clt}
 
 We formalize the martingale central limit theorem in Lindeberg form, in dimension
-one. This is the analytic core of Lemma~\ref{lem:componentwise}, and through it of
-the asymptotic normality Theorem~\ref{thm:normality} and the test calibration
-Lemma~\ref{lem:pearson}. A one-dimensional statement suffices: the coordinates of
-the estimator error are driven by martingales with vanishing cross-variation
-(Lemma~\ref{lem:qv_orthogonal}), so the vector CLT follows coordinatewise via the
-Cramér--Wold device or directly from the orthogonality.
+one, for a \emph{triangular array} of martingale differences (the Hall--Heyde
+form). This is the analytic core of Lemma~\ref{lem:componentwise}, and through it
+of the asymptotic normality Theorem~\ref{thm:normality} and the test calibration
+Lemma~\ref{lem:pearson}. A one-dimensional statement suffices: distinct
+coordinates of the estimator error are driven by martingales with vanishing
+cross-variation (Lemma~\ref{lem:qv_orthogonal}), so the vector limit follows
+coordinatewise (Cram\'er--Wold, or directly from the orthogonality).
 
-\textbf{Formalization note.} Mathlib has the i.i.d.\ one-dimensional CLT
-(\texttt{Probability/CentralLimitTheorem.lean}), proved by convergence of
-characteristic functions, and the supporting API: \texttt{charFun}
-(\texttt{MeasureTheory/Measure/CharacteristicFunction/Basic.lean}), the fact that
-\texttt{charFun} determines a measure, and the Gaussian characteristic function
-(\texttt{Distributions/Gaussian/CharFun.lean}). What is missing is the martingale
-version. The proof reuses the same final step (charFun convergence $\Rightarrow$
-convergence in distribution) but replaces independence by a
-conditional-characteristic-function argument.
+\medskip
 
-\section{Analytic ingredient}
+\textbf{Standing setup for this chapter.} Fix a probability space $(\Omega,P)$.
+A \emph{martingale difference array} consists, for each $n\in\N$, of
+\begin{itemize}
+  \item a single filtration $(\filt_i)_{i\in\N}$ of $\Omega$, shared by all rows
+        (the standard Lindeberg setup; the deterministic per-row normalization is
+        applied downstream, in Corollary~\ref{cor:mart_clt_componentwise});
+  \item a length $k_n\in\N$ and increments $\Delta_{n,i}:\Omega\to\R$ for $i<k_n$,
+        with $\Delta_{n,i}$ measurable with respect to $\filt_{i+1}$, square
+        integrable, and
+        \[
+          \E[\Delta_{n,i}\mid\filt_{i}] = 0 \quad\text{a.s.}
+        \]
+\end{itemize}
+This data is the Lean structure \texttt{AlphaRAR.MartDiffArray}. We write
+$S_n := \sum_{i<k_n}\Delta_{n,i}$ for the row sum, and introduce the per-step
+conditional variances and the predictable quadratic variation
+\[
+  v_{n,i} := \E[\Delta_{n,i}^2\mid\filt_{i}], \qquad
+  V_n := \sum_{i<k_n} v_{n,i} \;=\; \langle M_n\rangle_{k_n},
+\]
+and, for $\varepsilon>0$, the \emph{conditional Lindeberg quantity}
+\[
+  L_n(\varepsilon) := \sum_{i<k_n}
+    \E\!\big[\Delta_{n,i}^2\,\indic_{\{|\Delta_{n,i}|>\varepsilon\}}\mid\filt_{i}\big].
+\]
+The two hypotheses of the theorem are: $V_n\xrightarrow{\Prob}\sigma^2$ (a
+constant), and $L_n(\varepsilon)\xrightarrow{\Prob}0$ for every $\varepsilon>0$.
+
+\medskip
+
+\textbf{What Mathlib provides.} The entire analytic top of the argument is
+available.
+\begin{itemize}
+  \item \emph{L\'evy continuity theorem}: pointwise convergence of characteristic
+        functions implies weak convergence of the laws,
+        \texttt{ProbabilityMeasure.tendsto\_of\_tendsto\_charFun}
+        (\texttt{Mathlib/MeasureTheory/Measure/LevyConvergence.lean}). This is
+        exactly Lemma~\ref{lem:levy}.
+  \item The Gaussian characteristic function
+        $\charFun(\mathcal N(0,\sigma^2))(t)=\exp(-\sigma^2 t^2/2)$,
+        \texttt{charFun\_gaussianReal}
+        (\texttt{Distributions/Gaussian/Real.lean}).
+  \item Convergence in distribution as a first-class notion
+        \texttt{TendstoInDistribution}, with Slutsky
+        (\texttt{prodMk\_of\_tendstoInMeasure\_const},
+        \texttt{add\_of\_tendstoInMeasure\_const}), the continuous mapping theorem
+        and \texttt{.congr}
+        (\texttt{Mathlib/MeasureTheory/Function/ConvergenceInDistribution.lean}).
+        These carry the whole of Chapter~\ref{chap:normality} on top of
+        Theorem~\ref{thm:mart_clt}.
+\end{itemize}
+What is genuinely missing is the martingale core: the conditional
+characteristic-function estimate that yields
+$\E[e^{itS_n}]\to\exp(-\sigma^2 t^2/2)$. Mathlib's i.i.d.\ CLT cannot be reused
+here: it relies on an \emph{identical-factor} product $\charFun(\mathrm{law}\,X)^n$
+and the \emph{unconditional} Taylor expansion \texttt{taylor\_charFun\_two},
+whereas the martingale version replaces independence by nested conditioning. The
+rest of this chapter builds that core.
+
+\section{Reusable analytic ingredients}
 \label{sec:pre_clt_analytic}
 
 \begin{lemma}[Complex exponential expansion]\label{lem:clt_exp_bound}
-For all $x \in \R$,
+\lean{AlphaRAR.norm_expI_sub_taylor_le}\leanok
+For all $x\in\R$,
 \[
-  \Big| e^{ix} - 1 - ix + \tfrac{x^2}{2} \Big| \le \min\!\Big(x^2,\ \tfrac{|x|^3}{6}\Big).
+  \Big\| e^{ix} - \big(1 + ix - \tfrac{x^2}{2}\big)\Big\|
+  \;\le\; \min\!\big(2x^2,\ |x|^3\big).
 \]
 \end{lemma}
 
-\begin{proof}
-Standard: integrate the remainder of the Taylor expansion of $e^{ix}$; the two
-bounds come from estimating the remainder integral to first and to second order.
+\begin{proof}\leanok
+Both bounds follow from a short integral tower for the map $x\mapsto e^{ix}$,
+using $\tfrac{d}{dx}e^{ix}=ie^{ix}$ and the fundamental theorem of calculus.
+First $\|e^{ix}-1\|=\|\int_0^x i e^{is}\,ds\|\le|x|$. Integrating,
+$\|e^{ix}-1-ix\|=\|\int_0^x i(e^{is}-1)\,ds\|\le\int_0^{|x|}s\,ds=x^2/2$.
+Integrating once more,
+$\|e^{ix}-1-ix+\tfrac{x^2}{2}\|=\|\int_0^x i(e^{is}-1-is)\,ds\|
+\le\int_0^{|x|}\tfrac{s^2}{2}\,ds=|x|^3/6$, which is the cubic bound. The
+quadratic bound is $\|e^{ix}-1-ix\|+\tfrac{x^2}{2}\le x^2/2+x^2/2=x^2$.
+The specific constant $1/6$ is not used downstream; any fixed constant on the
+cubic term suffices.
 \end{proof}
 
+\begin{lemma}[A real elementary bound]\label{lem:clt_real_exp_bound}
+\lean{AlphaRAR.abs_exp_mul_one_sub_le}\leanok
+For every $y\in[0,1]$, $\ \big|e^{y}(1-y)-1\big|\le y^2$.
+\end{lemma}
+
+\begin{proof}\leanok
+Let $g(y)=1-e^{y}(1-y)$, so $g'(y)=y e^{y}\ge0$ and $g(0)=0$, whence $g\ge0$ and
+$\big|e^{y}(1-y)-1\big|=g(y)$. Put $h(y)=y^2-g(y)$; then $h(0)=h(1)=0$ and
+$h'(y)=y(2-e^{y})$ is $\ge0$ on $[0,\ln2]$ and $\le0$ on $[\ln2,1]$, so $h$ is
+nonnegative on $[0,1]$. Hence $g(y)\le y^2$. (The precise constant $1$ is
+immaterial downstream.)
+\end{proof}
+
+\begin{lemma}[A real elementary bound, unbounded form]\label{lem:clt_real_exp_bound_pos}
+\lean{AlphaRAR.abs_exp_mul_one_sub_le'}\leanok
+For every $y\ge0$, $\ \big|e^{y}(1-y)-1\big|\le y^2 e^{y}$.
+\end{lemma}
+
+\begin{proof}\leanok
+As above $\big|e^{y}(1-y)-1\big|=g(y)=1-e^{y}(1-y)\ge0$. Since $1-y+y^2\ge0$ and
+$e^{y}\ge1+y$, we get $e^{y}(1-y+y^2)\ge(1+y)(1-y+y^2)=1+y^3\ge1$, i.e.
+$e^{y}(1-y)+y^2e^{y}\ge1$, which rearranges to $g(y)\le y^2 e^{y}$. This form is
+valid for all $y\ge0$ (not only $y\le1$); the factor $e^{y}$ is what is needed when
+$y=\tfrac{t^2}{2}v_{n,i}$ is only known to be bounded, not $\le1$.
+\end{proof}
+
+\section{Conditional characteristic increment}
+\label{sec:pre_clt_cond}
+
 \begin{lemma}[Conditional characteristic increment]\label{lem:clt_cond_char}
+\lean{AlphaRAR.norm_condExp_expI_sub_le}\leanok
 \uses{lem:clt_exp_bound, def:pred_qv}
-Let $(M_{n,i})_{i\le k_n}$ be a martingale array with increments $\Delta_{n,i}$.
-For fixed $t$,
+Fix $t\in\R$. For each $n,i$ write
 \[
-  \E\big[e^{it\Delta_{n,i}}\mid\filt_{i-1}\big]
-  = 1 - \tfrac{t^2}{2}\,\E[\Delta_{n,i}^2\mid\filt_{i-1}] + r_{n,i},
+  r_{n,i} := \E\big[e^{it\Delta_{n,i}}\mid\filt_i\big]
+             - \Big(1 - \tfrac{t^2}{2}\,v_{n,i}\Big).
 \]
-where $\sum_i |r_{n,i}|$ is controlled by the conditional Lindeberg quantity
-$\sum_i \E[\Delta_{n,i}^2\indic_{\{|\Delta_{n,i}|>\varepsilon\}}\mid\filt_{i-1}]$
-plus $\varepsilon\, t\, \langle M_n\rangle_{k_n}$.
+Then $\E[e^{it\Delta_{n,i}}\mid\filt_i] = 1 - \tfrac{t^2}{2}v_{n,i} + r_{n,i}$
+with
+\[
+  \|r_{n,i}\| \;\le\;
+  \E\!\Big[\min\!\big(2t^2\Delta_{n,i}^2,\ |t|^3|\Delta_{n,i}|^3\big)
+    \,\Big|\,\filt_i\Big].
+\]
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:clt_exp_bound}
+Apply the conditional expectation to the pointwise identity
+$e^{it\Delta} = 1 + it\Delta - \tfrac{t^2}{2}\Delta^2
+ + \big(e^{it\Delta}-1-it\Delta+\tfrac{t^2}{2}\Delta^2\big)$. The linear term
+vanishes since $\E[\Delta_{n,i}\mid\filt_i]=0$ (conditional expectation commutes
+with the coercion $\R\to\mathbb{C}$), and the quadratic term is $-\tfrac{t^2}{2}v_{n,i}$ by
+definition of $v_{n,i}$. The remainder $r_{n,i}$ is the conditional expectation of
+the last bracket, whose modulus is bounded pointwise by
+$\min(2t^2\Delta^2,\,|t|^3|\Delta|^3)$ from Lemma~\ref{lem:clt_exp_bound} applied to
+$x=t\Delta$; conditional Jensen (\texttt{norm\_condExp\_le}) gives the stated bound.
+\end{proof}
+
+\section{Reduction to bounded predictable variance}
+\label{sec:pre_clt_trunc}
+
+Because $V_n$ converges only in probability, the exponential weight
+$e^{(t^2/2)V_n}$ appearing below is a priori unbounded. We remove this by a
+stopping argument, reducing the theorem to the case where the predictable
+variance is uniformly bounded.
+
+\begin{lemma}[Variance truncation]\label{lem:clt_truncation}
+Fix a constant $B$ with $\sigma^2<B$ (e.g.\ $B:=\sigma^2+1$). Define the stopped
+array by truncating increment $i$ as soon as the \emph{next} partial variance
+would exceed $B$:
+\[
+  \bar\Delta_{n,i}:=\Delta_{n,i}\,\indic_{\{V_{n,i+1}\le B\}},
+  \qquad V_{n,i+1}=\textstyle\sum_{l\le i}v_{n,l}.
+\]
+The indicator is $\filt_i$-measurable, since $V_{n,i+1}$ depends only on
+$v_{n,0},\dots,v_{n,i}$, all $\filt_i$-measurable. Then:
+\begin{enumerate}
+  \item[(i)] $\bar\Delta_{n,i}$ is again a martingale difference array for
+        $(\filt_i)$, with per-step variances
+        $\bar v_{n,i}=v_{n,i}\indic_{\{V_{n,i+1}\le B\}}$;
+  \item[(ii)] its predictable variation is bounded \emph{by the constant $B$}:
+        $\bar V_n=\sum_{i<k_n}\bar v_{n,i}\le B$ everywhere;
+  \item[(iii)] $\bar V_n\xrightarrow{\Prob}\sigma^2$, and $\bar\Delta_{n,i}$
+        satisfies the conditional Lindeberg condition;
+  \item[(iv)] $P\big(\bar S_n\ne S_n\big)\le P(V_n>B)\to0$, where
+        $\bar S_n=\sum_{i<k_n}\bar\Delta_{n,i}$.
+\end{enumerate}
+Consequently $S_n$ and $\bar S_n$ have the same characteristic-function limit, and
+it suffices to prove the theorem under the extra assumption $V_n\le B$ a.s.
 \end{lemma}
 
 \begin{proof}
-Take conditional expectation in Lemma~\ref{lem:clt_exp_bound}: the linear term
-vanishes since $\E[\Delta_{n,i}\mid\filt_{i-1}]=0$, and the remainder is bounded
-by $\E[\min(\Delta_{n,i}^2,|\Delta_{n,i}|^3/6)\mid\filt_{i-1}]$, split at the
-threshold $\varepsilon$ into a Lindeberg part and a part $\le \varepsilon t
-\E[\Delta_{n,i}^2\mid\filt_{i-1}]$.
+Since $v_{n,l}$ is $\filt_l$-measurable and $l\le i$ for $l$ appearing in
+$V_{n,i+1}$, the indicator $\indic_{\{V_{n,i+1}\le B\}}$ is $\filt_i$-measurable;
+multiplying $\Delta_{n,i}$ by it therefore preserves both the $\filt_{i+1}$-%
+measurability and the martingale-difference property
+($\E[\bar\Delta_{n,i}\mid\filt_i]=\indic_{\{V_{n,i+1}\le B\}}\E[\Delta_{n,i}\mid\filt_i]=0$),
+and $\bar v_{n,i}=\E[\bar\Delta_{n,i}^2\mid\filt_i]=\indic_{\{V_{n,i+1}\le B\}}v_{n,i}$,
+proving (i). For (ii): because $V$ is nondecreasing, the retained indices
+$\{i:V_{n,i+1}\le B\}$ form a prefix $\{0,\dots,m\}$, and
+$\bar V_n=\sum_{i\le m}v_{n,i}=V_{n,m+1}\le B$ by the choice of $m$ --- there is no
+overshoot. For (iii): on $\{V_n\le B\}$ every indicator equals $1$, so $\bar
+V_n=V_n$ and $\bar S_n=S_n$; since $P(V_n\le B)\to1$ (as
+$V_n\xrightarrow{\Prob}\sigma^2<B$), both $\bar V_n\xrightarrow{\Prob}\sigma^2$ and
+(iv) follow, and the Lindeberg sum only decreases under truncation
+($\bar\Delta_{n,i}^2\le\Delta_{n,i}^2$, $\{|\bar\Delta|>\varepsilon\}\subseteq\{|\Delta|>\varepsilon\}$).
+The final claim uses
+$\|\charFun(\mathrm{law}\,S_n)(t)-\charFun(\mathrm{law}\,\bar S_n)(t)\|\le
+2P(S_n\ne\bar S_n)$.
+\end{proof}
+
+\section{Infinitesimality estimates}
+\label{sec:pre_clt_infl}
+
+Throughout this section we assume the bounded-variance normalization of
+Lemma~\ref{lem:clt_truncation}: $V_n\le B'$ a.s.
+
+\begin{lemma}[Uniform smallness of the conditional variances]\label{lem:clt_max_var}
+\lean{AlphaRAR.MartDiffArray.condVar_le_lindeberg}\leanok
+For every $\varepsilon>0$ and every $i<k_n$, a.s.
+\[
+  v_{n,i}\;\le\;\varepsilon^2 + L_n(\varepsilon).
+\]
+In particular $\max_{i<k_n} v_{n,i}\le\varepsilon^2 + L_n(\varepsilon)$, so
+$L_n(\varepsilon)\xrightarrow{\Prob}0$ gives $\max_{i<k_n}v_{n,i}\xrightarrow{\Prob}0$.
+\end{lemma}
+
+\begin{proof}\leanok
+Split $v_{n,i}=\E[\Delta_{n,i}^2\indic_{\{|\Delta_{n,i}|\le\varepsilon\}}\mid\filt_i]
++\E[\Delta_{n,i}^2\indic_{\{|\Delta_{n,i}|>\varepsilon\}}\mid\filt_i]$. The first
+conditional expectation is $\le\varepsilon^2$ (its integrand is $\le\varepsilon^2$
+pointwise); the second is the $i$-th summand of $L_n(\varepsilon)$, hence
+$\le L_n(\varepsilon)$ since every summand is nonnegative (conditional expectation
+of a nonnegative function). The stated per-cell bound follows.
+\end{proof}
+
+\begin{lemma}[Sum of squared variances]\label{lem:clt_sum_var_sq}
+\lean{AlphaRAR.MartDiffArray.sum_condVar_sq_le}\leanok
+\uses{lem:clt_max_var}
+For every $\varepsilon>0$, a.s.
+\[
+  \sum_{i<k_n} v_{n,i}^2 \;\le\; \big(\varepsilon^2 + L_n(\varepsilon)\big)\,V_n .
+\]
+In particular, on $\{V_n\le B'\}$ with $L_n(\varepsilon)\xrightarrow{\Prob}0$, this
+gives $\sum_{i<k_n}v_{n,i}^2\xrightarrow{\Prob}0$.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:clt_max_var}
+By Lemma~\ref{lem:clt_max_var}, $v_{n,i}\le\varepsilon^2+L_n(\varepsilon)$ a.s.;
+since also $v_{n,i}\ge0$, this gives $v_{n,i}^2\le v_{n,i}(\varepsilon^2+L_n(\varepsilon))$.
+Summing over $i$ and factoring, $\sum_i v_{n,i}^2\le(\varepsilon^2+L_n(\varepsilon))\sum_i v_{n,i}
+=(\varepsilon^2+L_n(\varepsilon))V_n$.
+\end{proof}
+
+\begin{lemma}[Sum of the remainder majorants]\label{lem:clt_sum_rem}
+\lean{AlphaRAR.MartDiffArray.sum_condExp_min_le}\leanok
+\uses{lem:clt_cond_char}
+For every $\varepsilon\ge0$, a.s.
+\[
+  \sum_{i<k_n}\E\!\big[\min(2t^2\Delta_{n,i}^2,\,|t|^3|\Delta_{n,i}|^3)\mid\filt_i\big]
+  \;\le\; |t|^3\varepsilon\,V_n + 2t^2 L_n(\varepsilon).
+\]
+By Lemma~\ref{lem:clt_cond_char} the left-hand side dominates $\sum_{i<k_n}\|r_{n,i}\|$;
+hence on $\{V_n\le B'\}$ with $L_n(\varepsilon)\xrightarrow{\Prob}0$,
+$\sum_{i<k_n}\|r_{n,i}\|\xrightarrow{\Prob}0$ (send $n\to\infty$, then $\varepsilon\to0$).
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:clt_exp_bound}
+Pointwise, $\min(2t^2\Delta^2,|t|^3|\Delta|^3)\le
+|t|^3\varepsilon\,\Delta^2 + 2t^2\,\Delta^2\indic_{\{|\Delta|>\varepsilon\}}$: on
+$\{|\Delta|\le\varepsilon\}$ use the cubic term ($|t|^3|\Delta|^3\le|t|^3\varepsilon\Delta^2$),
+on $\{|\Delta|>\varepsilon\}$ the quadratic term. Taking conditional expectations
+and summing over $i$ gives $|t|^3\varepsilon\sum_i v_{n,i}+2t^2 L_n(\varepsilon)$.
 \end{proof}
 
 \section{Convergence of characteristic functions}
 \label{sec:pre_clt_char}
 
-\begin{lemma}[Telescoping product]\label{lem:clt_product}
-\uses{lem:clt_cond_char}
-With the notation above, if $\langle M_n\rangle_{k_n} \xrightarrow{\Prob}\sigma^2$
-and the conditional Lindeberg condition holds, then
+Fix $t\in\R$ and work under the bounded-variance normalization $V_n\le B'$.
+Define the partial sums $S_{n,j}:=\sum_{i<j}\Delta_{n,i}$ and
+$V_{n,j}:=\sum_{i<j}v_{n,i}$, and the complex process
 \[
-  \E\big[e^{it M_{n,k_n}}\big] \longrightarrow \exp\!\Big(-\tfrac{\sigma^2 t^2}{2}\Big)
-  \qquad\text{for every } t\in\R.
+  Z_{n,j} := \exp\!\Big(i t\,S_{n,j} + \tfrac{t^2}{2}V_{n,j}\Big),
+  \qquad j\le k_n .
+\]
+Then $Z_{n,0}=1$, $\ |Z_{n,j}|=\exp(\tfrac{t^2}{2}V_{n,j})\le\exp(\tfrac{t^2}{2}B')$,
+and $e^{itS_n}=Z_{n,k_n}\,\exp(-\tfrac{t^2}{2}V_n)$.
+
+\begin{lemma}[Almost-martingale expectation]\label{lem:clt_Z_expectation}
+\lean{AlphaRAR.MartDiffArray.clt_Z_expectation}\leanok
+\uses{lem:clt_cond_char, lem:clt_real_exp_bound_pos, lem:clt_sum_var_sq, lem:clt_sum_rem}
+$\E[Z_{n,k_n}]\to1$ as $n\to\infty$.
+\end{lemma}
+
+\begin{proof}\leanok
+The one-step increment factorises as
+$Z_{n,j+1}-Z_{n,j}=Z_{n,j}\big(\exp(it\Delta_{n,j}+\tfrac{t^2}{2}v_{n,j})-1\big)$,
+where the factor $Z_{n,j}$ is $\filt_j$-measurable. Taking conditional
+expectation and using Lemma~\ref{lem:clt_cond_char},
+\[
+  \E[Z_{n,j+1}-Z_{n,j}\mid\filt_j]
+  = Z_{n,j}\Big(e^{(t^2/2)v_{n,j}}\big(1-\tfrac{t^2}{2}v_{n,j}+r_{n,j}\big)-1\Big).
+\]
+Writing $y=\tfrac{t^2}{2}v_{n,j}\ (\le\tfrac{t^2}{2}B')$, the bracket splits as
+$\big(e^{y}(1-y)-1\big)+e^{y}r_{n,j}$; by
+Lemma~\ref{lem:clt_real_exp_bound_pos}, $|e^{y}(1-y)-1|\le y^2 e^{y}
+=\tfrac{t^4}{4}v_{n,j}^2\,e^{y}$. Hence the modulus is
+$\le|Z_{n,j}|\,e^{(t^2/2)B'}\big(\tfrac{t^4}{4}v_{n,j}^2+\|r_{n,j}\|\big)$.
+(The unbounded form of the elementary bound is essential here: $y$ is only bounded,
+not $\le1$.) Summing over $j$, telescoping and using the tower property
+$\E[Z_{n,k_n}-Z_{n,0}]=\sum_j\E\big[\E[Z_{n,j+1}-Z_{n,j}\mid\filt_j]\big]$,
+\[
+  \big|\E[Z_{n,k_n}]-1\big|
+  \le e^{(t^2/2)B'}\,\E\!\Big[\tfrac{t^4}{4}\textstyle\sum_j v_{n,j}^2
+      + e^{(t^2/2)B'}\sum_j\|r_{n,j}\|\Big].
+\]
+Both sums tend to $0$ in probability
+(Lemmas~\ref{lem:clt_sum_var_sq},~\ref{lem:clt_sum_rem}) and are uniformly
+bounded, so by bounded convergence the expectations tend to $0$.
+\end{proof}
+
+\begin{lemma}[Characteristic function limit]\label{lem:clt_product}
+\lean{AlphaRAR.MartDiffArray.clt_charFun}\leanok
+\uses{lem:clt_Z_expectation, lem:clt_truncation}
+Under the two hypotheses ($V_n\xrightarrow{\Prob}\sigma^2$ and the conditional
+Lindeberg condition), for every $t\in\R$,
+\[
+  \E\big[e^{itS_n}\big]\;=\;\charFun(\mathrm{law}\,S_n)(t)
+  \longrightarrow \exp\!\Big(-\tfrac{\sigma^2 t^2}{2}\Big).
 \]
 \end{lemma}
 
-\begin{proof}
-\uses{lem:clt_cond_char, lem:qv_incr}
-Write $e^{itM_{n,k_n}} = \prod_i e^{it\Delta_{n,i}}$ and compare with the
-predictable product $\prod_i(1 - \tfrac{t^2}{2}\E[\Delta_{n,i}^2\mid\filt_{i-1}])
-\approx \exp(-\tfrac{t^2}{2}\langle M_n\rangle_{k_n})$. The telescoping bound uses
-$|\prod a_i - \prod b_i| \le \sum_i |a_i - b_i|$ for terms of modulus $\le1$,
-with $a_i - b_i = r_{n,i}$ from Lemma~\ref{lem:clt_cond_char}, whose sum vanishes
-by Lindeberg. Then $\langle M_n\rangle_{k_n}\xrightarrow{\Prob}\sigma^2$ gives the
-limit $\exp(-\sigma^2 t^2/2)$.
+\begin{proof}\leanok
+\uses{lem:clt_Z_expectation, lem:clt_truncation}
+By Lemma~\ref{lem:clt_truncation} we may assume $V_n\le B'$ a.s. Then
+$e^{itS_n}=Z_{n,k_n}e^{-(t^2/2)V_n}$, so
+\[
+  \E[e^{itS_n}] - \exp(-\tfrac{t^2}{2}\sigma^2)
+  = \E\big[Z_{n,k_n}\big(e^{-(t^2/2)V_n}-e^{-(t^2/2)\sigma^2}\big)\big]
+    + e^{-(t^2/2)\sigma^2}\big(\E[Z_{n,k_n}]-1\big).
+\]
+The second term $\to0$ by Lemma~\ref{lem:clt_Z_expectation}. In the first,
+$|Z_{n,k_n}|\le e^{(t^2/2)B'}$ is bounded and
+$e^{-(t^2/2)V_n}-e^{-(t^2/2)\sigma^2}\xrightarrow{\Prob}0$ (continuity of $\exp$
+and $V_n\xrightarrow{\Prob}\sigma^2$), so bounded convergence gives $\to0$.
 \end{proof}
 
 \begin{lemma}[Characteristic functions determine the limit]\label{lem:levy}
@@ -86,39 +353,36 @@ distribution to $\mathcal{N}(0,\sigma^2)$.
 \end{lemma}
 
 \begin{proof}
-Injectivity is \texttt{MeasureTheory.Measure.ext\_of\_charFun} in Mathlib. The
-target $\exp(-\sigma^2 t^2/2)$ is the characteristic function of
-$\mathcal{N}(0,\sigma^2)$ (\texttt{Distributions/Gaussian/CharFun.lean}). The
-implication ``pointwise charFun convergence to a continuous limit charFun
-$\Rightarrow$ convergence in distribution'' is Lévy's continuity theorem; Mathlib
-has the special case used in its i.i.d.\ CLT
-(\texttt{Probability/CentralLimitTheorem.lean}), which is exactly what is needed
-here since the limit is a fixed Gaussian.
+The target $\exp(-\sigma^2 t^2/2)$ is the characteristic function of
+$\mathcal N(0,\sigma^2)$ (\texttt{charFun\_gaussianReal}). Pointwise convergence
+of characteristic functions to that of a fixed probability measure implies weak
+convergence of the laws by the L\'evy continuity theorem
+(\texttt{ProbabilityMeasure.tendsto\_of\_tendsto\_charFun}); injectivity is
+\texttt{Measure.ext\_of\_charFun}. Together these give convergence in distribution
+to $\mathcal N(0,\sigma^2)$.
 \end{proof}
-
-\textbf{Formalization note.} A fully general Lévy continuity theorem (arbitrary
-tight limits) is not yet in Mathlib, but is not required: we only need
-convergence to a fixed, known Gaussian limit, which the CLT file already handles.
 
 \section{The theorem}
 \label{sec:pre_clt_thm}
 
 \begin{theorem}[Martingale CLT, Lindeberg form]\label{thm:mart_clt}
+\lean{AlphaRAR.MartDiffArray.mart_clt}\leanok
 \uses{lem:clt_product, lem:levy}
-Let $(M_{n,i})_{i \le k_n}$ be a martingale array (with respect to filtrations
-$(\filt_{n,i})_i$) with $M_{n,0}=0$, predictable quadratic variation
-$\langle M_n\rangle_{k_n}\xrightarrow{\Prob}\sigma^2$, and satisfying the
-conditional Lindeberg condition: for every $\varepsilon>0$,
+Let $(\Delta_{n,i})_{i<k_n}$ be a martingale difference array (as in the standing
+setup) with predictable quadratic variation $V_n\xrightarrow{\Prob}\sigma^2$ and
+satisfying the conditional Lindeberg condition
+$L_n(\varepsilon)\xrightarrow{\Prob}0$ for every $\varepsilon>0$. Then the row sums
+converge in distribution,
 \[
-  \sum_{i}\E\big[\Delta_{n,i}^2\indic_{\{|\Delta_{n,i}|>\varepsilon\}}\mid\filt_{n,i-1}\big]
-  \xrightarrow{\Prob} 0.
+  S_n=\sum_{i<k_n}\Delta_{n,i} \;\eqdist\; \mathcal{N}(0,\sigma^2).
 \]
-Then $M_{n,k_n}\eqdist\mathcal{N}(0,\sigma^2)$.
 \end{theorem}
 
-\begin{proof}
-Combine Lemma~\ref{lem:clt_product} (convergence of characteristic functions) with
-Lemma~\ref{lem:levy} (the limit is $\mathcal{N}(0,\sigma^2)$).
+\begin{proof}\leanok
+\uses{lem:clt_product, lem:levy}
+Lemma~\ref{lem:clt_product} gives pointwise convergence of the characteristic
+functions to that of $\mathcal N(0,\sigma^2)$; Lemma~\ref{lem:levy} converts this
+into convergence in distribution.
 \end{proof}
 
 \begin{corollary}[Self-normalized componentwise form]\label{cor:mart_clt_componentwise}
@@ -126,16 +390,23 @@ Lemma~\ref{lem:levy} (the limit is $\mathcal{N}(0,\sigma^2)$).
 Let $M_{n,k}=\sum_{i\le n}X_{i,k}(\xi_{i,k}-\theta_k)$ as in
 Definition~\ref{def:M}--\ref{def:Q}, with $N_{n,k}\to\infty$ a.s.\ for each $k$.
 Then, with $D_n=\mathrm{diag}(\sqrt{N_{n,1}},\dots,\sqrt{N_{n,K}})$,
-$D_n(\estParams_n-\Params)\eqdist\mathcal{N}(0,\mathrm{diag}(V_1,\dots,V_K))$.
+\[
+  D_n(\estParams_n-\Params)\eqdist\mathcal{N}(0,\mathrm{diag}(V_1,\dots,V_K)).
+\]
 \end{corollary}
 
 \begin{proof}
 \uses{thm:mart_clt, lem:qv_orthogonal}
-Apply Theorem~\ref{thm:mart_clt} to the time-changed martingale
-$i\mapsto Q_{\tau_k(i),k}$ stopped when $N_{\cdot,k}=i$; its quadratic variation
-normalized by $N_{n,k}$ tends to $V_k$, and the conditional Lindeberg condition
-holds because the $\xi_{i,k}$ are i.i.d.\ with finite variance (dominated
-convergence, cf.\ the proof sketch of Lemma~\ref{lem:componentwise}). Distinct
-coordinates have vanishing cross-variation by Lemma~\ref{lem:qv_orthogonal}, so
-the joint limit is the stated diagonal Gaussian.
+Fix $k$. Apply Theorem~\ref{thm:mart_clt} to the time-changed array whose $m$-th
+row records the first $N_{n,k}=m$ sampled increments $X_{i,k}(\xi_{i,k}-\theta_k)$
+of arm $k$, with filtration the sampled filtration. Each sampled increment has
+conditional variance $V_k$, so the predictable variation of the normalized array
+$\Delta_{m,i}=X_{\cdot,k}(\xi_{\cdot,k}-\theta_k)/\sqrt{V_k\,m}$ is
+$\langle\,\rangle=1$ exactly, and the conditional Lindeberg condition holds because
+the $\xi_{i,k}$ are i.i.d.\ with $\E|\xi_{1,k}-\theta_k|^2=V_k<\infty$ (dominated
+convergence). Hence $M_{n,k}/\sqrt{V_k N_{n,k}}\eqdist\mathcal N(0,1)$. Distinct
+coordinates have vanishing cross-variation (Lemma~\ref{lem:qv_orthogonal}), so the
+joint limit is the stated diagonal Gaussian, and
+$D_n(\estParams_n-\Params)=\mathrm{diag}(\sqrt{V_k})\,M_n/\sqrt{\langle M\rangle_n}$
+up to a Bahadur $o_p(1)$ term.
 \end{proof}
