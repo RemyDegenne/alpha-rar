@@ -178,16 +178,25 @@ standalone theorem depending on a martingale-CLT lemma from Mathlib.
 \label{sec:norm_main}
 
 \begin{lemma}[CLT for the estimator]\label{lem:clt_theta}
-\uses{def:estimator}
-Under the standing hypotheses, $\sqrt n(\estParams_n - \Params)\eqdist\mathcal{N}(0,V)$.
+\lean{AlphaRAR.estimator_sqrtN_joint_tendsto_multivariateGaussian}\leanok
+\uses{def:estimator, lem:mart_clt_joint_selfnorm, lem:estimator_bahadur}
+Suppose $N_{n,k}/n\to v_k$ a.s.\ with $v_k>0$ for every arm $k$. Then, under
+Condition~\textbf{A}, $\sqrt n(\estParams_n - \Params)\eqdist\mathcal{N}(0,V)$ with
+$V=\mathrm{diag}(V_1/v_1,\dots,V_K/v_K)$.
 \end{lemma}
 
-\begin{proof}
-\uses{lem:componentwise, thm:LLN}
-$\sqrt n D_n^{-1}\to\mathrm{diag}(v_1^{-1/2},\dots,v_K^{-1/2})$ by Theorem~\ref{thm:LLN},
-so $\sqrt n(\estParams_n-\Params)=\sqrt n D_n^{-1}\cdot D_n(\estParams_n-\Params)$
-converges by Lemma~\ref{lem:componentwise} and Slutsky to
-$\mathrm{diag}(v_k^{-1/2})\,\mathcal{N}(0,\mathrm{diag}(V_k))=\mathcal{N}(0,V)$.
+\begin{proof}\leanok
+\uses{lem:mart_clt_joint_selfnorm, lem:estimator_bahadur}
+Exactly as in Corollary~\ref{cor:mart_clt_componentwise}, but with the deterministic
+normalization $\sqrt n$ in place of $D_n=\mathrm{diag}(\sqrt{N_{n,k}})$. By the Bahadur
+identity (Lemma~\ref{lem:estimator_bahadur}), coordinate $k$ of
+$\sqrt n(\estParams_n-\Params)$ is
+$(Q_{n,k}/\sqrt{N_{n,k}})\cdot\sqrt{nN_{n,k}}/(N_{n,k}+1)
+ + (\theta_{0,k}-\theta_k)\sqrt n/(N_{n,k}+1)$. The self-normalized martingale vector
+$(Q_{n,k}/\sqrt{N_{n,k}})_k$ converges to $\mathcal N(0,\mathrm{diag}(V_k))$
+(Lemma~\ref{lem:mart_clt_joint_selfnorm}); the multiplicative factor tends to $1/\sqrt{v_k}$ and
+the additive one to $0$ in probability. Multivariate Slutsky then gives the diagonal rescaling
+$\mathrm{diag}(1/\sqrt{v_k})$ of the Gaussian, whose covariance is $\mathrm{diag}(V_k/v_k)=V$.
 \end{proof}
 
 \begin{lemma}[CLT for the plug-in target]\label{lem:clt_rho}

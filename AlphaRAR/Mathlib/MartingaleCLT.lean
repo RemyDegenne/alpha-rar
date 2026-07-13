@@ -1781,6 +1781,41 @@ theorem tendsto_map_mul_of_tendstoInMeasure_one [IsProbabilityMeasure P] {σ2 : 
   simp only [id_eq, mul_one, Measure.map_id'] at h2
   exact h2
 
+/-- **Multivariate Slutsky.** If the laws of `Xn : ℕ → Ω → E` converge weakly to a probability
+measure `μ'` on `E`, `Rn : ℕ → Ω → E'` converges in probability to a constant `c`, and
+`g : E × E' → F` is continuous, then the laws of `fun ω ↦ g (Xn ω, Rn ω)` converge weakly to
+`μ'.map (fun x ↦ g (x, c))`. This is the vector generalisation of
+`tendsto_map_mul_of_tendstoInMeasure_one`, used to pass from a deterministic-normalizer joint CLT
+to the self-normalized one. -/
+theorem tendsto_map_comp_of_tendstoInMeasure_const [IsProbabilityMeasure P]
+    {E E' F : Type*}
+    [NormedAddCommGroup E] [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E]
+    [SeminormedAddCommGroup E'] [MeasurableSpace E'] [BorelSpace E'] [SecondCountableTopology E']
+    [TopologicalSpace F] [MeasurableSpace F] [BorelSpace F]
+    {μ' : Measure E} [IsProbabilityMeasure μ']
+    {Xn : ℕ → Ω → E} {Rn : ℕ → Ω → E'} {c : E'}
+    (g : E × E' → F) (hg : Continuous g)
+    (hX_meas : ∀ n, AEMeasurable (Xn n) P) (hR_meas : ∀ n, AEMeasurable (Rn n) P)
+    (hX : Tendsto (β := ProbabilityMeasure E)
+        (fun n ↦ ⟨P.map (Xn n), Measure.isProbabilityMeasure_map (hX_meas n)⟩) atTop
+        (𝓝 ⟨μ', inferInstance⟩))
+    (hR : TendstoInMeasure P Rn atTop (fun _ ↦ c)) :
+    Tendsto (β := ProbabilityMeasure F)
+      (fun n ↦ ⟨P.map (fun ω ↦ g (Xn n ω, Rn n ω)),
+        Measure.isProbabilityMeasure_map
+          (hg.measurable.comp_aemeasurable ((hX_meas n).prodMk (hR_meas n)))⟩) atTop
+      (𝓝 ⟨μ'.map (fun x ↦ g (x, c)),
+        Measure.isProbabilityMeasure_map
+          (hg.comp (continuous_id.prodMk continuous_const)).measurable.aemeasurable⟩) := by
+  have hid : TendstoInDistribution Xn atTop (id : E → E) (fun _ ↦ P) μ' := by
+    refine ⟨hX_meas, aemeasurable_id, ?_⟩
+    simp only [Measure.map_id]
+    exact hX
+  have hslut := hid.continuous_comp_prodMk_of_tendstoInMeasure_const (g := g) hg hR hR_meas
+  have h2 := hslut.tendsto
+  simp only [id_eq] at h2
+  exact h2
+
 end SelfNormalization
 
 end Array

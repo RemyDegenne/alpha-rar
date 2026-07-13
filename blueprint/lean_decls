@@ -57,6 +57,7 @@ AlphaRAR.all_arms_infinite_ae
 AlphaRAR.consistency_ae
 AlphaRAR.abs_estimator_sub_le_rate
 AlphaRAR.abs_estimator_sub_le_rate_ae
+AlphaRAR.estimator_sqrtN_joint_tendsto_multivariateGaussian
 AlphaRAR.isProjection_one_sub_vecMulVec
 AlphaRAR.isLittleOpOne_of_tendsto_ae
 AlphaRAR.IsLittleOpOne.add
@@ -118,3 +119,5 @@ AlphaRAR.MartDiffArray.clt_charFun
 AlphaRAR.MartDiffArray.mart_clt
 AlphaRAR.respMart_selfNorm_tendsto_gaussianReal
 AlphaRAR.respMart_joint_tendsto_multivariateGaussian
+AlphaRAR.respMart_joint_selfNorm_tendsto_multivariateGaussian
+AlphaRAR.estimatorError_joint_tendsto_multivariateGaussian

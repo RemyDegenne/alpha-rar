@@ -436,28 +436,52 @@ $\mathrm{diag}(v_kV_k)$ by orthogonality of the coordinates, Lemma~\ref{lem:qv_o
 then gives the joint limit.
 \end{proof}
 
+\begin{lemma}[Joint componentwise CLT, self-normalized]\label{lem:mart_clt_joint_selfnorm}
+\lean{AlphaRAR.respMart_joint_selfNorm_tendsto_multivariateGaussian}\leanok
+\uses{lem:mart_clt_joint, def:Q, def:counts}
+Suppose $N_{n,k}/n\to v_k$ a.s.\ for every arm $k$, with $v_k>0$. Then, under
+Condition~\textbf{A}, the vector of response martingales normalized by their own random counts
+converges jointly in distribution to a diagonal Gaussian,
+\[
+  \Big(\tfrac{Q_{n,1}}{\sqrt{N_{n,1}}},\dots,\tfrac{Q_{n,K}}{\sqrt{N_{n,K}}}\Big)
+    \eqdist \mathcal N\!\big(0, \mathrm{diag}(V_1,\dots,V_K)\big).
+\]
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:mart_clt_joint}
+Write $Q_{n,k}/\sqrt{N_{n,k}}=(Q_{n,k}/\sqrt n)\cdot\sqrt{n/N_{n,k}}$. The deterministic-normalizer
+joint limit (Lemma~\ref{lem:mart_clt_joint}) gives
+$(Q_{n,k}/\sqrt n)_k\eqdist\mathcal N(0,\mathrm{diag}(v_kV_k))$, and the coordinatewise scaling
+vector $(\sqrt{n/N_{n,k}})_k\to(v_k^{-1/2})_k$ in probability (from $N_{n,k}/n\to v_k$ and
+$v_k>0$). Multivariate Slutsky (a continuous coordinatewise product against a constant limit) then
+sends the product to the image of $\mathcal N(0,\mathrm{diag}(v_kV_k))$ under the diagonal scaling
+$\mathrm{diag}(v_k^{-1/2})$, which is $\mathcal N(0,\mathrm{diag}(V_k))$.
+\end{proof}
+
 \begin{corollary}[Self-normalized componentwise form]\label{cor:mart_clt_componentwise}
-\uses{thm:mart_clt, lem:qv_orthogonal, lem:mart_clt_selfnorm_arm, lem:mart_clt_joint}
-Let $M_{n,k}=\sum_{i\le n}X_{i,k}(\xi_{i,k}-\theta_k)$ as in
-Definition~\ref{def:M}--\ref{def:Q}, with $N_{n,k}\to\infty$ a.s.\ for each $k$.
-Then, with $D_n=\mathrm{diag}(\sqrt{N_{n,1}},\dots,\sqrt{N_{n,K}})$,
+\lean{AlphaRAR.estimatorError_joint_tendsto_multivariateGaussian}\leanok
+\uses{lem:mart_clt_joint_selfnorm, def:estimator, lem:estimator_bahadur, def:counts}
+Suppose $N_{n,k}/n\to v_k$ a.s.\ with $v_k>0$ for every arm $k$ (so in particular
+$N_{n,k}\to\infty$). Then, under Condition~\textbf{A}, with
+$D_n=\mathrm{diag}(\sqrt{N_{n,1}},\dots,\sqrt{N_{n,K}})$,
 \[
   D_n(\estParams_n-\Params)\eqdist\mathcal{N}(0,\mathrm{diag}(V_1,\dots,V_K)).
 \]
 \end{corollary}
 
-\begin{proof}
-\uses{thm:mart_clt, lem:qv_orthogonal}
-Fix $k$. Apply Theorem~\ref{thm:mart_clt} to the time-changed array whose $m$-th
-row records the first $N_{n,k}=m$ sampled increments $X_{i,k}(\xi_{i,k}-\theta_k)$
-of arm $k$, with filtration the sampled filtration. Each sampled increment has
-conditional variance $V_k$, so the predictable variation of the normalized array
-$\Delta_{m,i}=X_{\cdot,k}(\xi_{\cdot,k}-\theta_k)/\sqrt{V_k\,m}$ is
-$\langle\,\rangle=1$ exactly, and the conditional Lindeberg condition holds because
-the $\xi_{i,k}$ are i.i.d.\ with $\E|\xi_{1,k}-\theta_k|^2=V_k<\infty$ (dominated
-convergence). Hence $M_{n,k}/\sqrt{V_k N_{n,k}}\eqdist\mathcal N(0,1)$. Distinct
-coordinates have vanishing cross-variation (Lemma~\ref{lem:qv_orthogonal}), so the
-joint limit is the stated diagonal Gaussian, and
-$D_n(\estParams_n-\Params)=\mathrm{diag}(\sqrt{V_k})\,M_n/\sqrt{\langle M\rangle_n}$
-up to a Bahadur $o_p(1)$ term.
+\begin{proof}\leanok
+\uses{lem:mart_clt_joint_selfnorm, lem:estimator_bahadur}
+By the exact Bahadur identity (Lemma~\ref{lem:estimator_bahadur}),
+$\hat\theta_{n,k}-\theta_k=(Q_{n,k}+(\theta_{0,k}-\theta_k))/(N_{n,k}+1)$, so
+\[
+  \sqrt{N_{n,k}}(\hat\theta_{n,k}-\theta_k)
+    = \frac{Q_{n,k}}{\sqrt{N_{n,k}}}\cdot\frac{N_{n,k}}{N_{n,k}+1}
+      + (\theta_{0,k}-\theta_k)\frac{\sqrt{N_{n,k}}}{N_{n,k}+1}.
+\]
+The self-normalized martingale vector $(Q_{n,k}/\sqrt{N_{n,k}})_k$ converges jointly to
+$\mathcal N(0,\mathrm{diag}(V_k))$ (Lemma~\ref{lem:mart_clt_joint_selfnorm}), while the two
+coordinatewise scaling factors tend to $1$ and $0$ in probability (as $N_{n,k}\to\infty$).
+Multivariate Slutsky (a continuous coordinatewise affine map against the constant limit $(1,0)$)
+therefore leaves the Gaussian limit unchanged.
 \end{proof}
