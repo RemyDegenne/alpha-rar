@@ -116,3 +116,5 @@ AlphaRAR.MartDiffArray.sum_condExp_min_le
 AlphaRAR.MartDiffArray.clt_Z_expectation
 AlphaRAR.MartDiffArray.clt_charFun
 AlphaRAR.MartDiffArray.mart_clt
+AlphaRAR.respMart_selfNorm_tendsto_gaussianReal
+AlphaRAR.respMart_joint_tendsto_multivariateGaussian

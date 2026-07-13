@@ -385,8 +385,59 @@ functions to that of $\mathcal N(0,\sigma^2)$; Lemma~\ref{lem:levy} converts thi
 into convergence in distribution.
 \end{proof}
 
-\begin{corollary}[Self-normalized componentwise form]\label{cor:mart_clt_componentwise}
+\begin{lemma}[Per-arm self-normalized CLT]\label{lem:mart_clt_selfnorm_arm}
+\lean{AlphaRAR.respMart_selfNorm_tendsto_gaussianReal}\leanok
+\uses{thm:mart_clt, def:Q, def:counts}
+Fix an arm $k$ with a limiting proportion $N_{n,k}/n\to v_k>0$ a.s.\ and per-step conditional
+variance $V_k>0$ (a finite second moment $\E|\xi_{1,k}-\theta_k|^2 = V_k<\infty$). Then the
+self-normalized response martingale converges in distribution,
+\[
+  \frac{Q_{n,k}}{\sqrt{V_k\,N_{n,k}}} \eqdist \mathcal N(0,1).
+\]
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{thm:mart_clt}
+Normalize $Q_{n,k}$ by the \emph{deterministic} $\sqrt{V_k v_k n}$: the increments
+$\Delta_{m}=X_{m,k}(\xi_{m,k}-\theta_k)/\sqrt{V_k v_k n}$ form a martingale-difference array (for the
+action-augmented filtration) whose predictable variation is $N_{n,k}/(v_k n)\xrightarrow{\Prob}1$
+(consistency) and which satisfies the conditional Lindeberg condition, because the sampled responses
+are i.i.d.\ with finite variance $V_k$ (each cell contributes
+$\indic\{A_m=k\}\,V_k^{-1}v_k^{-1}n^{-1}\E[(\xi-\theta_k)^2\indic\{|\xi-\theta_k|>\varepsilon\sqrt{V_k v_k n}\}]$
+and the truncated moment vanishes by dominated convergence). Theorem~\ref{thm:mart_clt} then gives
+$Q_{n,k}/\sqrt{V_k v_k n}\eqdist\mathcal N(0,1)$. Finally
+$\sqrt{V_k v_k n}/\sqrt{V_k N_{n,k}}=\sqrt{v_k n/N_{n,k}}\xrightarrow{\Prob}1$, so Slutsky yields the
+stated random-normalizer limit.
+\end{proof}
+
+\begin{lemma}[Joint componentwise CLT, deterministic normalization]\label{lem:mart_clt_joint}
+\lean{AlphaRAR.respMart_joint_tendsto_multivariateGaussian}\leanok
+\uses{thm:mart_clt, lem:qv_orthogonal, def:Q, def:counts}
+Suppose $N_{n,k}/n\to v_k$ a.s.\ for every arm $k$, with $v_k\ge0$ and $V_k\ge0$. Then the vector of
+deterministically-normalized response martingales converges jointly in distribution to a diagonal
+Gaussian,
+\[
+  \Big(\tfrac{Q_{n,1}}{\sqrt n},\dots,\tfrac{Q_{n,K}}{\sqrt n}\Big)
+    \eqdist \mathcal N\!\big(0, \mathrm{diag}(v_1V_1,\dots,v_KV_K)\big).
+\]
+\end{lemma}
+
+\begin{proof}\leanok
 \uses{thm:mart_clt, lem:qv_orthogonal}
+By the Cramér--Wold device it suffices to prove that every scalar projection converges: for each
+$w\in\R^K$, $\langle w, Q_n/\sqrt n\rangle = \big(\sum_k w_k Q_{n,k}\big)/\sqrt n$. The increments
+$\sum_k w_k X_{i,k}(\xi_{i,k}-\theta_k)$ form a single martingale-difference array (the arm indicators
+are disjoint, so the conditional square is $\sum_k w_k^2\indic\{A_i=k\}V_k$, giving predictable
+variation $\sum_k w_k^2 V_k N_{n,k}/n\to\sum_k w_k^2 v_kV_k$; the conditional Lindeberg condition
+holds arm-by-arm by dominated convergence). Theorem~\ref{thm:mart_clt} yields
+$\big(\sum_k w_k Q_{n,k}\big)/\sqrt n\eqdist\mathcal N(0,\sum_k w_k^2 v_kV_k)$, which is precisely the
+projection $\langle w,\cdot\rangle$ of the diagonal Gaussian (whose covariance is
+$\mathrm{diag}(v_kV_k)$ by orthogonality of the coordinates, Lemma~\ref{lem:qv_orthogonal}). Cramér--Wold
+then gives the joint limit.
+\end{proof}
+
+\begin{corollary}[Self-normalized componentwise form]\label{cor:mart_clt_componentwise}
+\uses{thm:mart_clt, lem:qv_orthogonal, lem:mart_clt_selfnorm_arm, lem:mart_clt_joint}
 Let $M_{n,k}=\sum_{i\le n}X_{i,k}(\xi_{i,k}-\theta_k)$ as in
 Definition~\ref{def:M}--\ref{def:Q}, with $N_{n,k}\to\infty$ a.s.\ for each $k$.
 Then, with $D_n=\mathrm{diag}(\sqrt{N_{n,1}},\dots,\sqrt{N_{n,K}})$,
