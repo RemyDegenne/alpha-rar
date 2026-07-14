@@ -54,6 +54,7 @@ variable {Ω 𝓐 𝓨 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSp
 
 /-- The history `history A Y n` is measurable with respect to the action-augmented
 filtration `filtrationAction (n+1) = ℱ n ⊔ σ(A (n+1))`. -/
+@[fun_prop]
 lemma measurable_history_filtrationAction (n : ℕ) :
     Measurable[filtrationAction hA hY (n + 1)] (history A Y n) := by
   rw [filtrationAction_eq_comap (n + 1) (Nat.succ_ne_zero n)]
@@ -191,6 +192,7 @@ noncomputable def respMart (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y :
 omit [IsMarkovKernel ν] in
 /-- Each response-martingale increment is integrable (the indicator is bounded and the
 centered response is integrable). -/
+@[fun_prop]
 lemma integrable_respMart_increment {m : ℕ} (hAmeas : Measurable (A m))
     (hint : Integrable (Y m) P) (k : 𝓐) :
     Integrable (fun ω ↦ Set.indicator {ω | A m ω = k} (fun _ ↦ (1 : ℝ)) ω
@@ -330,6 +332,7 @@ lemma respMart_increment_mul_eq_zero {k j : 𝓐} (hkj : k ≠ j) (n : ℕ) :
 
 omit [IsMarkovKernel ν] in
 /-- Each `Q k n` is integrable (a finite sum of integrable increments). -/
+@[fun_prop]
 lemma integrable_respMart (hA : ∀ n, Measurable (A n)) (hint : ∀ n, Integrable (Y n) P)
     (k : 𝓐) (n : ℕ) : Integrable (respMart ν A Y k n) P :=
   integrable_finsetSum' _ fun m _ ↦ integrable_respMart_increment (hA m) (hint m) k
@@ -391,6 +394,7 @@ increment `V_k X_{n,k}` keeps the indicator because the current arm `A n` is `�
 omit [IsMarkovKernel ν] [IsProbabilityMeasure P] in
 /-- The squared response-martingale increment is integrable (indicator bounded × integrable
 centered square). -/
+@[fun_prop]
 lemma integrable_respMart_increment_sq {m : ℕ} (k : 𝓐) (hAmeas : Measurable (A m))
     (hcent2 : Integrable (fun ω ↦ (Y m ω - (ν k)[id]) ^ 2) P) :
     Integrable (fun ω ↦ (Set.indicator {ω | A m ω = k} (fun _ ↦ (1 : ℝ)) ω

@@ -185,6 +185,7 @@ lemma martingale_sq_sub_predQuadVar [IsFiniteMeasure μ]
 
 /-- **`⟨M⟩ n` is integrable.** Since `M² - ⟨M⟩` is (the martingale part, hence)
 integrable and `M²` is integrable, so is `⟨M⟩`. -/
+@[fun_prop]
 lemma integrable_predQuadVar [IsFiniteMeasure μ]
     (hM : StronglyAdapted ℱ M) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) (n : ℕ) :
     Integrable (predQuadVar M ℱ μ n) μ := by

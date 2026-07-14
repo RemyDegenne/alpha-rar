@@ -80,6 +80,7 @@ lemma stronglyAdapted_acount (hX : StronglyAdapted ℱ X) :
   obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, by omega⟩
   exact (hX i).mono (ℱ.mono (by omega : i ≤ m))
 
+@[fun_prop]
 lemma integrable_acount (hX : ∀ n, Integrable (X n) μ) (n : ℕ) :
     Integrable (acount X n) μ :=
   integrable_finsetSum' _ fun i _ ↦ hX i

@@ -79,6 +79,7 @@ lemma memLp_wIncr (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, M
 
 omit [DecidableEq 𝓐] in
 /-- Each weighted increment is `𝒢 (i+1)`-strongly-measurable. -/
+@[fun_prop]
 lemma stronglyMeasurable_wIncr (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (w : 𝓐 → ℝ) (i : ℕ) :
     StronglyMeasurable[IsAlgEnvSeq.filtrationAction h.measurable_action
       h.measurable_feedback (i + 1)] (wIncr ν A Y w i) :=
@@ -263,6 +264,7 @@ noncomputable def lindTrunc (ν : Kernel 𝓐 ℝ) (w : 𝓐 → ℝ) (ε : ℝ)
 
 omit [MeasurableSingletonClass 𝓐] [Fintype 𝓐] [DecidableEq 𝓐] [IsMarkovKernel ν]
   [IsProbabilityMeasure P] in
+@[fun_prop]
 lemma stronglyMeasurable_lindTrunc (w : 𝓐 → ℝ) (ε : ℝ) (n : ℕ) (a : 𝓐) :
     StronglyMeasurable (lindTrunc ν w ε n a) :=
   ((((continuous_id.sub continuous_const).pow 2).stronglyMeasurable).indicator
@@ -271,6 +273,7 @@ lemma stronglyMeasurable_lindTrunc (w : 𝓐 → ℝ) (ε : ℝ) (n : ℕ) (a : 
 
 omit [MeasurableSingletonClass 𝓐] [Fintype 𝓐] [DecidableEq 𝓐] in
 /-- `x ↦ lindTrunc … (Y i x)` is integrable (bounded by the integrable centered square). -/
+@[fun_prop]
 lemma integrable_lindTrunc_comp (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (w : 𝓐 → ℝ) (ε : ℝ) (n : ℕ) (a : 𝓐) (i : ℕ) :
     Integrable (fun ω ↦ lindTrunc ν w ε n a (Y i ω)) P := by
@@ -561,6 +564,7 @@ noncomputable def respVec (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y : 
     EuclideanSpace ℝ 𝓐 := WithLp.toLp 2 (fun a ↦ (Real.sqrt (n : ℝ))⁻¹ * respMart ν A Y a n ω)
 
 omit [Fintype 𝓐] [DecidableEq 𝓐] in
+@[fun_prop]
 lemma measurable_respVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (n : ℕ) :
     Measurable (respVec ν A Y n) :=
   (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp
@@ -627,6 +631,7 @@ lemma respMart_joint_tendsto_multivariateGaussian
 
 omit [Fintype 𝓐] [DecidableEq 𝓐] in
 /-- The self-normalized joint response-martingale vector `((√N_{n,a})⁻¹ Q_{n,a})_a ∈ ℝ^𝓐`. -/
+@[fun_prop]
 lemma measurable_respSelfNormVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (n : ℕ) :
     Measurable (fun ω ↦ (WithLp.toLp 2 (fun a ↦
       (Real.sqrt (count (fun j ↦ armIndicator A a j ω) n))⁻¹ * respMart ν A Y a n ω)
@@ -732,6 +737,7 @@ lemma respMart_joint_selfNorm_tendsto_multivariateGaussian
 
 omit [Fintype 𝓐] [DecidableEq 𝓐] in
 /-- The estimator-error vector `D_n(θ̂_n-θ)_k = √N_{n,k}(θ̂_{n,k}-θ_k)` is measurable. -/
+@[fun_prop]
 lemma measurable_estimatorErrorVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (n : ℕ) :
     Measurable (fun ω ↦ (WithLp.toLp 2 (fun k ↦
@@ -887,6 +893,7 @@ lemma respMart_eq_zero_of_count_zero (k : 𝓐) (n : ℕ) (ω : Ω)
 
 omit [Fintype 𝓐] [DecidableEq 𝓐] in
 /-- The `√n`-normalized estimator-error vector `(√n(θ̂_{n,k}-θ_k))_k` is measurable. -/
+@[fun_prop]
 lemma measurable_estimatorSqrtNVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (n : ℕ) :
     Measurable (fun ω ↦ (WithLp.toLp 2 (fun k ↦ Real.sqrt n

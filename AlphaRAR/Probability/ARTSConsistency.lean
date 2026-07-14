@@ -106,6 +106,7 @@ lemma stronglyAdapted_armIndicator (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P
   exact IsAlgEnvSeq.measurable_action_filtration h.measurable_action h.measurable_feedback
     (le_refl n) (measurableSet_singleton k)
 
+@[fun_prop]
 lemma integrable_armIndicator (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
     Integrable (armIndicator A k n) P := by
   have hs : MeasurableSet {ω | A n ω = k} := (h.measurable_action n) (measurableSet_singleton k)

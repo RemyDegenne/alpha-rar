@@ -625,9 +625,11 @@ noncomputable def lindeberg (n : ℕ) (ε : ℝ) : Ω → ℝ :=
   fun ω ↦ ∑ i ∈ Finset.range (A.k n),
     (P[{ω | ε < |A.d n i ω|}.indicator (fun ω ↦ (A.d n i ω) ^ 2) | A.𝓕 n i]) ω
 
+@[fun_prop]
 lemma measurable_d (n i : ℕ) : Measurable (A.d n i) :=
   (A.adapted n i).measurable.mono ((A.𝓕 n).le (i + 1)) le_rfl
 
+@[fun_prop]
 lemma integrable_sq (n i : ℕ) :
     Integrable (fun ω ↦ (A.d n i ω) ^ 2) P := (A.memLp n i).integrable_sq
 
@@ -718,26 +720,27 @@ noncomputable def Zproc (t : ℝ) (n j : ℕ) : Ω → ℂ :=
   fun ω ↦ Complex.exp (((t * A.partialSum n j ω : ℝ) : ℂ) * I
     + ((t ^ 2 / 2 * A.partialVar n j ω : ℝ) : ℂ))
 
+@[fun_prop]
 lemma stronglyMeasurable_condVar (n i : ℕ) : StronglyMeasurable[A.𝓕 n i] (A.condVar n i) :=
   stronglyMeasurable_condExp
 
+@[fun_prop]
 lemma stronglyMeasurable_partialSum (n j : ℕ) :
     StronglyMeasurable[A.𝓕 n j] (A.partialSum n j) := by
-  unfold MartDiffArray.partialSum
   refine Finset.stronglyMeasurable_fun_sum _ fun i hi ↦ ?_
   rw [Finset.mem_range] at hi
   exact (A.adapted n i).mono ((A.𝓕 n).mono (show i + 1 ≤ j by omega))
 
+@[fun_prop]
 lemma stronglyMeasurable_partialVar (n j : ℕ) :
     StronglyMeasurable[A.𝓕 n j] (A.partialVar n j) := by
-  unfold MartDiffArray.partialVar
   refine Finset.stronglyMeasurable_fun_sum _ fun i hi ↦ ?_
   rw [Finset.mem_range] at hi
   exact (A.stronglyMeasurable_condVar n i).mono ((A.𝓕 n).mono (show i ≤ j by omega))
 
+@[fun_prop]
 lemma stronglyMeasurable_Zproc (t : ℝ) (n j : ℕ) :
     StronglyMeasurable[A.𝓕 n j] (A.Zproc t n j) := by
-  unfold MartDiffArray.Zproc
   refine Complex.continuous_exp.comp_stronglyMeasurable ?_
   refine ((Complex.continuous_ofReal.comp_stronglyMeasurable
     ((A.stronglyMeasurable_partialSum n j).const_mul t)).mul stronglyMeasurable_const).add ?_
@@ -746,6 +749,7 @@ lemma stronglyMeasurable_Zproc (t : ℝ) (n j : ℕ) :
 
 /-- The `𝓕 j`-measurable factor `exp((t²/2) v_{n,j})`, the predictable part of the one-step
 `Z`-increment. -/
+@[fun_prop]
 lemma stronglyMeasurable_expVar (t : ℝ) (n j : ℕ) :
     StronglyMeasurable[A.𝓕 n j] (fun ω ↦ Complex.exp ((t ^ 2 / 2 * A.condVar n j ω : ℝ) : ℂ)) :=
   Complex.continuous_exp.comp_stronglyMeasurable
@@ -775,9 +779,9 @@ lemma norm_Zproc (t : ℝ) (n j : ℕ) (ω : Ω) :
 /-- The partial variance through step `i` (`V_{n,i+1} = ∑_{l≤i} v_{n,l}`) is `𝓕 i`-measurable:
 it involves only `v_{n,0},…,v_{n,i}`. This predictability is what makes the truncation stopping
 rule `𝟙{V_{n,i+1} ≤ B}` a legitimate (`𝓕 i`-measurable) weight. -/
+@[fun_prop]
 lemma stronglyMeasurable_partialVar_succ (n i : ℕ) :
     StronglyMeasurable[A.𝓕 n i] (A.partialVar n (i + 1)) := by
-  unfold MartDiffArray.partialVar
   refine Finset.stronglyMeasurable_fun_sum _ fun l hl ↦ ?_
   rw [Finset.mem_range] at hl
   exact (A.stronglyMeasurable_condVar n l).mono ((A.𝓕 n).mono (show l ≤ i by omega))
@@ -977,6 +981,7 @@ lemma norm_Zproc_le_of_le {t : ℝ} {n j : ℕ} {B : ℝ} {ω : Ω} (h : A.parti
 
 /-- With bounded partial predictable variation (`V_{n,j} ≤ B` a.e.), `Z_{n,j}` is integrable
 (it is bounded by the constant `e^{(t²/2)B}`). -/
+@[fun_prop]
 lemma integrable_Zproc_of_le [IsProbabilityMeasure P] (t : ℝ) (n j : ℕ) {B : ℝ}
     (h : A.partialVar n j ≤ᵐ[P] fun _ ↦ B) : Integrable (A.Zproc t n j) P := by
   refine Integrable.mono' (integrable_const (Real.exp (t ^ 2 / 2 * B)))
@@ -1000,6 +1005,7 @@ lemma partialVar_le_of_predVar_le {B : ℝ} {n : ℕ} (hB : A.predVar n ≤ᵐ[P
 
 /-- With bounded predictable variation, each squared conditional variance is integrable
 (it is dominated by `B · v_{n,j}`). -/
+@[fun_prop]
 lemma integrable_condVar_sq {B : ℝ} {n j : ℕ}
     (hB : A.predVar n ≤ᵐ[P] fun _ ↦ B) (hj : j < A.k n) :
     Integrable (fun ω ↦ (A.condVar n j ω) ^ 2) P := by
@@ -1129,14 +1135,14 @@ lemma norm_integral_Zproc_sub_one_le [IsProbabilityMeasure P] (t : ℝ) (n : ℕ
           MeasureTheory.integral_const_mul]
 
 /-- The Lindeberg quantity is integrable. -/
-lemma integrable_lindeberg (n : ℕ) (ε : ℝ) : Integrable (A.lindeberg n ε) P := by
-  unfold MartDiffArray.lindeberg
-  exact integrable_finsetSum _ fun j _ ↦ integrable_condExp
+@[fun_prop]
+lemma integrable_lindeberg (n : ℕ) (ε : ℝ) : Integrable (A.lindeberg n ε) P :=
+  integrable_finsetSum _ fun _ _ ↦ integrable_condExp
 
 /-- The predictable variation is integrable. -/
-lemma integrable_predVar (n : ℕ) : Integrable (A.predVar n) P := by
-  unfold MartDiffArray.predVar
-  exact integrable_finsetSum _ fun j _ ↦ integrable_condExp
+@[fun_prop]
+lemma integrable_predVar (n : ℕ) : Integrable (A.predVar n) P :=
+  integrable_finsetSum _ fun _ _ ↦ integrable_condExp
 
 /-- The predictable variation is nonnegative a.e. -/
 lemma predVar_nonneg (n : ℕ) : (0 : Ω → ℝ) ≤ᵐ[P] A.predVar n := by
@@ -1145,15 +1151,15 @@ lemma predVar_nonneg (n : ℕ) : (0 : Ω → ℝ) ≤ᵐ[P] A.predVar n := by
   exact Finset.sum_nonneg fun i _ ↦ hω i
 
 /-- The predictable variation is (strongly) measurable. -/
-lemma stronglyMeasurable_predVar (n : ℕ) : StronglyMeasurable (A.predVar n) := by
-  unfold MartDiffArray.predVar
-  exact Finset.stronglyMeasurable_fun_sum _ fun i _ ↦
+@[fun_prop]
+lemma stronglyMeasurable_predVar (n : ℕ) : StronglyMeasurable (A.predVar n) :=
+  Finset.stronglyMeasurable_fun_sum _ fun i _ ↦
     (A.stronglyMeasurable_condVar n i).mono ((A.𝓕 n).le i)
 
 /-- The Lindeberg quantity is (strongly) measurable. -/
-lemma stronglyMeasurable_lindeberg (n : ℕ) (ε : ℝ) : StronglyMeasurable (A.lindeberg n ε) := by
-  unfold MartDiffArray.lindeberg
-  exact Finset.stronglyMeasurable_fun_sum _ fun j _ ↦
+@[fun_prop]
+lemma stronglyMeasurable_lindeberg (n : ℕ) (ε : ℝ) : StronglyMeasurable (A.lindeberg n ε) :=
+  Finset.stronglyMeasurable_fun_sum _ fun j _ ↦
     stronglyMeasurable_condExp.mono ((A.𝓕 n).le j)
 
 /-- The Lindeberg quantity is nonnegative a.e. -/
@@ -1246,6 +1252,7 @@ lemma integral_sum_condExp_min_le [IsProbabilityMeasure P] {B : ℝ} {n : ℕ}
 lemma rowSum_eq_partialSum (n : ℕ) : A.rowSum n = A.partialSum n (A.k n) := rfl
 
 /-- The row sum is measurable. -/
+@[fun_prop]
 lemma measurable_rowSum (n : ℕ) : Measurable (A.rowSum n) :=
   ((A.stronglyMeasurable_partialSum n (A.k n)).mono ((A.𝓕 n).le (A.k n))).measurable
 
@@ -1255,6 +1262,7 @@ lemma norm_expI_rowSum (t : ℝ) (n : ℕ) (ω : Ω) :
   Complex.norm_exp_ofReal_mul_I (t * A.rowSum n ω)
 
 /-- `e^{itS_n}` is (strongly) measurable. -/
+@[fun_prop]
 lemma stronglyMeasurable_expI_rowSum (t : ℝ) (n : ℕ) :
     StronglyMeasurable (fun ω ↦ Complex.exp (((t * A.rowSum n ω : ℝ) : ℂ) * I)) :=
   Complex.continuous_exp.comp_stronglyMeasurable
@@ -1263,6 +1271,7 @@ lemma stronglyMeasurable_expI_rowSum (t : ℝ) (n : ℕ) :
       stronglyMeasurable_const)
 
 /-- `e^{itS_n}` is integrable (bounded by `1`). -/
+@[fun_prop]
 lemma integrable_expI_rowSum [IsFiniteMeasure P] (t : ℝ) (n : ℕ) :
     Integrable (fun ω ↦ Complex.exp (((t * A.rowSum n ω : ℝ) : ℂ) * I)) P :=
   Integrable.mono' (integrable_const 1) (A.stronglyMeasurable_expI_rowSum t n).aestronglyMeasurable

@@ -60,6 +60,7 @@ noncomputable def genRespMart (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (
 
 omit [IsMarkovKernel ν] in
 /-- Each general-functional increment is integrable. -/
+@[fun_prop]
 lemma integrable_genRespMart_increment {m : ℕ} (hAmeas : Measurable (A m)) {g : ℝ → ℝ}
     (hint : Integrable (fun ω ↦ g (Y m ω)) P) (k : 𝓐) :
     Integrable (fun ω ↦ Set.indicator {ω | A m ω = k} (fun _ ↦ (1 : ℝ)) ω
@@ -118,6 +119,7 @@ lemma genRespMart_succ (k : 𝓐) (g : ℕ → ℝ → ℝ) (n : ℕ) :
 
 omit [IsMarkovKernel ν] in
 /-- The general-functional martingale is integrable. -/
+@[fun_prop]
 lemma integrable_genRespMart (hA : ∀ n, Measurable (A n)) {g : ℕ → ℝ → ℝ}
     (hint : ∀ n, Integrable (fun ω ↦ g n (Y n ω)) P) (k : 𝓐) (n : ℕ) :
     Integrable (genRespMart ν A Y k g n) P :=
@@ -166,6 +168,7 @@ lemma martingale_genRespMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
 
 omit [IsMarkovKernel ν] [IsProbabilityMeasure P] in
 /-- The squared general-functional increment is integrable. -/
+@[fun_prop]
 lemma integrable_genRespMart_increment_sq {m : ℕ} (k : 𝓐) (hAmeas : Measurable (A m)) {g : ℝ → ℝ}
     (hcent2 : Integrable (fun ω ↦ (g (Y m ω) - (ν k)[g]) ^ 2) P) :
     Integrable (fun ω ↦ (Set.indicator {ω | A m ω = k} (fun _ ↦ (1 : ℝ)) ω
@@ -308,12 +311,14 @@ noncomputable def truncRespMart (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐)
   genRespMart ν A Y k (fun i ↦ truncation (fun y ↦ y - (ν k)[id]) (√i))
 
 /-- `truncation (· - θ) A` is strongly measurable. -/
+@[fun_prop]
 lemma stronglyMeasurable_truncation_sub_const (θ A : ℝ) :
     StronglyMeasurable (truncation (fun y : ℝ ↦ y - θ) A) :=
   (stronglyMeasurable_id.indicator measurableSet_Ioc).comp_measurable (measurable_id.sub_const θ)
 
 /-- The truncated increment function `truncation (· - θ) (√i)` applied to `Y i` is integrable
 (it is bounded by `√i`). -/
+@[fun_prop]
 lemma integrable_truncation_comp (hint : ∀ n, Integrable (Y n) P) (θ : ℝ) (n : ℕ) :
     Integrable (fun ω ↦ truncation (fun y : ℝ ↦ y - θ) (√n) (Y n ω)) P := by
   have haesm : AEStronglyMeasurable
@@ -543,6 +548,7 @@ lemma truncRespMart_zero_ae (k : 𝓐) : truncRespMart ν A Y k 0 =ᵐ[P] 0 := b
   filter_upwards with ω; rw [h0]
 
 /-- Squares of the truncated response martingale are integrable (from `MemLp 2`). -/
+@[fun_prop]
 lemma integrable_truncRespMart_sq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) (n : ℕ) :
     Integrable (fun ω ↦ truncRespMart ν A Y k n ω ^ 2) P :=

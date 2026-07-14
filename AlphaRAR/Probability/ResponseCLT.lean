@@ -58,6 +58,7 @@ lemma sum_respIncr (k : 𝓐) (n : ℕ) :
 
 /-- Each increment is `𝒢 (i+1)`-strongly-measurable (the assignment `A i` and response `Y i` are
 revealed by step `i+1`). -/
+@[fun_prop]
 lemma stronglyMeasurable_respIncr (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (i : ℕ) :
     StronglyMeasurable[IsAlgEnvSeq.filtrationAction h.measurable_action
       h.measurable_feedback (i + 1)] (respIncr ν A Y k i) := by
@@ -370,6 +371,7 @@ lemma tendstoInMeasure_predVar_respArray (h : IsAlgEnvSeq A Y alg (stationaryEnv
     field_simp
 
 /-- The assignment count `N_{n,k}` is measurable in `ω`. -/
+@[fun_prop]
 lemma measurable_count_armIndicator (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
     Measurable (fun ω ↦ count (fun j ↦ armIndicator A k j ω) n) := by
   simp only [count, armIndicator]
@@ -377,6 +379,7 @@ lemma measurable_count_armIndicator (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) 
     measurable_const.indicator ((h.measurable_action j) (measurableSet_singleton k))
 
 /-- Each `Q_{n,k}` is measurable (a finite sum of measurable increments). -/
+@[fun_prop]
 lemma measurable_respMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
     Measurable (respMart ν A Y k n) := by
   have heq : respMart ν A Y k n = fun ω ↦ ∑ i ∈ Finset.range n, respIncr ν A Y k i ω := by
