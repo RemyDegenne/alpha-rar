@@ -141,7 +141,7 @@ theorem aRTS_consistency [Fintype 𝓐]
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
       Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 (u k))
         ∧ Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop (𝓝 (u k)) := by
-  set ℱ := IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback with hℱ
+  let ℱ := IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback
   -- The target map lands in `[0,1]` because it lands in the simplex.
   have hTle1 : ∀ z k, T z k ≤ 1 := fun z k ↦
     (Finset.single_le_sum (fun i _ ↦ hTnn z i) (Finset.mem_univ k)).trans_eq (hTsum z)

@@ -215,11 +215,11 @@ lemma condExp_respMart_increment (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
     P[fun ω ↦ Set.indicator {ω | A i ω = k} (fun _ ↦ (1 : ℝ)) ω * (Y i ω - (ν k)[id])
         | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]
       =ᵐ[P] 0 := by
-  set hA := h.measurable_action with hA_def
-  set hY := h.measurable_feedback with hY_def
-  set G := IsAlgEnvSeq.filtrationAction hA hY i with hG_def
+  let hA := h.measurable_action
+  let hY := h.measurable_feedback
+  let G := IsAlgEnvSeq.filtrationAction hA hY i
   set c : Ω → ℝ := Set.indicator {ω | A i ω = k} (fun _ ↦ (1 : ℝ)) with hc_def
-  set g : Ω → ℝ := fun ω ↦ Y i ω - (ν k)[id] with hg_def
+  let g : Ω → ℝ := fun ω ↦ Y i ω - (ν k)[id]
   have hGle : G ≤ mΩ := (IsAlgEnvSeq.filtrationAction hA hY).le i
   -- `A i` and the indicator `c` are `G`-measurable.
   have hAG : Measurable[G] (A i) :=
@@ -256,9 +256,9 @@ lemma condExp_respMart_increment_sq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) 
           * (Y i ω - (ν k)[id])) ^ 2
         | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]
       =ᵐ[P] fun ω ↦ Set.indicator {ω | A i ω = k} (fun _ ↦ (1 : ℝ)) ω * armVar ν k := by
-  set hA := h.measurable_action with hA_def
-  set hY := h.measurable_feedback with hY_def
-  set G := IsAlgEnvSeq.filtrationAction hA hY i with hG_def
+  let hA := h.measurable_action
+  let hY := h.measurable_feedback
+  let G := IsAlgEnvSeq.filtrationAction hA hY i
   set c : Ω → ℝ := Set.indicator {ω | A i ω = k} (fun _ ↦ (1 : ℝ)) with hc_def
   set g : Ω → ℝ := fun ω ↦ (Y i ω - (ν k)[id]) ^ 2 with hg_def
   have hcG : StronglyMeasurable[G] c :=

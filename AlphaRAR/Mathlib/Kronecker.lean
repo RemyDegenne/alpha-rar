@@ -50,7 +50,7 @@ lemma kronecker_general {b y : ℕ → ℝ} {s : ℝ}
     (hb_pos : ∀ n, 0 < b n) (hb_mono : Monotone b) (hb_top : Tendsto b atTop atTop)
     (hy : Tendsto (fun n ↦ ∑ k ∈ range n, y k) atTop (𝓝 s)) :
     Tendsto (fun n : ℕ ↦ (b n)⁻¹ * ∑ k ∈ range n, b (k + 1) * y k) atTop (𝓝 0) := by
-  set S : ℕ → ℝ := fun n ↦ ∑ k ∈ range n, y k with hS
+  let S : ℕ → ℝ := fun n ↦ ∑ k ∈ range n, y k
   have hbinv : Tendsto (fun n : ℕ ↦ (b n)⁻¹) atTop (𝓝 0) := tendsto_inv_atTop_zero.comp hb_top
   -- `εᵢ := S_{i+1} - s → 0`.
   have hεt : Tendsto (fun i : ℕ ↦ S (i + 1) - s) atTop (𝓝 0) := by
@@ -69,7 +69,7 @@ lemma kronecker_general {b y : ℕ → ℝ} {s : ℝ}
     rw [Metric.tendsto_atTop]
     intro η hη
     obtain ⟨N₁, hN₁⟩ := Metric.tendsto_atTop.1 hεt (η / 2) (by linarith)
-    set A : ℝ := ∑ i ∈ range N₁, (b (i + 2) - b (i + 1)) * |S (i + 1) - s| with hAdef
+    let A : ℝ := ∑ i ∈ range N₁, (b (i + 2) - b (i + 1)) * |S (i + 1) - s|
     have hA0 : 0 ≤ A := Finset.sum_nonneg fun i _ ↦
       mul_nonneg (by linarith [hb_mono (by omega : i + 1 ≤ i + 2)]) (abs_nonneg _)
     have hAdiv : Tendsto (fun n : ℕ ↦ A * (b n)⁻¹) atTop (𝓝 0) := by

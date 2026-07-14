@@ -534,7 +534,7 @@ lemma multivariateGaussian_diagonal_smul_map (s d : 𝓐 → ℝ) (hs : ∀ a, 0
     (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp
       (measurable_pi_lambda _ fun a ↦
         (((WithLp.measurable_ofLp 2 (𝓐 → ℝ)).comp measurable_id).eval).const_mul (d a))
-  haveI : IsProbabilityMeasure ((multivariateGaussian 0 (Matrix.diagonal s)).map L) :=
+  have : IsProbabilityMeasure ((multivariateGaussian 0 (Matrix.diagonal s)).map L) :=
     Measure.isProbabilityMeasure_map hLmeas.aemeasurable
   refine Measure.ext_of_charFun (funext fun t ↦ ?_)
   have hinner : ∀ x : EuclideanSpace ℝ 𝓐, (⟪L x, t⟫ : ℝ) = ⟪x, L t⟫ := by
@@ -661,7 +661,7 @@ lemma respMart_joint_selfNorm_tendsto_multivariateGaussian
   set μ' : Measure (EuclideanSpace ℝ 𝓐) :=
     multivariateGaussian 0 (Matrix.diagonal fun a ↦ v a * armVar ν a) with hμ'
   -- The constant limit `c_a = 1/√v_a` and the random scaling `R_{n,a} = √n · (√N_{n,a})⁻¹`.
-  set c : EuclideanSpace ℝ 𝓐 := WithLp.toLp 2 (fun a ↦ (Real.sqrt (v a))⁻¹) with hc
+  let c : EuclideanSpace ℝ 𝓐 := WithLp.toLp 2 (fun a ↦ (Real.sqrt (v a))⁻¹)
   set Rn : ℕ → Ω → EuclideanSpace ℝ 𝓐 := fun n ω ↦ WithLp.toLp 2
     (fun a ↦ Real.sqrt n * (Real.sqrt (count (fun j ↦ armIndicator A a j ω) n))⁻¹) with hRn
   have hRmeas : ∀ n, AEMeasurable (Rn n) P := fun n ↦
@@ -867,7 +867,7 @@ lemma estimatorError_joint_tendsto_multivariateGaussian
   · rw [hN0]; simp
   · have hNpos : (0 : ℝ) < count (fun j ↦ armIndicator A k j ω) n :=
       lt_of_le_of_ne (hcnn k n ω) (Ne.symm hN0)
-    set s := Real.sqrt (count (fun j ↦ armIndicator A k j ω) n) with hs_def
+    set s := Real.sqrt (count (fun j ↦ armIndicator A k j ω) n)
     have hspos : (0 : ℝ) < s := Real.sqrt_pos.mpr hNpos
     have hNs : count (fun j ↦ armIndicator A k j ω) n = s ^ 2 := (Real.sq_sqrt hNpos.le).symm
     rw [hNs]; field_simp
@@ -988,7 +988,7 @@ theorem estimator_sqrtN_joint_tendsto_multivariateGaussian
       filter_upwards [eventually_gt_atTop 0] with n hn
       have hnpos : (0 : ℝ) < n := by exact_mod_cast hn
       rw [Real.sqrt_div (hcnn k n ω)]
-      set sn := Real.sqrt (n : ℝ) with hsn_def
+      set sn := Real.sqrt (n : ℝ)
       have hsnpos : (0 : ℝ) < sn := Real.sqrt_pos.mpr hnpos
       have hnn : (n : ℝ) = sn ^ 2 := (Real.sq_sqrt hnpos.le).symm
       rw [hnn]; field_simp
@@ -1003,7 +1003,7 @@ theorem estimator_sqrtN_joint_tendsto_multivariateGaussian
         refine hml.congr' ?_
         filter_upwards [eventually_gt_atTop 0] with n hn
         have hnpos : (0 : ℝ) < n := by exact_mod_cast hn
-        set sn := Real.sqrt (n : ℝ) with hsn_def
+        set sn := Real.sqrt (n : ℝ)
         have hsnpos : (0 : ℝ) < sn := Real.sqrt_pos.mpr hnpos
         have hnn : (n : ℝ) = sn ^ 2 := (Real.sq_sqrt hnpos.le).symm
         rw [hnn]; field_simp
@@ -1045,7 +1045,7 @@ theorem estimator_sqrtN_joint_tendsto_multivariateGaussian
   · rw [respMart_eq_zero_of_count_zero k n ω hN0]; simp only [hN0, Real.sqrt_zero]; ring
   · have hNpos : (0 : ℝ) < count (fun j ↦ armIndicator A k j ω) n :=
       lt_of_le_of_ne (hcnn k n ω) (Ne.symm hN0)
-    set s := Real.sqrt (count (fun j ↦ armIndicator A k j ω) n) with hs_def
+    set s := Real.sqrt (count (fun j ↦ armIndicator A k j ω) n)
     have hspos : (0 : ℝ) < s := Real.sqrt_pos.mpr hNpos
     have hNs : count (fun j ↦ armIndicator A k j ω) n = s ^ 2 := (Real.sq_sqrt hNpos.le).symm
     rw [hNs]; field_simp

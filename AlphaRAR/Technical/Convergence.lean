@@ -48,7 +48,7 @@ lemma tendsto_posPart_sub_div {a : ℕ → ℕ} {X ε : ℕ → ℝ} {α v : ℝ
     (hX : Tendsto (fun n ↦ X n / (n : ℝ)) atTop (𝓝 (-(α * v))))
     (hε : ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop, ε n < δ) :
     Tendsto (fun n ↦ max (ε n + (X n - X (a n)) / (n : ℝ)) 0) atTop (𝓝 0) := by
-  set L := α * v with hLdef
+  let L := α * v
   have hL0 : 0 ≤ L := mul_nonneg hα.1 hv.1
   refine tendsto_order.2 ⟨fun b hb ↦ ?_, fun b hb ↦ ?_⟩
   · -- lower bound: the positive part is always `≥ 0 > b`

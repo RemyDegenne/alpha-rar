@@ -144,7 +144,7 @@ lemma condExp_indicator_comp (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k :
     P[fun ω ↦ armIndicator A k i ω * φ (Y i ω)
         | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i] =ᵐ[P]
       fun ω ↦ armIndicator A k i ω * ∫ x, φ x ∂(ν k) := by
-  set G := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i with hG
+  let G := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i
   set c : Ω → ℝ := armIndicator A k i with hc
   have hcG : StronglyMeasurable[G] c :=
     stronglyMeasurable_const.indicator

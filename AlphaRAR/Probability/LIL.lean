@@ -154,7 +154,7 @@ lemma supermartingale_expProcess [IsProbabilityMeasure μ] (hM : Martingale M �
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
     Supermartingale (expProcess M ℱ μ θ) ℱ μ := by
   classical
-  haveI : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
+  have : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
   -- Increments and values are `L²`, giving the side conditions for the quadratic-variation lemmas.
   have haesm_d : ∀ i, AEStronglyMeasurable (fun ω ↦ M (i + 1) ω - M i ω) μ := fun i ↦
     (((hM.stronglyMeasurable (i + 1)).mono (ℱ.le _)).sub
@@ -604,7 +604,7 @@ lemma ae_eventually_le_sqrt_predQuadVar_mul_log [IsProbabilityMeasure μ] (hM : 
   refine ⟨K * Real.sqrt (2 * (1 / Real.log 2 + 2)), ?_⟩
   filter_upwards [hVω.eventually_ge_atTop ((2 : ℝ) ^ k₀), hVω.eventually_ge_atTop (Real.exp 1)]
     with n hn0 hne
-  set V := predQuadVar M ℱ μ n ω with hVdef
+  let V := predQuadVar M ℱ μ n ω
   have hVpos : 0 < V := lt_of_lt_of_le (Real.exp_pos 1) hne
   have hlogV1 : (1 : ℝ) ≤ Real.log V := (Real.le_log_iff_exp_le hVpos).mpr hne
   have hlogVnn : (0 : ℝ) ≤ Real.log V := le_trans zero_le_one hlogV1
@@ -668,7 +668,7 @@ lemma ae_eventually_le_sqrt_nat_mul_log [IsProbabilityMeasure μ] (hM : Martinga
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
     ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop, M n ω ≤ C * Real.sqrt (n * Real.log n) := by
-  haveI : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
+  have : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
   have haesm_d : ∀ i, AEStronglyMeasurable (fun ω ↦ M (i + 1) ω - M i ω) μ := fun i ↦
     (((hM.stronglyMeasurable (i + 1)).mono (ℱ.le _)).sub
       ((hM.stronglyMeasurable i).mono (ℱ.le _))).aestronglyMeasurable
@@ -688,7 +688,7 @@ lemma ae_eventually_le_sqrt_nat_mul_log [IsProbabilityMeasure μ] (hM : Martinga
   filter_upwards [hC, hVω.eventually_ge_atTop 1,
     (tendsto_natCast_atTop_atTop.eventually_ge_atTop (c ^ 2)), eventually_ge_atTop 2]
     with n hCn hV1 hnc hn2
-  set V := predQuadVar M ℱ μ n ω with hVdef
+  let V := predQuadVar M ℱ μ n ω
   have hnR : (2 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn2
   have hlogVnn : 0 ≤ Real.log V := Real.log_nonneg hV1
   have hlogV2 : Real.log V ≤ 2 * Real.log n := by

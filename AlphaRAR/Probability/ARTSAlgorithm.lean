@@ -121,7 +121,7 @@ lemma aRTSSelProb_succ_ae [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
     aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P (n + 1)
       =ᵐ[P] fun ω ↦ (alg.policy n (history A Y n ω) {k}).toReal := by
-  set 𝔽 := IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback with h𝔽
+  let 𝔽 := IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback
   set g : 𝓐 → ℝ := Set.indicator {k} (fun _ ↦ (1 : ℝ)) with hg_def
   have hg : StronglyMeasurable g := stronglyMeasurable_const.indicator (measurableSet_singleton k)
   have hgeq : (fun ω ↦ g (A (n + 1) ω)) = armIndicator A k (n + 1) := by

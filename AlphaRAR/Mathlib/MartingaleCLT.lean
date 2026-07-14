@@ -270,9 +270,9 @@ lemma norm_condExp_expI_sub_le [IsProbabilityMeasure P] (hm : m ≤ m0)
   set g : Ω → ℂ := fun ω' ↦ Complex.exp (((t * Δ ω' : ℝ) : ℂ) * I) with hg_def
   set lin : Ω → ℂ := fun ω' ↦ ((t * Δ ω' : ℝ) : ℂ) * I with hlin_def
   set quad : Ω → ℂ := fun ω' ↦ (((t * Δ ω' : ℝ) : ℂ)) ^ 2 / 2 with hquad_def
-  set R : Ω → ℂ := fun ω' ↦ g ω' - 1 - lin ω' + quad ω' with hR_def
-  set v : Ω → ℝ := P[fun ω' ↦ (Δ ω') ^ 2 | m] with hv_def
-  set φ : Ω → ℝ := fun ω' ↦ min (2 * t ^ 2 * (Δ ω') ^ 2) (|t| ^ 3 * |Δ ω'| ^ 3) with hφ_def
+  let R : Ω → ℂ := fun ω' ↦ g ω' - 1 - lin ω' + quad ω'
+  let v : Ω → ℝ := P[fun ω' ↦ (Δ ω') ^ 2 | m]
+  let φ : Ω → ℝ := fun ω' ↦ min (2 * t ^ 2 * (Δ ω') ^ 2) (|t| ^ 3 * |Δ ω'| ^ 3)
   -- helper: condExp commutes with the coercion ℝ → ℂ
   have hofReal : ∀ (f : Ω → ℝ), Integrable f P →
       (P[fun ω ↦ ((f ω : ℝ) : ℂ) | m]) =ᵐ[P] fun ω ↦ ((P[f | m] ω : ℝ) : ℂ) :=
@@ -455,7 +455,7 @@ lemma tendsto_integral_norm_of_tendstoInMeasure_zero [IsProbabilityMeasure P] {E
     (hmeas : ∀ n, StronglyMeasurable (g n)) (hbdd : ∀ n, ∀ᵐ ω ∂P, ‖g n ω‖ ≤ C)
     (hconv : TendstoInMeasure P g atTop 0) :
     Tendsto (fun n ↦ ∫ ω, ‖g n ω‖ ∂P) atTop (𝓝 0) := by
-  set C' : ℝ := max C 0 with hC'def
+  let C' : ℝ := max C 0
   have hC'0 : 0 ≤ C' := le_max_right _ _
   have hbdd' : ∀ n, ∀ᵐ ω ∂P, ‖g n ω‖ ≤ C' :=
     fun n ↦ (hbdd n).mono fun ω hω ↦ le_trans hω (le_max_left _ _)
@@ -521,7 +521,7 @@ lemma tendstoInMeasure_bdd_mul {f h : ℕ → Ω → ℂ} {C : ℝ}
   rw [tendstoInMeasure_iff_dist]
   rw [tendstoInMeasure_iff_dist] at hh
   intro ε hε
-  set C' := max C 1 with hC'
+  let C' := max C 1
   have hC'0 : 0 < C' := lt_of_lt_of_le one_pos (le_max_right _ _)
   have hsub : ∀ n, {ω | ε ≤ dist (f n ω * h n ω) 0} ≤ᵐ[P] {ω | ε / C' ≤ dist (h n ω) 0} := by
     intro n
@@ -948,7 +948,7 @@ lemma norm_condExp_Zproc_increment_le [IsProbabilityMeasure P] (t : ℝ) (n j : 
     norm_condExp_expI_sub_le ((A.𝓕 n).le j) (A.memLp n j) (A.mgdiff n j) t,
     A.condVar_nonneg n j] with ω hinc hchar hnn
   simp only [Pi.zero_apply] at hnn
-  set w : ℂ := (P[fun ω ↦ Complex.exp (((t * A.d n j ω : ℝ) : ℂ) * I) | A.𝓕 n j]) ω with hw_def
+  let w : ℂ := (P[fun ω ↦ Complex.exp (((t * A.d n j ω : ℝ) : ℂ) * I) | A.𝓕 n j]) ω
   have hw : ‖w - (1 - ((t ^ 2 / 2 * A.condVar n j ω : ℝ) : ℂ))‖
       ≤ (P[fun ω ↦ min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3)
         | A.𝓕 n j]) ω := hchar
@@ -1349,13 +1349,13 @@ lemma clt_Z_expectation [IsProbabilityMeasure P] (t : ℝ) {B : ℝ} (hB0 : 0 �
   intro η hη
   obtain ⟨ε, hε, hGη⟩ : ∃ ε, 0 < ε ∧
       Real.exp (t ^ 2 / 2 * B) * B * (t ^ 4 / 4 * ε ^ 2 + |t| ^ 3 * ε) < η := by
-    set EB := Real.exp (t ^ 2 / 2 * B) * B with hEBdef
+    let EB := Real.exp (t ^ 2 / 2 * B) * B
     have hEB0 : 0 ≤ EB := mul_nonneg (Real.exp_pos _).le hB0
     set M := EB * (t ^ 4 / 4 + |t| ^ 3) with hMdef
     have hM0 : 0 ≤ M := mul_nonneg hEB0 (by positivity)
     have hden : 0 < M + 1 := by positivity
     refine ⟨min 1 (η / (M + 1)), lt_min one_pos (by positivity), ?_⟩
-    set ε := min 1 (η / (M + 1)) with hεdef
+    let ε := min 1 (η / (M + 1))
     have hε1 : ε ≤ 1 := min_le_left _ _
     have hε2 : ε ≤ η / (M + 1) := min_le_right _ _
     have hεpos : 0 < ε := lt_min one_pos (by positivity)
@@ -1410,7 +1410,7 @@ lemma clt_charFun_bounded [IsProbabilityMeasure P] (t : ℝ) {B σ2 : ℝ} (hB0 
       (𝓝 (Complex.exp ((-(t ^ 2 / 2 * σ2) : ℝ) : ℂ))) := by
   rcases eq_or_ne t 0 with rfl | ht0
   · simp
-  set c : ℂ := Complex.exp ((-(t ^ 2 / 2 * σ2) : ℝ) : ℂ) with hc
+  let c : ℂ := Complex.exp ((-(t ^ 2 / 2 * σ2) : ℝ) : ℂ)
   -- bounds and measurability of the `Z`-process at the last step
   have hZbdd : ∀ n, ∀ᵐ ω ∂P, ‖A.Zproc t n (A.k n) ω‖ ≤ Real.exp (t ^ 2 / 2 * B) := fun n ↦ by
     filter_upwards [A.partialVar_le_of_predVar_le (hB n) (le_refl (A.k n))] with ω hω

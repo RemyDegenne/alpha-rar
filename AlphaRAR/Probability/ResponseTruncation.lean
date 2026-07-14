@@ -82,11 +82,11 @@ lemma condExp_genRespMart_increment (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) 
     P[fun ω ↦ Set.indicator {ω | A i ω = k} (fun _ ↦ (1 : ℝ)) ω * (g (Y i ω) - (ν k)[g])
         | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]
       =ᵐ[P] 0 := by
-  set hA := h.measurable_action with hA_def
-  set hY := h.measurable_feedback with hY_def
-  set G := IsAlgEnvSeq.filtrationAction hA hY i with hG_def
+  let hA := h.measurable_action
+  let hY := h.measurable_feedback
+  let G := IsAlgEnvSeq.filtrationAction hA hY i
   set c : Ω → ℝ := Set.indicator {ω | A i ω = k} (fun _ ↦ (1 : ℝ)) with hc_def
-  set gg : Ω → ℝ := fun ω ↦ g (Y i ω) - (ν k)[g] with hgg_def
+  let gg : Ω → ℝ := fun ω ↦ g (Y i ω) - (ν k)[g]
   have hGle : G ≤ mΩ := (IsAlgEnvSeq.filtrationAction hA hY).le i
   have hAG : Measurable[G] (A i) :=
     IsAlgEnvSeq.measurable_action_filtrationAction' hA hY i
@@ -190,9 +190,9 @@ lemma condExp_genRespMart_increment_sq (h : IsAlgEnvSeq A Y alg (stationaryEnv �
     P[fun ω ↦ (Set.indicator {ω | A i ω = k} (fun _ ↦ (1 : ℝ)) ω * (g (Y i ω) - (ν k)[g])) ^ 2
         | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]
       =ᵐ[P] fun ω ↦ Set.indicator {ω | A i ω = k} (fun _ ↦ (1 : ℝ)) ω * variance g (ν k) := by
-  set hA := h.measurable_action with hA_def
-  set hY := h.measurable_feedback with hY_def
-  set G := IsAlgEnvSeq.filtrationAction hA hY i with hG_def
+  let hA := h.measurable_action
+  let hY := h.measurable_feedback
+  let G := IsAlgEnvSeq.filtrationAction hA hY i
   set c : Ω → ℝ := Set.indicator {ω | A i ω = k} (fun _ ↦ (1 : ℝ)) with hc_def
   set gg : Ω → ℝ := fun ω ↦ (g (Y i ω) - (ν k)[g]) ^ 2 with hgg_def
   have hcG : StronglyMeasurable[G] c :=
@@ -359,7 +359,7 @@ absolute value (`|truncation ξ A| ≤ |ξ|`), so the second moment drops, and v
 second moment. Gives the upper bound `⟨M̃⟩ ≤ V_k N` needed for the LIL block argument. -/
 lemma truncVar_le_armVar (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) (i : ℕ) :
     truncVar ν k i ≤ armVar ν k := by
-  haveI : IsProbabilityMeasure (ν k) := inferInstance
+  have : IsProbabilityMeasure (ν k) := inferInstance
   have hgSM : StronglyMeasurable (truncation (fun y ↦ y - (ν k)[id]) (√i)) :=
     stronglyMeasurable_truncation_sub_const _ _
   have hgmem : MemLp (truncation (fun y ↦ y - (ν k)[id]) (√i)) 2 (ν k) :=
@@ -477,7 +477,7 @@ by `√i` pointwise (`abs_truncation_le_bound`) and `ν k` is a probability meas
 too. Unlike the sharper `abs_truncMean_le` (`V_k/√i`, used for the drift), this uniform bound is
 what controls the martingale increments in the block LIL. -/
 lemma abs_truncMean_le_sqrt (k : 𝓐) (i : ℕ) : |truncMean ν k i| ≤ √i := by
-  haveI : IsProbabilityMeasure (ν k) := inferInstance
+  have : IsProbabilityMeasure (ν k) := inferInstance
   have hbound : ∀ x : ℝ, |truncation (fun y ↦ y - (ν k)[id]) (√i) x| ≤ √i :=
     fun x ↦ (abs_truncation_le_bound _ _ _).trans (le_of_eq (abs_of_nonneg (sqrt_nonneg _)))
   have hgint : Integrable (truncation (fun y ↦ y - (ν k)[id]) (√i)) (ν k) :=
@@ -733,8 +733,8 @@ step `n` *and* its response lands in the tail `√n ≤ |Y n - θ_k|` is at most
 lemma measure_action_and_tail_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
     P {ω | A n ω = k ∧ √n ≤ |Y n ω - (ν k)[id]|}
       ≤ (ν k) {x | √n ≤ |x - (ν k)[id]|} := by
-  set θ := (ν k)[id] with hθ_def
-  set S : Set ℝ := {x | √n ≤ |x - θ|} with hS_def
+  let θ := (ν k)[id]
+  let S : Set ℝ := {x | √n ≤ |x - θ|}
   have hSmeas : MeasurableSet S := measurableSet_le measurable_const (by fun_prop)
   set g : ℝ → ℝ := S.indicator (fun _ ↦ 1) with hg_def
   have hgSM : StronglyMeasurable g := stronglyMeasurable_const.indicator hSmeas
@@ -769,7 +769,7 @@ lemma measure_action_and_tail_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
           (show ω ∉ {ω | A n ω = k ∧ √n ≤ |Y n ω - θ|} from fun hb ↦ hak hb.1), zero_mul]
   have hcint : Integrable (fun ω ↦ c ω * g (Y n ω)) P := by
     rw [hcg_eq]; exact (integrable_const (1 : ℝ)).indicator hbadmeas
-  set G := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback n with hG_def
+  let G := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback n
   have hGle : G ≤ mΩ :=
     (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback).le n
   have hcG : StronglyMeasurable[G] c :=

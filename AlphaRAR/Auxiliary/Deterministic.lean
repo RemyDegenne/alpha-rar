@@ -221,7 +221,7 @@ lemma generic_ineq_of_hitting (P : ℕ → Prop) [DecidablePred P]
     count X n - (n : ℝ) * ρ n
       ≤ 1 + (count X (hitting P n) - (hitting P n : ℝ) * ρ (hitting P n))
         + (auxU X p ρ α n - auxU X p ρ α (hitting P n)) := by
-  set ℓ := hitting P n with hℓ_def
+  let ℓ := hitting P n
   have htel := auxU_telescope X p ρ α n ℓ (Nat.findGreatest_le n)
   -- Each summand `p m - α ρ m` is `≤ 1` at the boundary index `m = ℓ`, `≤ 0` after.
   have hbound : ∑ m ∈ Finset.Ico ℓ n, (p m - α * ρ m) ≤ 1 := by

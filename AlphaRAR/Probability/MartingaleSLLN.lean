@@ -136,7 +136,7 @@ lemma martingale_div_atTop_ae_tendsto_zero_of_bdd [IsProbabilityMeasure μ]
     (hb : ∀ k, ∀ᵐ ω ∂μ, |M (k + 1) ω - M k ω| ≤ c) :
     ∀ᵐ ω ∂μ, Tendsto (fun n ↦ M n ω / n) atTop (𝓝 0) := by
   classical
-  haveI : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 :=
+  have : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 :=
     ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
   set S : ℕ → Ω → ℝ := fun n ω ↦ ∑ k ∈ range n, (M (k + 1) ω - M k ω) / ((k : ℝ) + 1) with hSdef
   have hSmart : Martingale S ℱ μ := martingale_weightedSeries hM
@@ -224,7 +224,7 @@ martingale difference: the weight `1/(1+⟨M⟩_{n+1})` is `ℱ_n`-measurable, s
 lemma martingale_bracketSeries [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM2 : ∀ n, MemLp (M n) 2 μ) :
     Martingale (bracketSeries M ℱ μ) ℱ μ := by
-  haveI : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
+  have : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
   have hint : ∀ n, Integrable (M n) μ := hM.integrable
   have hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ := fun n ↦
     ((hM2 (n + 1)).sub (hM2 n)).integrable_sq
@@ -300,7 +300,7 @@ lemma bracketSeries_succ_sub (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) 
 lemma memLp_bracketSeries_term [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM2 : ∀ n, MemLp (M n) 2 μ) (k : ℕ) :
     MemLp (fun ω ↦ (M (k + 1) ω - M k ω) / (1 + predQuadVar M ℱ μ (k + 1) ω)) 2 μ := by
-  haveI : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
+  have : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
   have hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ := fun n ↦
     ((hM2 (n + 1)).sub (hM2 n)).integrable_sq
   have hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ := fun n ↦
@@ -330,7 +330,7 @@ lemma memLp_bracketSeries [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
 lemma predQuadVar_bracketSeries_le_one [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM2 : ∀ n, MemLp (M n) 2 μ) (n : ℕ) :
     predQuadVar (bracketSeries M ℱ μ) ℱ μ n ≤ᵐ[μ] 1 := by
-  haveI : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
+  have : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
   have hTmart : Martingale (bracketSeries M ℱ μ) ℱ μ := martingale_bracketSeries hM hM2
   have hd2 : ∀ k, Integrable (fun ω ↦ (M (k + 1) ω - M k ω) ^ 2) μ := fun k ↦
     ((hM2 (k + 1)).sub (hM2 k)).integrable_sq
