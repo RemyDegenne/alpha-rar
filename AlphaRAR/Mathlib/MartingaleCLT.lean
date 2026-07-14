@@ -450,7 +450,7 @@ variable {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω}
 
 /-- **Bounded convergence in probability, `L¹` form.** On a probability space, if `g n → 0` in
 measure and `‖g n‖ ≤ C` a.e. uniformly in `n`, then `∫ ‖g n‖ → 0`. -/
-theorem tendsto_integral_norm_of_tendstoInMeasure_zero [IsProbabilityMeasure P] {E : Type*}
+lemma tendsto_integral_norm_of_tendstoInMeasure_zero [IsProbabilityMeasure P] {E : Type*}
     [NormedAddCommGroup E] {g : ℕ → Ω → E} {C : ℝ}
     (hmeas : ∀ n, StronglyMeasurable (g n)) (hbdd : ∀ n, ∀ᵐ ω ∂P, ‖g n ω‖ ≤ C)
     (hconv : TendstoInMeasure P g atTop 0) :
@@ -505,7 +505,7 @@ theorem tendsto_integral_norm_of_tendstoInMeasure_zero [IsProbabilityMeasure P] 
 /-- **Bounded convergence in probability.** On a probability space, if `g n → 0` in measure and
 `‖g n‖ ≤ C` a.e. uniformly in `n`, then `∫ g n → 0`. This is the quantitative core of the
 bounded-convergence steps of the martingale CLT (`V_n →ᵖ σ²` and `L_n(ε) →ᵖ 0`). -/
-theorem tendsto_integral_of_tendstoInMeasure_zero [IsProbabilityMeasure P] {E : Type*}
+lemma tendsto_integral_of_tendstoInMeasure_zero [IsProbabilityMeasure P] {E : Type*}
     [NormedAddCommGroup E] [NormedSpace ℝ E] {g : ℕ → Ω → E} {C : ℝ}
     (hmeas : ∀ n, StronglyMeasurable (g n)) (hbdd : ∀ n, ∀ᵐ ω ∂P, ‖g n ω‖ ≤ C)
     (hconv : TendstoInMeasure P g atTop 0) :
@@ -515,7 +515,7 @@ theorem tendsto_integral_of_tendstoInMeasure_zero [IsProbabilityMeasure P] {E : 
 
 /-- **Bounded × (→ 0 in measure) = → 0 in measure.** If `‖f n‖ ≤ C` a.e. and `h n → 0` in
 measure, then `f n · h n → 0` in measure. -/
-theorem tendstoInMeasure_bdd_mul {f h : ℕ → Ω → ℂ} {C : ℝ}
+lemma tendstoInMeasure_bdd_mul {f h : ℕ → Ω → ℂ} {C : ℝ}
     (hf : ∀ n, ∀ᵐ ω ∂P, ‖f n ω‖ ≤ C) (hh : TendstoInMeasure P h atTop 0) :
     TendstoInMeasure P (fun n ω => f n ω * h n ω) atTop 0 := by
   rw [tendstoInMeasure_iff_dist]
@@ -540,7 +540,7 @@ theorem tendstoInMeasure_bdd_mul {f h : ℕ → Ω → ℂ} {C : ℝ}
 
 /-- **Domination for convergence in measure.** If `0 ≤ g n ≤ h n` a.e. and `h n → 0` in measure,
 then `g n → 0` in measure. -/
-theorem tendstoInMeasure_zero_of_le {g h : ℕ → Ω → ℝ}
+lemma tendstoInMeasure_zero_of_le {g h : ℕ → Ω → ℝ}
     (hg0 : ∀ n, (0 : Ω → ℝ) ≤ᵐ[P] g n) (hgh : ∀ n, g n ≤ᵐ[P] h n)
     (hh : TendstoInMeasure P h atTop 0) : TendstoInMeasure P g atTop 0 := by
   rw [tendstoInMeasure_iff_dist]
@@ -562,7 +562,7 @@ theorem tendstoInMeasure_zero_of_le {g h : ℕ → Ω → ℝ}
 `∫ Z²·𝟙{|Z|>c} → 0` as `c → ∞`. This is the analytic heart of the i.i.d. Lindeberg condition:
 each cell's conditional Lindeberg quantity is (a proportion times) `E[(ξ-θ)²𝟙{|ξ-θ|>c_n}]` with
 `c_n → ∞`. -/
-theorem tendsto_integral_sq_indicator_gt {Z : Ω → ℝ} (hZ : Measurable Z)
+lemma tendsto_integral_sq_indicator_gt {Z : Ω → ℝ} (hZ : Measurable Z)
     (hZ2 : Integrable (fun ω => (Z ω) ^ 2) P) :
     Tendsto (fun c : ℝ => ∫ ω, {ω | c < |Z ω|}.indicator (fun ω => (Z ω) ^ 2) ω ∂P)
       atTop (𝓝 0) := by
@@ -1331,7 +1331,7 @@ conditional Lindeberg condition (`L_n(ε) → 0` in probability for every `ε > 
 `∫ Z_{n,k_n} → 1`. Combines the integral bound `norm_integral_Zproc_sub_one_le` with the two
 variance/remainder integral bounds and bounded convergence in probability; the final double limit
 sends `n → ∞` (so `∫ L_n(ε) → 0`) then `ε → 0`. -/
-theorem clt_Z_expectation [IsProbabilityMeasure P] (t : ℝ) {B : ℝ} (hB0 : 0 ≤ B)
+lemma clt_Z_expectation [IsProbabilityMeasure P] (t : ℝ) {B : ℝ} (hB0 : 0 ≤ B)
     (hB : ∀ n, A.predVar n ≤ᵐ[P] fun _ => B)
     (hLindeberg : ∀ ε, 0 < ε → TendstoInMeasure P (fun n => A.lindeberg n ε) atTop 0) :
     Tendsto (fun n => ∫ ω, A.Zproc t n (A.k n) ω ∂P) atTop (𝓝 1) := by
@@ -1402,7 +1402,7 @@ open Filter in
 /-- **Characteristic-function limit, bounded-variance form** (core of blueprint `lem:clt_product`).
 With `V_n ≤ B` a.e., `V_n → σ²` in probability and the conditional Lindeberg condition,
 `E[e^{itS_n}] = charFun → e^{-σ²t²/2}`. The general form follows by the variance truncation. -/
-theorem clt_charFun_bounded [IsProbabilityMeasure P] (t : ℝ) {B σ2 : ℝ} (hB0 : 0 ≤ B)
+lemma clt_charFun_bounded [IsProbabilityMeasure P] (t : ℝ) {B σ2 : ℝ} (hB0 : 0 ≤ B)
     (hσ2 : 0 ≤ σ2) (hB : ∀ n, A.predVar n ≤ᵐ[P] fun _ => B)
     (hV : TendstoInMeasure P (fun n => A.predVar n) atTop (fun _ => σ2))
     (hLindeberg : ∀ ε, 0 < ε → TendstoInMeasure P (fun n => A.lindeberg n ε) atTop 0) :
@@ -1471,7 +1471,7 @@ open Filter ProbabilityTheory MeasureTheory in
 under the truncation normalization `V_n ≤ B`). If `V_n ≤ B` a.e., `V_n → σ²` in probability and the
 conditional Lindeberg condition holds, then the laws of the row sums converge weakly to
 `𝒩(0, σ²)`. Combines `clt_charFun_bounded` with Mathlib's Lévy continuity theorem. -/
-theorem mart_clt_bounded [IsProbabilityMeasure P] {B σ2 : ℝ} (hB0 : 0 ≤ B) (hσ2 : 0 ≤ σ2)
+lemma mart_clt_bounded [IsProbabilityMeasure P] {B σ2 : ℝ} (hB0 : 0 ≤ B) (hσ2 : 0 ≤ σ2)
     (hB : ∀ n, A.predVar n ≤ᵐ[P] fun _ => B)
     (hV : TendstoInMeasure P (fun n => A.predVar n) atTop (fun _ => σ2))
     (hLindeberg : ∀ ε, 0 < ε → TendstoInMeasure P (fun n => A.lindeberg n ε) atTop 0) :
@@ -1640,7 +1640,7 @@ open Filter in
 /-- **Characteristic-function limit** (blueprint `lem:clt_product`). Under `V_n → σ²` in probability
 and the conditional Lindeberg condition, `E[e^{itS_n}] → e^{-σ²t²/2}`. The predictable variation is
 truncated at level `B = σ² + 1` to reduce to the bounded case `clt_charFun_bounded`. -/
-theorem clt_charFun [IsProbabilityMeasure P] (t : ℝ) {σ2 : ℝ} (hσ2 : 0 ≤ σ2)
+lemma clt_charFun [IsProbabilityMeasure P] (t : ℝ) {σ2 : ℝ} (hσ2 : 0 ≤ σ2)
     (hV : TendstoInMeasure P (fun n => A.predVar n) atTop (fun _ => σ2))
     (hLindeberg : ∀ ε, 0 < ε → TendstoInMeasure P (fun n => A.lindeberg n ε) atTop 0) :
     Tendsto (fun n => ∫ ω, Complex.exp (((t * A.rowSum n ω : ℝ) : ℂ) * I) ∂P) atTop
@@ -1769,7 +1769,7 @@ and `Y n → 1` in probability, then so do the laws of `X n · Y n`. This is wha
 `M_n/√(random) = (M_n/√(deterministic)) · √(deterministic/random)`, and the second factor tends to
 `1` in probability by the strong law, so the deterministic-normalizer CLT (`thm:mart_clt`) plus
 this Slutsky step give the self-normalized limit. -/
-theorem tendsto_map_mul_of_tendstoInMeasure_one [IsProbabilityMeasure P] {σ2 : NNReal}
+lemma tendsto_map_mul_of_tendstoInMeasure_one [IsProbabilityMeasure P] {σ2 : NNReal}
     {X Y : ℕ → Ω → ℝ} (hX_meas : ∀ n, AEMeasurable (X n) P) (hY_meas : ∀ n, AEMeasurable (Y n) P)
     (hX : Tendsto (β := ProbabilityMeasure ℝ)
         (fun n => ⟨P.map (X n), Measure.isProbabilityMeasure_map (hX_meas n)⟩) atTop
@@ -1795,7 +1795,7 @@ measure `μ'` on `E`, `Rn : ℕ → Ω → E'` converges in probability to a con
 `μ'.map (fun x ↦ g (x, c))`. This is the vector generalisation of
 `tendsto_map_mul_of_tendstoInMeasure_one`, used to pass from a deterministic-normalizer joint CLT
 to the self-normalized one. -/
-theorem tendsto_map_comp_of_tendstoInMeasure_const [IsProbabilityMeasure P]
+lemma tendsto_map_comp_of_tendstoInMeasure_const [IsProbabilityMeasure P]
     {E E' F : Type*}
     [NormedAddCommGroup E] [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E]
     [SeminormedAddCommGroup E'] [MeasurableSpace E'] [BorelSpace E'] [SecondCountableTopology E']

@@ -34,7 +34,7 @@ If `S` is a martingale with `eLpNorm (S n) 2 μ ≤ C` for all `n`, then `S n` c
 (finite) limit. This is the `L²`- (hence `L¹`-) bounded martingale convergence theorem: on a
 probability space `‖·‖₁ ≤ ‖·‖₂`, so the uniform `L²` bound gives a uniform `L¹` bound, and Mathlib's
 `Submartingale.exists_ae_tendsto_of_bdd` applies. -/
-theorem martingale_ae_tendsto_of_eLpNorm_two_le [IsProbabilityMeasure μ]
+lemma martingale_ae_tendsto_of_eLpNorm_two_le [IsProbabilityMeasure μ]
     (hS : Martingale S ℱ μ) {C : ℝ≥0} (hbdd : ∀ n, eLpNorm (S n) 2 μ ≤ C) :
     ∀ᵐ ω ∂μ, ∃ c, Tendsto (fun n ↦ S n ω) atTop (𝓝 c) :=
   hS.submartingale.exists_ae_tendsto_of_bdd (R := C) fun n ↦
@@ -44,7 +44,7 @@ theorem martingale_ae_tendsto_of_eLpNorm_two_le [IsProbabilityMeasure μ]
 /-- Integral form of `lem:slln_l2_conv`: a martingale `S` with square-integrable values and
 `∫ (S n)² ∂μ ≤ C` for all `n` converges a.e. to a finite limit. The uniform second-moment bound
 gives `eLpNorm (S n) 2 μ ≤ √C`, so `martingale_ae_tendsto_of_eLpNorm_two_le` applies. -/
-theorem martingale_ae_tendsto_of_integral_sq_le [IsProbabilityMeasure μ]
+lemma martingale_ae_tendsto_of_integral_sq_le [IsProbabilityMeasure μ]
     (hS : Martingale S ℱ μ) (hS2 : ∀ n, Integrable (fun ω ↦ (S n ω) ^ 2) μ)
     {C : ℝ} (hbdd : ∀ n, ∫ ω, (S n ω) ^ 2 ∂μ ≤ C) :
     ∀ᵐ ω ∂μ, ∃ c, Tendsto (fun n ↦ S n ω) atTop (𝓝 c) := by
@@ -63,7 +63,7 @@ theorem martingale_ae_tendsto_of_integral_sq_le [IsProbabilityMeasure μ]
 /-- The **weighted increment series** `S n = ∑_{k<n} (M (k+1) − M k)/(k+1)` of a martingale `M` is
 itself a martingale (part of blueprint `lem:slln_weighted`). Each increment `ΔS_n = ΔM_n/(n+1)` is
 a scaled martingale difference, so `𝔼[ΔS_n ∣ ℱ_n] = (n+1)⁻¹ 𝔼[ΔM_n ∣ ℱ_n] = 0`. -/
-theorem martingale_weightedSeries [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) :
+lemma martingale_weightedSeries [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) :
     Martingale (fun n ω ↦ ∑ k ∈ range n, (M (k + 1) ω - M k ω) / ((k : ℝ) + 1)) ℱ μ := by
   have hint : ∀ n, Integrable (M n) μ := hM.integrable
   have hadapt : ∀ n, StronglyMeasurable[ℱ n]
@@ -130,7 +130,7 @@ The bounded increments make everything square-integrable, and give the orthogona
 on the weighted increment series `S`, via the discrete Itô isometry
 (`integral_sq_eq_integral_predQuadVar`) and the telescoping of its predictable quadratic variation
 (`integral_predQuadVar_succ_sub`). `martingale_div_atTop_ae_tendsto_zero` then applies. -/
-theorem martingale_div_atTop_ae_tendsto_zero_of_bdd [IsProbabilityMeasure μ]
+lemma martingale_div_atTop_ae_tendsto_zero_of_bdd [IsProbabilityMeasure μ]
     (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) {c : ℝ}
     (hb : ∀ k, ∀ᵐ ω ∂μ, |M (k + 1) ω - M k ω| ≤ c) :
     ∀ᵐ ω ∂μ, Tendsto (fun n ↦ M n ω / n) atTop (𝓝 0) := by
@@ -220,7 +220,7 @@ noncomputable def bracketSeries (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m
 `lem:slln_bracket_weighted`). Each increment `ΔT_n = ΔM_n/(1+⟨M⟩_{n+1})` is a predictably-weighted
 martingale difference: the weight `1/(1+⟨M⟩_{n+1})` is `ℱ_n`-measurable, so
 `𝔼[ΔT_n ∣ ℱ_n] = (1+⟨M⟩_{n+1})⁻¹ 𝔼[ΔM_n ∣ ℱ_n] = 0`. -/
-theorem martingale_bracketSeries [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma martingale_bracketSeries [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM2 : ∀ n, MemLp (M n) 2 μ) :
     Martingale (bracketSeries M ℱ μ) ℱ μ := by
   haveI : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
@@ -288,7 +288,7 @@ theorem martingale_bracketSeries [IsProbabilityMeasure μ] (hM : Martingale M �
   rw [ha, Pi.add_apply, congrFun hself ω, h2, Pi.zero_apply, add_zero]
 
 /-- Increment of the bracket series: `T (k+1) − T k = (M (k+1) − M k)/(1 + ⟨M⟩_{k+1})`. -/
-theorem bracketSeries_succ_sub (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω)
+lemma bracketSeries_succ_sub (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω)
     (k : ℕ) (ω : Ω) :
     bracketSeries M ℱ μ (k + 1) ω - bracketSeries M ℱ μ k ω
       = (M (k + 1) ω - M k ω) / (1 + predQuadVar M ℱ μ (k + 1) ω) := by
@@ -296,7 +296,7 @@ theorem bracketSeries_succ_sub (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0
 
 /-- Each bracket-series increment `(M(k+1) − M k)/(1+⟨M⟩_{k+1})` is in `L²`, being dominated by
 `|M(k+1) − M k| ∈ L²` (the weight is in `(0,1]`). -/
-theorem memLp_bracketSeries_term [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma memLp_bracketSeries_term [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM2 : ∀ n, MemLp (M n) 2 μ) (k : ℕ) :
     MemLp (fun ω ↦ (M (k + 1) ω - M k ω) / (1 + predQuadVar M ℱ μ (k + 1) ω)) 2 μ := by
   haveI : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
@@ -318,7 +318,7 @@ theorem memLp_bracketSeries_term [IsProbabilityMeasure μ] (hM : Martingale M �
   nlinarith [abs_nonneg (M (k + 1) ω - M k ω), hqv]
 
 /-- The bracket series `T n` is in `L²`, being a finite sum of `L²` increments. -/
-theorem memLp_bracketSeries [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma memLp_bracketSeries [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM2 : ∀ n, MemLp (M n) 2 μ) (n : ℕ) : MemLp (bracketSeries M ℱ μ n) 2 μ :=
   memLp_finsetSum _ fun k _ ↦ memLp_bracketSeries_term hM hM2 k
 
@@ -326,7 +326,7 @@ theorem memLp_bracketSeries [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
 `lem:slln_bracket_weighted`). Each increment of `⟨T⟩` is `𝔼[(ΔT_k)² ∣ ℱ_k] = w_k²·Δ⟨M⟩_k`
 (with `w_k = 1/(1+⟨M⟩_{k+1})`), bounded by the telescoping quantity
 `1/(1+⟨M⟩_k) − 1/(1+⟨M⟩_{k+1})`; summing gives `⟨T⟩_n ≤ 1/(1+⟨M⟩_0) − 1/(1+⟨M⟩_n) ≤ 1`. -/
-theorem predQuadVar_bracketSeries_le_one [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma predQuadVar_bracketSeries_le_one [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM2 : ∀ n, MemLp (M n) 2 μ) (n : ℕ) :
     predQuadVar (bracketSeries M ℱ μ) ℱ μ n ≤ᵐ[μ] 1 := by
   haveI : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩

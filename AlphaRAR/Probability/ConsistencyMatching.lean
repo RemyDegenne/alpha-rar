@@ -76,7 +76,7 @@ from `rho_converges`), the vanishing normalized martingale (`hM`, from
 `assignMG_path_div_ae_tendsto_zero`), and the two generic conditions (`hgen`, `hgs`, discharged
 separately for the specific design) all a.s., the positive gap `(N_{n,k}/n - ρ̂_{n,k})⁺ → 0`
 a.s. Each is `filter_upwards` + the pathwise `pos_part_vanishes`. -/
-theorem pos_part_vanishes_ae {Xp pp ρp : ℕ → Ω → ℝ} {α C : ℝ} {ℓ : Ω → ℕ → ℕ} {u : Ω → ℝ}
+lemma pos_part_vanishes_ae {Xp pp ρp : ℕ → Ω → ℝ} {α C : ℝ} {ℓ : Ω → ℕ → ℕ} {u : Ω → ℝ}
     (hℓle : ∀ᵐ ω ∂μ, ∀ n, ℓ ω n ≤ n) (hα : α ∈ Set.Icc (0 : ℝ) 1)
     (hu : ∀ᵐ ω ∂μ, u ω ∈ Set.Icc (0 : ℝ) 1)
     (hρ : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ ρp n ω) atTop (𝓝 (u ω)))
@@ -105,7 +105,7 @@ core. The proportion process is `count (fun i ↦ Y i ω k)` (`= N_{n,k}(ω)`), 
 variable {ι : Type*}
 
 /-- **Negative part vanishes a.s.** (blueprint `lem:neg_part_vanishes`, a.s. form). -/
-theorem neg_part_vanishes_ae [Fintype ι] {Y r : ℕ → Ω → ι → ℝ}
+lemma neg_part_vanishes_ae [Fintype ι] {Y r : ℕ → Ω → ι → ℝ}
     (hY : ∀ᵐ ω ∂μ, ∀ j, ∑ k, Y j ω k = 1) (hr : ∀ᵐ ω ∂μ, ∀ n, ∑ k, r n ω k = 1)
     (hpos : ∀ᵐ ω ∂μ, ∀ j : ι,
       Tendsto (fun n ↦ max (count (fun i ↦ Y i ω j) n / (n : ℝ) - r n ω j) 0) atTop (𝓝 0))
@@ -117,7 +117,7 @@ theorem neg_part_vanishes_ae [Fintype ι] {Y r : ℕ → Ω → ι → ℝ}
 
 /-- **Proportions match the plug-in target a.s.** (blueprint `lem:match`, a.s. form).
 Given the vanishing gaps and `ρ̂_{n,k} → u_k`, the proportion `N_{n,k}/n → u_k` a.s. -/
-theorem match_proportion_ae {Y r : ℕ → Ω → ι → ℝ} {u : Ω → ℝ} (k : ι)
+lemma match_proportion_ae {Y r : ℕ → Ω → ι → ℝ} {u : Ω → ℝ} (k : ι)
     (hpos : ∀ᵐ ω ∂μ,
       Tendsto (fun n ↦ max (count (fun i ↦ Y i ω k) n / (n : ℝ) - r n ω k) 0) atTop (𝓝 0))
     (hneg : ∀ᵐ ω ∂μ,
@@ -129,7 +129,7 @@ theorem match_proportion_ae {Y r : ℕ → Ω → ι → ℝ} {u : Ω → ℝ} (
 
 /-- **All arms sampled infinitely often a.s.** (blueprint `lem:all_arms_infinite`, a.s. form).
 If the proportion converges to a positive (random) limit, the count diverges a.s. -/
-theorem all_arms_infinite_ae {Y : ℕ → Ω → ι → ℝ} {u : Ω → ℝ} (k : ι) (hu : ∀ᵐ ω ∂μ, 0 < u ω)
+lemma all_arms_infinite_ae {Y : ℕ → Ω → ι → ℝ} {u : Ω → ℝ} (k : ι) (hu : ∀ᵐ ω ∂μ, 0 < u ω)
     (hmatch : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ count (fun i ↦ Y i ω k) n / (n : ℝ)) atTop (𝓝 (u ω))) :
     ∀ᵐ ω ∂μ, Tendsto (fun n ↦ count (fun i ↦ Y i ω k) n) atTop atTop := by
   filter_upwards [hu, hmatch] with ω huω hmω
@@ -142,7 +142,7 @@ together with the simplex constraints (assignments and target both sum to `1`), 
 converge a.s. to the target: `N_{n,k}/n → u_k` for all arms `k` simultaneously. The per-arm
 negative gaps vanish by `neg_part_vanishes_ae`, and `match_proportion_ae` then closes each arm;
 `ae_all_iff` bundles the finitely many arms into a single a.s. event. -/
-theorem consistency_ae [Fintype ι] {Y r : ℕ → Ω → ι → ℝ} {u : Ω → ι → ℝ}
+lemma consistency_ae [Fintype ι] {Y r : ℕ → Ω → ι → ℝ} {u : Ω → ι → ℝ}
     (hY : ∀ᵐ ω ∂μ, ∀ j, ∑ k, Y j ω k = 1) (hr : ∀ᵐ ω ∂μ, ∀ n, ∑ k, r n ω k = 1)
     (hpos : ∀ k, ∀ᵐ ω ∂μ,
       Tendsto (fun n ↦ max (count (fun i ↦ Y i ω k) n / (n : ℝ) - r n ω k) 0) atTop (𝓝 0))

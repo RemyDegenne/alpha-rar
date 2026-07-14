@@ -359,7 +359,7 @@ with the current assignment. The increment `𝟙{A i = k}(Y i - (ν k)[id])` has
 expectation given `𝒢 i` because the response `Y i` is fresh given the current arm
 (`condExp_respMart_increment`); this is the filtration for which the paper's response martingale
 is a genuine martingale difference (the assignment is known, the response is not). -/
-theorem martingale_respMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma martingale_respMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) :
     Martingale (respMart ν A Y k)
       (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P := by
@@ -437,7 +437,7 @@ assignment count of arm `k`: `⟨Q k⟩_n = V_k N_{n,k}` a.e. The compensator in
 `V_k N` because the indicator is retained. The only hypothesis is Condition **A**: the responses
 are square-integrable (`hY2 : MemLp (Y n) 2 P`); the integrability of `Q`, its increments, and its
 increment products (feeding the discrete Doob decomposition) are all derived from it. -/
-theorem predQuadVar_respMart_eq [DecidableEq 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma predQuadVar_respMart_eq [DecidableEq 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (k : 𝓐) (hY2 : ∀ n, MemLp (Y n) 2 P) (n : ℕ) :
     predQuadVar (respMart ν A Y k)
         (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback)
@@ -500,7 +500,7 @@ theorem predQuadVar_respMart_eq [DecidableEq 𝓐] (h : IsAlgEnvSeq A Y alg (sta
 (`lem:qv_mart` for `Q`). Together with `predQuadVar_respMart_eq` (`⟨Q⟩ = V_k N`) this is the
 compensated response martingale. The only hypothesis is Condition **A** (`hY2 : MemLp (Y n) 2 P`),
 from which the square-integrability of `Q` is derived. -/
-theorem martingale_sq_sub_predQuadVar_respMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma martingale_sq_sub_predQuadVar_respMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (k : 𝓐) (hY2 : ∀ n, MemLp (Y n) 2 P) :
     Martingale
       (fun n ↦ (fun ω ↦ respMart ν A Y k n ω ^ 2)
@@ -516,7 +516,7 @@ theorem martingale_sq_sub_predQuadVar_respMart (h : IsAlgEnvSeq A Y alg (station
 (`integral_sq_eq_integral_predQuadVar`, `lem:qv_second_moment`) specialized to `Q`, using
 `⟨Q_k⟩ = V_k N` (`predQuadVar_respMart_eq`): `𝔼[Q²] = 𝔼[⟨Q⟩] = V_k 𝔼[N]`. The only hypothesis is
 Condition **A**. -/
-theorem integral_respMart_sq_eq [DecidableEq 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma integral_respMart_sq_eq [DecidableEq 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (k : 𝓐) (hY2 : ∀ n, MemLp (Y n) 2 P) (n : ℕ) :
     ∫ ω, respMart ν A Y k n ω ^ 2 ∂P = armVar ν k * ∫ ω, (pullCount A k n ω : ℝ) ∂P := by
   rw [integral_sq_eq_integral_predQuadVar (stronglyAdapted_respMart h k)
@@ -530,7 +530,7 @@ predictable compensator — the cross variation `⟨Q_k, Q_j⟩` — is `0`. The
 merely conditional: since each patient is assigned to exactly one arm, the increment indicators
 `𝟙{A = k}` and `𝟙{A = j}` are disjoint, so the product of increments `ΔQ_{·,k} · ΔQ_{·,j}` is
 *identically* `0`. -/
-theorem martingale_respMart_mul (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma martingale_respMart_mul (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) {k j : 𝓐} (hkj : k ≠ j) :
     Martingale (fun n ↦ respMart ν A Y k n * respMart ν A Y j n)
       (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback)
@@ -590,7 +590,7 @@ For each arm `k`, under Condition **A** (square-integrable responses, `hY2 : Mem
 variance: `∫ (ΔQ)² ≤ V_k`. Indeed the `𝒢`-conditional second moment is `𝟙{A n = k}·V_k`
 (`condExp_respMart_increment_sq`), so by the tower property `∫ (ΔQ)² = V_k · P{A n = k} ≤ V_k`.
 Then `isBigOpOne_martingale_div_sqrt` (`cor:mart_Op`) applies with `σ² = V_k`. -/
-theorem isBigOpOne_respMart_div_sqrt (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma isBigOpOne_respMart_div_sqrt (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (k : 𝓐) :
     IsBigOpOne P (fun n ω ↦ respMart ν A Y k n ω / Real.sqrt n) := by
   have hint : ∀ n, Integrable (Y n) P := fun n ↦ (hY2 n).integrable one_le_two

@@ -394,7 +394,7 @@ lemma measurable_respMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : �
 `AlphaRAR.MartDiffArray.mart_clt` applied to `respArray`, whose predictable variation tends to `1`
 (`tendstoInMeasure_predVar_respArray`) and which satisfies the conditional Lindeberg condition
 (`tendstoInMeasure_lindeberg_respArray`). -/
-theorem respMart_div_sqrt_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma respMart_div_sqrt_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (k : 𝓐) (vk : ℝ) (hvk : 0 < vk) (hVk : 0 < armVar ν k)
     (hνk : MemLp (fun x : ℝ ↦ x) 2 (ν k))
     (hNconv : ∀ᵐ ω ∂P,
@@ -418,7 +418,7 @@ standard Gaussian `𝒩(0,1)`. This follows from the deterministic-normalizer CL
 (`respMart_div_sqrt_tendsto_gaussianReal`) and Slutsky
 (`tendsto_map_mul_of_tendstoInMeasure_one`), since the ratio
 `√(V_k v_k n)/√(V_k N_{n,k}) = √(v_k n/N_{n,k}) → 1` in probability (from `N_{n,k}/n → v_k`). -/
-theorem respMart_selfNorm_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma respMart_selfNorm_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (k : 𝓐) (vk : ℝ) (hvk : 0 < vk) (hVk : 0 < armVar ν k)
     (hνk : MemLp (fun x : ℝ ↦ x) 2 (ν k))
     (hNconv : ∀ᵐ ω ∂P,

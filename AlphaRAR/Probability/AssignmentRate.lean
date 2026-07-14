@@ -29,7 +29,7 @@ variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
 /-- **The assignment martingale is `O_p(√n)`** (blueprint `lem:M_Op`).
 For a `[0,1]`-valued adapted integrable assignment indicator `X`, the assignment
 martingale `M` satisfies `M n / √n = O_p(1)`. -/
-theorem isBigOpOne_assignMart_div_sqrt [IsFiniteMeasure μ]
+lemma isBigOpOne_assignMart_div_sqrt [IsFiniteMeasure μ]
     (hX : StronglyAdapted ℱ X) (hX_int : ∀ n, Integrable (X n) μ)
     (h0X : ∀ n, 0 ≤ᵐ[μ] X n) (h1X : ∀ n, X n ≤ᵐ[μ] fun _ => (1 : ℝ)) :
     IsBigOpOne μ (fun n ω => assignMart X ℱ μ n ω / Real.sqrt n) := by
@@ -46,7 +46,7 @@ theorem isBigOpOne_assignMart_div_sqrt [IsFiniteMeasure μ]
 integrable assignment indicator `X` on a probability space, the assignment martingale `M` satisfies
 `M n / n → 0` almost everywhere. The increments are bounded by `1`, so the martingale strong law of
 large numbers `martingale_div_atTop_ae_tendsto_zero_of_bdd` applies. -/
-theorem assignMart_div_atTop_ae_tendsto_zero [IsProbabilityMeasure μ]
+lemma assignMart_div_atTop_ae_tendsto_zero [IsProbabilityMeasure μ]
     (hX : StronglyAdapted ℱ X) (hX_int : ∀ n, Integrable (X n) μ)
     (h0X : ∀ n, 0 ≤ᵐ[μ] X n) (h1X : ∀ n, X n ≤ᵐ[μ] fun _ => (1 : ℝ)) :
     ∀ᵐ ω ∂μ, Tendsto (fun n ↦ assignMart X ℱ μ n ω / n) atTop (𝓝 0) := by

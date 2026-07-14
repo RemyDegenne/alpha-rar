@@ -25,7 +25,7 @@ namespace AlphaRAR
 /-- **`I - s sᵀ` is an orthogonal projection** (blueprint `lem:projection`).
 For a unit vector `s` (`s ⬝ᵥ s = 1`), the matrix `1 - s sᵀ` is idempotent and
 symmetric. (The rank `K - 1` claim of the blueprint is not formalized here.) -/
-theorem isProjection_one_sub_vecMulVec {K : ℕ} (s : Fin K → ℝ) (hs : s ⬝ᵥ s = 1) :
+lemma isProjection_one_sub_vecMulVec {K : ℕ} (s : Fin K → ℝ) (hs : s ⬝ᵥ s = 1) :
     IsIdempotentElem (1 - vecMulVec s s) ∧ (1 - vecMulVec s s).IsSymm := by
   -- `(s sᵀ)(s sᵀ) = (sᵀ s) (s sᵀ) = s sᵀ`.
   have hmm : vecMulVec s s * vecMulVec s s = vecMulVec s s := by

@@ -41,7 +41,7 @@ of `limsup ε ≤ 0`),
 
 The blueprint states this with `a` non-decreasing, but the argument only needs
 `a n ≤ n`, so the monotonicity hypothesis is dropped here. -/
-theorem tendsto_posPart_sub_div {a : ℕ → ℕ} {X ε : ℕ → ℝ} {α v : ℝ}
+lemma tendsto_posPart_sub_div {a : ℕ → ℕ} {X ε : ℕ → ℝ} {α v : ℝ}
     (ha_le : ∀ n, a n ≤ n)
     (hα : α ∈ Set.Icc (0 : ℝ) 1) (hv : v ∈ Set.Icc (0 : ℝ) 1)
     (hX : Tendsto (fun n => X n / (n : ℝ)) atTop (𝓝 (-(α * v))))

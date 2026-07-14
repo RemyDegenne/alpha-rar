@@ -59,9 +59,9 @@ def _root_.MeasureTheory.Filtration.shiftDown (ℱ : Filtration ℕ m0) : Filtra
 /-- The assignment count process of a fixed arm, `N n = ∑_{i<n} X i` (0-indexed). -/
 def acount (X : ℕ → Ω → ℝ) (n : ℕ) : Ω → ℝ := ∑ i ∈ Finset.range n, X i
 
-@[simp] theorem acount_zero : acount X 0 = 0 := by simp [acount]
+@[simp] lemma acount_zero : acount X 0 = 0 := by simp [acount]
 
-theorem acount_succ (n : ℕ) : acount X (n + 1) = acount X n + X n := by
+lemma acount_succ (n : ℕ) : acount X (n + 1) = acount X n + X n := by
   simp [acount, Finset.sum_range_succ]
 
 /-- The assignment martingale, i.e. the martingale part of the count process `N` in its Doob
@@ -70,7 +70,7 @@ Its increments are `X n - μ[X n | ℱ (n-1)]`. -/
 noncomputable def assignMart (X : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) : ℕ → Ω → ℝ :=
   martingalePart (acount X) ℱ.shiftDown μ
 
-theorem stronglyAdapted_acount (hX : StronglyAdapted ℱ X) :
+lemma stronglyAdapted_acount (hX : StronglyAdapted ℱ X) :
     StronglyAdapted ℱ.shiftDown (acount X) := by
   intro n
   apply Finset.stronglyMeasurable_sum
@@ -79,21 +79,21 @@ theorem stronglyAdapted_acount (hX : StronglyAdapted ℱ X) :
   obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, by omega⟩
   exact (hX i).mono (ℱ.mono (by omega : i ≤ m))
 
-theorem integrable_acount (hX : ∀ n, Integrable (X n) μ) (n : ℕ) :
+lemma integrable_acount (hX : ∀ n, Integrable (X n) μ) (n : ℕ) :
     Integrable (acount X n) μ :=
   integrable_finsetSum' _ fun i _ => hX i
 
 /-- **The assignment process is a martingale** (blueprint `lem:M_martingale`).
 For an adapted, integrable assignment indicator `X`, the martingale part `M` of the count process
 is a martingale for the previous-history filtration `ℱ.shiftDown`. -/
-theorem martingale_assignMart [IsFiniteMeasure μ]
+lemma martingale_assignMart [IsFiniteMeasure μ]
     (hX : StronglyAdapted ℱ X) (hX_int : ∀ n, Integrable (X n) μ) :
     Martingale (assignMart X ℱ μ) ℱ.shiftDown μ :=
   martingale_martingalePart (stronglyAdapted_acount hX) (integrable_acount hX_int)
 
 /-- The increment of the assignment martingale is `X n - μ[X n | ℱ (n-1)]`,
 matching the blueprint's `ΔM = X - p` with `p_n = μ[X n | ℱ (n-1)]`. -/
-theorem assignMart_succ_sub (n : ℕ) :
+lemma assignMart_succ_sub (n : ℕ) :
     assignMart X ℱ μ (n + 1) - assignMart X ℱ μ n = X n - μ[X n | ℱ.shiftDown n] := by
   have hg : acount X (n + 1) - acount X n = X n := by rw [acount_succ]; abel
   unfold assignMart martingalePart
@@ -102,7 +102,7 @@ theorem assignMart_succ_sub (n : ℕ) :
 
 /-- The increments of the assignment martingale are bounded by `1` (blueprint
 `lem:M_martingale`, bounded-increment part): if `0 ≤ X ≤ 1` a.e., then `|M (n+1) - M n| ≤ 1` a.e. -/
-theorem abs_assignMart_succ_sub_le [IsFiniteMeasure μ]
+lemma abs_assignMart_succ_sub_le [IsFiniteMeasure μ]
     (hX_int : ∀ n, Integrable (X n) μ)
     (h0 : ∀ n, 0 ≤ᵐ[μ] X n) (h1 : ∀ n, X n ≤ᵐ[μ] fun _ => (1 : ℝ)) (n : ℕ) :
     ∀ᵐ ω ∂μ, |(assignMart X ℱ μ (n + 1) - assignMart X ℱ μ n) ω| ≤ 1 := by

@@ -40,7 +40,7 @@ For any sequence `Q` in a seminormed additive group, any `ℓ ≤ n` and any
 The two summands correspond to the "long" (`n - ℓ ≥ L`) and "short"
 (`n - ℓ < L`) cases: exactly one of them carries the increment, the other being
 nonnegative. -/
-theorem norm_sub_le_increment_control {E : Type*} [SeminormedAddCommGroup E]
+lemma norm_sub_le_increment_control {E : Type*} [SeminormedAddCommGroup E]
     (Q : ℕ → E) {ℓ n L : ℕ} (hℓ : ℓ ≤ n) (hL : 1 ≤ L) (hLn : L < n) :
     ‖Q n - Q ℓ‖
       ≤ ((n - ℓ : ℕ) : ℝ)

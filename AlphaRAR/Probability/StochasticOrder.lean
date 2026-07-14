@@ -44,7 +44,7 @@ def IsBigOpOne (μ : Measure Ω) (Y : ℕ → Ω → ℝ) : Prop :=
   ∀ ε : ℝ≥0∞, 0 < ε → ∃ M : ℝ, ∀ n, μ {ω | M < |Y n ω|} ≤ ε
 
 /-- `O_p(1)` only depends on each `Y n` up to `μ`-a.e. equality. -/
-theorem IsBigOpOne.congr {Y Y' : ℕ → Ω → ℝ} (h : ∀ n, Y n =ᵐ[μ] Y' n)
+lemma IsBigOpOne.congr {Y Y' : ℕ → Ω → ℝ} (h : ∀ n, Y n =ᵐ[μ] Y' n)
     (hY : IsBigOpOne μ Y) : IsBigOpOne μ Y' := by
   intro ε hε
   obtain ⟨M, hM⟩ := hY ε hε
@@ -56,7 +56,7 @@ theorem IsBigOpOne.congr {Y Y' : ℕ → Ω → ℝ} (h : ∀ n, Y n =ᵐ[μ] Y'
 
 /-- **Single-variable tightness.** For a finite measure and a measurable real
 function `f`, the measure of `{|f| > M}` can be made `≤ ε` by taking `M` large. -/
-theorem exists_meas_lt [IsFiniteMeasure μ] {f : Ω → ℝ} (hf : Measurable f)
+lemma exists_meas_lt [IsFiniteMeasure μ] {f : Ω → ℝ} (hf : Measurable f)
     {ε : ℝ≥0∞} (hε : 0 < ε) : ∃ M : ℝ, μ {ω | M < |f ω|} ≤ ε := by
   set s : ℕ → Set Ω := fun M => {ω | (M : ℝ) < |f ω|} with hs_def
   have hmeas : ∀ M, NullMeasurableSet (s M) μ := fun M =>
@@ -77,7 +77,7 @@ theorem exists_meas_lt [IsFiniteMeasure μ] {f : Ω → ℝ} (hf : Measurable f)
   exact ⟨(M : ℝ), hM.le⟩
 
 /-- The `|·|`-form of `o_p(1)`: `μ {ε ≤ |Y n|} → 0` for every real `ε > 0`. -/
-theorem IsLittleOpOne.tendsto_abs {Y : ℕ → Ω → ℝ} (hY : IsLittleOpOne μ Y) {ε : ℝ}
+lemma IsLittleOpOne.tendsto_abs {Y : ℕ → Ω → ℝ} (hY : IsLittleOpOne μ Y) {ε : ℝ}
     (hε : 0 < ε) : Tendsto (fun n => μ {ω | ε ≤ |Y n ω|}) atTop (𝓝 0) := by
   refine Tendsto.congr (fun n => ?_) (hY (ENNReal.ofReal ε) (ENNReal.ofReal_pos.mpr hε))
   congr 1
@@ -87,7 +87,7 @@ theorem IsLittleOpOne.tendsto_abs {Y : ℕ → Ω → ℝ} (hY : IsLittleOpOne �
 
 /-- Build `o_p(1)` from the `|·|`-form: if `μ {ε ≤ |Y n|} → 0` for all real `ε > 0`,
 then `Y = o_p(1)`. -/
-theorem isLittleOpOne_of_tendsto_abs {Y : ℕ → Ω → ℝ}
+lemma isLittleOpOne_of_tendsto_abs {Y : ℕ → Ω → ℝ}
     (h : ∀ ε : ℝ, 0 < ε → Tendsto (fun n => μ {ω | ε ≤ |Y n ω|}) atTop (𝓝 0)) :
     IsLittleOpOne μ Y := by
   intro ε hε
@@ -112,7 +112,7 @@ theorem isLittleOpOne_of_tendsto_abs {Y : ℕ → Ω → ℝ}
 
 /-- **Convergence in probability gives `o_p`** (blueprint `lem:op_of_tendsto`, first
 part). If `Y n → 0` almost everywhere on a finite measure, then `Y = o_p(1)`. -/
-theorem isLittleOpOne_of_tendsto_ae [IsFiniteMeasure μ] {Y : ℕ → Ω → ℝ}
+lemma isLittleOpOne_of_tendsto_ae [IsFiniteMeasure μ] {Y : ℕ → Ω → ℝ}
     (hmeas : ∀ n, AEStronglyMeasurable (Y n) μ)
     (h : ∀ᵐ ω ∂μ, Tendsto (fun n => Y n ω) atTop (𝓝 0)) :
     IsLittleOpOne μ Y :=
@@ -121,7 +121,7 @@ theorem isLittleOpOne_of_tendsto_ae [IsFiniteMeasure μ] {Y : ℕ → Ω → ℝ
 /-- **`o_p(1) + o_p(1) = o_p(1)`** (blueprint `lem:op_arith` (i)).
 The sum of two sequences converging to `0` in probability converges to `0` in
 probability. -/
-theorem IsLittleOpOne.add {X Y : ℕ → Ω → ℝ} (hX : IsLittleOpOne μ X)
+lemma IsLittleOpOne.add {X Y : ℕ → Ω → ℝ} (hX : IsLittleOpOne μ X)
     (hY : IsLittleOpOne μ Y) : IsLittleOpOne μ (fun n ω => X n ω + Y n ω) := by
   intro ε hε
   have hX2 := hX (ε / 2) (ENNReal.half_pos hε.ne')
@@ -145,7 +145,7 @@ theorem IsLittleOpOne.add {X Y : ℕ → Ω → ℝ} (hX : IsLittleOpOne μ X)
 
 /-- **`O_p(1) + O_p(1) = O_p(1)`** (blueprint `lem:op_arith` (i)).
 The sum of two sequences bounded in probability is bounded in probability. -/
-theorem IsBigOpOne.add {X Y : ℕ → Ω → ℝ} (hX : IsBigOpOne μ X) (hY : IsBigOpOne μ Y) :
+lemma IsBigOpOne.add {X Y : ℕ → Ω → ℝ} (hX : IsBigOpOne μ X) (hY : IsBigOpOne μ Y) :
     IsBigOpOne μ (fun n ω => X n ω + Y n ω) := by
   intro ε hε
   obtain ⟨Mx, hMx⟩ := hX (ε / 2) (ENNReal.half_pos hε.ne')
@@ -168,7 +168,7 @@ theorem IsBigOpOne.add {X Y : ℕ → Ω → ℝ} (hX : IsBigOpOne μ X) (hY : I
 
 /-- **`o_p(1) ⟹ O_p(1)`**: convergence in probability implies boundedness in
 probability (blueprint `lem:op_arith`, used for (ii)). -/
-theorem IsLittleOpOne.isBigOpOne [IsFiniteMeasure μ] {Y : ℕ → Ω → ℝ}
+lemma IsLittleOpOne.isBigOpOne [IsFiniteMeasure μ] {Y : ℕ → Ω → ℝ}
     (hmeas : ∀ n, Measurable (Y n)) (hY : IsLittleOpOne μ Y) : IsBigOpOne μ Y := by
   intro ε hε
   have hev : ∀ᶠ n in atTop, μ {ω | (1 : ℝ) ≤ |Y n ω|} ≤ ε :=
@@ -196,7 +196,7 @@ theorem IsLittleOpOne.isBigOpOne [IsFiniteMeasure μ] {Y : ℕ → Ω → ℝ}
     linarith
 
 /-- **`o_p(1) + O_p(1) = O_p(1)`** (blueprint `lem:op_arith` (ii)). -/
-theorem IsBigOpOne.add_littleOp [IsFiniteMeasure μ] {X Y : ℕ → Ω → ℝ}
+lemma IsBigOpOne.add_littleOp [IsFiniteMeasure μ] {X Y : ℕ → Ω → ℝ}
     (hmeas : ∀ n, Measurable (X n)) (hX : IsLittleOpOne μ X) (hY : IsBigOpOne μ Y) :
     IsBigOpOne μ (fun n ω => X n ω + Y n ω) :=
   (hX.isBigOpOne hmeas).add hY
@@ -204,7 +204,7 @@ theorem IsBigOpOne.add_littleOp [IsFiniteMeasure μ] {X Y : ℕ → Ω → ℝ}
 /-- **`O_p(1) · o_p(1) = o_p(1)`** (blueprint `lem:op_arith` (iii)).
 The product of a bounded-in-probability sequence and a sequence converging to `0`
 in probability converges to `0` in probability. -/
-theorem IsBigOpOne.mul_littleOp {X Y : ℕ → Ω → ℝ} (hX : IsBigOpOne μ X)
+lemma IsBigOpOne.mul_littleOp {X Y : ℕ → Ω → ℝ} (hX : IsBigOpOne μ X)
     (hY : IsLittleOpOne μ Y) : IsLittleOpOne μ (fun n ω => X n ω * Y n ω) := by
   apply isLittleOpOne_of_tendsto_abs
   intro ε hε
@@ -240,7 +240,7 @@ theorem IsBigOpOne.mul_littleOp {X Y : ℕ → Ω → ℝ} (hX : IsBigOpOne μ X
 
 /-- **A bounded multiple preserves `O_p(1)`** (blueprint `lem:op_arith` (iv)).
 If `|c n| ≤ B` for all `n` and `X = O_p(1)`, then `c n · X n = O_p(1)`. -/
-theorem IsBigOpOne.bdd_mul {X : ℕ → Ω → ℝ} {c : ℕ → ℝ} {B : ℝ} (hB : 0 ≤ B)
+lemma IsBigOpOne.bdd_mul {X : ℕ → Ω → ℝ} {c : ℕ → ℝ} {B : ℝ} (hB : 0 ≤ B)
     (hc : ∀ n, |c n| ≤ B) (hX : IsBigOpOne μ X) :
     IsBigOpOne μ (fun n ω => c n * X n ω) := by
   intro ε hε
@@ -259,7 +259,7 @@ theorem IsBigOpOne.bdd_mul {X : ℕ → Ω → ℝ} {c : ℕ → ℝ} {B : ℝ} 
 
 /-- **`O_p(1)` transfers through squares.** If the squared sequence `Z²` is bounded
 in probability, then so is `Z` itself (take `M = √M'`). -/
-theorem IsBigOpOne.of_sq {Z : ℕ → Ω → ℝ} (h : IsBigOpOne μ (fun n ω => (Z n ω) ^ 2)) :
+lemma IsBigOpOne.of_sq {Z : ℕ → Ω → ℝ} (h : IsBigOpOne μ (fun n ω => (Z n ω) ^ 2)) :
     IsBigOpOne μ Z := by
   intro ε hε
   obtain ⟨M', hM'⟩ := h ε hε
@@ -281,7 +281,7 @@ theorem IsBigOpOne.of_sq {Z : ℕ → Ω → ℝ} (h : IsBigOpOne μ (fun n ω =
 /-- **Bounded expectation gives `O_p`** (blueprint `lem:expectation_to_O`).
 If `∫⁻ |X n| ≤ C · u n` for all `n` (with `u n > 0`, `C ≥ 0`), then
 `X n / u n = O_p(1)`, i.e. `X n = O_p(u n)`. -/
-theorem isBigOpOne_of_lintegral_le (X : ℕ → Ω → ℝ) (u : ℕ → ℝ) (C : ℝ)
+lemma isBigOpOne_of_lintegral_le (X : ℕ → Ω → ℝ) (u : ℕ → ℝ) (C : ℝ)
     (hu : ∀ n, 0 < u n) (hC : 0 ≤ C) (hmeas : ∀ n, AEMeasurable (X n) μ)
     (hbound : ∀ n, ∫⁻ ω, ENNReal.ofReal |X n ω| ∂μ ≤ ENNReal.ofReal (C * u n)) :
     IsBigOpOne μ (fun n ω => X n ω / u n) := by
@@ -325,7 +325,7 @@ If `∫⁻ (X n)² ≤ C · (u n)²` for all `n` (with `u n > 0`, `C ≥ 0`), th
 `X n / u n = O_p(1)`, i.e. `X n = O_p(u n)`. This is Chebyshev's inequality: it
 reduces to the `L¹` bound `isBigOpOne_of_lintegral_le` applied to `X²` with rate
 `u²`, then transfers back through `IsBigOpOne.of_sq`. -/
-theorem isBigOpOne_of_lintegral_sq_le (X : ℕ → Ω → ℝ) (u : ℕ → ℝ) (C : ℝ)
+lemma isBigOpOne_of_lintegral_sq_le (X : ℕ → Ω → ℝ) (u : ℕ → ℝ) (C : ℝ)
     (hu : ∀ n, 0 < u n) (hC : 0 ≤ C) (hmeas : ∀ n, AEMeasurable (X n) μ)
     (hbound : ∀ n, ∫⁻ ω, ENNReal.ofReal ((X n ω) ^ 2) ∂μ ≤ ENNReal.ofReal (C * (u n) ^ 2)) :
     IsBigOpOne μ (fun n ω => X n ω / u n) := by

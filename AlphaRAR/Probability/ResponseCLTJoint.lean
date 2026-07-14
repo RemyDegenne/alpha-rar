@@ -469,7 +469,7 @@ omit [DecidableEq 𝓐] in
 projection ingredient): `(∑_k w_k Q_{n,k})/√n ⇒ 𝒩(0, ∑_k w_k² v_k V_k)`. Applies
 `MartDiffArray.mart_clt` to `wArray`, whose predictable variation tends to `∑_k w_k² v_k V_k` and
 which satisfies the conditional Lindeberg condition. -/
-theorem wLinComb_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma wLinComb_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (w : 𝓐 → ℝ) {v : 𝓐 → ℝ}
     (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) (hσ2 : 0 ≤ ∑ a, w a ^ 2 * armVar ν a * v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
@@ -582,7 +582,7 @@ Proved by the Cramér–Wold device (`tendsto_map_of_tendsto_map_inner`): every 
 `⟪·, t⟫ = (∑_k t_k Q_{n,k})/√n` converges to `𝒩(0, ∑_k t_k² v_k V_k)` (the 1-D CLT
 `wLinComb_tendsto_gaussianReal`), which is exactly the projection of the target Gaussian
 (`multivariateGaussian_diag_map_inner`). -/
-theorem respMart_joint_tendsto_multivariateGaussian
+lemma respMart_joint_tendsto_multivariateGaussian
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 ≤ v a)
     (hV : ∀ a, 0 ≤ armVar ν a)
@@ -643,7 +643,7 @@ composed with multivariate Slutsky (`tendsto_map_comp_of_tendstoInMeasure_const`
 coordinatewise scaling `√(n/N_{n,k}) → 1/√v_k` in probability, and the diagonal rescaling of the
 target Gaussian (`multivariateGaussian_diagonal_smul_map`) turns `diag(v_k V_k)` into
 `diag(V_k)`. -/
-theorem respMart_joint_selfNorm_tendsto_multivariateGaussian
+lemma respMart_joint_selfNorm_tendsto_multivariateGaussian
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
@@ -755,7 +755,7 @@ open scoped RealInnerProductSpace in
 `θ̂_{n,k} - θ_k = (Q_{n,k}+(θ_{0,k}-θ_k))/(N_{n,k}+1)` (`estimator_sub_eq`): coordinate `k` equals
 `(Q_{n,k}/√N_{n,k})·N_{n,k}/(N_{n,k}+1) + (θ_{0,k}-θ_k)√N_{n,k}/(N_{n,k}+1)`, whose scaling factors
 tend to `(1,0)` in probability, so multivariate Slutsky leaves the limit unchanged. -/
-theorem estimatorError_joint_tendsto_multivariateGaussian
+lemma estimatorError_joint_tendsto_multivariateGaussian
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))

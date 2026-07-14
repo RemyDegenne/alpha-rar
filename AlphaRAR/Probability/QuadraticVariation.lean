@@ -32,11 +32,11 @@ predictable part of `M²` in its Doob decomposition (blueprint `def:pred_qv`). -
 noncomputable def predQuadVar (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) : ℕ → Ω → ℝ :=
   predictablePart (fun n => M n ^ 2) ℱ μ
 
-@[simp] theorem predQuadVar_zero : predQuadVar M ℱ μ 0 = 0 := predictablePart_zero
+@[simp] lemma predQuadVar_zero : predQuadVar M ℱ μ 0 = 0 := predictablePart_zero
 
 /-- The predictable quadratic variation is invariant under negation: `⟨-M⟩ = ⟨M⟩`, since
 `(-M)² = M²` pointwise. -/
-theorem predQuadVar_neg (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) :
+lemma predQuadVar_neg (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) :
     predQuadVar (-M) ℱ μ = predQuadVar M ℱ μ := by
   unfold predQuadVar
   congr 1
@@ -46,7 +46,7 @@ theorem predQuadVar_neg (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ :
 /-- The increment of `⟨M⟩` is the conditional expectation of the increment of `M²`:
 `⟨M⟩ (n+1) - ⟨M⟩ n = μ[M (n+1)² - M n² | ℱ n]` (blueprint `lem:qv_incr`, before the
 martingale simplification of the cross term). -/
-theorem predQuadVar_succ_sub (n : ℕ) :
+lemma predQuadVar_succ_sub (n : ℕ) :
     predQuadVar M ℱ μ (n + 1) - predQuadVar M ℱ μ n
       = μ[(fun ω => M (n + 1) ω ^ 2) - fun ω => M n ω ^ 2 | ℱ n] := by
   rw [predQuadVar, predictablePart_add_one]
@@ -56,7 +56,7 @@ theorem predQuadVar_succ_sub (n : ℕ) :
 For a martingale `M`, the increment of `⟨M⟩` is the conditional second moment of
 the increment of `M`: `⟨M⟩ (n+1) - ⟨M⟩ n = μ[(M (n+1) - M n)² | ℱ n]` a.e.
 (the cross term `2 Mₙ ΔMₙ` vanishes by the martingale property). -/
-theorem predQuadVar_succ_sub_eq [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (n : ℕ)
+lemma predQuadVar_succ_sub_eq [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (n : ℕ)
     (hd2 : Integrable (fun ω => (M (n + 1) ω - M n ω) ^ 2) μ)
     (hprod : Integrable (M n * (M (n + 1) - M n)) μ) :
     predQuadVar M ℱ μ (n + 1) - predQuadVar M ℱ μ n
@@ -98,7 +98,7 @@ theorem predQuadVar_succ_sub_eq [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) 
 /-- **`⟨M⟩` is non-decreasing** (blueprint `lem:qv_incr`, monotonicity part).
 The quadratic variation of a martingale increases, since its increment is a
 conditional second moment, hence nonnegative. -/
-theorem predQuadVar_le_succ [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (n : ℕ)
+lemma predQuadVar_le_succ [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (n : ℕ)
     (hd2 : Integrable (fun ω => (M (n + 1) ω - M n ω) ^ 2) μ)
     (hprod : Integrable (M n * (M (n + 1) - M n)) μ) :
     predQuadVar M ℱ μ n ≤ᵐ[μ] predQuadVar M ℱ μ (n + 1) := by
@@ -115,7 +115,7 @@ theorem predQuadVar_le_succ [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (n :
 /-- **`⟨M⟩` is monotone** (blueprint `lem:qv_incr`, monotonicity part). Almost surely the whole
 path `n ↦ ⟨M⟩ n ω` is nondecreasing, since each increment is a conditional second moment (hence
 nonnegative, `predQuadVar_le_succ`). -/
-theorem predQuadVar_mono [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
+lemma predQuadVar_mono [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
     (hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
     (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ) :
     ∀ᵐ ω ∂μ, Monotone (fun n ↦ predQuadVar M ℱ μ n ω) := by
@@ -124,7 +124,7 @@ theorem predQuadVar_mono [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
 
 /-- **The predictable quadratic variation is nonnegative.** Since `⟨M⟩ 0 = 0` and `⟨M⟩` is
 nondecreasing (`predQuadVar_mono`), `0 ≤ ⟨M⟩ n` a.e. -/
-theorem predQuadVar_nonneg [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
+lemma predQuadVar_nonneg [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
     (hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
     (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ) (n : ℕ) :
     0 ≤ᵐ[μ] predQuadVar M ℱ μ n := by
@@ -136,7 +136,7 @@ theorem predQuadVar_nonneg [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
 /-- **Linear upper bound on `⟨M⟩` for bounded increments.** If `|ΔM_i| ≤ c` a.e., then each
 increment `⟨M⟩_{k+1} - ⟨M⟩_k` equals `μ[(ΔM_k)² | ℱ_k] ≤ c²`, so telescoping from `⟨M⟩_0 = 0`
 gives `⟨M⟩_n ≤ c² n` a.e. -/
-theorem predQuadVar_le_of_bound [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) {c : ℝ}
+lemma predQuadVar_le_of_bound [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) {c : ℝ}
     (hd2 : ∀ n, Integrable (fun ω => (M (n + 1) ω - M n ω) ^ 2) μ)
     (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
@@ -168,7 +168,7 @@ theorem predQuadVar_le_of_bound [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) 
 /-- **A martingale has constant expectation**: `∫ N n = ∫ N 0` for every `n`.
 Follows from `N 0 =ᵐ μ[N n | ℱ 0]` and the fact that conditional expectation
 preserves the integral. -/
-theorem martingale_integral_eq [IsFiniteMeasure μ] {N : ℕ → Ω → ℝ}
+lemma martingale_integral_eq [IsFiniteMeasure μ] {N : ℕ → Ω → ℝ}
     (hN : Martingale N ℱ μ) (n : ℕ) : ∫ ω, N n ω ∂μ = ∫ ω, N 0 ω ∂μ := by
   calc ∫ ω, N n ω ∂μ
       = ∫ ω, (μ[N n | ℱ 0]) ω ∂μ := (integral_condExp (f := N n) (ℱ.le 0)).symm
@@ -177,7 +177,7 @@ theorem martingale_integral_eq [IsFiniteMeasure μ] {N : ℕ → Ω → ℝ}
 /-- **`M² - ⟨M⟩` is a martingale** (blueprint `lem:qv_mart`).
 For an adapted process `M` with square-integrable values, `M² - ⟨M⟩` is a
 martingale, being the martingale part of `M²` in its Doob decomposition. -/
-theorem martingale_sq_sub_predQuadVar [IsFiniteMeasure μ]
+lemma martingale_sq_sub_predQuadVar [IsFiniteMeasure μ]
     (hM : StronglyAdapted ℱ M) (hM2 : ∀ n, Integrable (fun ω => M n ω ^ 2) μ) :
     Martingale (fun n => (fun ω => M n ω ^ 2) - predQuadVar M ℱ μ n) ℱ μ := by
   have hadapt : StronglyAdapted ℱ (fun n => fun ω => M n ω ^ 2) := fun n => (hM n).pow 2
@@ -185,7 +185,7 @@ theorem martingale_sq_sub_predQuadVar [IsFiniteMeasure μ]
 
 /-- **`⟨M⟩ n` is integrable.** Since `M² - ⟨M⟩` is (the martingale part, hence)
 integrable and `M²` is integrable, so is `⟨M⟩`. -/
-theorem integrable_predQuadVar [IsFiniteMeasure μ]
+lemma integrable_predQuadVar [IsFiniteMeasure μ]
     (hM : StronglyAdapted ℱ M) (hM2 : ∀ n, Integrable (fun ω => M n ω ^ 2) μ) (n : ℕ) :
     Integrable (predQuadVar M ℱ μ n) μ := by
   have hN := martingale_sq_sub_predQuadVar hM hM2
@@ -200,7 +200,7 @@ theorem integrable_predQuadVar [IsFiniteMeasure μ]
 `lem:qv_second_moment`). For a square-integrable martingale `M` with `M 0 = 0`,
 `E[M n ²] = E[⟨M⟩ n]`. This is the discrete Itô isometry: `M² - ⟨M⟩` is a
 martingale starting at `0`, so its expectation stays `0`. -/
-theorem integral_sq_eq_integral_predQuadVar [IsFiniteMeasure μ]
+lemma integral_sq_eq_integral_predQuadVar [IsFiniteMeasure μ]
     (hM : StronglyAdapted ℱ M) (hM2 : ∀ n, Integrable (fun ω => M n ω ^ 2) μ)
     (hM0 : M 0 =ᵐ[μ] 0) (n : ℕ) :
     ∫ ω, M n ω ^ 2 ∂μ = ∫ ω, predQuadVar M ℱ μ n ω ∂μ := by
@@ -226,7 +226,7 @@ theorem integral_sq_eq_integral_predQuadVar [IsFiniteMeasure μ]
 /-- **Integrated increment of `⟨M⟩`.** The expected increment of the quadratic
 variation is the second moment of the martingale increment:
 `E[⟨M⟩ (n+1)] - E[⟨M⟩ n] = E[(ΔM (n+1))²]`. -/
-theorem integral_predQuadVar_succ_sub [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
+lemma integral_predQuadVar_succ_sub [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
     (hM2 : ∀ n, Integrable (fun ω => M n ω ^ 2) μ) (n : ℕ)
     (hd2 : Integrable (fun ω => (M (n + 1) ω - M n ω) ^ 2) μ)
     (hprod : Integrable (M n * (M (n + 1) - M n)) μ) :
@@ -248,7 +248,7 @@ theorem integral_predQuadVar_succ_sub [IsFiniteMeasure μ] (hM : Martingale M �
 /-- **Martingale `L²` growth bound** (blueprint `lem:mart_sq_growth`).
 If every increment has second moment `≤ σ²`, then `E[M n ²] ≤ σ² n`. This is the
 discrete Itô isometry combined with the telescoping of `⟨M⟩`. -/
-theorem integral_sq_le_of_increment_bound [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
+lemma integral_sq_le_of_increment_bound [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
     (hM2 : ∀ n, Integrable (fun ω => M n ω ^ 2) μ) (hM0 : M 0 =ᵐ[μ] 0) (σ2 : ℝ)
     (hd2 : ∀ n, Integrable (fun ω => (M (n + 1) ω - M n ω) ^ 2) μ)
     (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ)
@@ -273,7 +273,7 @@ theorem integral_sq_le_of_increment_bound [IsFiniteMeasure μ] (hM : Martingale 
 `lem:qv_orthogonal`, first part). If `M`, `N` are martingales whose increments are
 conditionally orthogonal, `μ[ΔM (i+1) · ΔN (i+1) | ℱ i] = 0`, then `M · N` is a
 martingale. The integrability of the increment products is taken as hypotheses. -/
-theorem martingale_mul [IsFiniteMeasure μ] {N : ℕ → Ω → ℝ}
+lemma martingale_mul [IsFiniteMeasure μ] {N : ℕ → Ω → ℝ}
     (hM : Martingale M ℱ μ) (hN : Martingale N ℱ μ)
     (hMN : ∀ n, Integrable (M n * N n) μ)
     (hB : ∀ i, Integrable (M i * (N (i + 1) - N i)) μ)
@@ -343,7 +343,7 @@ theorem martingale_mul [IsFiniteMeasure μ] {N : ℕ → Ω → ℝ}
 conditionally orthogonal martingales, see `martingale_mul`), then
 `⟨M + N⟩ = ⟨M⟩ + ⟨N⟩`. This is predictable-part linearity together with the fact
 that the predictable part of the martingale `M · N` vanishes. -/
-theorem predQuadVar_add_of_martingale_mul {N : ℕ → Ω → ℝ}
+lemma predQuadVar_add_of_martingale_mul {N : ℕ → Ω → ℝ}
     (hM2 : ∀ n, Integrable (fun ω => M n ω ^ 2) μ)
     (hN2 : ∀ n, Integrable (fun ω => N n ω ^ 2) μ)
     (hMN : ∀ n, Integrable (M n * N n) μ)

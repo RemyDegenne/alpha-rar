@@ -57,7 +57,7 @@ If `|ΔM_i| ≤ c` a.e. and `|θ| c ≤ 1`, then
 The proof uses `eˣ ≤ 1 + x + x²` for `|x| ≤ 1`, monotonicity of conditional expectation, the
 martingale property `μ[ΔM_i | ℱ_i] = 0`, and `μ[(ΔM_i)² | ℱ_i] = ⟨M⟩_{i+1} - ⟨M⟩_i`
 (`predQuadVar_succ_sub_eq`). -/
-theorem condExp_exp_increment_le [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ) {c θ : ℝ}
+lemma condExp_exp_increment_le [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ) {c θ : ℝ}
     (hθ : |θ| * c ≤ 1) (i : ℕ) (hb : ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hd2 : Integrable (fun ω ↦ (M (i + 1) ω - M i ω) ^ 2) μ)
     (hprod : Integrable (M i * (M (i + 1) - M i)) μ) :
@@ -147,7 +147,7 @@ For a martingale `M` with `M 0 = 0`, square-integrable, with increments bounded 
 `|θ| c ≤ 1`, the process `Z_n(θ) = exp(θ M_n - θ² ⟨M⟩_n)` is a supermartingale.
 The one-step bound is `μ[Z_{i+1} | ℱ_i] = Z_i e^{-θ² Δ⟨M⟩_i} μ[e^{θ ΔM_i} | ℱ_i]
 ≤ Z_i e^{-θ² Δ⟨M⟩_i}(1 + θ² Δ⟨M⟩_i) ≤ Z_i`, using `condExp_exp_increment_le` and `1 + y ≤ eʸ`. -/
-theorem supermartingale_expProcess [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma supermartingale_expProcess [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
     {c θ : ℝ} (hθ : |θ| * c ≤ 1)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
@@ -261,7 +261,7 @@ supermartingale, then `ε · μ{ω : ε ≤ maxₖ≤ₙ Z_k ω} ≤ E[Z_0]`. Ma
 inequality for submartingales but not this supermartingale version, which controls the running
 maximum by the *initial* value; the proof stops `Z` at the first time it reaches `ε` and applies
 the optional stopping theorem to the submartingale `-Z`. -/
-theorem smul_measure_sup_le_integral_zero [IsFiniteMeasure μ] {Z : ℕ → Ω → ℝ}
+lemma smul_measure_sup_le_integral_zero [IsFiniteMeasure μ] {Z : ℕ → Ω → ℝ}
     (hZ : Supermartingale Z ℱ μ) (hnonneg : 0 ≤ Z) {ε : ℝ≥0} (n : ℕ) :
     ε • μ {ω | (ε : ℝ) ≤ (range (n + 1)).sup' nonempty_range_add_one fun k ↦ Z k ω}
       ≤ ENNReal.ofReal (∫ ω, Z 0 ω ∂μ) := by
@@ -313,7 +313,7 @@ For a square-integrable martingale `M` with `M 0 = 0`, increments bounded by `c`
 On this event the exponential supermartingale `Z_k(θ) = exp(θ M_k - θ² ⟨M⟩_k)` reaches
 `exp(θλ - θ² v)`, so Ville's inequality (`smul_measure_sup_le_integral_zero`) with `E[Z_0] = 1`
 gives the bound. Optimizing `θ = λ/(2v) ∧ 1/c` yields the classical `exp(-λ²/(2(v+cλ)))`. -/
-theorem measure_exists_ge_le_exp [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma measure_exists_ge_le_exp [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
     {c θ : ℝ} (hθc : |θ| * c ≤ 1) (hθ0 : 0 < θ)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) (lam v : ℝ) (n : ℕ) :
@@ -368,7 +368,7 @@ For a square-integrable martingale `M` with `M 0 = 0`, increments bounded by `c 
 This is `measure_exists_ge_le_exp` evaluated at `θ = λ/(2v)`, where
 `-θλ + θ² v = -λ²/(4v)`. The variance proxy is `2v` rather than the sharp `v` because the
 one-step bound uses `eˣ ≤ 1 + x + x²`; this costs a factor `√2` in the eventual LIL constant. -/
-theorem measure_exists_ge_le_exp_optimized [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma measure_exists_ge_le_exp_optimized [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ}
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {lam v : ℝ} (hlam : 0 < lam) (hv : 0 < v)
     (hadm : lam * c ≤ 2 * v) (n : ℕ) :
@@ -391,12 +391,12 @@ lets the Freedman bound accommodate a martingale whose increments are bounded on
 horizon (the truncated-response martingale, whose truncation level `√i` grows). -/
 noncomputable def stopMart (M : ℕ → Ω → ℝ) (N : ℕ) : ℕ → Ω → ℝ := fun m ↦ M (min m N)
 
-theorem stopMart_apply (M : ℕ → Ω → ℝ) (N m : ℕ) : stopMart M N m = M (min m N) := rfl
+lemma stopMart_apply (M : ℕ → Ω → ℝ) (N m : ℕ) : stopMart M N m = M (min m N) := rfl
 
 /-- **The stopped process is a martingale.** For `i < N` the increment equals `M (i+1) - M i`
 (a martingale increment); for `i ≥ N` the process is frozen at `M N`, whose conditional expectation
 given `ℱ i ⊇ ℱ N` is itself. -/
-theorem martingale_stopMart [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (N : ℕ) :
+lemma martingale_stopMart [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (N : ℕ) :
     Martingale (stopMart M N) ℱ μ := by
   refine martingale_nat (fun i ↦ (hM.stronglyMeasurable (min i N)).mono (ℱ.mono (min_le_left i N)))
     (fun i ↦ hM.integrable (min i N)) (fun i ↦ ?_)
@@ -415,7 +415,7 @@ theorem martingale_stopMart [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (N :
 /-- **The quadratic variation is unaffected by stopping, below the horizon.** For `m ≤ N`,
 `⟨stopMart M N⟩_m = ⟨M⟩_m`, since every increment in the defining sum has index `i < m ≤ N`, where
 `min (i+1) N = i+1` and `min i N = i`, so the compensator terms agree exactly. -/
-theorem predQuadVar_stopMart_of_le (M : ℕ → Ω → ℝ) (N : ℕ) {m : ℕ} (hmN : m ≤ N) :
+lemma predQuadVar_stopMart_of_le (M : ℕ → Ω → ℝ) (N : ℕ) {m : ℕ} (hmN : m ≤ N) :
     predQuadVar (stopMart M N) ℱ μ m = predQuadVar M ℱ μ m := by
   simp only [predQuadVar, predictablePart]
   refine Finset.sum_congr rfl fun i hi ↦ ?_
@@ -433,7 +433,7 @@ globally bounded by `c` (they vanish past `N`) and whose value and quadratic var
 `M`'s at every time `m ≤ N`. The pre-optimization form is essential here: the block LIL uses the
 *constrained* `θ = 1/c` (the true optimizer `λ/(2v)` is inadmissible), so `measure_exists_ge_le_exp`
 rather than `measure_exists_ge_le_exp_optimized` is what stops at the horizon. -/
-theorem measure_exists_ge_le_exp_horizon [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma measure_exists_ge_le_exp_horizon [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c θ : ℝ} (hc : 0 ≤ c)
     (hθc : |θ| * c ≤ 1) (hθ0 : 0 < θ) (lam v : ℝ) (N : ℕ)
     (hb : ∀ i < N, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
@@ -470,7 +470,7 @@ theorem measure_exists_ge_le_exp_horizon [IsProbabilityMeasure μ] (hM : Marting
 Taking `n → ∞` in `measure_exists_ge_le_exp_optimized` (the events increase with `n`):
 `μ{ω : ∃ k, λ ≤ M_k ω ∧ ⟨M⟩_k ω ≤ v} ≤ exp(-λ²/(4v))`. This is the form fed to Borel–Cantelli
 in the one-sided law of the iterated logarithm. -/
-theorem measure_exists_ge_le_exp_all [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma measure_exists_ge_le_exp_all [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ}
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {lam v : ℝ} (hlam : 0 < lam) (hv : 0 < v)
     (hadm : lam * c ≤ 2 * v) :
@@ -493,7 +493,7 @@ finitely many blocks are "bad": for a.e. `ω`, eventually in `k`, no time `n` ha
 This is the first Borel–Cantelli lemma (`ae_eventually_notMem`) applied to the sets
 `s_k = {∃ n, M_n ≥ λ_k ∧ ⟨M⟩_n ≤ v_k}`, whose measures are bounded via
 `measure_exists_ge_le_exp_all`. -/
-theorem ae_eventually_forall_lt_of_summable [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma ae_eventually_forall_lt_of_summable [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ}
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {lam v : ℕ → ℝ} (hlam : ∀ k, 0 < lam k)
     (hv : ∀ k, 0 < v k) (hadm : ∀ k, lam k * c ≤ 2 * v k)
@@ -585,7 +585,7 @@ statement `ae_eventually_forall_lt_dyadic`: for large `n`, take the least block 
 `K√(2^k(k+1)) ≤ C√(⟨M⟩_n log⟨M⟩_n)`. This is the `O(√(⟨M⟩_n log⟨M⟩_n))` a.s. upper bound used
 downstream (blueprint `lem:U_increment_bound`, via the bounded assignment martingale) — a `log`
 rather than `log log` rate, which suffices for the `o(⟨M⟩_n)` conclusions. -/
-theorem ae_eventually_le_sqrt_predQuadVar_mul_log [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma ae_eventually_le_sqrt_predQuadVar_mul_log [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ} (hc : 0 < c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
@@ -662,7 +662,7 @@ almost surely `M_n ≤ C √(n log n)` eventually. This combines the normalized 
 `log⟨M⟩_n ≤ 2 log n` (valid once `n ≥ c²`). It is the `O(√(n log n))` a.s. upper bound applied
 downstream to the bounded assignment martingale (blueprint `lem:U_increment_bound`, stated there
 with `log log`, weakened here to `log`). -/
-theorem ae_eventually_le_sqrt_nat_mul_log [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma ae_eventually_le_sqrt_nat_mul_log [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ} (hc : 0 < c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :

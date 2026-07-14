@@ -42,7 +42,7 @@ variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
 If `∑' i, μ {ω : b i < |ξ i ω|} < ∞`, then almost surely `|ξ i ω| ≤ b i` for all large `i`.
 Applied with `b_i = √i` and `∑_i P(|ξ_i| > √i) < ∞`, the truncation remainder
 `ξ_i 𝟙{|ξ_i| > b_i}` vanishes eventually. -/
-theorem ae_eventually_abs_le_of_tsum_ne_top {ξ : ℕ → Ω → ℝ} {b : ℕ → ℝ}
+lemma ae_eventually_abs_le_of_tsum_ne_top {ξ : ℕ → Ω → ℝ} {b : ℕ → ℝ}
     (h : (∑' i, μ {ω | b i < |ξ i ω|}) ≠ ∞) :
     ∀ᵐ ω ∂μ, ∀ᶠ i in atTop, |ξ i ω| ≤ b i := by
   filter_upwards [ae_eventually_notMem h] with ω hω
@@ -51,7 +51,7 @@ theorem ae_eventually_abs_le_of_tsum_ne_top {ξ : ℕ → Ω → ℝ} {b : ℕ �
 
 /-- `exp(-a √k)` is summable in `k` for `a > 0`. Since `log = o(√·)`, eventually
 `2 log k ≤ a √k`, i.e. `exp(-a√k) ≤ 1/k²`, which is summable. -/
-theorem summable_exp_neg_mul_sqrt {a : ℝ} (ha : 0 < a) :
+lemma summable_exp_neg_mul_sqrt {a : ℝ} (ha : 0 < a) :
     Summable (fun k : ℕ ↦ Real.exp (-a * Real.sqrt k)) := by
   have hcomp : Summable (fun k : ℕ ↦ 1 / (k : ℝ) ^ 2) :=
     Real.summable_one_div_nat_pow.mpr (by norm_num)
@@ -85,7 +85,7 @@ theorem summable_exp_neg_mul_sqrt {a : ℝ} (ha : 0 < a) :
 /-- **Pointwise truncation bound.** `|truncation f A x - f x| ≤ (f x)²/A` for `A > 0`. On the
 truncation window `truncation f A x = f x` and the difference is `0`; off it `truncation f A x = 0`,
 the difference is `|f x|`, and `|f x| ≥ A` there so `|f x| ≤ (f x)²/A`. -/
-theorem abs_truncation_sub_le {α : Type*} (f : α → ℝ) {A : ℝ} (hA : 0 < A) (x : α) :
+lemma abs_truncation_sub_le {α : Type*} (f : α → ℝ) {A : ℝ} (hA : 0 < A) (x : α) :
     |truncation f A x - f x| ≤ f x ^ 2 / A := by
   by_cases h : f x ∈ Set.Ioc (-A) A
   · rw [show truncation f A x = f x from by
@@ -107,7 +107,7 @@ If `X` is centred (`∫ X = 0`) with `X²` integrable, then `|∫ truncation X A
 `A > 0`. Applied to `ξ_i` with `A = √i` and `∫ ξ_i² = σ²`, this gives `|m_i| ≤ σ²/√i`.
 The point is that `∫ truncation X A = ∫(truncation X A - X)` (using `∫ X = 0`) and the pointwise
 bound `abs_truncation_sub_le`. -/
-theorem abs_integral_truncation_le [IsFiniteMeasure μ] {X : Ω → ℝ} (hint : Integrable X μ)
+lemma abs_integral_truncation_le [IsFiniteMeasure μ] {X : Ω → ℝ} (hint : Integrable X μ)
     (hX2 : Integrable (fun ω ↦ X ω ^ 2) μ) (hX0 : ∫ ω, X ω ∂μ = 0) {A : ℝ} (hA : 0 < A) :
     |∫ ω, truncation X A ω ∂μ| ≤ (∫ ω, X ω ^ 2 ∂μ) / A := by
   have htrunc_int : Integrable (truncation X A) μ := hint.aestronglyMeasurable.integrable_truncation
@@ -124,7 +124,7 @@ theorem abs_integral_truncation_le [IsFiniteMeasure μ] {X : Ω → ℝ} (hint :
 /-- `∑_{i<n} 1/√i ≤ 2√n` (with the convention `1/√0 = 0`). The deterministic core of the drift
 bound `lem:trunc_drift`: since `|m_i| ≤ σ²/√i`, the drift `∑ m_i D_i` is `O(√n)` (and `O(√N)`
 after restricting to the sampled indices). The key step is `1/√(x+1) ≤ 2(√(x+1) - √x)`. -/
-theorem sum_one_div_sqrt_le (n : ℕ) :
+lemma sum_one_div_sqrt_le (n : ℕ) :
     ∑ i ∈ Finset.range n, 1 / Real.sqrt i ≤ 2 * Real.sqrt n := by
   have hkey : ∀ x : ℝ, 0 ≤ x → 1 / Real.sqrt (x + 1) ≤ 2 * (Real.sqrt (x + 1) - Real.sqrt x) := by
     intro x hx
@@ -153,7 +153,7 @@ theorem sum_one_div_sqrt_le (n : ℕ) :
 /-- **Summability of the per-block Freedman bounds** (blueprint `lem:trunc_block_summable`).
 For `C > 0`, `∑_k exp(-(C/2)√k + σ²/4) < ∞`; this is what makes Borel–Cantelli applicable in the
 core step `lem:trunc_block` of the finite-variance LIL. -/
-theorem summable_block_bound {C σ : ℝ} (hC : 0 < C) :
+lemma summable_block_bound {C σ : ℝ} (hC : 0 < C) :
     Summable (fun k : ℕ ↦ Real.exp (-(C / 2) * Real.sqrt k + σ ^ 2 / 4)) :=
   ((summable_exp_neg_mul_sqrt (a := C / 2) (by positivity)).mul_right
     (Real.exp (σ ^ 2 / 4))).congr fun k ↦ (Real.exp_add _ _).symm
@@ -177,7 +177,7 @@ increment scale `a` (so the horizon-local bound is `c_j = a√{2^j}`), and the c
 `θ_j = 1/c_j`, the horizon Freedman inequality (`measure_exists_ge_le_exp_horizon`) gives
 `μ(∃ m ≤ 2^j : λ_j ≤ M_m, ⟨M⟩_m ≤ v·2^j) ≤ exp(-(C/a)√j + v/a²)` for `λ_j = C√(2^j j)`, because
 `θ_j λ_j = (C/a)√j` (the `√{2^j}` cancels) and `θ_j² · v·2^j = v/a²` stays bounded. -/
-theorem measure_exists_ge_le_exp_block [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma measure_exists_ge_le_exp_block [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
     {a : ℝ} (ha : 0 < a) (hinc : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ a * √i)
     (v C : ℝ) (j : ℕ) :
@@ -215,7 +215,7 @@ theorem measure_exists_ge_le_exp_block [IsProbabilityMeasure μ] (hM : Martingal
 (`measure_exists_ge_le_exp_block`) are summable in `j` (`summable_exp_neg_mul_sqrt`), so the first
 Borel–Cantelli lemma gives that a.s. only finitely many blocks are bad: for a.e. `ω`, for all large
 `j` and every `m ≤ 2^j`, `⟨M⟩_m ≤ v·2^j ⇒ M_m < C√(2^j j)`. -/
-theorem ae_eventually_lt_block_of_growing [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma ae_eventually_lt_block_of_growing [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
     {a : ℝ} (ha : 0 < a) (hinc : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ a * √i)
     (v : ℝ) {C : ℝ} (hC : 0 < C) :
@@ -247,7 +247,7 @@ exceedance (`ae_eventually_lt_block_of_growing`) and the linear quadratic-variat
 with `n ≤ 2^j` (so `2^j ≤ 2n` and `j ≤ log₂ n + 1`); then `⟨M⟩_n ≤ v·n ≤ v·2^j`, so the block bound
 applies at `m = n`, giving `M_n < √(2^j j) ≤ C'√(n log n)`. The horizon restriction `m ≤ 2^j` yields
 the `n`-scale (not the `⟨M⟩_n`-scale): time-blocking is what the growing increments permit. -/
-theorem ae_eventually_le_sqrt_nat_mul_log_of_growing [IsProbabilityMeasure μ]
+lemma ae_eventually_le_sqrt_nat_mul_log_of_growing [IsProbabilityMeasure μ]
     (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
     {a : ℝ} (ha : 0 < a) (hinc : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ a * √i)
     {v : ℝ} (hv : 0 ≤ v) (hqv : ∀ᵐ ω ∂μ, ∀ n, predQuadVar M ℱ μ n ω ≤ v * (n : ℝ)) :
@@ -320,7 +320,7 @@ one-sided bound `ae_eventually_le_sqrt_nat_mul_log_of_growing` to both `M` and `
 with the same quadratic variation, `predQuadVar_neg`, and the same increment bound) gives
 `|M_n| ≤ C'√(n log n)` eventually, a.s. This is the reusable finite-variance LIL used to control a
 martingale with square-root-growing increments on both sides. -/
-theorem ae_eventually_abs_le_sqrt_nat_mul_log_of_growing [IsProbabilityMeasure μ]
+lemma ae_eventually_abs_le_sqrt_nat_mul_log_of_growing [IsProbabilityMeasure μ]
     (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
     {a : ℝ} (ha : 0 < a) (hinc : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ a * √i)
     {v : ℝ} (hv : 0 ≤ v) (hqv : ∀ᵐ ω ∂μ, ∀ n, predQuadVar M ℱ μ n ω ≤ v * (n : ℝ)) :

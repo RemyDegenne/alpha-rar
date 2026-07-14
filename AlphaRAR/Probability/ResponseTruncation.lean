@@ -143,7 +143,7 @@ lemma stronglyAdapted_genRespMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
 /-- **The general functional response martingale is a martingale** for `filtrationAction`.
 For any increment functions `g` (with `g n` measurable and `g n (Y n)` integrable), by
 `condExp_genRespMart_increment`. -/
-theorem martingale_genRespMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma martingale_genRespMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     {g : ℕ → ℝ → ℝ} (hg : ∀ n, StronglyMeasurable (g n))
     (hint : ∀ n, Integrable (fun ω ↦ g n (Y n ω)) P) (k : 𝓐) :
     Martingale (genRespMart ν A Y k g)
@@ -253,7 +253,7 @@ lemma memLp_genRespMart (hA : ∀ n, Measurable (A n)) {g : ℕ → ℝ → ℝ}
 sum `⟨M⟩_n = ∑_{i<n} variance (g i) (ν k) · 𝟙{A i = k}`. For `respMart` (`g = id`, constant variance
 `armVar`) this collapses to `armVar · N`; for the truncated martingale the varying variances
 `v_i = variance (g i) (ν k)` are retained (blueprint `lem:trunc_qv`). -/
-theorem predQuadVar_genRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
+lemma predQuadVar_genRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     {g : ℕ → ℝ → ℝ} (hg : ∀ n, StronglyMeasurable (g n))
     (hg2 : ∀ n, MemLp (fun ω ↦ g n (Y n ω)) 2 P) (n : ℕ) :
     predQuadVar (genRespMart ν A Y k g)
@@ -340,7 +340,7 @@ lemma memLp_truncation_comp (hint : ∀ n, Integrable (Y n) P) (θ : ℝ) (n : �
 
 /-- **The truncated response martingale is a martingale** (blueprint `lem:trunc_mart`).
 Instance of `martingale_genRespMart` with `g i = truncation(· - θ_k, √i)`. -/
-theorem martingale_truncRespMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma martingale_truncRespMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) :
     Martingale (truncRespMart ν A Y k)
       (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P :=
@@ -381,7 +381,7 @@ lemma truncVar_le_armVar (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) 
 /-- **The quadratic variation of the truncated response martingale** (blueprint `lem:trunc_qv`):
 `⟨M̃⟩_n = ∑_{i<n} v_i 𝟙{A i = k}`, with `v_i = truncVar ν k i`. Instance of
 `predQuadVar_genRespMart_eq`. -/
-theorem predQuadVar_truncRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma predQuadVar_truncRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) (n : ℕ) :
     predQuadVar (truncRespMart ν A Y k)
         (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P n
@@ -393,7 +393,7 @@ theorem predQuadVar_truncRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν)
 /-- **The truncated quadratic variation is bounded by `V_k N`**: `⟨M̃⟩_n ≤ V_k · N_{n,k}` a.e.,
 since each `v_i ≤ V_k` (`truncVar_le_armVar`). This is the `⟨M̃⟩ ≲ σ² N` bound the LIL block
 argument needs (the upper half of blueprint `lem:trunc_var_conv`). -/
-theorem predQuadVar_truncRespMart_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma predQuadVar_truncRespMart_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) (n : ℕ) :
     predQuadVar (truncRespMart ν A Y k)
         (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P n
@@ -582,7 +582,7 @@ martingale stopped at `2^j` (`measure_exists_ge_le_exp_horizon`) gives, for `λ_
 `P(∃ m ≤ 2^j : M̃_m ≥ λ_j ∧ ⟨M̃⟩_m ≤ V_k 2^j) ≤ exp(-(C/2)√j + V_k/4)`.
 The exponent is `-(C/2)√j + V_k/4` because `θ_j λ_j = (C/2)√j` (the `√(2^j)` cancels) and
 `θ_j² v = V_k/4` stays bounded. -/
-theorem measure_exists_truncRespMart_block (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma measure_exists_truncRespMart_block (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) (C : ℝ) (j : ℕ) :
     P {ω | ∃ m ≤ 2 ^ j, C * √((2 : ℝ) ^ j * j) ≤ truncRespMart ν A Y k m ω
           ∧ predQuadVar (truncRespMart ν A Y k)
@@ -599,7 +599,7 @@ half). The per-block bounds `P(s_j) ≤ exp(-(C/2)√j + V_k/4)` (`measure_exist
 are summable in `j` (`summable_exp_neg_mul_sqrt`), so the first Borel–Cantelli lemma
 (`ae_eventually_notMem`) gives that a.s. only finitely many blocks are bad: for a.e. `ω`, for all
 large `j` and every `m ≤ 2^j`, `⟨M̃⟩_m ω ≤ V_k 2^j ⇒ M̃_m ω < C√(2^j j)`. -/
-theorem ae_eventually_truncRespMart_lt_block (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma ae_eventually_truncRespMart_lt_block (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) {C : ℝ} (hC : 0 < C) :
     ∀ᵐ ω ∂P, ∀ᶠ (j : ℕ) in atTop, ∀ m ≤ 2 ^ j,
       predQuadVar (truncRespMart ν A Y k)
@@ -622,7 +622,7 @@ blueprint's displayed statement: time-blocking controls `M̃_n` on the scale of 
 is what the growing increment bound `2√i` permits. When arm `k` is sampled a positive fraction of
 the time (`N_{n,k} ≍ n`, the regime of interest) this coincides with the `√(⟨M̃⟩_n log⟨M̃⟩_n)`
 form. -/
-theorem ae_eventually_truncRespMart_le_sqrt_nat_mul_log
+lemma ae_eventually_truncRespMart_le_sqrt_nat_mul_log
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hint : ∀ n, Integrable (Y n) P) (k : 𝓐)
     (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) :
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
@@ -636,7 +636,7 @@ theorem ae_eventually_truncRespMart_le_sqrt_nat_mul_log
 `ae_eventually_truncRespMart_le_sqrt_nat_mul_log`, obtained by instantiating the general two-sided
 bound `ae_eventually_abs_le_sqrt_nat_mul_log_of_growing` at the truncated martingale. Almost surely
 `|M̃_n| ≤ C' √(n log n)` eventually. -/
-theorem ae_eventually_abs_truncRespMart_le_sqrt_nat_mul_log
+lemma ae_eventually_abs_truncRespMart_le_sqrt_nat_mul_log
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hint : ∀ n, Integrable (Y n) P) (k : 𝓐)
     (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) :
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
@@ -730,7 +730,7 @@ lemma tailRespPart_succ_sub (k : 𝓐) (n : ℕ) (ω : Ω) :
 step `n` *and* its response lands in the tail `√n ≤ |Y n - θ_k|` is at most the reward law's tail
 `ν_k(√n ≤ |· - θ_k|)`. Conditioning on `𝒢 n` replaces the sampled response's tail indicator by its
 `ν(A n)`-integral (`condExp_feedback_comp`), which on `{A n = k}` is `ν_k`, and `P{A n = k} ≤ 1`. -/
-theorem measure_action_and_tail_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
+lemma measure_action_and_tail_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
     P {ω | A n ω = k ∧ √n ≤ |Y n ω - (ν k)[id]|}
       ≤ (ν k) {x | √n ≤ |x - (ν k)[id]|} := by
   set θ := (ν k)[id] with hθ_def
@@ -804,7 +804,7 @@ theorem measure_action_and_tail_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P
 `∑' n, P(A n = k ∧ √n ≤ |Y n - θ_k|) < ∞`, by the conditional bookkeeping
 (`measure_action_and_tail_le`) and the law-level tail summability
 (`tsum_measure_abs_sub_ge_sqrt_ne_top`). -/
-theorem tsum_measure_action_and_tail_ne_top (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
+lemma tsum_measure_action_and_tail_ne_top (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) :
     (∑' n : ℕ, P {ω | A n ω = k ∧ √n ≤ |Y n ω - (ν k)[id]|}) ≠ ∞ := by
   have hint2 : Integrable (fun x ↦ (x - (ν k)[id]) ^ 2) (ν k) :=
@@ -817,7 +817,7 @@ By the first Borel–Cantelli lemma applied to the summable sampled tail events
 (`tsum_measure_action_and_tail_ne_top`), almost surely for all large `n` the tail-remainder
 increment `𝟙{A n = k}((Y n - θ_k) - truncation(Y n - θ_k, √n))` vanishes, so `R_n` is eventually
 constant, hence `R_n = O(1)` a.s. -/
-theorem ae_eventually_tailRespPart_const (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
+lemma ae_eventually_tailRespPart_const (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) :
     ∀ᵐ ω ∂P, ∀ᶠ n in atTop, tailRespPart ν A Y k (n + 1) ω = tailRespPart ν A Y k n ω := by
   filter_upwards [ae_eventually_notMem (tsum_measure_action_and_tail_ne_top h k hν2)] with ω hω
@@ -837,7 +837,7 @@ truncated martingale is two-sided `O(√(n log n))` (an instance of the general 
 `ae_eventually_abs_truncRespMart_le_sqrt_nat_mul_log`), the tail remainder is `O(1)`
 (`ae_eventually_tailRespPart_const`), and the drift is `O(√n)` (`abs_truncDrift_le`); the last two
 are `o(√(n log n))`, so almost surely `|Q_{n,k}| ≤ C √(n log n)` eventually. -/
-theorem ae_eventually_abs_respMart_le_sqrt_nat_mul_log
+lemma ae_eventually_abs_respMart_le_sqrt_nat_mul_log
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hint : ∀ n, Integrable (Y n) P) (k : 𝓐)
     (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) :
     ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
@@ -880,7 +880,7 @@ theorem ae_eventually_abs_respMart_le_sqrt_nat_mul_log
 
 /-- **The response martingale is `O(√(n log n))`** (blueprint `lem:lil_truncation`), the one-sided
 consequence of `ae_eventually_abs_respMart_le_sqrt_nat_mul_log` via `Q_n ≤ |Q_n|`. -/
-theorem ae_eventually_respMart_le_sqrt_nat_mul_log
+lemma ae_eventually_respMart_le_sqrt_nat_mul_log
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hint : ∀ n, Integrable (Y n) P) (k : 𝓐)
     (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) :
     ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,

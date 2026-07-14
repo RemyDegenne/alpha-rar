@@ -48,17 +48,17 @@ def assignMG (n : ℕ) : ℝ := ∑ j ∈ range n, (X j - p j)
 
 /-- **Count decomposition** (blueprint `lem:count_decomp`).
 `N n = ∑_{m<n} p m + M n`. -/
-theorem count_eq (n : ℕ) : count X n = (∑ m ∈ range n, p m) + assignMG X p n := by
+lemma count_eq (n : ℕ) : count X n = (∑ m ∈ range n, p m) + assignMG X p n := by
   simp only [count, assignMG, Finset.sum_sub_distrib]
   grind
 
 /-- Increment of the count: `N (n+1) = N n + X n`. -/
-theorem count_succ (n : ℕ) : count X (n + 1) = count X n + X n := by
+lemma count_succ (n : ℕ) : count X (n + 1) = count X n + X n := by
   unfold count
   rw [Finset.sum_range_succ]
 
 /-- Increment of the assignment martingale: `M (n+1) = M n + (X n - p n)`. -/
-theorem assignMG_succ (n : ℕ) :
+lemma assignMG_succ (n : ℕ) :
     assignMG X p (n + 1) = assignMG X p n + (X n - p n) := by
   unfold assignMG
   rw [Finset.sum_range_succ]
@@ -73,7 +73,7 @@ Writing `D n := N n - n ρ n`, `U (n+1) - U n = α ρ_n - p n + (D (n+1) - D n)`
 `α ρ_n` pairs the selection probability `p_n` with the plug-in target `ρ_n` at the same index, so
 the throttle discharged downstream is `p_n ≤ α ρ_n` (patient `n` uses the target of patients
 `0, …, n-1`). Valid for all `n` (the `α ρ`-sum grows at every step). -/
-theorem auxU_succ_sub (n : ℕ) :
+lemma auxU_succ_sub (n : ℕ) :
     auxU X p ρ α (n + 1) - auxU X p ρ α n
       = α * ρ n - p n
         + (((count X (n + 1) - (n + 1 : ℝ) * ρ (n + 1)) - (count X n - (n : ℝ) * ρ n))) := by
@@ -83,7 +83,7 @@ theorem auxU_succ_sub (n : ℕ) :
   ring
 
 /-- A telescoping identity for a real sequence over `Ico ℓ n`. -/
-theorem sum_Ico_succ_sub (f : ℕ → ℝ) (ℓ : ℕ) :
+lemma sum_Ico_succ_sub (f : ℕ → ℝ) (ℓ : ℕ) :
     ∀ n, ℓ ≤ n → ∑ m ∈ Ico ℓ n, (f (m + 1) - f m) = f n - f ℓ := by
   intro n
   induction n with
@@ -107,7 +107,7 @@ For `ℓ ≤ n`, writing `D m := N m - m ρ m`,
 `U n - U ℓ = ∑_{m=ℓ}^{n-1} (α ρ_m - p m) + (D n - D ℓ)`.
 Rearranged, this is the blueprint's identity expressing `D n` in terms of `D ℓ`,
 the summed throttling terms, and the increment of `U`. -/
-theorem auxU_telescope (n ℓ : ℕ) (hℓn : ℓ ≤ n) :
+lemma auxU_telescope (n ℓ : ℕ) (hℓn : ℓ ≤ n) :
     auxU X p ρ α n - auxU X p ρ α ℓ
       = (∑ m ∈ Ico ℓ n, (α * ρ m - p m))
         + ((count X n - (n : ℝ) * ρ n) - (count X ℓ - (ℓ : ℝ) * ρ ℓ)) := by
@@ -128,7 +128,7 @@ theorem auxU_telescope (n ℓ : ℕ) (hℓn : ℓ ≤ n) :
 /-- **Counts sum to time** (blueprint `lem:counts_sum`).
 If the assignment vector sums to one at each time, then the arm counts sum to the
 time index. -/
-theorem counts_sum {ι : Type*} [Fintype ι] (Y : ℕ → ι → ℝ) (hY : ∀ j, ∑ k, Y j k = 1) (n : ℕ) :
+lemma counts_sum {ι : Type*} [Fintype ι] (Y : ℕ → ι → ℝ) (hY : ∀ j, ∑ k, Y j k = 1) (n : ℕ) :
     (∑ k, count (fun j => Y j k) n) = n := by
   simp only [count]
   rw [Finset.sum_comm]
@@ -141,14 +141,14 @@ def hitting (P : ℕ → Prop) [DecidablePred P] (n : ℕ) : ℕ := Nat.findGrea
 
 /-- **Basic properties of the hitting time** (blueprint `lem:hitting_basic`):
 `n ↦ hitting P n` is non-decreasing and bounded above by `n`. -/
-theorem hitting_basic (P : ℕ → Prop) [DecidablePred P] :
+lemma hitting_basic (P : ℕ → Prop) [DecidablePred P] :
     Monotone (hitting P) ∧ ∀ n, hitting P n ≤ n := by
   refine ⟨fun a b hab => Nat.findGreatest_mono_right P hab, fun n => Nat.findGreatest_le n⟩
 
 /-- **Sign at the hitting time** (blueprint `lem:hitting_sign`, maximality part).
 Strictly after the last under-sampling time (and up to `n`), the arm is no longer
 under-sampled: `¬ P m` for `hitting P n < m ≤ n`. -/
-theorem hitting_sign (P : ℕ → Prop) [DecidablePred P] {n m : ℕ}
+lemma hitting_sign (P : ℕ → Prop) [DecidablePred P] {n m : ℕ}
     (hlt : hitting P n < m) (hle : m ≤ n) : ¬ P m :=
   Nat.findGreatest_is_greatest hlt hle
 
@@ -158,7 +158,7 @@ Whenever the throttling condition `p m ≤ α ρ_m` holds for all `ℓ+1 ≤ m �
 `p ℓ ≤ 1`, and `0 ≤ α ρ_ℓ`, the gap `D n = N n - n ρ n` is controlled by its
 value at `ℓ` plus the increment of `U`:
 `D n ≤ 1 + D ℓ + (U n - U ℓ)`. -/
-theorem preliminary_ineq (n ℓ : ℕ) (hℓn : ℓ ≤ n)
+lemma preliminary_ineq (n ℓ : ℕ) (hℓn : ℓ ≤ n)
     (hp1 : p ℓ ≤ 1) (hαρ : 0 ≤ α * ρ ℓ)
     (hthrottle : ∀ m ∈ Ico (ℓ + 1) n, p m ≤ α * ρ m) :
     (count X n - (n : ℝ) * ρ n)
@@ -192,7 +192,7 @@ If the predicate `P` implies under-sampling `N m ≤ m ρ m`, then at the last
 under-sampling time the gap is nonpositive: `N ℓ - ℓ ρ ℓ ≤ 0` for
 `ℓ = hitting P n`. (With the `Nat.findGreatest` convention this is the sharp
 `≤ 0`, stronger than the blueprint's `≤ K m₀`.) -/
-theorem preliminary_small (P : ℕ → Prop) [DecidablePred P] (n : ℕ)
+lemma preliminary_small (P : ℕ → Prop) [DecidablePred P] (n : ℕ)
     (hPspec : ∀ m, P m → count X m ≤ (m : ℝ) * ρ m) :
     count X (hitting P n) - (hitting P n : ℝ) * ρ (hitting P n) ≤ 0 := by
   rcases Nat.eq_zero_or_pos (hitting P n) with h0 | hpos
@@ -212,7 +212,7 @@ From `auxU_telescope`, `D n = D ℓ + (U n - U ℓ) + ∑_{m∈[ℓ,n)} (p_m - �
 `m > ℓ` is `≤ 0` (by the throttle at `m`, over-sampled via `hitting_sign`), and the single boundary
 term `m = ℓ` is `≤ 1` (by `p ≤ 1`), so the sum is `≤ 1`. No lower bound on `ℓ_n` is needed: the
 identity holds at `ℓ_n = 0` too, since the `α ρ`-sum of `U` grows at every step. -/
-theorem generic_ineq_of_hitting (P : ℕ → Prop) [DecidablePred P]
+lemma generic_ineq_of_hitting (P : ℕ → Prop) [DecidablePred P]
     (hthrottle : ∀ m, ¬ P m → p m ≤ α * ρ m)
     (hp1 : ∀ m, p m ≤ 1) (hαρ : ∀ m, 0 ≤ α * ρ m) (n : ℕ) :
     count X n - (n : ℝ) * ρ n
@@ -249,7 +249,7 @@ theorem generic_ineq_of_hitting (P : ℕ → Prop) [DecidablePred P]
 /-- **Generic smallness from the throttle** (blueprint `eq:generic_small`, deterministic packaging).
 If `P` implies under-sampling (`P m → N_m ≤ m ρ_m`), then at the last under-sampling time the gap
 is nonpositive (`preliminary_small`), so `(N_{ℓ_n} - ℓ_n ρ_{ℓ_n})/n < δ` eventually for `δ > 0`. -/
-theorem generic_small_of_hitting (P : ℕ → Prop) [DecidablePred P]
+lemma generic_small_of_hitting (P : ℕ → Prop) [DecidablePred P]
     (hunder : ∀ m, P m → count X m ≤ (m : ℝ) * ρ m) (δ : ℝ) (hδ : 0 < δ) :
     ∀ᶠ n in atTop,
       (count X (hitting P n) - (hitting P n : ℝ) * ρ (hitting P n)) / (n : ℝ) < δ := by
@@ -266,7 +266,7 @@ theorem generic_small_of_hitting (P : ℕ → Prop) [DecidablePred P]
 def respMG (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) : ℝ := ∑ j ∈ range n, X j * (ξ j - θ)
 
 /-- `Q n = ∑ X ξ - θ N n`: the response martingale rewritten via the count. -/
-theorem respMG_eq (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) :
+lemma respMG_eq (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) :
     respMG X ξ θ n = (∑ j ∈ range n, X j * ξ j) - θ * count X n := by
   unfold respMG count
   rw [Finset.mul_sum, ← Finset.sum_sub_distrib]
@@ -278,7 +278,7 @@ theorem respMG_eq (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) :
 
 On `{N n ≠ 0}`, the leading term of the estimator error equals `Q n / N n`:
 `(∑ X ξ) / N n - θ = Q n / N n`. -/
-theorem theta_error_Q (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) (hN : count X n ≠ 0) :
+lemma theta_error_Q (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) (hN : count X n ≠ 0) :
     (∑ j ∈ range n, X j * ξ j) / count X n - θ = respMG X ξ θ n / count X n := by
   rw [respMG_eq, sub_div, mul_div_assoc, div_self hN, mul_one]
 
@@ -295,7 +295,7 @@ The regularized estimator has the *exact* error decomposition
 `{0,1}`-valued assignment indicators). Since `Q n = O(√(n \log n))` and the numerator offset
 `θ₀ - θ` is constant, this is the Bahadur representation
 `θ̂ n = \tfrac1{N n}∑ X ξ + o(N n^{-1/2})` in sharp, remainder-free form. -/
-theorem estimator_sub_eq (ξ : ℕ → ℝ) (θ θ₀ : ℝ) (n : ℕ) (hN : count X n + 1 ≠ 0) :
+lemma estimator_sub_eq (ξ : ℕ → ℝ) (θ θ₀ : ℝ) (n : ℕ) (hN : count X n + 1 ≠ 0) :
     estimator X ξ θ₀ n - θ = (respMG X ξ θ n + (θ₀ - θ)) / (count X n + 1) := by
   rw [estimator, respMG_eq]
   field_simp
@@ -304,7 +304,7 @@ theorem estimator_sub_eq (ξ : ℕ → ℝ) (θ θ₀ : ℝ) (n : ℕ) (hN : cou
 /-- **Absolute estimator error bound**: `|θ̂ n - θ| ≤ (|Q n| + |θ₀ - θ|) / (N n + 1)`.
 The pathwise backbone of the LIL rate `lem:theta_LIL`: with `|Q n| = O(√(n \log n))` and
 `N n + 1 ≍ v_k n`, it gives `|θ̂ n - θ| = O(√(\log n / n))`. -/
-theorem abs_estimator_sub_le (ξ : ℕ → ℝ) (θ θ₀ : ℝ) (n : ℕ) (hN : 0 < count X n + 1) :
+lemma abs_estimator_sub_le (ξ : ℕ → ℝ) (θ θ₀ : ℝ) (n : ℕ) (hN : 0 < count X n + 1) :
     |estimator X ξ θ₀ n - θ| ≤ (|respMG X ξ θ n| + |θ₀ - θ|) / (count X n + 1) := by
   rw [estimator_sub_eq X ξ θ θ₀ n (ne_of_gt hN), abs_div, abs_of_pos hN]
   gcongr
@@ -319,7 +319,7 @@ If the response martingale is `O(√(n log n))` — `|Q_n| ≤ C√(n log n)` ev
 √(log n / n)`). This is the `√(\log n / n)` rate of `lem:theta_LIL` (the `\log`, not `\log\log`,
 form). Combining the exact error `θ̂_n - θ = (Q_n + (θ₀-θ))/(N_n+1)` with `|Q_n| ≤ C√(n log n)` and
 `N_n + 1 ≳ (v/2) n` gives the bound with `C' = (2/v)(C + |θ₀-θ|)`. -/
-theorem abs_estimator_sub_le_rate (ξ : ℕ → ℝ) (θ θ₀ : ℝ) {v : ℝ} (hv : 0 < v)
+lemma abs_estimator_sub_le_rate (ξ : ℕ → ℝ) (θ θ₀ : ℝ) {v : ℝ} (hv : 0 < v)
     (hN : Tendsto (fun n ↦ count X n / (n : ℝ)) atTop (𝓝 v)) {C : ℝ} (hC : 0 ≤ C)
     (hQ : ∀ᶠ n in atTop, |respMG X ξ θ n| ≤ C * √((n : ℝ) * Real.log n)) :
     ∃ C', ∀ᶠ n in atTop,
@@ -366,7 +366,7 @@ If the plug-in target converges, `ρ n → u`, and the normalized assignment mar
 to `u` by Cesàro convergence (`Filter.Tendsto.cesaro`), the limit is `α u + 0 - u = -(1-α) u`.
 Applied pathwise (with the a.s. limits from `lem:M_lln` and `lem:rho_converges`), this yields the
 almost-sure statement `lem:U_over_n`. -/
-theorem auxU_div_tendsto (u : ℝ) (hρ : Tendsto ρ atTop (𝓝 u))
+lemma auxU_div_tendsto (u : ℝ) (hρ : Tendsto ρ atTop (𝓝 u))
     (hM : Tendsto (fun n => assignMG X p n / (n : ℝ)) atTop (𝓝 0)) :
     Tendsto (fun n => auxU X p ρ α n / (n : ℝ)) atTop (𝓝 (-(1 - α) * u)) := by
   -- Cesàro average of `ρ` over `range n` tends to `u`.
@@ -397,7 +397,7 @@ target `ρ`, throttling parameter `α`, and last under-sampling times `ℓ` (wit
 Then `(N n / n - ρ n)⁺ → 0`. The argument feeds the auxiliary-process limit `U n / n → -(1-α) u`
 (`auxU_div_tendsto`) into the analytic positive-part lemma `tendsto_posPart_sub_div`
 (blueprint `lem:convergence`), then squeezes. -/
-theorem pos_part_vanishes {ℓ : ℕ → ℕ} {u C : ℝ} (hℓle : ∀ n, ℓ n ≤ n)
+lemma pos_part_vanishes {ℓ : ℕ → ℕ} {u C : ℝ} (hℓle : ∀ n, ℓ n ≤ n)
     (hα : α ∈ Set.Icc (0 : ℝ) 1) (hu : u ∈ Set.Icc (0 : ℝ) 1)
     (hρ : Tendsto ρ atTop (𝓝 u))
     (hM : Tendsto (fun n => assignMG X p n / (n : ℝ)) atTop (𝓝 0))
@@ -452,7 +452,7 @@ Vector form over `K` arms. If every arm's positive gap `(N_{·,j}/n - r_{·,j})�
 negative gap `(r_{·,k} - N_{·,k}/n)⁺` also vanishes. Indeed
 `r_k - N_k/n = ∑_{j≠k}(N_j/n - r_j)`, whose positive part is dominated by
 `∑_{j≠k}(N_j/n - r_j)⁺ → 0`. -/
-theorem neg_part_vanishes {ι : Type*} [Fintype ι] (Y r : ℕ → ι → ℝ)
+lemma neg_part_vanishes {ι : Type*} [Fintype ι] (Y r : ℕ → ι → ℝ)
     (hY : ∀ j, ∑ k, Y j k = 1) (hr : ∀ n, ∑ k, r n k = 1)
     (hpos : ∀ j : ι,
       Tendsto (fun n => max (count (fun i => Y i j) n / (n : ℝ) - r n j) 0) atTop (𝓝 0))
@@ -489,7 +489,7 @@ Single-arm form. If both the positive gap `(N_k/n - r_k)⁺` and the negative ga
 vanish (from `pos_part_vanishes`, `neg_part_vanishes`), and the target converges `r_k → u_k`, then
 the allocation proportion converges to the same limit, `N_k/n → u_k`. The gap itself vanishes
 because `x = x⁺ - (-x)⁺`, so `N_k/n - r_k = (N_k/n - r_k)⁺ - (r_k - N_k/n)⁺ → 0`. -/
-theorem match_proportion {ι : Type*} (Y r : ℕ → ι → ℝ) {uk : ℝ} (k : ι)
+lemma match_proportion {ι : Type*} (Y r : ℕ → ι → ℝ) {uk : ℝ} (k : ι)
     (hpos : Tendsto (fun n => max (count (fun i => Y i k) n / (n : ℝ) - r n k) 0) atTop (𝓝 0))
     (hneg : Tendsto (fun n => max (r n k - count (fun i => Y i k) n / (n : ℝ)) 0) atTop (𝓝 0))
     (hr : Tendsto (fun n => r n k) atTop (𝓝 uk)) :
@@ -516,7 +516,7 @@ theorem match_proportion {ι : Type*} (Y r : ℕ → ι → ℝ) {uk : ℝ} (k :
 If the allocation proportion converges to a positive limit, `N_k/n → u_k > 0` (from
 `match_proportion`), then the count diverges, `N_k → ∞`. Writing `N_k = (N_k/n) · n`, the first
 factor tends to `u_k > 0` and the second to `∞`. -/
-theorem all_arms_infinite {ι : Type*} (Y : ℕ → ι → ℝ) {uk : ℝ} (k : ι) (huk : 0 < uk)
+lemma all_arms_infinite {ι : Type*} (Y : ℕ → ι → ℝ) {uk : ℝ} (k : ι) (huk : 0 < uk)
     (hmatch : Tendsto (fun n => count (fun i => Y i k) n / (n : ℝ)) atTop (𝓝 uk)) :
     Tendsto (fun n => count (fun i => Y i k) n) atTop atTop := by
   have hmul : Tendsto (fun n : ℕ => count (fun i => Y i k) n / (n : ℝ) * (n : ℝ)) atTop atTop :=

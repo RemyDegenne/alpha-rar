@@ -26,7 +26,7 @@ namespace AlphaRAR
 
 /-- **Layer-cake summability of tail measures, general measure.** For a finite measure `μ` and a
 measurable, integrable, nonnegative `X`, `∑' i, μ {ω : (i : ℝ) < X ω} < ∞`. -/
-theorem tsum_measure_Ioi_ne_top {Ω : Type*} {mΩ : MeasurableSpace Ω} {μ : Measure Ω}
+lemma tsum_measure_Ioi_ne_top {Ω : Type*} {mΩ : MeasurableSpace Ω} {μ : Measure Ω}
     [IsFiniteMeasure μ] {X : Ω → ℝ} (hX : Measurable X) (hint : Integrable X μ) (hnn : 0 ≤ X) :
     (∑' i : ℕ, μ {ω | (i : ℝ) < X ω}) ≠ ∞ := by
   have hmeas : ∀ i : ℕ, MeasurableSet {ω | (i : ℝ) < X ω} :=
@@ -68,7 +68,7 @@ For a finite measure `ρ` on `ℝ` with finite second central moment `∫ (x-θ)
 `∑' i, ρ {x : √i < |x - θ|} < ∞`. Since `√i < |x-θ| ⟺ i < (x-θ)²`, this is
 `tsum_measure_Ioi_ne_top` for `X = (· - θ)²`. Applied to a reward law `ρ = ν k` (with
 `θ = θ_k`) this bounds `∑_i ν_k(|· - θ_k| > √i)`. -/
-theorem tsum_measure_abs_sub_gt_sqrt_ne_top {ρ : Measure ℝ} [IsFiniteMeasure ρ] (θ : ℝ)
+lemma tsum_measure_abs_sub_gt_sqrt_ne_top {ρ : Measure ℝ} [IsFiniteMeasure ρ] (θ : ℝ)
     (hρ2 : Integrable (fun x ↦ (x - θ) ^ 2) ρ) :
     (∑' i : ℕ, ρ {x | Real.sqrt i < |x - θ|}) ≠ ∞ := by
   have hset : ∀ i : ℕ, {x | Real.sqrt i < |x - θ|} = {x | (i : ℝ) < (x - θ) ^ 2} := by
@@ -92,7 +92,7 @@ the sampled tail term of the finite-variance LIL, because Mathlib's `truncation`
 left-open window `Ioc (-A) A`, so a value *equal* to `√i` in absolute value can still be off the
 window. Derived from the strict version by shifting the index: for `i ≥ 1`,
 `√i ≤ |x-θ| ⟹ √(i-1) < |x-θ|`, and the `i = 0` term is `ρ` of a set, hence finite. -/
-theorem tsum_measure_abs_sub_ge_sqrt_ne_top {ρ : Measure ℝ} [IsFiniteMeasure ρ] (θ : ℝ)
+lemma tsum_measure_abs_sub_ge_sqrt_ne_top {ρ : Measure ℝ} [IsFiniteMeasure ρ] (θ : ℝ)
     (hρ2 : Integrable (fun x ↦ (x - θ) ^ 2) ρ) :
     (∑' i : ℕ, ρ {x | Real.sqrt i ≤ |x - θ|}) ≠ ∞ := by
   have hbound : ∀ i : ℕ,

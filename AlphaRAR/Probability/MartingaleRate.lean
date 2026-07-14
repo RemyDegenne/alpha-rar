@@ -32,7 +32,7 @@ The proof bounds `E[M n²] ≤ σ² n` (`integral_sq_le_of_increment_bound`) and
 it to the `L²` Chebyshev inequality (`isBigOpOne_of_lintegral_sq_le`). The rate is
 taken as `√(max n 1)` to keep it strictly positive, then transferred to `√n`
 (the two agree for `n ≥ 1`, and both vanish at `n = 0` since `M 0 = 0`). -/
-theorem isBigOpOne_martingale_div_sqrt [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
+lemma isBigOpOne_martingale_div_sqrt [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
     (hM2 : ∀ n, Integrable (fun ω => M n ω ^ 2) μ) (hM0 : M 0 =ᵐ[μ] 0)
     (σ2 : ℝ) (hσ2 : 0 ≤ σ2)
     (hd2 : ∀ n, Integrable (fun ω => (M (n + 1) ω - M n ω) ^ 2) μ)
@@ -89,7 +89,7 @@ This is the convenient form of `cor:mart_Op` for the assignment martingale: the
 bounded increments give all the integrability side conditions (`M n` is a.e. bounded
 by `c n`, hence square-integrable) and the increment second moment bound
 `E[(ΔM)²] ≤ c² μ(univ)`. -/
-theorem isBigOpOne_of_bdd_increments [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
+lemma isBigOpOne_of_bdd_increments [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (c : ℝ) (hc : 0 ≤ c)
     (hΔ : ∀ n, ∀ᵐ ω ∂μ, |M (n + 1) ω - M n ω| ≤ c) :
     IsBigOpOne μ (fun n ω => M n ω / Real.sqrt n) := by

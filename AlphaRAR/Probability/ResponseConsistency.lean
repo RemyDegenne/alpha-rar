@@ -79,7 +79,7 @@ If `V_k = armVar ν k > 0`, then on `{N_{n,k} → ∞}` the quadratic variation 
 tends to `∞`, and the bracket SLLN gives `Q_{n,k}/⟨Q_k⟩_n → 0`, whence
 `Q_{n,k}/N_{n,k} = V_k · (Q_{n,k}/⟨Q_k⟩_n) → 0`. If `V_k = 0`, then `𝔼[Q_{n,k}²] = V_k 𝔼[N] = 0`,
 so `Q_{n,k} = 0` a.s. for every `n`, and the ratio is identically `0`. -/
-theorem respMart_div_pullCount_ae_tendsto_zero
+lemma respMart_div_pullCount_ae_tendsto_zero
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (hY2 : ∀ n, MemLp (Y n) 2 P) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop →
       Tendsto (fun n ↦ respMart ν A Y k n ω / (pullCount A k n ω : ℝ)) atTop (𝓝 0) := by
@@ -131,7 +131,7 @@ From the exact error identity `θ̂_{n,k} - θ_k = (Q_{n,k} + (θ₀-θ_k))/(N_{
 (`estimator_sub_eq`), both fractions vanish: `Q_{n,k}/(N_{n,k}+1) → 0` because
 `Q_{n,k}/N_{n,k} → 0` (`respMart_div_pullCount_ae_tendsto_zero`) and `N_{n,k}/(N_{n,k}+1) → 1`,
 while the constant offset `(θ₀-θ_k)/(N_{n,k}+1) → 0` since `N_{n,k} → ∞`. -/
-theorem estimator_ae_tendsto_of_pullCount_atTop
+lemma estimator_ae_tendsto_of_pullCount_atTop
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : ℝ) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop →
@@ -203,7 +203,7 @@ Since `N_{\cdot,k}` is a nondecreasing `ℕ`-valued sequence, `N_{n,k}\not\to\in
 be bounded, and thus eventually constant at its supremum `N_{N_0,k}`. For `n \ge N_0` no further
 patient is assigned to arm `k`, so both the numerator `\sum_{j<n} 𝟙\{A_j=k\}Y_j` and the
 denominator `N_{n,k}+1` are constant, and the estimator freezes. -/
-theorem exists_tendsto_estimator_of_not_pullCount_atTop (k : 𝓐) (θ₀ : ℝ) (ω : Ω)
+lemma exists_tendsto_estimator_of_not_pullCount_atTop (k : 𝓐) (θ₀ : ℝ) (ω : Ω)
     (hnot : ¬ Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop) :
     ∃ L, Tendsto (fun n ↦ estimator (fun j ↦ Set.indicator {ω | A j ω = k} (fun _ ↦ (1 : ℝ)) ω)
       (fun j ↦ Y j ω) θ₀ n) atTop (𝓝 L) := by
@@ -249,7 +249,7 @@ the arm mean `θ_k = (ν k)[id]` on `\{N_{n,k}\to\infty\}` (Lemma
 `estimator_ae_tendsto_of_pullCount_atTop`), and to an eventually-attained value on
 `\{\sup_n N_{n,k}<\infty\}` (Lemma `exists_tendsto_estimator_of_not_pullCount_atTop`). The
 dichotomy is exhaustive because `N_{n,k}` is monotone in `n`. -/
-theorem estimator_ae_tendsto (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
+lemma estimator_ae_tendsto (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : ℝ) :
     ∀ᵐ ω ∂P, ∃ L, Tendsto (fun n ↦ estimator
       (fun j ↦ Set.indicator {ω | A j ω = k} (fun _ ↦ (1 : ℝ)) ω) (fun j ↦ Y j ω) θ₀ n)
@@ -266,7 +266,7 @@ omit [DecidableEq 𝓐] in
 into a single a.s. limit vector `z : 𝓐 → ℝ`: almost surely there is `z` with
 `\hat\theta_{n,k}\to z_k` for every arm `k` simultaneously. This is the a.s. convergence
 `\hat\Params_n \to z` that Condition **B** then transports through the (continuous) target map. -/
-theorem estimator_ae_tendsto_pi [Countable 𝓐]
+lemma estimator_ae_tendsto_pi [Countable 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ) :
     ∀ᵐ ω ∂P, ∃ z : 𝓐 → ℝ, ∀ k, Tendsto (fun n ↦ estimator
       (fun j ↦ Set.indicator {ω | A j ω = k} (fun _ ↦ (1 : ℝ)) ω) (fun j ↦ Y j ω) (θ₀ k) n)
@@ -283,7 +283,7 @@ For any continuous target map `T : (𝓐 → ℝ) → (𝓐 → ℝ)`, the plug-
 estimator vector (`estimator_ae_tendsto_pi`); continuity of `T` transports the convergence
 `\hat\Params_n \to z` (in the product topology) to `T(\hat\Params_n) \to T z`. The blueprint's
 non-sparse refinement `u \in (0,1)^K` needs the rest of Condition **B** and is deferred. -/
-theorem rho_converges [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma rho_converges [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k, Tendsto (fun n ↦ T (fun k' ↦ estimator
       (fun j ↦ Set.indicator {ω | A j ω = k'} (fun _ ↦ (1 : ℝ)) ω) (fun j ↦ Y j ω) (θ₀ k') n) k)
@@ -304,7 +304,7 @@ bridge) and the two-sided LIL bound `|Q_{n,k}| ≤ C√(n log n)` eventually a.s
 `|θ̂_{n,k} - θ_k| ≤ C'·√(n log n)/n` for large `n`. Each is the pathwise `abs_estimator_sub_le_rate`
 after the bridges `count(𝟙{A·=k}) = N_{n,k}` and `respMG(𝟙{A·=k}) = Q_{n,k}`; the (random) LIL
 constant is made nonnegative via `max C 0`. -/
-theorem abs_estimator_sub_le_rate_ae (k : 𝓐) (θ₀ : ℝ) {v : Ω → ℝ}
+lemma abs_estimator_sub_le_rate_ae (k : 𝓐) (θ₀ : ℝ) {v : Ω → ℝ}
     (hv : ∀ᵐ ω ∂P, 0 < v ω)
     (hN : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω)))
     (hQ : ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,

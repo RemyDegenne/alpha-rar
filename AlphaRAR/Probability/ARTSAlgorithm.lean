@@ -156,7 +156,7 @@ design (`IsARTS`), then for every arm the process selection probabilities satisf
 whenever arm `k` is over-sampled at time `m`, `p_{m,k} ≤ α ρ̂_{m,k}`. At `m = 0` the condition is
 vacuous (`N_0 = 0`); at `m = n+1` it is `IsARTS.throttle` transported through `aRTSSelProb_succ_ae`,
 `histTarget_eq` and `histCount_eq`. -/
-theorem throttle_of_isARTS [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+lemma throttle_of_isARTS [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} {α : ℝ} (hARTS : IsARTS alg θ₀ T α) (k : 𝓐) :
     ∀ᵐ ω ∂P, ∀ m, ¬ aRTSUnder A Y θ₀ T k ω m →
@@ -187,7 +187,7 @@ stationary environment with `Y_n ∈ L²` (Condition **A**) and continuous simpl
 `T`, then almost surely the allocation proportions and plug-in targets converge to a common limit:
 `N_{n,k}/n → u_k` and `ρ̂_{n,k} → u_k` for every arm `k`. This is `aRTS_consistency` with its
 throttle hypothesis discharged by `throttle_of_isARTS`. -/
-theorem aRTS_consistency_of_isARTS [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+lemma aRTS_consistency_of_isARTS [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)

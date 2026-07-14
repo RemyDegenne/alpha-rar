@@ -44,7 +44,7 @@ Toeplitz-weighted average of `(S_{i+1})` with nonnegative weights `(b_{i+2}-b_{i
 `kronecker`/`kronecker'` (weights `k`, `k+1`) to the random nondecreasing weights `b_k = 1+⟨M⟩_k`
 of the bracket-normalized
 martingale SLLN. -/
-theorem kronecker_general {b y : ℕ → ℝ} {s : ℝ}
+lemma kronecker_general {b y : ℕ → ℝ} {s : ℝ}
     (hb_pos : ∀ n, 0 < b n) (hb_mono : Monotone b) (hb_top : Tendsto b atTop atTop)
     (hy : Tendsto (fun n ↦ ∑ k ∈ range n, y k) atTop (𝓝 s)) :
     Tendsto (fun n : ℕ ↦ (b n)⁻¹ * ∑ k ∈ range n, b (k + 1) * y k) atTop (𝓝 0) := by
@@ -188,7 +188,7 @@ theorem kronecker_general {b y : ℕ → ℝ} {s : ℝ}
 
 It is the special case of `kronecker_general` with the positive nondecreasing weights
 `b_k = max k 1` (equal to `k` for `k ≥ 1`, so `b (k+1) = k+1` and the divisor is `n` eventually). -/
-theorem kronecker' {x : ℕ → ℝ} {s : ℝ}
+lemma kronecker' {x : ℕ → ℝ} {s : ℝ}
     (hx : Tendsto (fun n ↦ ∑ k ∈ range n, x k) atTop (𝓝 s)) :
     Tendsto (fun n : ℕ ↦ (n : ℝ)⁻¹ * ∑ k ∈ range n, ((k : ℝ) + 1) * x k) atTop (𝓝 0) := by
   have hb_pos : ∀ n : ℕ, 0 < max (n : ℝ) 1 := fun n ↦ lt_of_lt_of_le one_pos (le_max_right _ _)
@@ -210,7 +210,7 @@ converge to `s`, then `(1/n) ∑_{k < n} k · x k → 0`.
 
 Since `∑_{k<n} k·x k = ∑_{k<n} (k+1)·x k - ∑_{k<n} x k`, this follows from `kronecker'` together
 with `(1/n) ∑_{k<n} x k → 0` (the partial sums are bounded, being convergent). -/
-theorem kronecker {x : ℕ → ℝ} {s : ℝ}
+lemma kronecker {x : ℕ → ℝ} {s : ℝ}
     (hx : Tendsto (fun n ↦ ∑ k ∈ range n, x k) atTop (𝓝 s)) :
     Tendsto (fun n : ℕ ↦ (n : ℝ)⁻¹ * ∑ k ∈ range n, (k : ℝ) * x k) atTop (𝓝 0) := by
   have hinv : Tendsto (fun n : ℕ ↦ (n : ℝ)⁻¹) atTop (𝓝 0) :=
