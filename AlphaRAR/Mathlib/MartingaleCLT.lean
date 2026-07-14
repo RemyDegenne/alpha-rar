@@ -164,7 +164,7 @@ lemma abs_exp_mul_one_sub_le {y : ℝ} (hy1 : y ≤ 1) :
   have hge : 1 - y ^ 2 ≤ Real.exp y * (1 - y) := by
     have h3 := mul_le_mul_of_nonneg_right
       (by linarith [Real.add_one_le_exp y] : (1 : ℝ) + y ≤ Real.exp y)
-      (by linarith : (0 : ℝ) ≤ 1 - y)
+      (by positivity : (0 : ℝ) ≤ 1 - y)
     nlinarith [h3]
   rw [abs_of_nonpos (by linarith)]
   linarith
