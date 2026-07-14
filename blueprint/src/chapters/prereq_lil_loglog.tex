@@ -1,0 +1,613 @@
+\chapter{A general martingale law of the iterated logarithm}
+\label{chap:pre_llil}
+
+Chapter~\ref{chap:pre_lil} proves a one-sided LIL at the \emph{$\log$} rate,
+$M_n=O(\sqrt{\langle M\rangle_n\log\langle M\rangle_n})$, using a dyadic schedule
+tuned so that the Borel--Cantelli tail bounds form a trivially summable
+\emph{geometric} series. That $\log$ (rather than $\log\log$) factor is the price of
+that convenience, and it suffices for every $o(\langle M\rangle_n)$ use in Part~I.
+
+This chapter sharpens the rate to the true $\log\log$ and, more importantly,
+repackages the result as a \emph{general} martingale law of the iterated logarithm:
+a theorem about an arbitrary $L^2$-martingale whose increments are small on the LIL
+scale, with no bandit or i.i.d.\ structure baked in. Everything is stated for its own
+sake, as a candidate Mathlib contribution. The chapter reuses, unchanged, the
+formalized engine of Chapter~\ref{chap:pre_lil}: the exponential supermartingale
+(Lemma~\ref{lem:lil_exp_supermart}), Ville's maximal inequality, the Freedman tail
+bound (Lemma~\ref{lem:lil_freedman}, Corollary~\ref{cor:lil_freedman_opt}), the
+horizon-local variant \texttt{measure\_exists\_ge\_le\_exp\_horizon}, and the
+Borel--Cantelli step (Lemma~\ref{lem:lil_bc}).
+
+\medskip
+\noindent\textbf{Where the $\log\log$ comes from.} The dyadic argument controls, for a
+threshold schedule $(v_k,\lambda_k)$, the events $s_k=\{\exists n:\ M_n\ge\lambda_k,\
+\langle M\rangle_n\le v_k\}$, whose measures the optimized Freedman bound estimates by
+$\exp(-\lambda_k^2/(4v_k))$. With geometric blocks $v_k=\eta^k$ the two natural
+thresholds differ only in what summability they demand:
+\[
+  \lambda_k=\kappa\sqrt{v_k\,\log v_k}\ \Longrightarrow\ \exp(-\tfrac{\kappa^2}{4}\log v_k)
+  \ \text{(geometric)},\qquad
+  \lambda_k=\kappa\sqrt{v_k\,\log\log v_k}\ \Longrightarrow\
+  \exp(-\tfrac{\kappa^2}{4}\log\log v_k)\ \text{(a $p$-series)}.
+\]
+Since $\log\log\eta^k=\log(k\log\eta)$, the second right-hand side is
+$(k\log\eta)^{-\kappa^2/4}$, summable exactly when $\kappa>2$. So the only real change
+from Chapter~\ref{chap:pre_lil} is the block \emph{threshold} and the corresponding
+switch from geometric to $p$-series summability. The one structural subtlety is that
+the near-optimal exponential parameter $\theta_k=\lambda_k/(2v_k)\to0$, so its
+admissibility $\theta_k c\le1$ holds only \emph{eventually} in $k$; the Borel--Cantelli
+step must be relaxed accordingly.
+
+\medskip
+\noindent\textbf{Layout.} Section~\ref{sec:llil_bounded} does the bounded-increment
+case (the workhorse, reusing Chapter~\ref{chap:pre_lil} verbatim);
+Section~\ref{sec:llil_general} isolates the general hypothesis \textbf{(H)} that makes
+the argument go through for growing increments;
+Section~\ref{sec:llil_sharp} refines the one-step estimate to obtain the sharp
+constant $\limsup\le1$; Section~\ref{sec:llil_forms} records the consumable normalized
+forms; Section~\ref{sec:llil_hw} applies the general theorem, via truncation, to the
+classical i.i.d.\ Hartman--Wintner LIL under a bare second moment; and
+Section~\ref{sec:llil_skip} records Doob's optional-skipping lemma, which connects a
+predictably-sampled i.i.d.\ sequence to a genuine i.i.d.\ partial sum.
+
+Throughout, $(M_n)_{n\in\N}$ is an $L^2$-martingale with $M_0=0$ on a filtered
+probability space $(\Omega,\filt,\Prob)$, and $\langle M\rangle$ is its predictable
+quadratic variation (Definition~\ref{def:pred_qv}). We abbreviate
+$s_n^2:=\langle M\rangle_n$.
+
+\section{The bounded-increment case}
+\label{sec:llil_bounded}
+
+\begin{lemma}[$p$-series tail summability]\label{lem:llil_tail_summable}
+\lean{AlphaRAR.summable_exp_neg_mul_log_add}\leanok
+For every $\kappa>2$ and $\eta>1$,
+$\sum_{k}\exp\!\big(-\tfrac{\kappa^2}{4}\log\log\eta^k\big)<\infty$. (Formalized with base $\eta=2$
+and the surrogate $\log(k+2)\asymp\log\log 2^k$: for $1<p$, $\sum_k\exp(-p\log(k+2))<\infty$.)
+\end{lemma}
+\begin{proof}\leanok
+For $k\ge1$, $\log\log\eta^k=\log(k\log\eta)$, so the $k$-th term equals
+$(k\log\eta)^{-\kappa^2/4}=(\log\eta)^{-\kappa^2/4}\,k^{-\kappa^2/4}$. Since
+$\kappa^2/4>1$ this is a convergent $p$-series (Mathlib
+\texttt{summable\_one\_div\_nat\_rpow}); dropping the finitely many indices with
+$\log\log\eta^k\le0$ does not affect summability.
+\end{proof}
+
+\begin{lemma}[Borel--Cantelli with eventual admissibility]\label{lem:llil_evt_adm}
+\lean{AlphaRAR.ae_eventually_forall_lt_of_summable_eventually}\leanok
+\uses{cor:lil_freedman_opt, lem:lil_bc}
+Let $M$ be a square-integrable martingale with $M_0=0$ and $|\Delta M_i|\le c$ a.e.
+Let $(v_k),(\lambda_k)$ be positive schedules such that
+\begin{enumerate}
+  \item $\lambda_k c\le 2v_k$ for all large $k$ \emph{(eventual admissibility)}, and
+  \item $\sum_k\exp(-\lambda_k^2/(4v_k))<\infty$.
+\end{enumerate}
+Then almost surely, for all large $k$ and every $n$,
+$\langle M\rangle_n\le v_k\Rightarrow M_n<\lambda_k$.
+\end{lemma}
+\begin{proof}\leanok
+As in Lemma~\ref{lem:lil_bc}, for indices $k$ where admissibility holds the optimized
+Freedman bound (Corollary~\ref{cor:lil_freedman_opt}, infinite-horizon form
+\texttt{measure\_exists\_ge\_le\_exp\_all}) gives
+$\Prob(s_k)\le\exp(-\lambda_k^2/(4v_k))$, where
+$s_k=\{\exists n:\ M_n\ge\lambda_k,\ \langle M\rangle_n\le v_k\}$; for the finitely many
+remaining $k$ use the trivial bound $\Prob(s_k)\le1$. The total $\sum_k\Prob(s_k)$ is
+still finite, so the first Borel--Cantelli lemma (\texttt{ae\_eventually\_notMem})
+places a.e.\ $\omega$ in only finitely many $s_k$; the complement is the claim. This is
+Lemma~\ref{lem:lil_bc} with its ``$\forall k$'' admissibility weakened to
+``$\forall^\infty k$''.
+\end{proof}
+
+\begin{lemma}[Bounded-increment $\log\log$ exceedance]\label{lem:llil_bounded_block}
+\lean{AlphaRAR.ae_eventually_forall_lt_dyadic_loglog}\leanok
+\uses{lem:llil_tail_summable, lem:llil_evt_adm}
+Let $|\Delta M_i|\le c$ a.e.\ with $c>0$. Fix $\eta>1$ and $\kappa>2$, set $v_k=\eta^k$
+and $\lambda_k=\kappa\sqrt{\eta^k\,\log\log\eta^k}$ (for $k$ large enough that
+$\log\log\eta^k>0$). Then almost surely, for all large $k$ and every $n$,
+$\langle M\rangle_n\le\eta^k\Rightarrow M_n<\kappa\sqrt{\eta^k\log\log\eta^k}$.
+(Formalized with $\eta=2$ and the surrogate $\lambda_k=\kappa\sqrt{2^k\log(k+2)}$.)
+\end{lemma}
+\begin{proof}\leanok
+Eventual admissibility: $\lambda_k c\le 2v_k$ reads
+$\kappa c\sqrt{\log\log\eta^k/\eta^k}\le2$, which holds for large $k$ because
+$\log\log\eta^k/\eta^k\to0$ (in the formalization, $\lambda_k c\le2\cdot2^k$ reduces to
+$(\kappa c)^2\log(k+2)\le4\cdot2^k$, eventual since $\log(k+2)=o(2^k)$). Summability:
+$\exp(-\lambda_k^2/(4v_k))=\exp(-\tfrac{\kappa^2}{4}\log\log\eta^k)$ is summable by
+Lemma~\ref{lem:llil_tail_summable}. Apply Lemma~\ref{lem:llil_evt_adm}.
+\end{proof}
+
+\begin{theorem}[General bounded-increment LIL, $O$-rate]\label{thm:llil_bounded}
+\lean{AlphaRAR.ae_eventually_le_sqrt_predQuadVar_mul_loglog}\leanok
+\uses{lem:llil_bounded_block}
+Let $M$ be a square-integrable martingale with $M_0=0$, $|\Delta M_i|\le c$ a.e., and
+$\langle M\rangle_n\to\infty$ a.s. Then for every constant $C>2$, almost surely
+\[
+  M_n\le C\,\sqrt{\langle M\rangle_n\,\log\log\langle M\rangle_n}\qquad
+  \text{for all large }n.
+\]
+\end{theorem}
+\begin{proof}\leanok
+Pick $\eta>1$ and $\kappa\in(2,C/\sqrt\eta)$ (possible once $\eta<(C/2)^2$), and use
+Lemma~\ref{lem:llil_bounded_block}. For large $n$ let $k$ be the least index with
+$\langle M\rangle_n\le\eta^k$; minimality gives $\eta^k\le\eta\langle M\rangle_n$, and
+$\langle M\rangle_n\to\infty$ makes $\log\log\eta^k\le\log\log(\eta\langle M\rangle_n)
+\le(1+o(1))\log\log\langle M\rangle_n$. Hence
+$M_n<\kappa\sqrt{\eta^k\log\log\eta^k}\le\kappa\sqrt\eta\,(1+o(1))
+\sqrt{\langle M\rangle_n\log\log\langle M\rangle_n}\le C\sqrt{\langle M\rangle_n
+\log\log\langle M\rangle_n}$ for large $n$.
+\end{proof}
+
+\section{The general hypothesis: small increments on the LIL scale}
+\label{sec:llil_general}
+
+Bounded increments are the special case of a condition that also covers martingales
+with \emph{growing} increments, provided they are negligible relative to the LIL scale
+$\sqrt{s_n^2/\log\log s_n^2}$. This is the martingale analogue of the Lindeberg
+condition and the natural hypothesis of the Hall--Heyde martingale LIL.
+
+\begin{definition}[Condition \textbf{(H)}]\label{def:llil_H}
+$M$ satisfies \textbf{(H)} with constant $A>0$ if there is an $\filt$-predictable
+sequence $(c_i)$ with $|\Delta M_i|\le c_i$ a.e.\ and, for all large $i$,
+\[
+  c_i\ \le\ A\,\sqrt{\langle M\rangle_i\,/\,\log\log\langle M\rangle_i}\qquad\text{a.e.}
+\]
+\end{definition}
+
+A fixed bound $|\Delta M_i|\le c$ satisfies \textbf{(H)} with \emph{every} $A>0$ once
+$\langle M\rangle_n\to\infty$, since then $\sqrt{\langle M\rangle_i/\log\log\langle
+M\rangle_i}\to\infty$. The point of \textbf{(H)} is that under it the near-optimal
+$\theta$ is admissible \emph{and} small, so no truncation is needed inside the theorem.
+
+\begin{lemma}[Quadratic-variation stopping]\label{lem:llil_qv_stop}
+\uses{def:pred_qv}
+For $v>0$ let $\tau_v:=\inf\{n:\ \langle M\rangle_{n+1}>v\}$. Because $\langle M\rangle$
+is predictable ($\langle M\rangle_{n+1}$ is $\filt_n$-measurable), $\tau_v$ is a
+stopping time, and on $\{n\le\tau_v\}$ one has $\langle M\rangle_n\le v$. The stopped
+process $M^{\tau_v}_n:=M_{n\wedge\tau_v}$ is a martingale with
+$\langle M^{\tau_v}\rangle_n=\langle M\rangle_{n\wedge\tau_v}$, and under \textbf{(H)}
+with constant $A$ its increments obey $|\Delta M^{\tau_v}_i|\le C(v):=A\sqrt{v/\log\log v}$
+a.e.\ for all $i$ (for $v$ large), since for $i<\tau_v$ we have $\langle M\rangle_i\le v$
+and past $\tau_v$ the increments vanish. Moreover
+\[
+  \{\exists n:\ M_n\ge\lambda,\ \langle M\rangle_n\le v\}\ \subseteq\
+  \{\exists n:\ M^{\tau_v}_n\ge\lambda,\ \langle M^{\tau_v}\rangle_n\le v\}.
+\]
+\end{lemma}
+\begin{proof}
+Predictability of $\langle M\rangle$ gives $\{\tau_v\ge n+1\}=\{\langle M\rangle_{n+1}
+\le v\}\in\filt_n$, so $\tau_v$ is a stopping time (constructible with Mathlib's
+\texttt{hittingBtwn}, the stopping-time API already used in the proof of Ville's
+inequality). That $M^{\tau_v}$ is a martingale is Mathlib's
+\texttt{Submartingale.stoppedProcess} applied to $\pm M$; the increment bound uses
+monotonicity of $\langle M\rangle$ and \textbf{(H)}. The only genuinely new ingredient is
+the quadratic-variation identity $\langle M^{\tau_v}\rangle=\langle M\rangle_{\cdot\wedge
+\tau_v}$, the stopping-time analogue of the \emph{formalized} deterministic-horizon
+\texttt{predQuadVar\_stopMart\_of\_le} of Chapter~\ref{chap:pre_lil}. For the inclusion: if
+$\langle M\rangle_n\le v$ then $n\le\tau_v$, so $M^{\tau_v}_n=M_n$ and
+$\langle M^{\tau_v}\rangle_n=\langle M\rangle_n$.
+\end{proof}
+
+\begin{lemma}[Per-block bound under \textbf{(H)}]\label{lem:llil_H_measure}
+\uses{cor:lil_freedman_opt, lem:llil_qv_stop}
+Suppose $M$ satisfies \textbf{(H)} with constant $A$. Fix $\kappa>0$ with
+$\kappa A\le2$, set $v_k=\eta^k$ ($\eta>1$) and
+$\lambda_k=\kappa\sqrt{v_k\log\log v_k}$. Then for all large $k$,
+\[
+  \Prob\big(\exists n:\ M_n\ge\lambda_k,\ \langle M\rangle_n\le v_k\big)\ \le\
+  \exp\!\big(-\tfrac{\kappa^2}{4}\log\log v_k\big).
+\]
+\end{lemma}
+\begin{proof}
+By Lemma~\ref{lem:llil_qv_stop} the event is contained in the corresponding event for
+the stopped martingale $M^{\tau_{v_k}}$, whose increments are globally bounded by
+$C(v_k)=A\sqrt{v_k/\log\log v_k}$. Apply the optimized infinite-horizon Freedman bound
+(Corollary~\ref{cor:lil_freedman_opt}) to $M^{\tau_{v_k}}$ with $c=C(v_k)$,
+$\lambda=\lambda_k$, $v=v_k$: admissibility $\lambda_k C(v_k)\le2v_k$ reads
+$\kappa\sqrt{v_k\log\log v_k}\cdot A\sqrt{v_k/\log\log v_k}=\kappa A\,v_k\le2v_k$, i.e.\
+$\kappa A\le2$; and the exponent is
+$-\lambda_k^2/(4v_k)=-\tfrac{\kappa^2}{4}\log\log v_k$.
+\end{proof}
+
+\begin{lemma}[\textbf{(H)} exceedance]\label{lem:llil_H_block}
+\uses{lem:llil_H_measure, lem:llil_tail_summable}
+Under the hypotheses of Lemma~\ref{lem:llil_H_measure} with additionally $\kappa>2$
+(so $A<1$ and $A\le2/\kappa$), almost surely for all large $k$ and every $n$,
+$\langle M\rangle_n\le\eta^k\Rightarrow M_n<\kappa\sqrt{\eta^k\log\log\eta^k}$.
+\end{lemma}
+\begin{proof}
+The per-block bounds of Lemma~\ref{lem:llil_H_measure} are summable by
+Lemma~\ref{lem:llil_tail_summable} ($\kappa>2$), so $\sum_k\Prob(s_k)<\infty$ with
+$s_k=\{\exists n:\ M_n\ge\lambda_k,\ \langle M\rangle_n\le v_k\}$; the first
+Borel--Cantelli lemma finishes as in Lemma~\ref{lem:llil_evt_adm}.
+\end{proof}
+
+\begin{theorem}[General martingale LIL under \textbf{(H)}, $O$-rate]\label{thm:llil_general}
+\uses{lem:llil_H_block}
+Let $M$ be a square-integrable martingale with $M_0=0$ satisfying \textbf{(H)} with some
+constant $A<1$, and $\langle M\rangle_n\to\infty$ a.s. Then there is a constant $C$
+(any $C>2$ suffices, once $A$ is small enough) such that almost surely
+\[
+  M_n\le C\,\sqrt{\langle M\rangle_n\,\log\log\langle M\rangle_n}\qquad
+  \text{for all large }n.
+\]
+Bounded increments (Theorem~\ref{thm:llil_bounded}) are the case $A\to0$.
+\end{theorem}
+\begin{proof}
+Choose $\kappa>2$ with $\kappa A\le2$ and $\eta>1$, apply
+Lemma~\ref{lem:llil_H_block}, and repackage exactly as in
+Theorem~\ref{thm:llil_bounded} (least $k$ with $\langle M\rangle_n\le\eta^k$).
+\end{proof}
+
+\section{The sharp constant}
+\label{sec:llil_sharp}
+
+The $O$-rate above uses the crude one-step estimate $e^x\le1+x+x^2$
+(Chapter~\ref{chap:pre_lil}), whose variance proxy $2$ inflates the constant. Replacing
+it by the second-order estimate, valid as the increment $\to0$, yields the sharp
+$\limsup\le1$. This section is the ``definitive theorem'' upgrade; the $O$-rate of
+Sections~\ref{sec:llil_bounded}--\ref{sec:llil_general} already suffices for every
+almost-sure rate in Part~I.
+
+\begin{lemma}[Refined elementary inequality]\label{lem:llil_refined_ineq}
+For every $\delta>0$ there is $\eta_\delta>0$ such that $e^x\le1+x+\tfrac12(1+\delta)x^2$
+for all $|x|\le\eta_\delta$.
+\end{lemma}
+\begin{proof}
+Mathlib's \texttt{Real.exp\_bound} at $n=3$ gives, for $|x|\le1$,
+$\big|e^x-(1+x+\tfrac12 x^2)\big|\le|x|^3\cdot\tfrac{4}{3!\cdot3}=\tfrac29|x|^3$, hence
+$e^x\le1+x+\tfrac12 x^2+\tfrac29|x|^3\le1+x+\tfrac12\big(1+\tfrac49|x|\big)x^2$; take
+$\eta_\delta:=\min(1,\tfrac94\delta)$. (So this lemma is a Mathlib one-liner, not new work.)
+\end{proof}
+
+\begin{lemma}[Refined conditional MGF bound]\label{lem:llil_refined_mgf}
+\uses{lem:llil_refined_ineq, def:pred_qv}
+If $|\Delta M_i|\le c$ a.e.\ and $|\theta|c\le\eta_\delta$, then
+$\E[e^{\theta\Delta M_i}\mid\filt_i]\le\exp\!\big(\tfrac12(1+\delta)\theta^2
+(\langle M\rangle_{i+1}-\langle M\rangle_i)\big)$ a.e.
+\end{lemma}
+\begin{proof}
+As in Lemma~\ref{lem:lil_exp_supermart}'s one-step bound, but with
+Lemma~\ref{lem:llil_refined_ineq} in place of $e^x\le1+x+x^2$: using
+$\E[\Delta M_i\mid\filt_i]=0$ and $\E[(\Delta M_i)^2\mid\filt_i]=\langle M\rangle_{i+1}
+-\langle M\rangle_i$, one gets
+$\E[e^{\theta\Delta M_i}\mid\filt_i]\le1+\tfrac12(1+\delta)\theta^2
+(\langle M\rangle_{i+1}-\langle M\rangle_i)\le\exp(\cdots)$.
+\end{proof}
+
+\begin{lemma}[Refined exponential supermartingale and Freedman bound]\label{lem:llil_refined_freedman}
+\uses{lem:llil_refined_mgf}
+Under $|\Delta M_i|\le c$ and $|\theta|c\le\eta_\delta$, the process
+$Z_n=\exp\!\big(\theta M_n-\tfrac12(1+\delta)\theta^2\langle M\rangle_n\big)$ is a
+supermartingale, and hence for $\lambda,v>0$,
+\[
+  \Prob\big(\exists n:\ M_n\ge\lambda,\ \langle M\rangle_n\le v\big)\ \le\
+  \exp\!\big(-\theta\lambda+\tfrac12(1+\delta)\theta^2 v\big).
+\]
+Optimizing at $\theta=\lambda/((1+\delta)v)$ (admissible when
+$\lambda c\le(1+\delta)v\,\eta_\delta$) gives the bound
+$\exp\!\big(-\lambda^2/(2(1+\delta)v)\big)$.
+\end{lemma}
+\begin{proof}
+Verbatim the proofs of Lemma~\ref{lem:lil_exp_supermart} (supermartingale, via
+Lemma~\ref{lem:llil_refined_mgf}), Lemma~\ref{lem:lil_freedman} (Ville's inequality),
+and Corollary~\ref{cor:lil_freedman_opt} (optimization), with the proxy $2v$ replaced
+by $(1+\delta)v$.
+\end{proof}
+
+\begin{lemma}[Sharp exceedance]\label{lem:llil_sharp_block}
+\uses{lem:llil_refined_freedman, lem:llil_qv_stop, lem:llil_tail_summable}
+Let $M$ satisfy \textbf{(H)} with constant $A$ (or have bounded increments), and
+$\langle M\rangle_n\to\infty$. Fix $\eta>1$ and $\varepsilon>\delta>0$, set $v_k=\eta^k$
+and $\lambda_k=\sqrt{2(1+\varepsilon)\,v_k\log\log v_k}$. Then almost surely for all
+large $k$ and every $n$,
+$\langle M\rangle_n\le\eta^k\Rightarrow M_n<\sqrt{2(1+\varepsilon)\eta^k\log\log\eta^k}$.
+\end{lemma}
+\begin{proof}
+Stop at $\tau_{v_k}$ (Lemma~\ref{lem:llil_qv_stop}); the stopped increments are bounded
+by $C(v_k)=A\sqrt{v_k/\log\log v_k}$ (or by the fixed $c$). The optimizer
+$\theta_k=\lambda_k/((1+\delta)v_k)=\sqrt{2(1+\varepsilon)\log\log v_k/v_k}/(1+\delta)$
+satisfies $\theta_k C(v_k)=A\sqrt{2(1+\varepsilon)}/(1+\delta)$, which is $\le\eta_\delta$
+for $A$ small (bounded case: $\theta_k c\to0$). Lemma~\ref{lem:llil_refined_freedman}
+gives $\Prob(s_k)\le\exp(-\lambda_k^2/(2(1+\delta)v_k))
+=\exp(-\tfrac{1+\varepsilon}{1+\delta}\log\log v_k)$, summable by
+Lemma~\ref{lem:llil_tail_summable}'s argument since $(1+\varepsilon)/(1+\delta)>1$.
+Borel--Cantelli finishes.
+\end{proof}
+
+\begin{theorem}[Sharp general martingale LIL]\label{thm:llil_sharp}
+\uses{lem:llil_sharp_block}
+Let $M$ be a square-integrable martingale with $M_0=0$, $\langle M\rangle_n\to\infty$
+a.s., satisfying \textbf{(H)} (in particular any bounded-increment martingale). Then
+\[
+  \limsup_{n\to\infty}\frac{M_n}{\sqrt{2\,\langle M\rangle_n\,\log\log\langle M\rangle_n}}
+  \ \le\ 1\qquad\text{a.s.},
+\]
+and, applied to $-M$ (same quadratic variation, Definition~\ref{def:pred_qv}), the two-sided
+bound $\limsup_n|M_n|/\sqrt{2\langle M\rangle_n\log\log\langle M\rangle_n}\le1$ a.s.
+\end{theorem}
+\begin{proof}
+Fix a countable family $\eta_j\downarrow1$, $\varepsilon_j\downarrow0$ with
+$\varepsilon_j>\delta_j>0$. For each $j$, Lemma~\ref{lem:llil_sharp_block} and the
+repackaging of Theorem~\ref{thm:llil_bounded} give, a.s.,
+$\limsup_n M_n/\sqrt{2\langle M\rangle_n\log\log\langle M\rangle_n}\le
+\sqrt{(1+\varepsilon_j)\eta_j}$. Intersect the countably many a.s.\ events and let
+$j\to\infty$.
+\end{proof}
+
+\section{Consumable forms}
+\label{sec:llil_forms}
+
+\begin{corollary}[Two-sided normalized bound]\label{cor:llil_norm}
+\uses{thm:llil_general}
+Under the hypotheses of Theorem~\ref{thm:llil_general} (or \ref{thm:llil_bounded}),
+almost surely $|M_n|\le C\sqrt{\langle M\rangle_n\log\log\langle M\rangle_n}$ for all
+large $n$, some deterministic $C$. Apply Theorem~\ref{thm:llil_general} to $M$ and $-M$.
+\end{corollary}
+
+\begin{corollary}[Bound at scale $\sqrt{n\log\log n}$]\label{cor:llil_nat}
+\uses{cor:llil_norm}
+If moreover $\langle M\rangle_n\le K n$ for a constant $K$ (e.g.\ $|\Delta M_i|\le c$
+gives $\langle M\rangle_n\le c^2 n$, Lemma~\ref{lem:qv_linear_bound}), then almost
+surely $|M_n|\le C'\sqrt{n\log\log n}$ for all large $n$.
+\end{corollary}
+\begin{proof}
+$\langle M\rangle_n\le Kn$ gives $\log\log\langle M\rangle_n\le\log\log(Kn)\le
+\log\log n+o(1)$ for large $n$; substitute into Corollary~\ref{cor:llil_norm}.
+\end{proof}
+
+These are the $\log\log$ replacements for Corollaries~\ref{cor:lil_upper} and
+\ref{cor:lil_upper_nat}: the bounded assignment martingale $M_{\cdot,k}$ of
+Lemma~\ref{lem:U_increment_bound} is covered by Corollary~\ref{cor:llil_nat} via
+Theorem~\ref{thm:llil_bounded}.
+
+\section{Application: the i.i.d.\ Hartman--Wintner LIL}
+\label{sec:llil_hw}
+
+The general theorem needs \textbf{(H)}; a sum of i.i.d.\ increments with a fixed heavy
+law does not satisfy it and must be truncated. This is the classical Hartman--Wintner
+LIL \cite{HartmanWintner1941}: it holds under a bare second moment, and that sharpness
+is exactly what makes it delicate. A single truncation at the LIL scale
+$\sqrt{j/\log\log j}$ makes the main part satisfy \textbf{(H)} but leaves a tail whose
+one-term exceedance probabilities are \emph{not} summable ($\sum_j\Prob(|Y_j|>
+\sqrt{j/\log\log j})=\infty$ when only $\E[Y^2]<\infty$), so the pathwise
+Borel--Cantelli route of Chapter~\ref{chap:pre_lil} is unavailable.
+
+The resolution is a \emph{three-level} truncation. Cut at two scales: the LIL scale
+$b_j\asymp\sqrt{j/\log\log j}$ and the higher scale $\sqrt j$.
+\begin{itemize}
+  \item The \emph{high} part $|Y_j|>\sqrt j$ has \emph{summable} exceedance
+        probabilities ($\sum_j\Prob(Y^2>j)\le\E[Y^2]+1<\infty$), so it vanishes
+        eventually and contributes $O(1)$ --- exactly the tail step already formalized
+        in Chapter~\ref{chap:pre_lil} (Lemma~\ref{lem:trunc_tail_summable}).
+  \item The \emph{low} part $|Y_j|\le b_j$ satisfies \textbf{(H)} and gets the sharp LIL
+        from Theorem~\ref{thm:llil_sharp}.
+  \item The \emph{medium} band $b_j<|Y_j|\le\sqrt j$ is the crux, and is handled by
+        Kolmogorov's convergence theorem and Kronecker's lemma: the key point
+        (Lemma~\ref{lem:hw_medium_var}) is that this band is only a
+        \emph{$\log\log$-factor wide} multiplicatively, so its variance series against
+        the LIL scale \emph{converges under the bare second moment}, with no extra
+        moment. This is the classical Kolmogorov method; see
+        \cite{Stout1974,heyde1980}.
+\end{itemize}
+A one-shot alternative for the whole upper bound is de~Acosta's proof
+\cite{deAcosta1983}; see the remark after Theorem~\ref{thm:hw}.
+
+Let $(Y_j)_{j\ge1}$ be i.i.d., $\E[Y_1]=0$, $\E[Y_1^2]=\sigma^2<\infty$, and
+$S_m=\sum_{j\le m}Y_j$. With its natural filtration $S$ is a martingale with
+$\langle S\rangle_m=\sigma^2 m$. Write $L(t):=\log\log t$.
+
+\begin{definition}[Three-level truncated decomposition]\label{def:hw_trunc}
+Fix $A_0\in(0,\tfrac12)$, with low cutoff $b_j:=A_0\sigma\sqrt{j/L(j)}$ and high cutoff
+$\sqrt j$. Split each increment into low, medium and high parts,
+\[
+  Y_j^{\mathrm L}:=Y_j\indic_{\{|Y_j|\le b_j\}},\quad
+  Y_j^{\mathrm M}:=Y_j\indic_{\{b_j<|Y_j|\le\sqrt j\}},\quad
+  Y_j^{\mathrm H}:=Y_j\indic_{\{|Y_j|>\sqrt j\}},
+\]
+so $Y_j=Y_j^{\mathrm L}+Y_j^{\mathrm M}+Y_j^{\mathrm H}$, and set
+\[
+  \tilde S_m:=\sum_{j\le m}\!\big(Y_j^{\mathrm L}-\E Y_j^{\mathrm L}\big),\quad
+  W_m:=\sum_{j\le m}\!\big(Y_j^{\mathrm M}-\E Y_j^{\mathrm M}\big),\quad
+  H_m:=\sum_{j\le m}Y_j^{\mathrm H},\quad
+  D_m:=\sum_{j\le m}\E\big[Y_j\indic_{\{|Y_j|\le\sqrt j\}}\big].
+\]
+Since $\E Y_j^{\mathrm L}+\E Y_j^{\mathrm M}=\E[Y_j\indic_{\{|Y_j|\le\sqrt j\}}]$, one has
+$S_m=\tilde S_m+W_m+H_m+D_m$.
+\end{definition}
+
+\begin{lemma}[High part is eventually zero]\label{lem:hw_high}
+\uses{def:hw_trunc, lem:trunc_tail_summable}
+Almost surely $Y_j^{\mathrm H}=0$ for all large $j$, so $H_m$ is eventually constant and
+$H_m=O(1)$ a.s.
+\end{lemma}
+\begin{proof}
+$\sum_j\Prob(|Y_j|>\sqrt j)=\sum_j\Prob(Y_1^2>j)\le\E[Y_1^2]+1<\infty$ by the layer-cake
+bound (Lemma~\ref{lem:trunc_tail_summable}). The first Borel--Cantelli lemma places a.e.\
+$\omega$ in only finitely many $\{|Y_j|>\sqrt j\}$; past that index $Y_j^{\mathrm H}=0$.
+\end{proof}
+
+\begin{lemma}[Low part satisfies \textbf{(H)}]\label{lem:hw_low_H}
+\uses{def:hw_trunc, thm:llil_general, thm:llil_sharp}
+$\tilde S$ is a martingale with $|\Delta\tilde S_j|\le2b_j$ and
+$\langle\tilde S\rangle_m=\sum_{j\le m}\Var(Y_j^{\mathrm L})$. Since
+$\Var(Y_j^{\mathrm L})\to\sigma^2$ (as $b_j\to\infty$), $\langle\tilde S\rangle_m\sim
+\sigma^2 m$; in particular $\tfrac12\sigma^2 m\le\langle\tilde S\rangle_m\le\sigma^2 m$
+eventually. Hence $\tilde S$ satisfies \textbf{(H)} with $A=2A_0<1$, so
+Theorem~\ref{thm:llil_general} gives $\tilde S_m=O(\sqrt{m\,L(m)})$ a.s., and the sharp
+Theorem~\ref{thm:llil_sharp} gives $\limsup_m\tilde S_m/\sqrt{2\sigma^2 m\,L(m)}\le1$.
+\end{lemma}
+\begin{proof}
+$|\Delta\tilde S_j|=|Y_j^{\mathrm L}-\E Y_j^{\mathrm L}|\le2b_j=2A_0\sigma\sqrt{j/L(j)}
+\le2A_0\sqrt{\langle\tilde S\rangle_j/L(\langle\tilde S\rangle_j)}$ for large $j$, using
+$\langle\tilde S\rangle_j\ge\tfrac12\sigma^2 j$ and monotonicity of $t\mapsto t/L(t)$;
+this is \textbf{(H)} with $A=2A_0$. The variance facts $\Var(Y_j^{\mathrm L})\le\sigma^2$
+and $\Var(Y_j^{\mathrm L})=\E[Y^2\indic_{\{|Y|\le b_j\}}]-(\E Y_j^{\mathrm L})^2\to\sigma^2$
+(dominated convergence, $\E Y_j^{\mathrm L}\to0$) are the same statements formalized at
+level $\sqrt i$ as \texttt{AlphaRAR.truncVar\_le\_armVar} and the variance convergence
+$v_i\to\sigma^2$ (Lemma~\ref{lem:trunc_var_conv}). Then $\langle\tilde S\rangle_m/(\sigma^2
+m)\to1$, so $L(\langle\tilde S\rangle_m)\sim L(m)$, fixing the constant in the sharp bound.
+\end{proof}
+
+\begin{lemma}[Medium variance series converges under a bare second moment]\label{lem:hw_medium_var}
+\uses{def:hw_trunc}
+$\displaystyle\sum_{j\ge3}\frac{\Var(Y_j^{\mathrm M})}{j\,L(j)}<\infty$.
+\end{lemma}
+\begin{proof}
+$\Var(Y_j^{\mathrm M})\le\E[(Y_j^{\mathrm M})^2]=\E[Y^2\indic_{\{b_j<|Y|\le\sqrt j\}}]$,
+so by Tonelli
+\[
+  \sum_{j\ge3}\frac{\Var(Y_j^{\mathrm M})}{j\,L(j)}\ \le\
+  \E\Big[Y^2\!\!\sum_{j:\,b_j<|Y|\le\sqrt j}\frac{1}{j\,L(j)}\Big].
+\]
+Fix $y=|Y|$. The condition $b_j<y\le\sqrt j$ means $y^2\le j$ and
+$j/L(j)<(y/(A_0\sigma))^2$; as $t\mapsto t/L(t)$ is increasing the latter is $j<j_0(y)$,
+where $j_0(y)/L(j_0(y))=(y/(A_0\sigma))^2$, so $j_0(y)\asymp y^2 L(y^2)$. Thus $j$ runs
+over $[y^2,j_0(y))$, an interval of multiplicative width $\asymp L(y^2)$ on which
+$L(j)\asymp L(y^2)$; hence
+\[
+  \sum_{y^2\le j<j_0(y)}\frac{1}{j\,L(j)}\ \asymp\
+  \frac{1}{L(y^2)}\log\frac{j_0(y)}{y^2}\ \asymp\ \frac{\log L(y^2)}{L(y^2)}\ =\ O(1),
+\]
+bounded uniformly in $y$ (indeed $\to0$). The inner factor being bounded, the double sum
+is $\le C\,\E[Y^2]<\infty$. The mechanism: the medium band is only a $\log\log$-factor
+wide, so the harmonic inner sum is $O(\log\log\log/\log\log)=O(1)$; this is exactly where
+the bare second moment suffices --- a $\sqrt j$ high cutoff makes the band any wider and
+the sum would need $\E[Y^2\log\log|Y|]$.
+\end{proof}
+
+\begin{lemma}[Medium part is negligible]\label{lem:hw_medium}
+\uses{lem:hw_medium_var, lem:slln_l2_conv, lem:kronecker_general}
+$W_m=o(\sqrt{m\,L(m)})$ a.s.
+\end{lemma}
+\begin{proof}
+Put $a_j:=\sqrt{2\,j\,L(j)}$, positive nondecreasing with $a_j\to\infty$. The partial
+sums of the independent, mean-zero terms $(Y_j^{\mathrm M}-\E Y_j^{\mathrm M})/a_{j+1}$
+form an $L^2$-bounded martingale, since by independence and Lemma~\ref{lem:hw_medium_var}
+\[
+  \int\Big(\sum_{j<n}\tfrac{Y_j^{\mathrm M}-\E Y_j^{\mathrm M}}{a_{j+1}}\Big)^2
+  =\sum_{j<n}\frac{\Var(Y_j^{\mathrm M})}{a_{j+1}^2}
+  \le\tfrac12\sum_{j}\frac{\Var(Y_j^{\mathrm M})}{j\,L(j)}<\infty .
+\]
+Hence $\sum_j(Y_j^{\mathrm M}-\E Y_j^{\mathrm M})/a_{j+1}$ converges a.s.\ by the $L^2$
+martingale convergence theorem (Lemma~\ref{lem:slln_l2_conv}), and Kronecker's lemma with
+weights $b_j=a_j$ (Lemma~\ref{lem:kronecker_general}, whose conclusion
+$a_m^{-1}\sum_{j<m}a_{j+1}y_j\to0$ with $y_j=(Y_j^{\mathrm M}-\E Y_j^{\mathrm M})/a_{j+1}$
+is exactly $a_m^{-1}\sum_{j<m}(Y_j^{\mathrm M}-\E Y_j^{\mathrm M})\to0$) gives
+$W_m=o(a_m)=o(\sqrt{m\,L(m)})$ a.s. This is the Kolmogorov-convergence-plus-Kronecker
+pattern of the martingale SLLN (Chapter~\ref{chap:pre_slln}); both ingredients are
+already formalized.
+\end{proof}
+
+\begin{lemma}[Drift is negligible]\label{lem:hw_drift}
+\uses{def:hw_trunc}
+$|D_m|\le2\sigma^2\sqrt m$, so $D_m=O(\sqrt m)=o(\sqrt{m\,L(m)})$.
+\end{lemma}
+\begin{proof}
+Each summand $\E[Y_j\indic_{\{|Y_j|\le\sqrt j\}}]$ is the mean of the truncation of the
+centred $Y_j$ at level $\sqrt j$, so the already-formalized centred truncated-mean bound
+$|\!\int\operatorname{trunc}(X,A)|\le\E[X^2]/A$
+(\texttt{AlphaRAR.abs\_integral\_truncation\_le}, about Mathlib's
+\texttt{MeasureTheory.truncation}) gives $|\E[Y_j\indic_{\{|Y_j|\le\sqrt j\}}]|\le
+\sigma^2/\sqrt j$. Summing with $\sum_{j\le m}1/\sqrt j\le2\sqrt m$
+(\texttt{AlphaRAR.sum\_one\_div\_sqrt\_le}, also formalized) gives $|D_m|\le2\sigma^2
+\sqrt m$; and $\sqrt m/\sqrt{m\,L(m)}\to0$, so $D_m=o(\sqrt{m\,L(m)})$. Both cited bounds
+are exactly those used for the drift in the existing (log-rate) truncation route
+(Lemmas~\ref{lem:trunc_mean_bound}--\ref{lem:trunc_drift}), applied here at level
+$\sqrt j$ instead of $\sqrt i$.
+\end{proof}
+
+\begin{theorem}[i.i.d.\ Hartman--Wintner, upper half]\label{thm:hw}
+\uses{lem:hw_high, lem:hw_low_H, lem:hw_medium, lem:hw_drift}
+For i.i.d.\ $(Y_j)$ with $\E[Y_1]=0$ and $\E[Y_1^2]=\sigma^2<\infty$, almost surely
+\[
+  \limsup_{m\to\infty}\frac{S_m}{\sqrt{2\sigma^2 m\,\log\log m}}\ \le\ 1,
+\]
+in particular $S_m=O(\sqrt{m\log\log m})$; the two-sided form follows from $-Y$.
+\end{theorem}
+\begin{proof}
+By Definition~\ref{def:hw_trunc}, $S_m=\tilde S_m+W_m+H_m+D_m$, and the three remainders
+are $o(\sqrt{m\,L(m)})$: $H_m=O(1)$ (Lemma~\ref{lem:hw_high}), $W_m=o(\sqrt{m\,L(m)})$
+(Lemma~\ref{lem:hw_medium}) and $D_m=o(\sqrt m)$ (Lemma~\ref{lem:hw_drift}). Hence
+$\limsup_m S_m/\sqrt{2\sigma^2 m\,L(m)}=\limsup_m\tilde S_m/\sqrt{2\sigma^2 m\,L(m)}\le1$
+by the sharp low-part bound (Lemma~\ref{lem:hw_low_H}). No $A_0\to0$ limit is needed: the
+low truncation $b_j\to\infty$ already gives $\Var(Y_j^{\mathrm L})\to\sigma^2$, so the
+constant is sharp. The two-sided statement applies this to $-Y$.
+\end{proof}
+
+\begin{remark}[de~Acosta's one-shot alternative]\label{rem:hw_deacosta}
+The bound $\limsup_m S_m/\sqrt{2\sigma^2 m\log\log m}\le1$ can instead be obtained in one
+stroke by de~Acosta's method \cite{deAcosta1983}, which avoids the three-level split and
+may be cleaner to formalize as a self-contained i.i.d.\ result. In that route
+Theorem~\ref{thm:hw} is proved directly, while the general Theorem~\ref{thm:llil_general}
+is still used for the genuinely martingale (bounded or \textbf{(H)}) applications ---
+notably the assignment martingale $M_{\cdot,k}$.
+\end{remark}
+
+\section{Optional skipping and the response martingale}
+\label{sec:llil_skip}
+
+The finite-variance martingales of Part~I are of the form
+$\sum_{j<n}D_j(Y_j-\theta)$ with $(Y_j)$ i.i.d.\ independent of the past and $(D_j)$
+predictable $\{0,1\}$-valued. Doob's optional-skipping theorem turns such a martingale
+into a genuine i.i.d.\ partial sum, so Theorem~\ref{thm:hw} applies to it directly ---
+no separate martingale finite-variance LIL is needed.
+
+\begin{lemma}[Optional skipping]\label{lem:opt_skip}
+Let $(Y_j)_{j\ge1}$ be i.i.d.\ with law $\rho$, adapted to $\filt$ with $Y_j$
+independent of $\filt_{j-1}$, and $(D_j)$ predictable ($D_j$ is $\filt_{j-1}$-measurable)
+$\{0,1\}$-valued with $\sum_j D_j=\infty$ a.s. Let $\tau_1<\tau_2<\cdots$ enumerate
+$\{j:D_j=1\}$. Then $(Y_{\tau_m})_{m\ge1}$ is i.i.d.\ with law $\rho$; consequently, for
+every $\theta$,
+\[
+  \sum_{j<n}D_j\,(Y_j-\theta)\ =\ S_{N_n},\qquad
+  S_m:=\sum_{i\le m}(Y_{\tau_i}-\theta),\quad N_n:=\sum_{j<n}D_j.
+\]
+\end{lemma}
+\begin{proof}
+The classical optional-skipping / optional-sampling argument for i.i.d.\ sequences: for
+any bounded measurable $g_1,\dots,g_p$, conditioning successively on
+$\filt_{\tau_i-1}$ and using $Y_{\tau_i}\perp\filt_{\tau_i-1}$ with law $\rho$ (as
+$\{\tau_i=j\}\in\filt_{j-1}$) gives $\E\prod_i g_i(Y_{\tau_i})=\prod_i\int g_i\,d\rho$,
+which is the i.i.d.\ law. The displayed identity is just a reindexing of the nonzero
+summands. Mathlib building blocks: the independence/`Kernel` API and `Filtration`
+machinery; this general statement is not yet in Mathlib and is a worthwhile
+contribution.
+\end{proof}
+
+\begin{corollary}[LIL for a predictably-sampled i.i.d.\ sum]\label{cor:subsampled_lil}
+\uses{lem:opt_skip, thm:hw}
+With the notation of Lemma~\ref{lem:opt_skip}, if $\E[Y_1]=\theta$ and
+$\Var(Y_1)=V<\infty$, then almost surely
+\[
+  \Big|\sum_{j<n}D_j(Y_j-\theta)\Big|\ =\ O\!\big(\sqrt{N_n\,\log\log N_n}\big).
+\]
+\end{corollary}
+\begin{proof}
+By Lemma~\ref{lem:opt_skip} the left side is $|S_{N_n}|$ for the i.i.d.\ centred sum
+$S$; since $N_n\to\infty$ a.s., Theorem~\ref{thm:hw} (two-sided) gives
+$|S_{N_n}|=O(\sqrt{N_n\log\log N_n})$.
+\end{proof}
+
+\textbf{Application.} This is the shape used in Lemma~\ref{lem:theta_LIL}: with
+$Y_j=\xi_{j,k}$, $\theta=\theta_k$, $D_j=X_{j,k}$, and $N_n=N_{n,k}$, it yields
+$Q_{n,k}=O(\sqrt{N_{n,k}\log\log N_{n,k}})$ a.s., the $\log\log$ upgrade of the
+$Q$-bound. The bounded assignment martingale $M_{\cdot,k}$ instead goes through
+Corollary~\ref{cor:llil_nat} (Theorem~\ref{thm:llil_bounded}), as it is genuinely
+adaptive rather than a subsampled i.i.d.\ sum.
+
+\medskip
+\noindent\textbf{Relationship to Chapter~\ref{chap:pre_lil}.} The bounded-increment
+$O$-corollary (Corollary~\ref{cor:llil_nat}) supersedes Corollaries~\ref{cor:lil_upper}
+and \ref{cor:lil_upper_nat} with the $\log\log$ rate; Theorem~\ref{thm:hw} +
+Corollary~\ref{cor:subsampled_lil} supersede the growing-increment truncation route
+(the $\log$-rate \texttt{measure\_exists\_ge\_le\_exp\_block} family), which remains a
+valid $\log$-rate fallback. Nothing in this chapter is formalized yet; it reuses the
+formalized supermartingale, Ville, Freedman, horizon and Borel--Cantelli lemmas of
+Chapter~\ref{chap:pre_lil}, and, for the i.i.d.\ layer, the already-formalized tools of
+the SLLN chapter: the layer-cake summability
+Lemma~\ref{lem:trunc_tail_summable} (high part), the $L^2$ martingale convergence
+theorem Lemma~\ref{lem:slln_l2_conv} and Kronecker's lemma
+Lemma~\ref{lem:kronecker_general} (medium part). The genuinely new devices are just the
+stopping-time quadratic-variation stop (Lemma~\ref{lem:llil_qv_stop}), the refined
+one-step estimate (Lemma~\ref{lem:llil_refined_ineq}), the medium-band variance estimate
+that carries the bare second moment (Lemma~\ref{lem:hw_medium_var}, the analytic crux),
+and optional skipping (Lemma~\ref{lem:opt_skip}).

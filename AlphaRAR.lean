@@ -11,6 +11,7 @@ import AlphaRAR.Probability.Assignment
 import AlphaRAR.Probability.AssignmentRate
 import AlphaRAR.Probability.ConsistencyMatching
 import AlphaRAR.Probability.LIL
+import AlphaRAR.Probability.LILLogLog
 import AlphaRAR.Probability.LILTruncation
 import AlphaRAR.Probability.MartingaleRate
 import AlphaRAR.Probability.MartingaleSLLN
