@@ -15,9 +15,13 @@ coordinatewise (Cram\'er--Wold, or directly from the orthogonality).
 \textbf{Standing setup for this chapter.} Fix a probability space $(\Omega,P)$.
 A \emph{martingale difference array} consists, for each $n\in\N$, of
 \begin{itemize}
-  \item a single filtration $(\filt_i)_{i\in\N}$ of $\Omega$, shared by all rows
-        (the standard Lindeberg setup; the deterministic per-row normalization is
-        applied downstream, in Corollary~\ref{cor:mart_clt_componentwise});
+  \item a filtration $(\filt_{n,i})_{i\in\N}$ of $\Omega$, one per row $n$ (allowing
+        the filtration to depend on the row costs nothing: every estimate below is
+        internal to a single row, and the two cross-row limits
+        $V_n\xrightarrow{\Prob}\sigma^2$, $L_n(\varepsilon)\xrightarrow{\Prob}0$ refer
+        only to $P$; it is what lets the self-normalized and joint applications supply a
+        different filtration for each normalization). Within a fixed row $n$ we
+        abbreviate $\filt_i:=\filt_{n,i}$;
   \item a length $k_n\in\N$ and increments $\Delta_{n,i}:\Omega\to\R$ for $i<k_n$,
         with $\Delta_{n,i}$ measurable with respect to $\filt_{i+1}$, square
         integrable, and

@@ -1,9 +1,13 @@
+AlphaRAR.armIndicator
 AlphaRAR.count
 AlphaRAR.counts_sum
+Learning.IsAlgEnvSeq.filtration
 AlphaRAR.estimator
+AlphaRAR.aRTSTarget
 AlphaRAR.estimator_sub_eq
 AlphaRAR.IsLittleOpOne
 AlphaRAR.IsBigOpOne
+AlphaRAR.aRTSSelProb
 AlphaRAR.assignMG
 AlphaRAR.martingale_assignMart
 AlphaRAR.isBigOpOne_assignMart_div_sqrt

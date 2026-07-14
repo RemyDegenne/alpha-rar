@@ -88,7 +88,7 @@ noncomputable def respArray (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
 @[simp] lemma respArray_filt (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (k : 𝓐) (vk : ℝ) :
     (respArray h hY2 k vk).𝓕
-      = IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback := rfl
+      = fun _ ↦ IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback := rfl
 
 @[simp] lemma respArray_k (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (k : 𝓐) (vk : ℝ) :

@@ -131,7 +131,7 @@ omit [DecidableEq 𝓐] in
 @[simp] lemma wArray_filt (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (w : 𝓐 → ℝ) :
     (wArray h hY2 w).𝓕
-      = IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback := rfl
+      = fun _ ↦ IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback := rfl
 
 omit [DecidableEq 𝓐] in
 @[simp] lemma wArray_k (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)

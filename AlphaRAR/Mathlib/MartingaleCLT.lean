@@ -583,13 +583,18 @@ section Array
 
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
-/-- A (single-filtration) triangular array of square-integrable martingale differences: row `n`
-has increments `d n 0, …, d n (k n - 1)`, each `d n i` measurable with respect to `𝓕 (i+1)`,
-square integrable, and a martingale difference `E[d n i | 𝓕 i] = 0`. This is the data of the
-Lindeberg martingale central limit theorem. -/
+/-- A triangular array of square-integrable martingale differences, with one filtration per row:
+row `n` carries its own filtration `𝓕 n` and increments `d n 0, …, d n (k n - 1)`, each `d n i`
+measurable with respect to `𝓕 n (i+1)`, square integrable, and a martingale difference
+`E[d n i | 𝓕 n i] = 0`. This is the data of the Lindeberg martingale central limit theorem.
+
+Allowing the filtration to depend on the row `n` costs nothing: every step of the argument works
+within a single row, and the cross-row limits (`V_n → σ²`, `L_n(ε) → 0` in probability) only refer
+to the measure `P`. It is what lets the self-normalized/joint applications feed a different
+filtration for each normalization. -/
 structure MartDiffArray (P : Measure Ω) where
-  /-- The (shared) filtration. -/
-  𝓕 : Filtration ℕ mΩ
+  /-- The filtration of row `n`. -/
+  𝓕 : ℕ → Filtration ℕ mΩ
   /-- `d n i` is the `i`-th increment of row `n`. -/
   d : ℕ → ℕ → Ω → ℝ
   /-- `k n` is the length of row `n`. -/
@@ -597,9 +602,9 @@ structure MartDiffArray (P : Measure Ω) where
   /-- Each increment is square integrable. -/
   memLp : ∀ n i, MemLp (d n i) 2 P
   /-- Martingale-difference property. -/
-  mgdiff : ∀ n i, P[d n i | 𝓕 i] =ᵐ[P] 0
-  /-- `d n i` is revealed at step `i + 1`. -/
-  adapted : ∀ n i, StronglyMeasurable[𝓕 (i + 1)] (d n i)
+  mgdiff : ∀ n i, P[d n i | 𝓕 n i] =ᵐ[P] 0
+  /-- `d n i` is revealed at step `i + 1` of row `n`. -/
+  adapted : ∀ n i, StronglyMeasurable[𝓕 n (i + 1)] (d n i)
 
 namespace MartDiffArray
 
@@ -609,7 +614,7 @@ variable {P : Measure Ω} (A : MartDiffArray P)
 noncomputable def rowSum (n : ℕ) : Ω → ℝ := fun ω => ∑ i ∈ Finset.range (A.k n), A.d n i ω
 
 /-- Conditional variance of cell `(n,i)`: `v_{n,i} = E[d n i ² | 𝓕 i]`. -/
-noncomputable def condVar (n i : ℕ) : Ω → ℝ := P[fun ω => (A.d n i ω) ^ 2 | A.𝓕 i]
+noncomputable def condVar (n i : ℕ) : Ω → ℝ := P[fun ω => (A.d n i ω) ^ 2 | A.𝓕 n i]
 
 /-- Predictable quadratic variation of row `n`: `V_n = ∑_{i<k n} v_{n,i}`. -/
 noncomputable def predVar (n : ℕ) : Ω → ℝ :=
@@ -618,10 +623,10 @@ noncomputable def predVar (n : ℕ) : Ω → ℝ :=
 /-- Conditional Lindeberg quantity `L_n(ε) = ∑_{i<k n} E[d n i ² 𝟙{|d n i|>ε} | 𝓕 i]`. -/
 noncomputable def lindeberg (n : ℕ) (ε : ℝ) : Ω → ℝ :=
   fun ω => ∑ i ∈ Finset.range (A.k n),
-    (P[{ω | ε < |A.d n i ω|}.indicator (fun ω => (A.d n i ω) ^ 2) | A.𝓕 i]) ω
+    (P[{ω | ε < |A.d n i ω|}.indicator (fun ω => (A.d n i ω) ^ 2) | A.𝓕 n i]) ω
 
 lemma measurable_d (n i : ℕ) : Measurable (A.d n i) :=
-  (A.adapted n i).measurable.mono (A.𝓕.le (i + 1)) le_rfl
+  (A.adapted n i).measurable.mono ((A.𝓕 n).le (i + 1)) le_rfl
 
 lemma integrable_sq (n i : ℕ) :
     Integrable (fun ω => (A.d n i ω) ^ 2) P := (A.memLp n i).integrable_sq
@@ -630,13 +635,13 @@ lemma integrable_sq (n i : ℕ) :
 each cell variance is controlled by `ε²` plus the whole Lindeberg sum. -/
 lemma condVar_le_lindeberg [IsProbabilityMeasure P] (n i : ℕ) (hi : i < A.k n) (ε : ℝ) :
     A.condVar n i ≤ᵐ[P] fun ω => ε ^ 2 + A.lindeberg n ε ω := by
-  have hsq := condExp_sq_le (A.measurable_d n i) (A.integrable_sq n i) (A.𝓕.le i) ε
+  have hsq := condExp_sq_le (A.measurable_d n i) (A.integrable_sq n i) ((A.𝓕 n).le i) ε
   have hnn : ∀ j, (0 : Ω → ℝ) ≤ᵐ[P]
-      P[{ω | ε < |A.d n j ω|}.indicator (fun ω => (A.d n j ω) ^ 2) | A.𝓕 j] :=
+      P[{ω | ε < |A.d n j ω|}.indicator (fun ω => (A.d n j ω) ^ 2) | A.𝓕 n j] :=
     fun j => condExp_nonneg (ae_of_all _ fun ω =>
       Set.indicator_nonneg (fun _ _ => sq_nonneg _) ω)
   have hterm :
-      (fun ω => (P[{ω | ε < |A.d n i ω|}.indicator (fun ω => (A.d n i ω) ^ 2) | A.𝓕 i]) ω)
+      (fun ω => (P[{ω | ε < |A.d n i ω|}.indicator (fun ω => (A.d n i ω) ^ 2) | A.𝓕 n i]) ω)
         ≤ᵐ[P] A.lindeberg n ε := by
     filter_upwards [ae_all_iff.mpr hnn] with ω hω
     simp only [Pi.zero_apply] at hω
@@ -676,13 +681,13 @@ lemma sum_condVar_sq_le [IsProbabilityMeasure P] (n : ℕ) (ε : ℝ) :
 Together with Lemma `norm_condExp_expI_sub_le` this bounds `∑_i ‖r_{n,i}‖`. -/
 lemma sum_condExp_min_le (n : ℕ) {ε : ℝ} (hε : 0 ≤ ε) (t : ℝ) :
     (fun ω => ∑ i ∈ Finset.range (A.k n),
-        (P[fun ω => min (2 * t ^ 2 * (A.d n i ω) ^ 2) (|t| ^ 3 * |A.d n i ω| ^ 3) | A.𝓕 i]) ω)
+        (P[fun ω => min (2 * t ^ 2 * (A.d n i ω) ^ 2) (|t| ^ 3 * |A.d n i ω| ^ 3) | A.𝓕 n i]) ω)
       ≤ᵐ[P] fun ω => |t| ^ 3 * ε * A.predVar n ω + 2 * t ^ 2 * A.lindeberg n ε ω := by
   have hcell : ∀ i, ∀ᵐ ω ∂P, i ∈ Finset.range (A.k n) →
-      (P[fun ω => min (2 * t ^ 2 * (A.d n i ω) ^ 2) (|t| ^ 3 * |A.d n i ω| ^ 3) | A.𝓕 i]) ω ≤
-        |t| ^ 3 * ε * (P[fun ω => (A.d n i ω) ^ 2 | A.𝓕 i]) ω
+      (P[fun ω => min (2 * t ^ 2 * (A.d n i ω) ^ 2) (|t| ^ 3 * |A.d n i ω| ^ 3) | A.𝓕 n i]) ω ≤
+        |t| ^ 3 * ε * (P[fun ω => (A.d n i ω) ^ 2 | A.𝓕 n i]) ω
           + 2 * t ^ 2 *
-            (P[{ω | ε < |A.d n i ω|}.indicator (fun ω => (A.d n i ω) ^ 2) | A.𝓕 i]) ω := by
+            (P[{ω | ε < |A.d n i ω|}.indicator (fun ω => (A.d n i ω) ^ 2) | A.𝓕 n i]) ω := by
     intro i
     by_cases hi : i ∈ Finset.range (A.k n)
     · filter_upwards
@@ -691,11 +696,11 @@ lemma sum_condExp_min_le (n : ℕ) {ε : ℝ} (hε : 0 ≤ ε) (t : ℝ) :
     · exact ae_of_all _ fun ω hmem => absurd hmem hi
   filter_upwards [ae_all_iff.mpr hcell] with ω hω
   calc ∑ i ∈ Finset.range (A.k n),
-        (P[fun ω => min (2 * t ^ 2 * (A.d n i ω) ^ 2) (|t| ^ 3 * |A.d n i ω| ^ 3) | A.𝓕 i]) ω
+        (P[fun ω => min (2 * t ^ 2 * (A.d n i ω) ^ 2) (|t| ^ 3 * |A.d n i ω| ^ 3) | A.𝓕 n i]) ω
       ≤ ∑ i ∈ Finset.range (A.k n),
-          (|t| ^ 3 * ε * (P[fun ω => (A.d n i ω) ^ 2 | A.𝓕 i]) ω
+          (|t| ^ 3 * ε * (P[fun ω => (A.d n i ω) ^ 2 | A.𝓕 n i]) ω
             + 2 * t ^ 2 *
-              (P[{ω | ε < |A.d n i ω|}.indicator (fun ω => (A.d n i ω) ^ 2) | A.𝓕 i]) ω) :=
+              (P[{ω | ε < |A.d n i ω|}.indicator (fun ω => (A.d n i ω) ^ 2) | A.𝓕 n i]) ω) :=
         Finset.sum_le_sum fun i hi => hω i hi
     _ = |t| ^ 3 * ε * A.predVar n ω + 2 * t ^ 2 * A.lindeberg n ε ω := by
         simp only [MartDiffArray.predVar, MartDiffArray.condVar, MartDiffArray.lindeberg,
@@ -713,25 +718,25 @@ noncomputable def Zproc (t : ℝ) (n j : ℕ) : Ω → ℂ :=
   fun ω => Complex.exp (((t * A.partialSum n j ω : ℝ) : ℂ) * I
     + ((t ^ 2 / 2 * A.partialVar n j ω : ℝ) : ℂ))
 
-lemma stronglyMeasurable_condVar (n i : ℕ) : StronglyMeasurable[A.𝓕 i] (A.condVar n i) :=
+lemma stronglyMeasurable_condVar (n i : ℕ) : StronglyMeasurable[A.𝓕 n i] (A.condVar n i) :=
   stronglyMeasurable_condExp
 
 lemma stronglyMeasurable_partialSum (n j : ℕ) :
-    StronglyMeasurable[A.𝓕 j] (A.partialSum n j) := by
+    StronglyMeasurable[A.𝓕 n j] (A.partialSum n j) := by
   unfold MartDiffArray.partialSum
   refine Finset.stronglyMeasurable_fun_sum _ fun i hi => ?_
   rw [Finset.mem_range] at hi
-  exact (A.adapted n i).mono (A.𝓕.mono (show i + 1 ≤ j by omega))
+  exact (A.adapted n i).mono ((A.𝓕 n).mono (show i + 1 ≤ j by omega))
 
 lemma stronglyMeasurable_partialVar (n j : ℕ) :
-    StronglyMeasurable[A.𝓕 j] (A.partialVar n j) := by
+    StronglyMeasurable[A.𝓕 n j] (A.partialVar n j) := by
   unfold MartDiffArray.partialVar
   refine Finset.stronglyMeasurable_fun_sum _ fun i hi => ?_
   rw [Finset.mem_range] at hi
-  exact (A.stronglyMeasurable_condVar n i).mono (A.𝓕.mono (show i ≤ j by omega))
+  exact (A.stronglyMeasurable_condVar n i).mono ((A.𝓕 n).mono (show i ≤ j by omega))
 
 lemma stronglyMeasurable_Zproc (t : ℝ) (n j : ℕ) :
-    StronglyMeasurable[A.𝓕 j] (A.Zproc t n j) := by
+    StronglyMeasurable[A.𝓕 n j] (A.Zproc t n j) := by
   unfold MartDiffArray.Zproc
   refine Complex.continuous_exp.comp_stronglyMeasurable ?_
   refine ((Complex.continuous_ofReal.comp_stronglyMeasurable
@@ -742,7 +747,7 @@ lemma stronglyMeasurable_Zproc (t : ℝ) (n j : ℕ) :
 /-- The `𝓕 j`-measurable factor `exp((t²/2) v_{n,j})`, the predictable part of the one-step
 `Z`-increment. -/
 lemma stronglyMeasurable_expVar (t : ℝ) (n j : ℕ) :
-    StronglyMeasurable[A.𝓕 j] (fun ω => Complex.exp ((t ^ 2 / 2 * A.condVar n j ω : ℝ) : ℂ)) :=
+    StronglyMeasurable[A.𝓕 n j] (fun ω => Complex.exp ((t ^ 2 / 2 * A.condVar n j ω : ℝ) : ℂ)) :=
   Complex.continuous_exp.comp_stronglyMeasurable
     (Complex.continuous_ofReal.comp_stronglyMeasurable
       ((A.stronglyMeasurable_condVar n j).const_mul (t ^ 2 / 2)))
@@ -771,11 +776,11 @@ lemma norm_Zproc (t : ℝ) (n j : ℕ) (ω : Ω) :
 it involves only `v_{n,0},…,v_{n,i}`. This predictability is what makes the truncation stopping
 rule `𝟙{V_{n,i+1} ≤ B}` a legitimate (`𝓕 i`-measurable) weight. -/
 lemma stronglyMeasurable_partialVar_succ (n i : ℕ) :
-    StronglyMeasurable[A.𝓕 i] (A.partialVar n (i + 1)) := by
+    StronglyMeasurable[A.𝓕 n i] (A.partialVar n (i + 1)) := by
   unfold MartDiffArray.partialVar
   refine Finset.stronglyMeasurable_fun_sum _ fun l hl => ?_
   rw [Finset.mem_range] at hl
-  exact (A.stronglyMeasurable_condVar n l).mono (A.𝓕.mono (show l ≤ i by omega))
+  exact (A.stronglyMeasurable_condVar n l).mono ((A.𝓕 n).mono (show l ≤ i by omega))
 
 /-- The array truncated at predictable-variance level `B`: increment `i` is kept only while the
 next partial variance `V_{n,i+1}` (which is `𝓕 i`-measurable) stays `≤ B`. Because `V` is
@@ -786,11 +791,12 @@ noncomputable def trunc (A : MartDiffArray P) [IsFiniteMeasure P] (B : ℝ) : Ma
   k := A.k
   d n i := {ω | A.partialVar n (i + 1) ω ≤ B}.indicator (A.d n i)
   memLp n i := MemLp.indicator
-    (measurableSet_le ((A.stronglyMeasurable_partialVar_succ n i).measurable.mono (A.𝓕.le i) le_rfl)
+    (measurableSet_le
+      ((A.stronglyMeasurable_partialVar_succ n i).measurable.mono ((A.𝓕 n).le i) le_rfl)
       measurable_const) (A.memLp n i)
   adapted n i := (A.adapted n i).indicator
     (measurableSet_le
-      ((A.stronglyMeasurable_partialVar_succ n i).measurable.mono (A.𝓕.mono i.le_succ) le_rfl)
+      ((A.stronglyMeasurable_partialVar_succ n i).measurable.mono ((A.𝓕 n).mono i.le_succ) le_rfl)
       measurable_const)
   mgdiff n i := by
     refine (condExp_indicator ((A.memLp n i).integrable one_le_two)
@@ -823,7 +829,7 @@ lemma sum_indicator_le {v : ℕ → ℝ} (hv : ∀ i, 0 ≤ v i) {B : ℝ} (hB :
     · rw [if_neg h, add_zero]; exact ih
 
 lemma measurableSet_truncSet_filt (B : ℝ) (n i : ℕ) :
-    MeasurableSet[A.𝓕 i] {ω | A.partialVar n (i + 1) ω ≤ B} :=
+    MeasurableSet[A.𝓕 n i] {ω | A.partialVar n (i + 1) ω ≤ B} :=
   measurableSet_le (A.stronglyMeasurable_partialVar_succ n i).measurable measurable_const
 
 /-- The truncated conditional variance is the original one, weighted by the (predictable) stopping
@@ -838,7 +844,7 @@ lemma condVar_trunc [IsFiniteMeasure P] (B : ℝ) (n i : ℕ) :
     · rw [Set.indicator_of_mem h, Set.indicator_of_mem h]
     · rw [Set.indicator_of_notMem h, Set.indicator_of_notMem h]; ring
   have heq : (A.trunc B).condVar n i
-      = P[{ω | A.partialVar n (i + 1) ω ≤ B}.indicator (fun ω => (A.d n i ω) ^ 2) | A.𝓕 i] := by
+      = P[{ω | A.partialVar n (i + 1) ω ≤ B}.indicator (fun ω => (A.d n i ω) ^ 2) | A.𝓕 n i] := by
     rw [← hsq]; rfl
   rw [heq]
   exact condExp_indicator (A.integrable_sq n i) (A.measurableSet_truncSet_filt B n i)
@@ -884,9 +890,9 @@ The factor `Z_{n,j}·e^{(t²/2)v_{n,j}}` is `𝓕 j`-measurable and is pulled ou
 expectation; the remaining `e^{itΔ_{n,j}}` is the fresh randomness. -/
 lemma condExp_Zproc_increment [IsProbabilityMeasure P] (t : ℝ) (n j : ℕ)
     (hZj : Integrable (A.Zproc t n j) P) (hZj1 : Integrable (A.Zproc t n (j + 1)) P) :
-    P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 j] =ᵐ[P]
+    P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 n j] =ᵐ[P]
       fun ω => A.Zproc t n j ω * Complex.exp ((t ^ 2 / 2 * A.condVar n j ω : ℝ) : ℂ) *
-          (P[fun ω => Complex.exp (((t * A.d n j ω : ℝ) : ℂ) * I) | A.𝓕 j]) ω
+          (P[fun ω => Complex.exp (((t * A.d n j ω : ℝ) : ℂ) * I) | A.𝓕 n j]) ω
         - A.Zproc t n j ω := by
   set g : Ω → ℂ := fun ω => Complex.exp (((t * A.d n j ω : ℝ) : ℂ) * I) with hg_def
   set fac : Ω → ℂ :=
@@ -898,7 +904,7 @@ lemma condExp_Zproc_increment [IsProbabilityMeasure P] (t : ℝ) (n j : ℕ)
         = ((t ^ 2 / 2 * A.condVar n j ω : ℝ) : ℂ) + ((t * A.d n j ω : ℝ) : ℂ) * I from by ring,
       Complex.exp_add]
     ring
-  have hfac_sm : StronglyMeasurable[A.𝓕 j] fac :=
+  have hfac_sm : StronglyMeasurable[A.𝓕 n j] fac :=
     (A.stronglyMeasurable_Zproc t n j).mul (A.stronglyMeasurable_expVar t n j)
   have hg_aesm : AEStronglyMeasurable g P :=
     Complex.continuous_exp.comp_aestronglyMeasurable
@@ -908,17 +914,17 @@ lemma condExp_Zproc_increment [IsProbabilityMeasure P] (t : ℝ) (n j : ℕ)
     refine Integrable.mono' (integrable_const (1 : ℝ)) hg_aesm (ae_of_all _ fun ω => ?_)
     simp only [hg_def]
     exact le_of_eq (Complex.norm_exp_ofReal_mul_I (t * A.d n j ω))
-  have hpull : P[fun ω => fac ω * g ω | A.𝓕 j] =ᵐ[P] fun ω => fac ω * (P[g | A.𝓕 j]) ω := by
+  have hpull : P[fun ω => fac ω * g ω | A.𝓕 n j] =ᵐ[P] fun ω => fac ω * (P[g | A.𝓕 n j]) ω := by
     have hfg : Integrable (fun ω => (ContinuousLinearMap.mul ℝ ℂ) (fac ω) (g ω)) P := by
       simp only [ContinuousLinearMap.mul_apply']
       rw [← hZeq]; exact hZj1
     simpa only [ContinuousLinearMap.mul_apply'] using
       condExp_bilin_of_stronglyMeasurable_left (B := ContinuousLinearMap.mul ℝ ℂ) hfac_sm hfg hg_int
-  have hZ1c : P[A.Zproc t n (j + 1) | A.𝓕 j] =ᵐ[P] fun ω => fac ω * (P[g | A.𝓕 j]) ω := by
+  have hZ1c : P[A.Zproc t n (j + 1) | A.𝓕 n j] =ᵐ[P] fun ω => fac ω * (P[g | A.𝓕 n j]) ω := by
     rw [hZeq]; exact hpull
-  have hZjc : P[A.Zproc t n j | A.𝓕 j] = A.Zproc t n j :=
-    condExp_of_stronglyMeasurable (A.𝓕.le j) (A.stronglyMeasurable_Zproc t n j) hZj
-  filter_upwards [condExp_sub hZj1 hZj (A.𝓕 j), hZ1c] with ω h1 h2
+  have hZjc : P[A.Zproc t n j | A.𝓕 n j] = A.Zproc t n j :=
+    condExp_of_stronglyMeasurable ((A.𝓕 n).le j) (A.stronglyMeasurable_Zproc t n j) hZj
+  filter_upwards [condExp_sub hZj1 hZj (A.𝓕 n j), hZ1c] with ω h1 h2
   rw [h1, Pi.sub_apply, h2, congrFun hZjc ω]
 
 /-- One-step increment of the partial predictable variation: `V_{n,j+1} = V_{n,j} + v_{n,j}`. -/
@@ -933,19 +939,19 @@ The predictable prefactor `e^{(t²/2)V_{n,j+1}}` is bounded once the array has b
 variation (`V_n ≤ B`), which is what makes the telescoped sum converge. -/
 lemma norm_condExp_Zproc_increment_le [IsProbabilityMeasure P] (t : ℝ) (n j : ℕ)
     (hZj : Integrable (A.Zproc t n j) P) (hZj1 : Integrable (A.Zproc t n (j + 1)) P) :
-    (fun ω => ‖(P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 j]) ω‖) ≤ᵐ[P]
+    (fun ω => ‖(P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 n j]) ω‖) ≤ᵐ[P]
       fun ω => Real.exp (t ^ 2 / 2 * A.partialVar n (j + 1) ω) *
         (t ^ 4 / 4 * (A.condVar n j ω) ^ 2 +
           (P[fun ω => min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3)
-            | A.𝓕 j]) ω) := by
+            | A.𝓕 n j]) ω) := by
   filter_upwards [A.condExp_Zproc_increment t n j hZj hZj1,
-    norm_condExp_expI_sub_le (A.𝓕.le j) (A.memLp n j) (A.mgdiff n j) t,
+    norm_condExp_expI_sub_le ((A.𝓕 n).le j) (A.memLp n j) (A.mgdiff n j) t,
     A.condVar_nonneg n j] with ω hinc hchar hnn
   simp only [Pi.zero_apply] at hnn
-  set w : ℂ := (P[fun ω => Complex.exp (((t * A.d n j ω : ℝ) : ℂ) * I) | A.𝓕 j]) ω with hw_def
+  set w : ℂ := (P[fun ω => Complex.exp (((t * A.d n j ω : ℝ) : ℂ) * I) | A.𝓕 n j]) ω with hw_def
   have hw : ‖w - (1 - ((t ^ 2 / 2 * A.condVar n j ω : ℝ) : ℂ))‖
       ≤ (P[fun ω => min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3)
-        | A.𝓕 j]) ω := hchar
+        | A.𝓕 n j]) ω := hchar
   have hfac := norm_expVar_mul_sub_one_le (v := A.condVar n j ω) hnn hw
   have hZfactor : A.Zproc t n j ω * Complex.exp ((t ^ 2 / 2 * A.condVar n j ω : ℝ) : ℂ) * w
         - A.Zproc t n j ω
@@ -974,7 +980,7 @@ lemma norm_Zproc_le_of_le {t : ℝ} {n j : ℕ} {B : ℝ} {ω : Ω} (h : A.parti
 lemma integrable_Zproc_of_le [IsProbabilityMeasure P] (t : ℝ) (n j : ℕ) {B : ℝ}
     (h : A.partialVar n j ≤ᵐ[P] fun _ => B) : Integrable (A.Zproc t n j) P := by
   refine Integrable.mono' (integrable_const (Real.exp (t ^ 2 / 2 * B)))
-    ((A.stronglyMeasurable_Zproc t n j).mono (A.𝓕.le j)).aestronglyMeasurable ?_
+    ((A.stronglyMeasurable_Zproc t n j).mono ((A.𝓕 n).le j)).aestronglyMeasurable ?_
   filter_upwards [h] with ω hω
   exact A.norm_Zproc_le_of_le hω
 
@@ -999,7 +1005,7 @@ lemma integrable_condVar_sq {B : ℝ} {n j : ℕ}
     Integrable (fun ω => (A.condVar n j ω) ^ 2) P := by
   have hb : A.condVar n j ≤ᵐ[P] fun _ => B := (A.condVar_le_predVar hj).trans hB
   have haesm : AEStronglyMeasurable (A.condVar n j) P :=
-    ((A.stronglyMeasurable_condVar n j).mono (A.𝓕.le j)).aestronglyMeasurable
+    ((A.stronglyMeasurable_condVar n j).mono ((A.𝓕 n).le j)).aestronglyMeasurable
   have hdom : Integrable (fun ω => B * A.condVar n j ω) P := by
     have : Integrable (A.condVar n j) P := integrable_condExp
     exact this.const_mul B
@@ -1015,17 +1021,17 @@ Under `V_n ≤ B` a.e., summing the one-step norm bounds over `j < k n` gives, a
 lemma sum_norm_condExp_increment_le [IsProbabilityMeasure P] (t : ℝ) (n : ℕ) {B : ℝ}
     (hB : A.predVar n ≤ᵐ[P] fun _ => B) :
     (fun ω => ∑ j ∈ Finset.range (A.k n),
-        ‖(P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 j]) ω‖) ≤ᵐ[P]
+        ‖(P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 n j]) ω‖) ≤ᵐ[P]
       fun ω => Real.exp (t ^ 2 / 2 * B) *
         (t ^ 4 / 4 * (∑ j ∈ Finset.range (A.k n), (A.condVar n j ω) ^ 2)
           + ∑ j ∈ Finset.range (A.k n),
               (P[fun ω => min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3)
-                | A.𝓕 j]) ω) := by
+                | A.𝓕 n j]) ω) := by
   have hcell : ∀ j, ∀ᵐ ω ∂P, j ∈ Finset.range (A.k n) →
-      ‖(P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 j]) ω‖ ≤
+      ‖(P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 n j]) ω‖ ≤
         Real.exp (t ^ 2 / 2 * B) * (t ^ 4 / 4 * (A.condVar n j ω) ^ 2 +
           (P[fun ω => min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3)
-            | A.𝓕 j]) ω) := by
+            | A.𝓕 n j]) ω) := by
     intro j
     by_cases hj : j ∈ Finset.range (A.k n)
     · have hj' := Finset.mem_range.mp hj
@@ -1033,7 +1039,7 @@ lemma sum_norm_condExp_increment_le [IsProbabilityMeasure P] (t : ℝ) (n : ℕ)
       have hZj1 := A.integrable_Zproc_of_le t n (j + 1) (A.partialVar_le_of_predVar_le hB hj')
       filter_upwards [A.norm_condExp_Zproc_increment_le t n j hZj hZj1,
         A.partialVar_le_of_predVar_le hB hj',
-        condExp_nonneg (μ := P) (m := A.𝓕 j)
+        condExp_nonneg (μ := P) (m := A.𝓕 n j)
           (f := fun ω => min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3))
           (ae_of_all _ fun ω => le_min (by positivity) (by positivity))]
         with ω hbd hVle hr_nn
@@ -1045,16 +1051,16 @@ lemma sum_norm_condExp_increment_le [IsProbabilityMeasure P] (t : ℝ) (n : ℕ)
     · exact ae_of_all _ fun ω hmem => absurd hmem hj
   filter_upwards [ae_all_iff.mpr hcell] with ω hω
   calc ∑ j ∈ Finset.range (A.k n),
-        ‖(P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 j]) ω‖
+        ‖(P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 n j]) ω‖
       ≤ ∑ j ∈ Finset.range (A.k n), Real.exp (t ^ 2 / 2 * B) *
           (t ^ 4 / 4 * (A.condVar n j ω) ^ 2 +
             (P[fun ω => min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3)
-              | A.𝓕 j]) ω) := Finset.sum_le_sum fun j hj => hω j hj
+              | A.𝓕 n j]) ω) := Finset.sum_le_sum fun j hj => hω j hj
     _ = Real.exp (t ^ 2 / 2 * B) *
           (t ^ 4 / 4 * (∑ j ∈ Finset.range (A.k n), (A.condVar n j ω) ^ 2)
             + ∑ j ∈ Finset.range (A.k n),
                 (P[fun ω => min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3)
-                  | A.𝓕 j]) ω) := by
+                  | A.𝓕 n j]) ω) := by
         rw [← Finset.mul_sum, Finset.sum_add_distrib, ← Finset.mul_sum]
 
 /-- **Integral form of the almost-martingale bound** (bounded-variance core of
@@ -1069,26 +1075,26 @@ lemma norm_integral_Zproc_sub_one_le [IsProbabilityMeasure P] (t : ℝ) (n : ℕ
         (t ^ 4 / 4 * (∫ ω, ∑ j ∈ Finset.range (A.k n), (A.condVar n j ω) ^ 2 ∂P)
           + ∫ ω, ∑ j ∈ Finset.range (A.k n),
               (P[fun ω => min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3)
-                | A.𝓕 j]) ω ∂P) := by
+                | A.𝓕 n j]) ω ∂P) := by
   have hint : ∀ j, j ≤ A.k n → Integrable (A.Zproc t n j) P :=
     fun j hj => A.integrable_Zproc_of_le t n j (A.partialVar_le_of_predVar_le hB hj)
   have hEnorm_int : ∀ j ∈ Finset.range (A.k n),
-      Integrable (fun ω => ‖(P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 j]) ω‖) P :=
+      Integrable (fun ω => ‖(P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 n j]) ω‖) P :=
     fun j _ => integrable_condExp.norm
   have hv2sum_int : Integrable (fun ω => ∑ j ∈ Finset.range (A.k n), (A.condVar n j ω) ^ 2) P :=
     integrable_finsetSum _ fun j hj => A.integrable_condVar_sq hB (Finset.mem_range.mp hj)
   have hrsum_int : Integrable (fun ω => ∑ j ∈ Finset.range (A.k n),
       (P[fun ω => min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3)
-        | A.𝓕 j]) ω) P :=
+        | A.𝓕 n j]) ω) P :=
     integrable_finsetSum _ fun j _ => integrable_condExp
   have hsum : ∑ j ∈ Finset.range (A.k n),
-        ∫ ω, (P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 j]) ω ∂P
+        ∫ ω, (P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 n j]) ω ∂P
       = (∫ ω, A.Zproc t n (A.k n) ω ∂P) - 1 := by
     have step : ∀ j ∈ Finset.range (A.k n),
-        ∫ ω, (P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 j]) ω ∂P
+        ∫ ω, (P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 n j]) ω ∂P
           = (∫ ω, A.Zproc t n (j + 1) ω ∂P) - (∫ ω, A.Zproc t n j ω ∂P) := by
       intro j hj
-      rw [integral_condExp (A.𝓕.le j)]
+      rw [integral_condExp ((A.𝓕 n).le j)]
       exact integral_sub (hint (j + 1) (Finset.mem_range.mp hj))
         (hint j (le_of_lt (Finset.mem_range.mp hj)))
     rw [Finset.sum_congr rfl step,
@@ -1096,20 +1102,20 @@ lemma norm_integral_Zproc_sub_one_le [IsProbabilityMeasure P] (t : ℝ) (n : ℕ
     simp
   rw [← hsum]
   calc ‖∑ j ∈ Finset.range (A.k n),
-        ∫ ω, (P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 j]) ω ∂P‖
+        ∫ ω, (P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 n j]) ω ∂P‖
       ≤ ∑ j ∈ Finset.range (A.k n),
-          ‖∫ ω, (P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 j]) ω ∂P‖ := norm_sum_le _ _
+          ‖∫ ω, (P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 n j]) ω ∂P‖ := norm_sum_le _ _
     _ ≤ ∑ j ∈ Finset.range (A.k n),
-          ∫ ω, ‖(P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 j]) ω‖ ∂P :=
+          ∫ ω, ‖(P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 n j]) ω‖ ∂P :=
         Finset.sum_le_sum fun j _ => norm_integral_le_integral_norm _
     _ = ∫ ω, ∑ j ∈ Finset.range (A.k n),
-          ‖(P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 j]) ω‖ ∂P :=
+          ‖(P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 n j]) ω‖ ∂P :=
         (integral_finsetSum _ hEnorm_int).symm
     _ ≤ ∫ ω, Real.exp (t ^ 2 / 2 * B) *
           (t ^ 4 / 4 * (∑ j ∈ Finset.range (A.k n), (A.condVar n j ω) ^ 2)
             + ∑ j ∈ Finset.range (A.k n),
                 (P[fun ω => min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3)
-                  | A.𝓕 j]) ω) ∂P :=
+                  | A.𝓕 n j]) ω) ∂P :=
         integral_mono_ae (integrable_finsetSum _ hEnorm_int)
           (((hv2sum_int.const_mul (t ^ 4 / 4)).add hrsum_int).const_mul (Real.exp (t ^ 2 / 2 * B)))
           (A.sum_norm_condExp_increment_le t n hB)
@@ -1117,7 +1123,7 @@ lemma norm_integral_Zproc_sub_one_le [IsProbabilityMeasure P] (t : ℝ) (n : ℕ
           (t ^ 4 / 4 * (∫ ω, ∑ j ∈ Finset.range (A.k n), (A.condVar n j ω) ^ 2 ∂P)
             + ∫ ω, ∑ j ∈ Finset.range (A.k n),
                 (P[fun ω => min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3)
-                  | A.𝓕 j]) ω ∂P) := by
+                  | A.𝓕 n j]) ω ∂P) := by
         rw [MeasureTheory.integral_const_mul,
           integral_add (hv2sum_int.const_mul (t ^ 4 / 4)) hrsum_int,
           MeasureTheory.integral_const_mul]
@@ -1142,17 +1148,18 @@ lemma predVar_nonneg (n : ℕ) : (0 : Ω → ℝ) ≤ᵐ[P] A.predVar n := by
 lemma stronglyMeasurable_predVar (n : ℕ) : StronglyMeasurable (A.predVar n) := by
   unfold MartDiffArray.predVar
   exact Finset.stronglyMeasurable_fun_sum _ fun i _ =>
-    (A.stronglyMeasurable_condVar n i).mono (A.𝓕.le i)
+    (A.stronglyMeasurable_condVar n i).mono ((A.𝓕 n).le i)
 
 /-- The Lindeberg quantity is (strongly) measurable. -/
 lemma stronglyMeasurable_lindeberg (n : ℕ) (ε : ℝ) : StronglyMeasurable (A.lindeberg n ε) := by
   unfold MartDiffArray.lindeberg
-  exact Finset.stronglyMeasurable_fun_sum _ fun j _ => stronglyMeasurable_condExp.mono (A.𝓕.le j)
+  exact Finset.stronglyMeasurable_fun_sum _ fun j _ =>
+    stronglyMeasurable_condExp.mono ((A.𝓕 n).le j)
 
 /-- The Lindeberg quantity is nonnegative a.e. -/
 lemma lindeberg_nonneg (n : ℕ) (ε : ℝ) : (0 : Ω → ℝ) ≤ᵐ[P] A.lindeberg n ε := by
   have hcell : ∀ j, (0 : Ω → ℝ) ≤ᵐ[P]
-      (P[{ω | ε < |A.d n j ω|}.indicator (fun ω => (A.d n j ω) ^ 2) | A.𝓕 j]) :=
+      (P[{ω | ε < |A.d n j ω|}.indicator (fun ω => (A.d n j ω) ^ 2) | A.𝓕 n j]) :=
     fun j => condExp_nonneg (ae_of_all _ fun ω => Set.indicator_nonneg (fun _ _ => sq_nonneg _) ω)
   filter_upwards [ae_all_iff.mpr hcell] with ω hω
   simp only [Pi.zero_apply] at hω ⊢
@@ -1161,10 +1168,10 @@ lemma lindeberg_nonneg (n : ℕ) (ε : ℝ) : (0 : Ω → ℝ) ≤ᵐ[P] A.linde
 
 /-- The Lindeberg quantity never exceeds the predictable variation (dropping the indicators). -/
 lemma lindeberg_le_predVar (n : ℕ) (ε : ℝ) : A.lindeberg n ε ≤ᵐ[P] A.predVar n := by
-  have hcell : ∀ j, (P[{ω | ε < |A.d n j ω|}.indicator (fun ω => (A.d n j ω) ^ 2) | A.𝓕 j])
+  have hcell : ∀ j, (P[{ω | ε < |A.d n j ω|}.indicator (fun ω => (A.d n j ω) ^ 2) | A.𝓕 n j])
       ≤ᵐ[P] A.condVar n j := by
     intro j
-    exact condExp_mono (m := A.𝓕 j)
+    exact condExp_mono (m := A.𝓕 n j)
       ((A.integrable_sq n j).indicator (measurableSet_lt measurable_const (A.measurable_d n j).abs))
       (A.integrable_sq n j)
       (ae_of_all _ fun ω => by
@@ -1205,11 +1212,11 @@ lemma integral_sum_condExp_min_le [IsProbabilityMeasure P] {B : ℝ} {n : ℕ}
     (hB : A.predVar n ≤ᵐ[P] fun _ => B) {ε : ℝ} (hε : 0 ≤ ε) (t : ℝ) :
     (∫ ω, ∑ j ∈ Finset.range (A.k n),
         (P[fun ω => min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3)
-          | A.𝓕 j]) ω ∂P)
+          | A.𝓕 n j]) ω ∂P)
       ≤ |t| ^ 3 * ε * B + 2 * t ^ 2 * ∫ ω, A.lindeberg n ε ω ∂P := by
   have hr_int : Integrable (fun ω => ∑ j ∈ Finset.range (A.k n),
       (P[fun ω => min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3)
-        | A.𝓕 j]) ω) P :=
+        | A.𝓕 n j]) ω) P :=
     integrable_finsetSum _ fun j _ => integrable_condExp
   have hbound_int :
       Integrable (fun ω => |t| ^ 3 * ε * A.predVar n ω + 2 * t ^ 2 * A.lindeberg n ε ω) P :=
@@ -1223,7 +1230,7 @@ lemma integral_sum_condExp_min_le [IsProbabilityMeasure P] {B : ℝ} {n : ℕ}
           simp [measureReal_def, measure_univ]
   calc (∫ ω, ∑ j ∈ Finset.range (A.k n),
         (P[fun ω => min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3)
-          | A.𝓕 j]) ω ∂P)
+          | A.𝓕 n j]) ω ∂P)
       ≤ ∫ ω, (|t| ^ 3 * ε * A.predVar n ω + 2 * t ^ 2 * A.lindeberg n ε ω) ∂P :=
         integral_mono_ae hr_int hbound_int (A.sum_condExp_min_le n hε t)
     _ = |t| ^ 3 * ε * (∫ ω, A.predVar n ω ∂P) + 2 * t ^ 2 * ∫ ω, A.lindeberg n ε ω ∂P := by
@@ -1240,7 +1247,7 @@ lemma rowSum_eq_partialSum (n : ℕ) : A.rowSum n = A.partialSum n (A.k n) := rf
 
 /-- The row sum is measurable. -/
 lemma measurable_rowSum (n : ℕ) : Measurable (A.rowSum n) :=
-  ((A.stronglyMeasurable_partialSum n (A.k n)).mono (A.𝓕.le (A.k n))).measurable
+  ((A.stronglyMeasurable_partialSum n (A.k n)).mono ((A.𝓕 n).le (A.k n))).measurable
 
 /-- `‖e^{itS_n}‖ = 1`. -/
 lemma norm_expI_rowSum (t : ℝ) (n : ℕ) (ω : Ω) :
@@ -1252,7 +1259,7 @@ lemma stronglyMeasurable_expI_rowSum (t : ℝ) (n : ℕ) :
     StronglyMeasurable (fun ω => Complex.exp (((t * A.rowSum n ω : ℝ) : ℂ) * I)) :=
   Complex.continuous_exp.comp_stronglyMeasurable
     ((Complex.continuous_ofReal.comp_stronglyMeasurable
-      (((A.stronglyMeasurable_partialSum n (A.k n)).mono (A.𝓕.le (A.k n))).const_mul t)).mul
+      (((A.stronglyMeasurable_partialSum n (A.k n)).mono ((A.𝓕 n).le (A.k n))).const_mul t)).mul
       stronglyMeasurable_const)
 
 /-- `e^{itS_n}` is integrable (bounded by `1`). -/
@@ -1376,7 +1383,7 @@ theorem clt_Z_expectation [IsProbabilityMeasure P] (t : ℝ) {B : ℝ} (hB0 : 0 
   have hmono : t ^ 4 / 4 * (∫ ω, ∑ j ∈ Finset.range (A.k n), (A.condVar n j ω) ^ 2 ∂P)
         + ∫ ω, ∑ j ∈ Finset.range (A.k n),
             (P[fun ω => min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3)
-              | A.𝓕 j]) ω ∂P
+              | A.𝓕 n j]) ω ∂P
       ≤ t ^ 4 / 4 * (B * (ε ^ 2 + ∫ ω, A.lindeberg n ε ω ∂P))
         + (|t| ^ 3 * ε * B + 2 * t ^ 2 * ∫ ω, A.lindeberg n ε ω ∂P) :=
     add_le_add (mul_le_mul_of_nonneg_left (A.integral_sum_condVar_sq_le (hB n) ε) (by positivity))
@@ -1385,7 +1392,7 @@ theorem clt_Z_expectation [IsProbabilityMeasure P] (t : ℝ) {B : ℝ} (hB0 : 0 
           (∫ ω, ∑ j ∈ Finset.range (A.k n), (A.condVar n j ω) ^ 2 ∂P)
         + ∫ ω, ∑ j ∈ Finset.range (A.k n),
             (P[fun ω => min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3)
-              | A.𝓕 j]) ω ∂P)
+              | A.𝓕 n j]) ω ∂P)
       ≤ Real.exp (t ^ 2 / 2 * B) * (t ^ 4 / 4 * (B * (ε ^ 2 + ∫ ω, A.lindeberg n ε ω ∂P))
           + (|t| ^ 3 * ε * B + 2 * t ^ 2 * ∫ ω, A.lindeberg n ε ω ∂P)) :=
         mul_le_mul_of_nonneg_left hmono (Real.exp_pos _).le
@@ -1409,7 +1416,7 @@ theorem clt_charFun_bounded [IsProbabilityMeasure P] (t : ℝ) {B σ2 : ℝ} (hB
     filter_upwards [A.partialVar_le_of_predVar_le (hB n) (le_refl (A.k n))] with ω hω
     exact A.norm_Zproc_le_of_le hω
   have hZ_sm : ∀ n, StronglyMeasurable (A.Zproc t n (A.k n)) := fun n =>
-    (A.stronglyMeasurable_Zproc t n (A.k n)).mono (A.𝓕.le (A.k n))
+    (A.stronglyMeasurable_Zproc t n (A.k n)).mono ((A.𝓕 n).le (A.k n))
   have hZint : ∀ n, Integrable (A.Zproc t n (A.k n)) P := fun n =>
     A.integrable_Zproc_of_le t n (A.k n) (A.partialVar_le_of_predVar_le (hB n) (le_refl (A.k n)))
   -- the exponential weight `e^{-(t²/2)V_n}` and its bound/measurability
@@ -1547,10 +1554,10 @@ lemma tendsto_measure_predVar_gt {σ2 B : ℝ} (hσB : σ2 < B)
 lemma lindeberg_trunc_le [IsFiniteMeasure P] (B : ℝ) (n : ℕ) (ε : ℝ) :
     (A.trunc B).lindeberg n ε ≤ᵐ[P] A.lindeberg n ε := by
   have hcell : ∀ i,
-      (P[{ω | ε < |(A.trunc B).d n i ω|}.indicator (fun ω => ((A.trunc B).d n i ω) ^ 2) | A.𝓕 i])
-        ≤ᵐ[P] (P[{ω | ε < |A.d n i ω|}.indicator (fun ω => (A.d n i ω) ^ 2) | A.𝓕 i]) := by
+      (P[{ω | ε < |(A.trunc B).d n i ω|}.indicator (fun ω => ((A.trunc B).d n i ω) ^ 2) | A.𝓕 n i])
+        ≤ᵐ[P] (P[{ω | ε < |A.d n i ω|}.indicator (fun ω => (A.d n i ω) ^ 2) | A.𝓕 n i]) := by
     intro i
-    refine condExp_mono (m := A.𝓕 i)
+    refine condExp_mono (m := A.𝓕 n i)
       (((A.trunc B).integrable_sq n i).indicator
         (measurableSet_lt measurable_const ((A.trunc B).measurable_d n i).abs))
       ((A.integrable_sq n i).indicator (measurableSet_lt measurable_const (A.measurable_d n i).abs))
@@ -1707,11 +1714,12 @@ variable (𝓕 : Filtration ℕ mΩ) (d : ℕ → Ω → ℝ) (a : ℕ → ℝ)
 /-- The triangular array from a single martingale-difference sequence `d` scaled by the
 deterministic normalizer `1/√(a n)` in row `n`. Its row sum is `M_n/√(a n)`, `M_n = ∑_{i<n} d_i`. -/
 noncomputable def ofSeq : MartDiffArray P where
-  𝓕 := 𝓕
+  𝓕 := fun _ => 𝓕
   d n i := fun ω => (Real.sqrt (a n))⁻¹ * d i ω
   k := id
   memLp n i := (hmemLp i).const_mul _
   mgdiff n i := by
+    show P[fun ω => (Real.sqrt (a n))⁻¹ * d i ω | 𝓕 i] =ᵐ[P] 0
     filter_upwards [condExp_const_mul (m := 𝓕 i) (Real.sqrt (a n))⁻¹ (d i), hmgdiff i]
       with ω h1 h2
     simp only [Pi.zero_apply] at h2 ⊢
