@@ -4,10 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
 import AlphaRAR.Mathlib.HasCondDistrib
-import AlphaRAR.Probability.QuadraticVariation
 import AlphaRAR.Probability.MartingaleRate
-import LeanMachineLearning.SequentialLearning.StationaryEnv
 import LeanMachineLearning.SequentialLearning.FiniteActions
+import LeanMachineLearning.SequentialLearning.StationaryEnv
+import Mathlib.Topology.Separation.CompletelyRegular
 
 /-!
 # The response martingale, via the algorithm–environment framework

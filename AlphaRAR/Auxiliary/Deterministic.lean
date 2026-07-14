@@ -3,8 +3,11 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import Mathlib
 import AlphaRAR.Technical.Convergence
+import Mathlib.Algebra.BigOperators.Field
+import Mathlib.Algebra.Order.Star.Real
+import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
+import Mathlib.Analysis.Complex.ExponentialBounds
 
 /-!
 # Deterministic core of the auxiliary processes

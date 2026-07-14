@@ -4,8 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
 import AlphaRAR.Probability.ARTSConsistency
-import AlphaRAR.Mathlib.HasCondDistrib
-import LeanMachineLearning.SequentialLearning.FiniteActions
 
 /-!
 # The aRTS design family as a property of an `Algorithm`
