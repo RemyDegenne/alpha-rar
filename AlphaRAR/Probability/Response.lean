@@ -332,7 +332,7 @@ omit [IsMarkovKernel ν] in
 /-- Each `Q k n` is integrable (a finite sum of integrable increments). -/
 lemma integrable_respMart (hA : ∀ n, Measurable (A n)) (hint : ∀ n, Integrable (Y n) P)
     (k : 𝓐) (n : ℕ) : Integrable (respMart ν A Y k n) P :=
-  integrable_finsetSum' _ fun m _ => integrable_respMart_increment (hA m) (hint m) k
+  integrable_finsetSum' _ fun m _ ↦ integrable_respMart_increment (hA m) (hint m) k
 
 /-- The response martingale `Q k` is adapted to the action-augmented filtration
 `𝒢 = filtrationAction`: `Q k n` depends only on the assignments and responses of patients
@@ -343,7 +343,7 @@ lemma stronglyAdapted_respMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k
   set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback
   intro n
   unfold respMart
-  refine Finset.stronglyMeasurable_sum _ fun m hm => ?_
+  refine Finset.stronglyMeasurable_sum _ fun m hm ↦ ?_
   rw [Finset.mem_range] at hm
   have hAm : Measurable[𝒢 n] (A m) :=
     IsAlgEnvSeq.measurable_action_filtrationAction_lt h.measurable_action h.measurable_feedback hm
@@ -367,7 +367,7 @@ lemma martingale_respMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
   have hInt : ∀ n, Integrable (respMart ν A Y k n) P :=
     integrable_respMart h.measurable_action hint k
   have hadapt : StronglyAdapted 𝒢 (respMart ν A Y k) := stronglyAdapted_respMart h k
-  refine martingale_nat hadapt hInt fun i => ?_
+  refine martingale_nat hadapt hInt fun i ↦ ?_
   rw [respMart_succ]
   symm
   have hadd := condExp_add (hInt i)
@@ -427,7 +427,7 @@ omit [IsMarkovKernel ν] in
 lemma memLp_respMart (hA : ∀ n, Measurable (A n)) (hY2 : ∀ n, MemLp (Y n) 2 P) (k : 𝓐) (n : ℕ) :
     MemLp (respMart ν A Y k n) 2 P := by
   unfold respMart
-  exact memLp_finsetSum' _ fun m _ => memLp_respMart_increment k (hA m) (hY2 m)
+  exact memLp_finsetSum' _ fun m _ ↦ memLp_respMart_increment k (hA m) (hY2 m)
 
 /-- **The quadratic variation of `Q` is `V_k N`** (blueprint `lem:Q_quad_var`).
 For the action-augmented filtration `𝒢 = filtrationAction` — for which `Q k` is a martingale

@@ -34,8 +34,8 @@ lemma isProjection_one_sub_vecMulVec {K : ℕ} (s : Fin K → ℝ) (hs : s ⬝�
   have hmm : vecMulVec s s * vecMulVec s s = vecMulVec s s := by
     ext i j
     simp only [Matrix.mul_apply, Matrix.vecMulVec_apply]
-    have hfac : ∀ k, s i * s k * (s k * s j) = s i * s j * (s k * s k) := fun k => by ring
-    rw [Finset.sum_congr rfl (fun k _ => hfac k), ← Finset.mul_sum]
+    have hfac : ∀ k, s i * s k * (s k * s j) = s i * s j * (s k * s k) := fun k ↦ by ring
+    rw [Finset.sum_congr rfl (fun k _ ↦ hfac k), ← Finset.mul_sum]
     have : ∑ k, s k * s k = 1 := hs
     rw [this, mul_one]
   refine ⟨?_, ?_⟩

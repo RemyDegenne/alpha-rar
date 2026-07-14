@@ -30,7 +30,7 @@ variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
 /-- The **predictable quadratic variation** `⟨M⟩` of a process `M`, defined as the
 predictable part of `M²` in its Doob decomposition (blueprint `def:pred_qv`). -/
 noncomputable def predQuadVar (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) : ℕ → Ω → ℝ :=
-  predictablePart (fun n => M n ^ 2) ℱ μ
+  predictablePart (fun n ↦ M n ^ 2) ℱ μ
 
 @[simp] lemma predQuadVar_zero : predQuadVar M ℱ μ 0 = 0 := predictablePart_zero
 
@@ -48,7 +48,7 @@ lemma predQuadVar_neg (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : M
 martingale simplification of the cross term). -/
 lemma predQuadVar_succ_sub (n : ℕ) :
     predQuadVar M ℱ μ (n + 1) - predQuadVar M ℱ μ n
-      = μ[(fun ω => M (n + 1) ω ^ 2) - fun ω => M n ω ^ 2 | ℱ n] := by
+      = μ[(fun ω ↦ M (n + 1) ω ^ 2) - fun ω ↦ M n ω ^ 2 | ℱ n] := by
   rw [predQuadVar, predictablePart_add_one]
   abel
 
@@ -57,14 +57,14 @@ For a martingale `M`, the increment of `⟨M⟩` is the conditional second momen
 the increment of `M`: `⟨M⟩ (n+1) - ⟨M⟩ n = μ[(M (n+1) - M n)² | ℱ n]` a.e.
 (the cross term `2 Mₙ ΔMₙ` vanishes by the martingale property). -/
 lemma predQuadVar_succ_sub_eq [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (n : ℕ)
-    (hd2 : Integrable (fun ω => (M (n + 1) ω - M n ω) ^ 2) μ)
+    (hd2 : Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
     (hprod : Integrable (M n * (M (n + 1) - M n)) μ) :
     predQuadVar M ℱ μ (n + 1) - predQuadVar M ℱ μ n
-      =ᵐ[μ] μ[fun ω => (M (n + 1) ω - M n ω) ^ 2 | ℱ n] := by
+      =ᵐ[μ] μ[fun ω ↦ (M (n + 1) ω - M n ω) ^ 2 | ℱ n] := by
   rw [predQuadVar_succ_sub]
   -- `M(n+1)² - Mₙ² = (M(n+1) - Mₙ)² + (Mₙ ΔMₙ + Mₙ ΔMₙ)` pointwise.
-  have hfun : ((fun ω => M (n + 1) ω ^ 2) - fun ω => M n ω ^ 2)
-      = (fun ω => (M (n + 1) ω - M n ω) ^ 2)
+  have hfun : ((fun ω ↦ M (n + 1) ω ^ 2) - fun ω ↦ M n ω ^ 2)
+      = (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2)
         + (M n * (M (n + 1) - M n) + M n * (M (n + 1) - M n)) := by
     funext ω
     simp only [Pi.sub_apply, Pi.add_apply, Pi.mul_apply]
@@ -99,11 +99,11 @@ lemma predQuadVar_succ_sub_eq [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (n
 The quadratic variation of a martingale increases, since its increment is a
 conditional second moment, hence nonnegative. -/
 lemma predQuadVar_le_succ [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (n : ℕ)
-    (hd2 : Integrable (fun ω => (M (n + 1) ω - M n ω) ^ 2) μ)
+    (hd2 : Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
     (hprod : Integrable (M n * (M (n + 1) - M n)) μ) :
     predQuadVar M ℱ μ n ≤ᵐ[μ] predQuadVar M ℱ μ (n + 1) := by
   have hinc := predQuadVar_succ_sub_eq hM n hd2 hprod
-  have hnn : (0 : Ω → ℝ) ≤ᵐ[μ] μ[fun ω => (M (n + 1) ω - M n ω) ^ 2 | ℱ n] := by
+  have hnn : (0 : Ω → ℝ) ≤ᵐ[μ] μ[fun ω ↦ (M (n + 1) ω - M n ω) ^ 2 | ℱ n] := by
     refine condExp_nonneg ?_
     filter_upwards with ω
     simp only [Pi.zero_apply]
@@ -137,7 +137,7 @@ lemma predQuadVar_nonneg [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
 increment `⟨M⟩_{k+1} - ⟨M⟩_k` equals `μ[(ΔM_k)² | ℱ_k] ≤ c²`, so telescoping from `⟨M⟩_0 = 0`
 gives `⟨M⟩_n ≤ c² n` a.e. -/
 lemma predQuadVar_le_of_bound [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) {c : ℝ}
-    (hd2 : ∀ n, Integrable (fun ω => (M (n + 1) ω - M n ω) ^ 2) μ)
+    (hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
     (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
     ∀ᵐ ω ∂μ, ∀ n, predQuadVar M ℱ μ n ω ≤ c ^ 2 * n := by
@@ -145,10 +145,10 @@ lemma predQuadVar_le_of_bound [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) {c
       predQuadVar M ℱ μ (k + 1) ω - predQuadVar M ℱ μ k ω ≤ c ^ 2 := by
     intro k
     have hinc := predQuadVar_succ_sub_eq hM k (hd2 k) (hprod k)
-    have hsqle : (fun ω => (M (k + 1) ω - M k ω) ^ 2) ≤ᵐ[μ] fun _ => c ^ 2 := by
+    have hsqle : (fun ω ↦ (M (k + 1) ω - M k ω) ^ 2) ≤ᵐ[μ] fun _ ↦ c ^ 2 := by
       filter_upwards [hb k] with ω h
       nlinarith [neg_le_of_abs_le h, le_of_abs_le h]
-    have hcond : μ[fun ω => (M (k + 1) ω - M k ω) ^ 2 | ℱ k] ≤ᵐ[μ] fun _ => c ^ 2 := by
+    have hcond : μ[fun ω ↦ (M (k + 1) ω - M k ω) ^ 2 | ℱ k] ≤ᵐ[μ] fun _ ↦ c ^ 2 := by
       have h := condExp_mono (m := ℱ k) (hd2 k) (integrable_const (c ^ 2)) hsqle
       rwa [condExp_const (ℱ.le k)] at h
     filter_upwards [hinc, hcond] with ω e ec
@@ -157,12 +157,12 @@ lemma predQuadVar_le_of_bound [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) {c
   intro n
   have htel : ∑ k ∈ Finset.range n,
       (predQuadVar M ℱ μ (k + 1) ω - predQuadVar M ℱ μ k ω) = predQuadVar M ℱ μ n ω := by
-    rw [Finset.sum_range_sub (fun k => predQuadVar M ℱ μ k ω) n]
+    rw [Finset.sum_range_sub (fun k ↦ predQuadVar M ℱ μ k ω) n]
     have h0 : predQuadVar M ℱ μ 0 ω = 0 := by rw [predQuadVar_zero]; rfl
     rw [h0, sub_zero]
   rw [← htel]
   calc ∑ k ∈ Finset.range n, (predQuadVar M ℱ μ (k + 1) ω - predQuadVar M ℱ μ k ω)
-      ≤ ∑ _k ∈ Finset.range n, c ^ 2 := Finset.sum_le_sum fun k _ => hω k
+      ≤ ∑ _k ∈ Finset.range n, c ^ 2 := Finset.sum_le_sum fun k _ ↦ hω k
     _ = c ^ 2 * n := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]; ring
 
 /-- **A martingale has constant expectation**: `∫ N n = ∫ N 0` for every `n`.
@@ -178,20 +178,20 @@ lemma martingale_integral_eq [IsFiniteMeasure μ] {N : ℕ → Ω → ℝ}
 For an adapted process `M` with square-integrable values, `M² - ⟨M⟩` is a
 martingale, being the martingale part of `M²` in its Doob decomposition. -/
 lemma martingale_sq_sub_predQuadVar [IsFiniteMeasure μ]
-    (hM : StronglyAdapted ℱ M) (hM2 : ∀ n, Integrable (fun ω => M n ω ^ 2) μ) :
-    Martingale (fun n => (fun ω => M n ω ^ 2) - predQuadVar M ℱ μ n) ℱ μ := by
-  have hadapt : StronglyAdapted ℱ (fun n => fun ω => M n ω ^ 2) := fun n => (hM n).pow 2
+    (hM : StronglyAdapted ℱ M) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) :
+    Martingale (fun n ↦ (fun ω ↦ M n ω ^ 2) - predQuadVar M ℱ μ n) ℱ μ := by
+  have hadapt : StronglyAdapted ℱ (fun n ↦ fun ω ↦ M n ω ^ 2) := fun n ↦ (hM n).pow 2
   exact martingale_martingalePart hadapt hM2
 
 /-- **`⟨M⟩ n` is integrable.** Since `M² - ⟨M⟩` is (the martingale part, hence)
 integrable and `M²` is integrable, so is `⟨M⟩`. -/
 lemma integrable_predQuadVar [IsFiniteMeasure μ]
-    (hM : StronglyAdapted ℱ M) (hM2 : ∀ n, Integrable (fun ω => M n ω ^ 2) μ) (n : ℕ) :
+    (hM : StronglyAdapted ℱ M) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) (n : ℕ) :
     Integrable (predQuadVar M ℱ μ n) μ := by
   have hN := martingale_sq_sub_predQuadVar hM hM2
-  have hNk : Integrable ((fun ω => M n ω ^ 2) - predQuadVar M ℱ μ n) μ := hN.integrable n
+  have hNk : Integrable ((fun ω ↦ M n ω ^ 2) - predQuadVar M ℱ μ n) μ := hN.integrable n
   have hid : predQuadVar M ℱ μ n
-      = (fun ω => M n ω ^ 2) - ((fun ω => M n ω ^ 2) - predQuadVar M ℱ μ n) := by
+      = (fun ω ↦ M n ω ^ 2) - ((fun ω ↦ M n ω ^ 2) - predQuadVar M ℱ μ n) := by
     funext ω; simp [Pi.sub_apply]
   rw [hid]
   exact (hM2 n).sub hNk
@@ -201,18 +201,18 @@ lemma integrable_predQuadVar [IsFiniteMeasure μ]
 `E[M n ²] = E[⟨M⟩ n]`. This is the discrete Itô isometry: `M² - ⟨M⟩` is a
 martingale starting at `0`, so its expectation stays `0`. -/
 lemma integral_sq_eq_integral_predQuadVar [IsFiniteMeasure μ]
-    (hM : StronglyAdapted ℱ M) (hM2 : ∀ n, Integrable (fun ω => M n ω ^ 2) μ)
+    (hM : StronglyAdapted ℱ M) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
     (hM0 : M 0 =ᵐ[μ] 0) (n : ℕ) :
     ∫ ω, M n ω ^ 2 ∂μ = ∫ ω, predQuadVar M ℱ μ n ω ∂μ := by
   have hN := martingale_sq_sub_predQuadVar hM hM2
   have hIqv := integrable_predQuadVar hM hM2
   -- `∫ (M n² - ⟨M⟩ n) = ∫ M n² - ∫ ⟨M⟩ n`.
-  have e1 : ∫ ω, ((fun ω => M n ω ^ 2) - predQuadVar M ℱ μ n) ω ∂μ
+  have e1 : ∫ ω, ((fun ω ↦ M n ω ^ 2) - predQuadVar M ℱ μ n) ω ∂μ
       = ∫ ω, M n ω ^ 2 ∂μ - ∫ ω, predQuadVar M ℱ μ n ω ∂μ :=
     integral_sub (hM2 n) (hIqv n)
   -- At time `0` the process is `M 0² - ⟨M⟩ 0 = 0` a.e.
-  have e0 : ∫ ω, ((fun ω => M 0 ω ^ 2) - predQuadVar M ℱ μ 0) ω ∂μ = 0 := by
-    have hz : ((fun ω => M 0 ω ^ 2) - predQuadVar M ℱ μ 0) =ᵐ[μ] 0 := by
+  have e0 : ∫ ω, ((fun ω ↦ M 0 ω ^ 2) - predQuadVar M ℱ μ 0) ω ∂μ = 0 := by
+    have hz : ((fun ω ↦ M 0 ω ^ 2) - predQuadVar M ℱ μ 0) =ᵐ[μ] 0 := by
       filter_upwards [hM0] with ω hω
       simp only [Pi.sub_apply, Pi.zero_apply] at hω ⊢
       rw [show predQuadVar M ℱ μ 0 ω = 0 from by rw [predQuadVar_zero]; rfl, hω]
@@ -227,19 +227,19 @@ lemma integral_sq_eq_integral_predQuadVar [IsFiniteMeasure μ]
 variation is the second moment of the martingale increment:
 `E[⟨M⟩ (n+1)] - E[⟨M⟩ n] = E[(ΔM (n+1))²]`. -/
 lemma integral_predQuadVar_succ_sub [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
-    (hM2 : ∀ n, Integrable (fun ω => M n ω ^ 2) μ) (n : ℕ)
-    (hd2 : Integrable (fun ω => (M (n + 1) ω - M n ω) ^ 2) μ)
+    (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) (n : ℕ)
+    (hd2 : Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
     (hprod : Integrable (M n * (M (n + 1) - M n)) μ) :
     ∫ ω, predQuadVar M ℱ μ (n + 1) ω ∂μ - ∫ ω, predQuadVar M ℱ μ n ω ∂μ
       = ∫ ω, (M (n + 1) ω - M n ω) ^ 2 ∂μ := by
   have hIqv := integrable_predQuadVar hM.stronglyAdapted hM2
   have h1 : predQuadVar M ℱ μ (n + 1) - predQuadVar M ℱ μ n
-      =ᵐ[μ] μ[fun ω => (M (n + 1) ω - M n ω) ^ 2 | ℱ n] :=
+      =ᵐ[μ] μ[fun ω ↦ (M (n + 1) ω - M n ω) ^ 2 | ℱ n] :=
     predQuadVar_succ_sub_eq hM n hd2 hprod
   calc ∫ ω, predQuadVar M ℱ μ (n + 1) ω ∂μ - ∫ ω, predQuadVar M ℱ μ n ω ∂μ
       = ∫ ω, (predQuadVar M ℱ μ (n + 1) ω - predQuadVar M ℱ μ n ω) ∂μ :=
         (integral_sub (hIqv (n + 1)) (hIqv n)).symm
-    _ = ∫ ω, (μ[fun ω => (M (n + 1) ω - M n ω) ^ 2 | ℱ n]) ω ∂μ := by
+    _ = ∫ ω, (μ[fun ω ↦ (M (n + 1) ω - M n ω) ^ 2 | ℱ n]) ω ∂μ := by
         refine integral_congr_ae ?_
         filter_upwards [h1] with ω hω
         simpa [Pi.sub_apply] using hω
@@ -249,8 +249,8 @@ lemma integral_predQuadVar_succ_sub [IsFiniteMeasure μ] (hM : Martingale M ℱ 
 If every increment has second moment `≤ σ²`, then `E[M n ²] ≤ σ² n`. This is the
 discrete Itô isometry combined with the telescoping of `⟨M⟩`. -/
 lemma integral_sq_le_of_increment_bound [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
-    (hM2 : ∀ n, Integrable (fun ω => M n ω ^ 2) μ) (hM0 : M 0 =ᵐ[μ] 0) (σ2 : ℝ)
-    (hd2 : ∀ n, Integrable (fun ω => (M (n + 1) ω - M n ω) ^ 2) μ)
+    (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) (hM0 : M 0 =ᵐ[μ] 0) (σ2 : ℝ)
+    (hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
     (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ)
     (hinc : ∀ n, ∫ ω, (M (n + 1) ω - M n ω) ^ 2 ∂μ ≤ σ2) (n : ℕ) :
     ∫ ω, M n ω ^ 2 ∂μ ≤ σ2 * n := by
@@ -280,9 +280,9 @@ lemma martingale_mul [IsFiniteMeasure μ] {N : ℕ → Ω → ℝ}
     (hC : ∀ i, Integrable (N i * (M (i + 1) - M i)) μ)
     (hD : ∀ i, Integrable ((M (i + 1) - M i) * (N (i + 1) - N i)) μ)
     (hortho : ∀ i, μ[(M (i + 1) - M i) * (N (i + 1) - N i) | ℱ i] =ᵐ[μ] 0) :
-    Martingale (fun n => M n * N n) ℱ μ := by
+    Martingale (fun n ↦ M n * N n) ℱ μ := by
   refine martingale_nat
-    (fun n => (hM.stronglyMeasurable n).mul (hN.stronglyMeasurable n)) hMN (fun i => ?_)
+    (fun n ↦ (hM.stronglyMeasurable n).mul (hN.stronglyMeasurable n)) hMN (fun i ↦ ?_)
   -- Increments of `M` and `N` have vanishing conditional expectation.
   have hcdM : μ[M (i + 1) - M i | ℱ i] =ᵐ[μ] 0 := by
     have h3 : μ[M i | ℱ i] = M i :=
@@ -344,32 +344,32 @@ conditionally orthogonal martingales, see `martingale_mul`), then
 `⟨M + N⟩ = ⟨M⟩ + ⟨N⟩`. This is predictable-part linearity together with the fact
 that the predictable part of the martingale `M · N` vanishes. -/
 lemma predQuadVar_add_of_martingale_mul {N : ℕ → Ω → ℝ}
-    (hM2 : ∀ n, Integrable (fun ω => M n ω ^ 2) μ)
-    (hN2 : ∀ n, Integrable (fun ω => N n ω ^ 2) μ)
+    (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hN2 : ∀ n, Integrable (fun ω ↦ N n ω ^ 2) μ)
     (hMN : ∀ n, Integrable (M n * N n) μ)
-    (hmart : Martingale (fun n => M n * N n) ℱ μ) (n : ℕ) :
-    predQuadVar (fun k => M k + N k) ℱ μ n
+    (hmart : Martingale (fun n ↦ M n * N n) ℱ μ) (n : ℕ) :
+    predQuadVar (fun k ↦ M k + N k) ℱ μ n
       =ᵐ[μ] predQuadVar M ℱ μ n + predQuadVar N ℱ μ n := by
-  have hproc : (fun k => (M k + N k) ^ 2)
-      = (fun k => M k ^ 2) + (fun k => N k ^ 2) + (2 : ℝ) • (fun k => M k * N k) := by
+  have hproc : (fun k ↦ (M k + N k) ^ 2)
+      = (fun k ↦ M k ^ 2) + (fun k ↦ N k ^ 2) + (2 : ℝ) • (fun k ↦ M k * N k) := by
     funext k ω
     simp only [Pi.add_apply, Pi.smul_apply, Pi.pow_apply, Pi.mul_apply, smul_eq_mul]
     ring
-  have hMint : ∀ k, Integrable ((fun k => M k ^ 2) k) μ := hM2
-  have hNint : ∀ k, Integrable ((fun k => N k ^ 2) k) μ := hN2
-  have hMNint : ∀ k, Integrable (((2 : ℝ) • fun k => M k * N k) k) μ := fun k => by
+  have hMint : ∀ k, Integrable ((fun k ↦ M k ^ 2) k) μ := hM2
+  have hNint : ∀ k, Integrable ((fun k ↦ N k ^ 2) k) μ := hN2
+  have hMNint : ∀ k, Integrable (((2 : ℝ) • fun k ↦ M k * N k) k) μ := fun k ↦ by
     simpa using (hMN k).smul (2 : ℝ)
   -- Split `⟨M+N⟩` by linearity of the predictable part.
-  have h1 : predQuadVar (fun k => M k + N k) ℱ μ n
-      =ᵐ[μ] predictablePart ((fun k => M k ^ 2) + fun k => N k ^ 2) ℱ μ n
-        + predictablePart ((2 : ℝ) • fun k => M k * N k) ℱ μ n := by
+  have h1 : predQuadVar (fun k ↦ M k + N k) ℱ μ n
+      =ᵐ[μ] predictablePart ((fun k ↦ M k ^ 2) + fun k ↦ N k ^ 2) ℱ μ n
+        + predictablePart ((2 : ℝ) • fun k ↦ M k * N k) ℱ μ n := by
     rw [predQuadVar, hproc]
-    exact predictablePart_add (fun k => (hMint k).add (hNint k)) hMNint n
-  have h2 : predictablePart ((fun k => M k ^ 2) + fun k => N k ^ 2) ℱ μ n
+    exact predictablePart_add (fun k ↦ (hMint k).add (hNint k)) hMNint n
+  have h2 : predictablePart ((fun k ↦ M k ^ 2) + fun k ↦ N k ^ 2) ℱ μ n
       =ᵐ[μ] predQuadVar M ℱ μ n + predQuadVar N ℱ μ n := by
     simpa only [predQuadVar] using predictablePart_add hMint hNint n
-  have h3 : predictablePart ((2 : ℝ) • fun k => M k * N k) ℱ μ n =ᵐ[μ] 0 := by
-    have hs := predictablePart_smul (ℱ := ℱ) (μ := μ) (f := fun k => M k * N k) (2 : ℝ) n
+  have h3 : predictablePart ((2 : ℝ) • fun k ↦ M k * N k) ℱ μ n =ᵐ[μ] 0 := by
+    have hs := predictablePart_smul (ℱ := ℱ) (μ := μ) (f := fun k ↦ M k * N k) (2 : ℝ) n
     have hz := hmart.predictablePart_eq_zero n
     filter_upwards [hs, hz] with ω es ez
     simp only [Pi.smul_apply, Pi.zero_apply] at es ez ⊢

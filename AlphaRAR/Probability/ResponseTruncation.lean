@@ -121,7 +121,7 @@ omit [IsMarkovKernel ν] in
 lemma integrable_genRespMart (hA : ∀ n, Measurable (A n)) {g : ℕ → ℝ → ℝ}
     (hint : ∀ n, Integrable (fun ω ↦ g n (Y n ω)) P) (k : 𝓐) (n : ℕ) :
     Integrable (genRespMart ν A Y k g n) P :=
-  integrable_finsetSum' _ fun m _ => integrable_genRespMart_increment (hA m) (hint m) k
+  integrable_finsetSum' _ fun m _ ↦ integrable_genRespMart_increment (hA m) (hint m) k
 
 /-- The general-functional martingale is adapted to `filtrationAction`. -/
 lemma stronglyAdapted_genRespMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
@@ -131,7 +131,7 @@ lemma stronglyAdapted_genRespMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
   set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback
   intro n
   unfold genRespMart
-  refine Finset.stronglyMeasurable_sum _ fun m hm => ?_
+  refine Finset.stronglyMeasurable_sum _ fun m hm ↦ ?_
   rw [Finset.mem_range] at hm
   have hAm : Measurable[𝒢 n] (A m) :=
     IsAlgEnvSeq.measurable_action_filtrationAction_lt h.measurable_action h.measurable_feedback hm
@@ -152,7 +152,7 @@ lemma martingale_genRespMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
   have hInt : ∀ n, Integrable (genRespMart ν A Y k g n) P :=
     integrable_genRespMart h.measurable_action hint k
   have hadapt : StronglyAdapted 𝒢 (genRespMart ν A Y k g) := stronglyAdapted_genRespMart h k hg
-  refine martingale_nat hadapt hInt fun i => ?_
+  refine martingale_nat hadapt hInt fun i ↦ ?_
   rw [genRespMart_succ]
   symm
   have hadd := condExp_add (hInt i)
@@ -247,7 +247,7 @@ lemma memLp_genRespMart (hA : ∀ n, Measurable (A n)) {g : ℕ → ℝ → ℝ}
     (hg2 : ∀ n, MemLp (fun ω ↦ g n (Y n ω)) 2 P) (k : 𝓐) (n : ℕ) :
     MemLp (genRespMart ν A Y k g n) 2 P := by
   unfold genRespMart
-  exact memLp_finsetSum' _ fun m _ => memLp_genRespMart_increment k (hA m) (hg2 m)
+  exact memLp_finsetSum' _ fun m _ ↦ memLp_genRespMart_increment k (hA m) (hg2 m)
 
 /-- **The quadratic variation of the general-functional martingale** is the weighted assignment
 sum `⟨M⟩_n = ∑_{i<n} variance (g i) (ν k) · 𝟙{A i = k}`. For `respMart` (`g = id`, constant variance

@@ -62,7 +62,7 @@ per-path). For a `[0,1]`-valued adapted integrable assignment indicator `X`, alm
 `p_j = μ[X j | ℱ (j-1)]`. This is exactly the `hM` hypothesis consumed by `pos_part_vanishes`. -/
 lemma assignMG_path_div_ae_tendsto_zero [IsProbabilityMeasure μ]
     (hX : StronglyAdapted ℱ X) (hX_int : ∀ n, Integrable (X n) μ)
-    (h0X : ∀ n, 0 ≤ᵐ[μ] X n) (h1X : ∀ n, X n ≤ᵐ[μ] fun _ => (1 : ℝ)) :
+    (h0X : ∀ n, 0 ≤ᵐ[μ] X n) (h1X : ∀ n, X n ≤ᵐ[μ] fun _ ↦ (1 : ℝ)) :
     ∀ᵐ ω ∂μ, Tendsto (fun n ↦ assignMG (fun j ↦ X j ω)
       (fun j ↦ (μ[X j | ℱ.shiftDown j]) ω) n / (n : ℝ)) atTop (𝓝 0) := by
   filter_upwards [assignMart_div_atTop_ae_tendsto_zero hX hX_int h0X h1X] with ω hω

@@ -126,13 +126,13 @@ lemma auxU_telescope (n ℓ : ℕ) (hℓn : ℓ ≤ n) :
   rw [← sum_Ico_succ_sub (auxU X p ρ α) ℓ n hℓn, Finset.sum_congr rfl hterm,
     Finset.sum_add_distrib]
   congr 1
-  exact sum_Ico_succ_sub (fun m => count X m - (m : ℝ) * ρ m) ℓ n hℓn
+  exact sum_Ico_succ_sub (fun m ↦ count X m - (m : ℝ) * ρ m) ℓ n hℓn
 
 /-- **Counts sum to time** (blueprint `lem:counts_sum`).
 If the assignment vector sums to one at each time, then the arm counts sum to the
 time index. -/
 lemma counts_sum {ι : Type*} [Fintype ι] (Y : ℕ → ι → ℝ) (hY : ∀ j, ∑ k, Y j k = 1) (n : ℕ) :
-    (∑ k, count (fun j => Y j k) n) = n := by
+    (∑ k, count (fun j ↦ Y j k) n) = n := by
   simp only [count]
   rw [Finset.sum_comm]
   simp only [hY, Finset.sum_const, Finset.card_range, nsmul_eq_mul, mul_one]
@@ -146,7 +146,7 @@ def hitting (P : ℕ → Prop) [DecidablePred P] (n : ℕ) : ℕ := Nat.findGrea
 `n ↦ hitting P n` is non-decreasing and bounded above by `n`. -/
 lemma hitting_basic (P : ℕ → Prop) [DecidablePred P] :
     Monotone (hitting P) ∧ ∀ n, hitting P n ≤ n := by
-  refine ⟨fun a b hab => Nat.findGreatest_mono_right P hab, fun n => Nat.findGreatest_le n⟩
+  refine ⟨fun a b hab ↦ Nat.findGreatest_mono_right P hab, fun n ↦ Nat.findGreatest_le n⟩
 
 /-- **Sign at the hitting time** (blueprint `lem:hitting_sign`, maximality part).
 Strictly after the last under-sampling time (and up to `n`), the arm is no longer
@@ -172,7 +172,7 @@ lemma preliminary_ineq (n ℓ : ℕ) (hℓn : ℓ ≤ n)
     set T := ∑ m ∈ Ico ℓ n, (α * ρ m - p m) with hT
     have hTge : -1 ≤ T := by
       have hmemL : ℓ ∈ Ico ℓ n := Finset.mem_Ico.mpr ⟨le_rfl, hlt⟩
-      have hsplit := Finset.add_sum_erase (Ico ℓ n) (fun m => α * ρ m - p m) hmemL
+      have hsplit := Finset.add_sum_erase (Ico ℓ n) (fun m ↦ α * ρ m - p m) hmemL
       have hrest : 0 ≤ ∑ m ∈ (Ico ℓ n).erase ℓ, (α * ρ m - p m) := by
         apply Finset.sum_nonneg
         intro m hm
@@ -370,13 +370,13 @@ to `u` by Cesàro convergence (`Filter.Tendsto.cesaro`), the limit is `α u + 0 
 Applied pathwise (with the a.s. limits from `lem:M_lln` and `lem:rho_converges`), this yields the
 almost-sure statement `lem:U_over_n`. -/
 lemma auxU_div_tendsto (u : ℝ) (hρ : Tendsto ρ atTop (𝓝 u))
-    (hM : Tendsto (fun n => assignMG X p n / (n : ℝ)) atTop (𝓝 0)) :
-    Tendsto (fun n => auxU X p ρ α n / (n : ℝ)) atTop (𝓝 (-(1 - α) * u)) := by
+    (hM : Tendsto (fun n ↦ assignMG X p n / (n : ℝ)) atTop (𝓝 0)) :
+    Tendsto (fun n ↦ auxU X p ρ α n / (n : ℝ)) atTop (𝓝 (-(1 - α) * u)) := by
   -- Cesàro average of `ρ` over `range n` tends to `u`.
-  have hcesaro : Tendsto (fun n => (∑ m ∈ range n, ρ m) / (n : ℝ)) atTop (𝓝 u) := by
+  have hcesaro : Tendsto (fun n ↦ (∑ m ∈ range n, ρ m) / (n : ℝ)) atTop (𝓝 u) := by
     simpa [smul_eq_mul, div_eq_inv_mul] using hρ.cesaro
   -- Combine the three pieces.
-  have hlim : Tendsto (fun n => α * ((∑ m ∈ range n, ρ m) / (n : ℝ))
+  have hlim : Tendsto (fun n ↦ α * ((∑ m ∈ range n, ρ m) / (n : ℝ))
       + assignMG X p n / (n : ℝ) - ρ n) atTop (𝓝 (α * u + 0 - u)) :=
     ((hcesaro.const_mul α).add hM).sub hρ
   rw [show α * u + 0 - u = -(1 - α) * u by ring] at hlim
@@ -403,17 +403,17 @@ Then `(N n / n - ρ n)⁺ → 0`. The argument feeds the auxiliary-process limit
 lemma pos_part_vanishes {ℓ : ℕ → ℕ} {u C : ℝ} (hℓle : ∀ n, ℓ n ≤ n)
     (hα : α ∈ Set.Icc (0 : ℝ) 1) (hu : u ∈ Set.Icc (0 : ℝ) 1)
     (hρ : Tendsto ρ atTop (𝓝 u))
-    (hM : Tendsto (fun n => assignMG X p n / (n : ℝ)) atTop (𝓝 0))
+    (hM : Tendsto (fun n ↦ assignMG X p n / (n : ℝ)) atTop (𝓝 0))
     (hgen : ∀ n, count X n - (n : ℝ) * ρ n
       ≤ C + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) + (auxU X p ρ α n - auxU X p ρ α (ℓ n)))
     (hgs : ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
       (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) / (n : ℝ) < δ) :
-    Tendsto (fun n => max (count X n / (n : ℝ) - ρ n) 0) atTop (𝓝 0) := by
-  have hU : Tendsto (fun n => auxU X p ρ α n / (n : ℝ)) atTop (𝓝 (-((1 - α) * u))) := by
+    Tendsto (fun n ↦ max (count X n / (n : ℝ) - ρ n) 0) atTop (𝓝 0) := by
+  have hU : Tendsto (fun n ↦ auxU X p ρ α n / (n : ℝ)) atTop (𝓝 (-((1 - α) * u))) := by
     have h := auxU_div_tendsto X p ρ α u hρ hM
     rwa [neg_mul] at h
   have hα' : (1 - α) ∈ Set.Icc (0 : ℝ) 1 := ⟨by linarith [hα.2], by linarith [hα.1]⟩
-  have hCn : Tendsto (fun n : ℕ => C / (n : ℝ)) atTop (𝓝 0) := by
+  have hCn : Tendsto (fun n : ℕ ↦ C / (n : ℝ)) atTop (𝓝 0) := by
     have h := tendsto_one_div_atTop_nhds_zero_nat.const_mul C
     simp only [mul_one_div, mul_zero] at h
     exact h
@@ -424,10 +424,10 @@ lemma pos_part_vanishes {ℓ : ℕ → ℕ} {u C : ℝ} (hℓle : ∀ n, ℓ n �
       hgs (δ / 2) (by linarith)] with n ha hb
     linarith
   have key := tendsto_posPart_sub_div (a := ℓ) (X := auxU X p ρ α)
-    (ε := fun n : ℕ => C / (n : ℝ) + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) / (n : ℝ))
+    (ε := fun n : ℕ ↦ C / (n : ℝ) + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n)) / (n : ℝ))
     hℓle hα' hu hU hε
   refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds key
-    (Eventually.of_forall fun n => le_max_right _ _) ?_
+    (Eventually.of_forall fun n ↦ le_max_right _ _) ?_
   filter_upwards [eventually_ge_atTop 1] with n hn
   have hnR : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
   have hnum : 0 ≤ C + (count X (ℓ n) - (ℓ n : ℝ) * ρ (ℓ n))
@@ -458,33 +458,33 @@ negative gap `(r_{·,k} - N_{·,k}/n)⁺` also vanishes. Indeed
 lemma neg_part_vanishes {ι : Type*} [Fintype ι] (Y r : ℕ → ι → ℝ)
     (hY : ∀ j, ∑ k, Y j k = 1) (hr : ∀ n, ∑ k, r n k = 1)
     (hpos : ∀ j : ι,
-      Tendsto (fun n => max (count (fun i => Y i j) n / (n : ℝ) - r n j) 0) atTop (𝓝 0))
+      Tendsto (fun n ↦ max (count (fun i ↦ Y i j) n / (n : ℝ) - r n j) 0) atTop (𝓝 0))
     (k : ι) :
-    Tendsto (fun n => max (r n k - count (fun i => Y i k) n / (n : ℝ)) 0) atTop (𝓝 0) := by
+    Tendsto (fun n ↦ max (r n k - count (fun i ↦ Y i k) n / (n : ℝ)) 0) atTop (𝓝 0) := by
   classical
-  have hsum : Tendsto (fun n => ∑ j ∈ Finset.univ.erase k,
-      max (count (fun i => Y i j) n / (n : ℝ) - r n j) 0) atTop (𝓝 0) := by
-    have h := tendsto_finsetSum (Finset.univ.erase k) (fun j _ => hpos j)
+  have hsum : Tendsto (fun n ↦ ∑ j ∈ Finset.univ.erase k,
+      max (count (fun i ↦ Y i j) n / (n : ℝ) - r n j) 0) atTop (𝓝 0) := by
+    have h := tendsto_finsetSum (Finset.univ.erase k) (fun j _ ↦ hpos j)
     simpa using h
   refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hsum
-    (Eventually.of_forall fun n => le_max_right _ _) ?_
+    (Eventually.of_forall fun n ↦ le_max_right _ _) ?_
   filter_upwards [eventually_ge_atTop 1] with n hn
   have hn0 : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
-  have h1 : (∑ j, count (fun i => Y i j) n / (n : ℝ)) = 1 := by
+  have h1 : (∑ j, count (fun i ↦ Y i j) n / (n : ℝ)) = 1 := by
     rw [← Finset.sum_div, counts_sum Y hY n, div_self (ne_of_gt hn0)]
-  have htot : (∑ j, (count (fun i => Y i j) n / (n : ℝ) - r n j)) = 0 := by
+  have htot : (∑ j, (count (fun i ↦ Y i j) n / (n : ℝ) - r n j)) = 0 := by
     rw [Finset.sum_sub_distrib, h1, hr n, sub_self]
   have hsplit := Finset.add_sum_erase Finset.univ
-    (fun j => count (fun i => Y i j) n / (n : ℝ) - r n j) (Finset.mem_univ k)
-  have hid2 : (∑ j ∈ Finset.univ.erase k, (count (fun i => Y i j) n / (n : ℝ) - r n j))
-      = r n k - count (fun i => Y i k) n / (n : ℝ) := by
-    have hz : (count (fun i => Y i k) n / (n : ℝ) - r n k)
-        + ∑ j ∈ Finset.univ.erase k, (count (fun i => Y i j) n / (n : ℝ) - r n j) = 0 := by
+    (fun j ↦ count (fun i ↦ Y i j) n / (n : ℝ) - r n j) (Finset.mem_univ k)
+  have hid2 : (∑ j ∈ Finset.univ.erase k, (count (fun i ↦ Y i j) n / (n : ℝ) - r n j))
+      = r n k - count (fun i ↦ Y i k) n / (n : ℝ) := by
+    have hz : (count (fun i ↦ Y i k) n / (n : ℝ) - r n k)
+        + ∑ j ∈ Finset.univ.erase k, (count (fun i ↦ Y i j) n / (n : ℝ) - r n j) = 0 := by
       rw [hsplit]; exact htot
     linarith
   rw [← hid2]
-  refine max_le (Finset.sum_le_sum fun j _ => le_max_left _ _)
-    (Finset.sum_nonneg fun j _ => le_max_right _ _)
+  refine max_le (Finset.sum_le_sum fun j _ ↦ le_max_left _ _)
+    (Finset.sum_nonneg fun j _ ↦ le_max_right _ _)
 
 /-- **Proportions match the plug-in target** (blueprint `lem:match`).
 
@@ -493,25 +493,25 @@ vanish (from `pos_part_vanishes`, `neg_part_vanishes`), and the target converges
 the allocation proportion converges to the same limit, `N_k/n → u_k`. The gap itself vanishes
 because `x = x⁺ - (-x)⁺`, so `N_k/n - r_k = (N_k/n - r_k)⁺ - (r_k - N_k/n)⁺ → 0`. -/
 lemma match_proportion {ι : Type*} (Y r : ℕ → ι → ℝ) {uk : ℝ} (k : ι)
-    (hpos : Tendsto (fun n => max (count (fun i => Y i k) n / (n : ℝ) - r n k) 0) atTop (𝓝 0))
-    (hneg : Tendsto (fun n => max (r n k - count (fun i => Y i k) n / (n : ℝ)) 0) atTop (𝓝 0))
-    (hr : Tendsto (fun n => r n k) atTop (𝓝 uk)) :
-    Tendsto (fun n => count (fun i => Y i k) n / (n : ℝ)) atTop (𝓝 uk) := by
+    (hpos : Tendsto (fun n ↦ max (count (fun i ↦ Y i k) n / (n : ℝ) - r n k) 0) atTop (𝓝 0))
+    (hneg : Tendsto (fun n ↦ max (r n k - count (fun i ↦ Y i k) n / (n : ℝ)) 0) atTop (𝓝 0))
+    (hr : Tendsto (fun n ↦ r n k) atTop (𝓝 uk)) :
+    Tendsto (fun n ↦ count (fun i ↦ Y i k) n / (n : ℝ)) atTop (𝓝 uk) := by
   have hid : ∀ x : ℝ, max x 0 - max (-x) 0 = x := by
     intro x
     rcases le_total 0 x with h | h
     · rw [max_eq_left h, max_eq_right (by linarith : -x ≤ 0), sub_zero]
     · rw [max_eq_right h, max_eq_left (by linarith : (0 : ℝ) ≤ -x), zero_sub, neg_neg]
-  have hdiff : Tendsto (fun n => count (fun i => Y i k) n / (n : ℝ) - r n k) atTop (𝓝 0) := by
+  have hdiff : Tendsto (fun n ↦ count (fun i ↦ Y i k) n / (n : ℝ) - r n k) atTop (𝓝 0) := by
     have h := hpos.sub hneg
     rw [sub_zero] at h
-    refine h.congr fun n => ?_
-    rw [show r n k - count (fun i => Y i k) n / (n : ℝ)
-        = -(count (fun i => Y i k) n / (n : ℝ) - r n k) from by ring]
+    refine h.congr fun n ↦ ?_
+    rw [show r n k - count (fun i ↦ Y i k) n / (n : ℝ)
+        = -(count (fun i ↦ Y i k) n / (n : ℝ) - r n k) from by ring]
     exact hid _
   have hlim := hdiff.add hr
   rw [zero_add] at hlim
-  refine hlim.congr fun n => ?_
+  refine hlim.congr fun n ↦ ?_
   ring
 
 /-- **All arms are sampled infinitely often** (blueprint `lem:all_arms_infinite`).
@@ -520,9 +520,9 @@ If the allocation proportion converges to a positive limit, `N_k/n → u_k > 0` 
 `match_proportion`), then the count diverges, `N_k → ∞`. Writing `N_k = (N_k/n) · n`, the first
 factor tends to `u_k > 0` and the second to `∞`. -/
 lemma all_arms_infinite {ι : Type*} (Y : ℕ → ι → ℝ) {uk : ℝ} (k : ι) (huk : 0 < uk)
-    (hmatch : Tendsto (fun n => count (fun i => Y i k) n / (n : ℝ)) atTop (𝓝 uk)) :
-    Tendsto (fun n => count (fun i => Y i k) n) atTop atTop := by
-  have hmul : Tendsto (fun n : ℕ => count (fun i => Y i k) n / (n : ℝ) * (n : ℝ)) atTop atTop :=
+    (hmatch : Tendsto (fun n ↦ count (fun i ↦ Y i k) n / (n : ℝ)) atTop (𝓝 uk)) :
+    Tendsto (fun n ↦ count (fun i ↦ Y i k) n) atTop atTop := by
+  have hmul : Tendsto (fun n : ℕ ↦ count (fun i ↦ Y i k) n / (n : ℝ) * (n : ℝ)) atTop atTop :=
     hmatch.pos_mul_atTop huk tendsto_natCast_atTop_atTop
   refine hmul.congr' ?_
   filter_upwards [eventually_ge_atTop 1] with n hn

@@ -45,14 +45,14 @@ The blueprint states this with `a` non-decreasing, but the argument only needs
 lemma tendsto_posPart_sub_div {a : ℕ → ℕ} {X ε : ℕ → ℝ} {α v : ℝ}
     (ha_le : ∀ n, a n ≤ n)
     (hα : α ∈ Set.Icc (0 : ℝ) 1) (hv : v ∈ Set.Icc (0 : ℝ) 1)
-    (hX : Tendsto (fun n => X n / (n : ℝ)) atTop (𝓝 (-(α * v))))
+    (hX : Tendsto (fun n ↦ X n / (n : ℝ)) atTop (𝓝 (-(α * v))))
     (hε : ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop, ε n < δ) :
-    Tendsto (fun n => max (ε n + (X n - X (a n)) / (n : ℝ)) 0) atTop (𝓝 0) := by
+    Tendsto (fun n ↦ max (ε n + (X n - X (a n)) / (n : ℝ)) 0) atTop (𝓝 0) := by
   set L := α * v with hLdef
   have hL0 : 0 ≤ L := mul_nonneg hα.1 hv.1
-  refine tendsto_order.2 ⟨fun b hb => ?_, fun b hb => ?_⟩
+  refine tendsto_order.2 ⟨fun b hb ↦ ?_, fun b hb ↦ ?_⟩
   · -- lower bound: the positive part is always `≥ 0 > b`
-    exact Filter.Eventually.of_forall fun n => lt_of_lt_of_le hb (le_max_right _ _)
+    exact Filter.Eventually.of_forall fun n ↦ lt_of_lt_of_le hb (le_max_right _ _)
   · -- upper bound: for `b > 0`, eventually the inside is `< b`
     set δ := b / 3 with hδdef
     have hδ : (0 : ℝ) < δ := by rw [hδdef]; linarith
@@ -65,9 +65,9 @@ lemma tendsto_posPart_sub_div {a : ℕ → ℕ} {X ε : ℕ → ℝ} {α v : ℝ
         (tendsto_order.1 hX).1 (-L - δ) (by linarith)
       obtain ⟨N0, hN0⟩ := eventually_atTop.1 hev
       have hne : (range (N0 + 1)).Nonempty := nonempty_range_iff.mpr (Nat.succ_ne_zero N0)
-      set B := (range (N0 + 1)).sup' hne (fun m => |X m|) with hBdef
+      set B := (range (N0 + 1)).sup' hne (fun m ↦ |X m|) with hBdef
       have hbound : ∀ m ∈ range (N0 + 1), |X m| ≤ B := by
-        intro m hm; rw [hBdef]; exact le_sup' (fun m => |X m|) hm
+        intro m hm; rw [hBdef]; exact le_sup' (fun m ↦ |X m|) hm
       have hB0 : 0 ≤ B := le_trans (abs_nonneg _) (hbound 0 (mem_range.mpr (Nat.succ_pos N0)))
       filter_upwards [eventually_ge_atTop 1, eventually_gt_atTop (Nat.ceil (B / δ))]
         with n hn1 hnc

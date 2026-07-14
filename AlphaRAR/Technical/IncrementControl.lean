@@ -46,34 +46,34 @@ lemma norm_sub_le_increment_control {E : Type*} [SeminormedAddCommGroup E]
     ‖Q n - Q ℓ‖
       ≤ ((n - ℓ : ℕ) : ℝ)
           * (Icc L n).sup' (nonempty_Icc.mpr hLn.le)
-              (fun m => ‖Q n - Q (n - m)‖ / (m : ℝ))
+              (fun m ↦ ‖Q n - Q (n - m)‖ / (m : ℝ))
         + (range L).sup' (nonempty_range_iff.mpr (Nat.one_le_iff_ne_zero.mp hL))
-            (fun m => ‖Q n - Q (n - m)‖) := by
+            (fun m ↦ ‖Q n - Q (n - m)‖) := by
   -- Both maxima are nonnegative (each is a max of nonnegative reals).
   have hA0 : (0 : ℝ) ≤ (Icc L n).sup' (nonempty_Icc.mpr hLn.le)
-      (fun m => ‖Q n - Q (n - m)‖ / (m : ℝ)) :=
+      (fun m ↦ ‖Q n - Q (n - m)‖ / (m : ℝ)) :=
     le_trans (by positivity)
-      (le_sup' (fun m => ‖Q n - Q (n - m)‖ / (m : ℝ)) (mem_Icc.mpr ⟨le_rfl, hLn.le⟩))
+      (le_sup' (fun m ↦ ‖Q n - Q (n - m)‖ / (m : ℝ)) (mem_Icc.mpr ⟨le_rfl, hLn.le⟩))
   have hB0 : (0 : ℝ) ≤ (range L).sup' (nonempty_range_iff.mpr (Nat.one_le_iff_ne_zero.mp hL))
-      (fun m => ‖Q n - Q (n - m)‖) :=
+      (fun m ↦ ‖Q n - Q (n - m)‖) :=
     le_trans (norm_nonneg _)
-      (le_sup' (fun m => ‖Q n - Q (n - m)‖) (mem_range.mpr hL))
+      (le_sup' (fun m ↦ ‖Q n - Q (n - m)‖) (mem_range.mpr hL))
   -- The increment reaches `Q ℓ` as a backward step of size `n - ℓ` from `Q n`.
   have hd : n - (n - ℓ) = ℓ := Nat.sub_sub_self hℓ
   rcases lt_or_ge (n - ℓ) L with hlt | hge
   · -- Short increment `n - ℓ < L`: absorbed by the second maximum.
     have hle : ‖Q n - Q (n - (n - ℓ))‖ ≤ (range L).sup'
         (nonempty_range_iff.mpr (Nat.one_le_iff_ne_zero.mp hL))
-        (fun m => ‖Q n - Q (n - m)‖) :=
-      le_sup' (fun m => ‖Q n - Q (n - m)‖) (mem_range.mpr hlt)
+        (fun m ↦ ‖Q n - Q (n - m)‖) :=
+      le_sup' (fun m ↦ ‖Q n - Q (n - m)‖) (mem_range.mpr hlt)
     rw [hd] at hle
     have hnn : (0 : ℝ) ≤ ((n - ℓ : ℕ) : ℝ) * (Icc L n).sup' (nonempty_Icc.mpr hLn.le)
-        (fun m => ‖Q n - Q (n - m)‖ / (m : ℝ)) := mul_nonneg (Nat.cast_nonneg _) hA0
+        (fun m ↦ ‖Q n - Q (n - m)‖ / (m : ℝ)) := mul_nonneg (Nat.cast_nonneg _) hA0
     grind
   · -- Long increment `L ≤ n - ℓ`: absorbed by the (normalized) first maximum.
     have hle : ‖Q n - Q (n - (n - ℓ))‖ / ((n - ℓ : ℕ) : ℝ) ≤ (Icc L n).sup'
-        (nonempty_Icc.mpr hLn.le) (fun m => ‖Q n - Q (n - m)‖ / (m : ℝ)) :=
-      le_sup' (fun m => ‖Q n - Q (n - m)‖ / (m : ℝ)) (mem_Icc.mpr ⟨hge, Nat.sub_le n ℓ⟩)
+        (nonempty_Icc.mpr hLn.le) (fun m ↦ ‖Q n - Q (n - m)‖ / (m : ℝ)) :=
+      le_sup' (fun m ↦ ‖Q n - Q (n - m)‖ / (m : ℝ)) (mem_Icc.mpr ⟨hge, Nat.sub_le n ℓ⟩)
     rw [hd] at hle
     have hdpos : (0 : ℝ) < ((n - ℓ : ℕ) : ℝ) := by
       have : 0 < n - ℓ := lt_of_lt_of_le Nat.zero_lt_one (le_trans hL hge)

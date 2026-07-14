@@ -48,7 +48,7 @@ def _root_.MeasureTheory.Filtration.shiftDown (ℱ : Filtration ℕ m0) : Filtra
   seq n := match n with
     | 0 => ⊥
     | m + 1 => ℱ m
-  mono' := monotone_nat_of_le_succ fun n => by
+  mono' := monotone_nat_of_le_succ fun n ↦ by
     cases n with
     | zero => exact bot_le
     | succ m => exact ℱ.mono (Nat.le_succ m)
@@ -82,7 +82,7 @@ lemma stronglyAdapted_acount (hX : StronglyAdapted ℱ X) :
 
 lemma integrable_acount (hX : ∀ n, Integrable (X n) μ) (n : ℕ) :
     Integrable (acount X n) μ :=
-  integrable_finsetSum' _ fun i _ => hX i
+  integrable_finsetSum' _ fun i _ ↦ hX i
 
 /-- **The assignment process is a martingale** (blueprint `lem:M_martingale`).
 For an adapted, integrable assignment indicator `X`, the martingale part `M` of the count process
@@ -105,12 +105,12 @@ lemma assignMart_succ_sub (n : ℕ) :
 `lem:M_martingale`, bounded-increment part): if `0 ≤ X ≤ 1` a.e., then `|M (n+1) - M n| ≤ 1` a.e. -/
 lemma abs_assignMart_succ_sub_le [IsFiniteMeasure μ]
     (hX_int : ∀ n, Integrable (X n) μ)
-    (h0 : ∀ n, 0 ≤ᵐ[μ] X n) (h1 : ∀ n, X n ≤ᵐ[μ] fun _ => (1 : ℝ)) (n : ℕ) :
+    (h0 : ∀ n, 0 ≤ᵐ[μ] X n) (h1 : ∀ n, X n ≤ᵐ[μ] fun _ ↦ (1 : ℝ)) (n : ℕ) :
     ∀ᵐ ω ∂μ, |(assignMart X ℱ μ (n + 1) - assignMart X ℱ μ n) ω| ≤ 1 := by
   have hc0 : (0 : Ω → ℝ) ≤ᵐ[μ] μ[X n | ℱ.shiftDown n] := by
     have h := condExp_mono (m := ℱ.shiftDown n) (integrable_zero Ω ℝ μ) (hX_int n) (h0 n)
     rwa [condExp_zero] at h
-  have hc1 : μ[X n | ℱ.shiftDown n] ≤ᵐ[μ] fun _ => (1 : ℝ) := by
+  have hc1 : μ[X n | ℱ.shiftDown n] ≤ᵐ[μ] fun _ ↦ (1 : ℝ) := by
     have h := condExp_mono (m := ℱ.shiftDown n) (hX_int n) (integrable_const (1 : ℝ)) (h1 n)
     rwa [condExp_const (ℱ.shiftDown.le n)] at h
   filter_upwards [h0 n, h1 n, hc0, hc1] with ω hx0 hx1 hcω0 hcω1
