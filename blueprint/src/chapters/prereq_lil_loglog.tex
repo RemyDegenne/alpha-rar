@@ -10,7 +10,11 @@ that convenience, and it suffices for every $o(\langle M\rangle_n)$ use in Part~
 This chapter sharpens the rate to the true $\log\log$ and, more importantly,
 repackages the result as a \emph{general} martingale law of the iterated logarithm:
 a theorem about an arbitrary $L^2$-martingale whose increments are small on the LIL
-scale, with no bandit or i.i.d.\ structure baked in. Everything is stated for its own
+scale, with no bandit or i.i.d.\ structure baked in. The argument is the classical
+martingale LIL of Stout \cite{Stout1970} and Hall--Heyde \cite{HallHeyde1980}, built on
+Freedman's exponential inequality \cite{Freedman1975}; the i.i.d.\ Hartman--Wintner application
+follows Kolmogorov's truncation method as presented by Stout \cite[Ch.~5]{Stout1974}.
+Everything is stated for its own
 sake, as a candidate Mathlib contribution. The chapter reuses, unchanged, the
 formalized engine of Chapter~\ref{chap:pre_lil}: the exponential supermartingale
 (Lemma~\ref{lem:lil_exp_supermart}), Ville's maximal inequality, the Freedman tail
@@ -159,6 +163,14 @@ $\theta$ is admissible \emph{and} small, so no truncation is needed inside the t
 
 \begin{lemma}[Quadratic-variation stopping]\label{lem:llil_qv_stop}
 \uses{def:pred_qv}
+This is the standard device of the martingale LIL \cite{Stout1970,HallHeyde1980} (see also
+\cite{Freedman1975} for the underlying exponential inequality): the geometric \emph{block base}
+must act on the quadratic variation itself (via a random stopping time), \emph{not} on a
+deterministic time horizon. A deterministic-horizon blocking $2^j$ (as in the $O$-rate engine of
+Chapter~\ref{chap:pre_lil}) unavoidably loses a factor $\sqrt2$ in the constant when passing to the
+$\langle M\rangle_n$ scale, so it yields the $O$-rate but never the sharp constant~$1$; the
+sharp constant requires block base $\eta\downarrow1$ on $\langle M\rangle$, which is exactly this
+quadratic-variation stopping.
 For $v>0$ let $\tau_v:=\inf\{n:\ \langle M\rangle_{n+1}>v\}$. Because $\langle M\rangle$
 is predictable ($\langle M\rangle_{n+1}$ is $\filt_n$-measurable), $\tau_v$ is a
 stopping time, and on $\{n\le\tau_v\}$ one has $\langle M\rangle_n\le v$. The stopped
@@ -248,10 +260,11 @@ Sections~\ref{sec:llil_bounded}--\ref{sec:llil_general} already suffices for eve
 almost-sure rate in Part~I.
 
 \begin{lemma}[Refined elementary inequality]\label{lem:llil_refined_ineq}
+\lean{AlphaRAR.exp_le_one_add_add_half_mul_sq}\leanok
 For every $\delta>0$ there is $\eta_\delta>0$ such that $e^x\le1+x+\tfrac12(1+\delta)x^2$
 for all $|x|\le\eta_\delta$.
 \end{lemma}
-\begin{proof}
+\begin{proof}\leanok
 Mathlib's \texttt{Real.exp\_bound} at $n=3$ gives, for $|x|\le1$,
 $\big|e^x-(1+x+\tfrac12 x^2)\big|\le|x|^3\cdot\tfrac{4}{3!\cdot3}=\tfrac29|x|^3$, hence
 $e^x\le1+x+\tfrac12 x^2+\tfrac29|x|^3\le1+x+\tfrac12\big(1+\tfrac49|x|\big)x^2$; take
@@ -259,6 +272,7 @@ $\eta_\delta:=\min(1,\tfrac94\delta)$. (So this lemma is a Mathlib one-liner, no
 \end{proof}
 
 \begin{lemma}[Refined conditional MGF bound]\label{lem:llil_refined_mgf}
+\lean{AlphaRAR.condExp_exp_increment_le_refined}\leanok
 \uses{lem:llil_refined_ineq, def:pred_qv}
 If $|\Delta M_i|\le c$ a.e.\ and $|\theta|c\le\eta_\delta$, then
 $\E[e^{\theta\Delta M_i}\mid\filt_i]\le\exp\!\big(\tfrac12(1+\delta)\theta^2
@@ -274,6 +288,7 @@ $\E[e^{\theta\Delta M_i}\mid\filt_i]\le1+\tfrac12(1+\delta)\theta^2
 \end{proof}
 
 \begin{lemma}[Refined exponential supermartingale and Freedman bound]\label{lem:llil_refined_freedman}
+\lean{AlphaRAR.measure_exists_ge_le_exp_all_refined}\leanok
 \uses{lem:llil_refined_mgf}
 Under $|\Delta M_i|\le c$ and $|\theta|c\le\eta_\delta$, the process
 $Z_n=\exp\!\big(\theta M_n-\tfrac12(1+\delta)\theta^2\langle M\rangle_n\big)$ is a
@@ -294,12 +309,15 @@ by $(1+\delta)v$.
 \end{proof}
 
 \begin{lemma}[Sharp exceedance]\label{lem:llil_sharp_block}
+\lean{AlphaRAR.ae_eventually_forall_lt_pow_loglog_sharp}\leanok
 \uses{lem:llil_refined_freedman, lem:llil_qv_stop, lem:llil_tail_summable}
 Let $M$ satisfy \textbf{(H)} with constant $A$ (or have bounded increments), and
 $\langle M\rangle_n\to\infty$. Fix $\eta>1$ and $\varepsilon>\delta>0$, set $v_k=\eta^k$
 and $\lambda_k=\sqrt{2(1+\varepsilon)\,v_k\log\log v_k}$. Then almost surely for all
 large $k$ and every $n$,
 $\langle M\rangle_n\le\eta^k\Rightarrow M_n<\sqrt{2(1+\varepsilon)\eta^k\log\log\eta^k}$.
+(Formalized for bounded increments, with the surrogate $\log(k+2)\asymp\log\log\eta^k$ in place of
+$\log\log\eta^k$, which is asymptotically equal and so preserves the sharp constant.)
 \end{lemma}
 \begin{proof}
 Stop at $\tau_{v_k}$ (Lemma~\ref{lem:llil_qv_stop}); the stopped increments are bounded
@@ -314,6 +332,7 @@ Borel--Cantelli finishes.
 \end{proof}
 
 \begin{theorem}[Sharp general martingale LIL]\label{thm:llil_sharp}
+\lean{AlphaRAR.ae_eventually_abs_le_sqrt_predQuadVar_mul_loglog_sharp}\leanok
 \uses{lem:llil_sharp_block}
 Let $M$ be a square-integrable martingale with $M_0=0$, $\langle M\rangle_n\to\infty$
 a.s., satisfying \textbf{(H)} (in particular any bounded-increment martingale). Then
@@ -323,6 +342,9 @@ a.s., satisfying \textbf{(H)} (in particular any bounded-increment martingale). 
 \]
 and, applied to $-M$ (same quadratic variation, Definition~\ref{def:pred_qv}), the two-sided
 bound $\limsup_n|M_n|/\sqrt{2\langle M\rangle_n\log\log\langle M\rangle_n}\le1$ a.s.
+(Formalized for bounded increments, both in the equivalent form ``a.s.\ for every $b>1$, eventually
+$|M_n|\le b\sqrt{2\langle M\rangle_n\log\log\langle M\rangle_n}$'' and as the genuine
+$\limsup$ statement \texttt{AlphaRAR.ae\_limsup\_abs\_div\_sqrt\_predQuadVar\_mul\_loglog\_le\_one}.)
 \end{theorem}
 \begin{proof}
 Fix a countable family $\eta_j\downarrow1$, $\varepsilon_j\downarrow0$ with
@@ -333,23 +355,56 @@ $\limsup_n M_n/\sqrt{2\langle M\rangle_n\log\log\langle M\rangle_n}\le
 $j\to\infty$.
 \end{proof}
 
+\begin{theorem}[Sharp LIL for growing increments with a linear quadratic variation]
+\label{thm:llil_growth_sharp}
+\lean{AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growth_sharp_all,
+AlphaRAR.ae_limsup_abs_div_sqrt_nat_mul_loglog_of_growth_le_one}\leanok
+\uses{lem:llil_sharp_block, thm:llil_sharp}
+Let $M$ be a square-integrable martingale with $M_0=0$, increments bounded by a monotone
+nonnegative growth $|\Delta M_i|\le g(i)$ satisfying the base-independent condition
+\textbf{(H)} $g(n)\sqrt{L(n)/n}\to0$, and a \emph{linear} quadratic-variation bound
+$\langle M\rangle_n\le v\,n$ ($v>0$). Then, a.s., for every $\beta>1$ eventually
+$|M_n|\le\beta\sqrt{2v\,n\,L(n)}$, i.e.\ $\limsup_n|M_n|/\sqrt{2v\,n\,L(n)}\le1$.
+\end{theorem}
+\begin{proof}\leanok
+Fix $\beta>1$ and block with the geometric horizons $N_j=\lceil\rho^j\rceil$ for
+$\rho=1+(\beta-1)/2\downarrow1$ and $\delta=(\beta-1)/2$, so $(1+\delta)\rho=\rho^2<\beta^2$.
+Over each block the increments are bounded by $g(N_j)$, and condition \textbf{(H)} transfers
+to the block form $g(N_j)\sqrt{\log(j+2)/N_j}\to0$ because
+$\log(j+2)\le(\log K+1)\,L(N_j)$ with $K=1/\log\rho+2$ (from $j\le\log N_j/\log\rho$), so the
+block quantity is $\le\sqrt{\log K+1}\,g(N_j)\sqrt{L(N_j)/N_j}\to0$. The refined per-block
+Freedman bound (Lemma~\ref{lem:llil_sharp_block}) with the near-optimal
+$\theta_j=\alpha\sqrt{\log(j+2)/N_j}$, $\alpha=C/((1+\delta)v)$, gives a summable
+$p$-series tail; repackaging via the least $j$ with $n\le N_j$ (so $N_j\le\rho n+1$ and
+additively $\log(j+2)\le D_\rho+L(n)$) yields the constant $\beta$. \emph{No random
+stopping time}: the linear bound $\langle M\rangle_n\le v\,n$ lets the deterministic horizon
+$N_j$ play the role of quadratic-variation stopping (contrast the general \textbf{(H)}
+Theorem~\ref{thm:llil_sharp}, whose constant-\textbf{(H)} increments would require it).
+Countable intersection over $\beta_m=1+1/(m+1)\downarrow1$ and the two-sided step (apply to
+$-M$) give the $\limsup$ form.
+\end{proof}
+
 \section{Consumable forms}
 \label{sec:llil_forms}
 
 \begin{corollary}[Two-sided normalized bound]\label{cor:llil_norm}
-\uses{thm:llil_general}
+\lean{AlphaRAR.ae_eventually_abs_le_sqrt_predQuadVar_mul_loglog}\leanok
+\uses{thm:llil_bounded}
 Under the hypotheses of Theorem~\ref{thm:llil_general} (or \ref{thm:llil_bounded}),
 almost surely $|M_n|\le C\sqrt{\langle M\rangle_n\log\log\langle M\rangle_n}$ for all
-large $n$, some deterministic $C$. Apply Theorem~\ref{thm:llil_general} to $M$ and $-M$.
+large $n$, some deterministic $C$. Apply Theorem~\ref{thm:llil_bounded} to $M$ and $-M$.
+(Formalized for bounded increments; the \textbf{(H)} version follows once
+Theorem~\ref{thm:llil_general} is formalized.)
 \end{corollary}
 
 \begin{corollary}[Bound at scale $\sqrt{n\log\log n}$]\label{cor:llil_nat}
+\lean{AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog}\leanok
 \uses{cor:llil_norm}
 If moreover $\langle M\rangle_n\le K n$ for a constant $K$ (e.g.\ $|\Delta M_i|\le c$
 gives $\langle M\rangle_n\le c^2 n$, Lemma~\ref{lem:qv_linear_bound}), then almost
 surely $|M_n|\le C'\sqrt{n\log\log n}$ for all large $n$.
 \end{corollary}
-\begin{proof}
+\begin{proof}\leanok
 $\langle M\rangle_n\le Kn$ gives $\log\log\langle M\rangle_n\le\log\log(Kn)\le
 \log\log n+o(1)$ for large $n$; substitute into Corollary~\ref{cor:llil_norm}.
 \end{proof}
@@ -371,21 +426,27 @@ one-term exceedance probabilities are \emph{not} summable ($\sum_j\Prob(|Y_j|>
 \sqrt{j/\log\log j})=\infty$ when only $\E[Y^2]<\infty$), so the pathwise
 Borel--Cantelli route of Chapter~\ref{chap:pre_lil} is unavailable.
 
-The resolution is a \emph{three-level} truncation. Cut at two scales: the LIL scale
-$b_j\asymp\sqrt{j/\log\log j}$ and the higher scale $\sqrt j$.
+The resolution is a \emph{three-level} truncation. Cut at two scales: the log-level scale
+$b_j=\sqrt{j/\log(j+2)}$ (strictly below the LIL scale $\sqrt{j/\log\log j}$) and the
+higher scale $\sqrt j$.
 \begin{itemize}
   \item The \emph{high} part $|Y_j|>\sqrt j$ has \emph{summable} exceedance
         probabilities ($\sum_j\Prob(Y^2>j)\le\E[Y^2]+1<\infty$), so it vanishes
         eventually and contributes $O(1)$ --- exactly the tail step already formalized
         in Chapter~\ref{chap:pre_lil} (Lemma~\ref{lem:trunc_tail_summable}).
-  \item The \emph{low} part $|Y_j|\le b_j$ satisfies \textbf{(H)} and gets the sharp LIL
-        from Theorem~\ref{thm:llil_sharp}.
+  \item The \emph{low} part $|Y_j|\le b_j$ has increments $|\Delta\tilde S_j|\le2b_j$
+        satisfying condition \textbf{(H)} in the sharp $\to0$ form
+        ($2b_n\sqrt{L(n)/n}=2\sqrt{L(n)/\log(n+2)}\to0$) and a \emph{linear}
+        quadratic-variation bound $\langle\tilde S\rangle\le\sigma^2 m$, so it gets the
+        sharp LIL directly from Theorem~\ref{thm:llil_growth_sharp} via deterministic
+        base-$\rho$ blocking --- \emph{no random stopping time}. The log-level (rather than
+        LIL-scale) cutoff is what makes \textbf{(H)} hold in the $\to0$ form.
   \item The \emph{medium} band $b_j<|Y_j|\le\sqrt j$ is the crux, and is handled by
         Kolmogorov's convergence theorem and Kronecker's lemma: the key point
-        (Lemma~\ref{lem:hw_medium_var}) is that this band is only a
-        \emph{$\log\log$-factor wide} multiplicatively, so its variance series against
-        the LIL scale \emph{converges under the bare second moment}, with no extra
-        moment. This is the classical Kolmogorov method; see
+        (Lemma~\ref{lem:hw_medium_var}) is that with the log-level cutoff this band is only
+        a \emph{$\log$-factor wide} multiplicatively, so its variance series against
+        the LIL scale \emph{converges under the bare second moment} (inner harmonic sum
+        $O(1)$), with no extra moment. This is the classical Kolmogorov method; see
         \cite{Stout1974,heyde1980}.
 \end{itemize}
 A one-shot alternative for the whole upper bound is de~Acosta's proof
@@ -393,11 +454,59 @@ A one-shot alternative for the whole upper bound is de~Acosta's proof
 
 Let $(Y_j)_{j\ge1}$ be i.i.d., $\E[Y_1]=0$, $\E[Y_1^2]=\sigma^2<\infty$, and
 $S_m=\sum_{j\le m}Y_j$. With its natural filtration $S$ is a martingale with
-$\langle S\rangle_m=\sigma^2 m$. Write $L(t):=\log\log t$.
+$\langle S\rangle_m=\sigma^2 m$. Write $L(t):=\log\log t$. The martingale structure of a partial
+sum of independent centred variables is recorded once and for all, in the generality needed for the
+truncated increments below (independent, integrable, centred, but not necessarily identically
+distributed).
+
+\begin{lemma}[Partial sums of independent centred variables form a martingale]\label{lem:hw_martingale}
+\lean{AlphaRAR.martingale_iidSum}\leanok
+Let $(Y_j)_{j\ge0}$ be independent, integrable and centred ($\E Y_j=0$). Then the partial sums
+$S_n=\sum_{j<n}Y_j$ are a martingale with $S_0=0$, for the ``strictly before $n$'' natural filtration
+$\filt_n=\sigma(Y_0,\dots,Y_{n-1})$ (with $\filt_0$ trivial).
+\end{lemma}
+\begin{proof}\leanok
+$S_n$ is $\filt_n$-measurable (a sum of $Y_0,\dots,Y_{n-1}$) and integrable. For the increment,
+$\E[S_{n+1}\mid\filt_n]=S_n+\E[Y_n\mid\filt_n]=S_n+\E Y_n=S_n$, because $Y_n$ is independent of the
+past $\filt_n=\sigma(Y_0,\dots,Y_{n-1})$. Mathlib's $\log\log$-free
+\texttt{condExp\_indep\_eq} supplies $\E[Y_n\mid\filt_n]=\E Y_n$; the ``strictly before'' index is
+what makes $S_0=0$ (unlike \texttt{Filtration.natural}, which would force $S_0=Y_0$).
+\end{proof}
+
+\begin{lemma}[Quadratic variation of the i.i.d.\ sum]\label{lem:hw_qv}
+\lean{AlphaRAR.predQuadVar_iidSum_le}\leanok
+\uses{lem:hw_martingale, def:pred_qv}
+In the setting of Lemma~\ref{lem:hw_martingale}, if additionally $\E[Y_j^2]<\infty$, the predictable
+quadratic variation has increment $\langle S\rangle_{n+1}-\langle S\rangle_n=\E[Y_n^2]$; hence if
+$\E[Y_j^2]\le v$ for all $j$, then $\langle S\rangle_n\le v\,n$ almost surely for all $n$.
+\end{lemma}
+\begin{proof}\leanok
+The increment of $\langle S\rangle$ is the conditional second moment of $\Delta S_n=Y_n$
+(\texttt{predQuadVar\_succ\_sub\_eq}), which independence makes the constant $\E[Y_n^2]$
+(\texttt{condExp\_natFiltLT\_comp\_indep} with $g=(\cdot)^2$); telescoping from $\langle S\rangle_0=0$
+gives $\langle S\rangle_n=\sum_{j<n}\E[Y_j^2]\le v\,n$. Applied with $S=\tilde S$ and $v=\sigma^2$
+(since $\Var(Y_j^{\mathrm L})\le\sigma^2$) this is the linear bound $\langle\tilde S\rangle_n\le
+\sigma^2 n$ the growing-increment LIL requires.
+\end{proof}
+
+\begin{corollary}[Loglog LIL for bounded i.i.d.\ increments]\label{cor:hw_bounded}
+\lean{AlphaRAR.ae_eventually_abs_sum_le_sqrt_nat_mul_loglog_of_bounded}\leanok
+\uses{lem:hw_martingale, lem:hw_qv, cor:llil_nat}
+Let $(Y_j)$ be independent and centred with $|Y_j|\le c$ a.e.\ and second moments bounded below,
+$\E[Y_j^2]\ge w>0$. Then $S_n=\sum_{j<n}Y_j$ satisfies $|S_n|=O(\sqrt{n\log\log n})$ a.s.
+\end{corollary}
+\begin{proof}\leanok
+$S$ is a martingale (Lemma~\ref{lem:hw_martingale}) with bounded increments $|\Delta S_j|=|Y_j|\le c$;
+its quadratic variation is $\langle S\rangle_n=\sum_{j<n}\E[Y_j^2]$ (Lemma~\ref{lem:hw_qv}), so
+$\langle S\rangle_n\ge w\,n\to\infty$. The bounded-increment loglog LIL
+(Corollary~\ref{cor:llil_nat}) applies directly. This is the special case of
+Theorem~\ref{thm:hw} where no truncation is needed, and is already fully formalized.
+\end{proof}
 
 \begin{definition}[Three-level truncated decomposition]\label{def:hw_trunc}
-Fix $A_0\in(0,\tfrac12)$, with low cutoff $b_j:=A_0\sigma\sqrt{j/L(j)}$ and high cutoff
-$\sqrt j$. Split each increment into low, medium and high parts,
+Low cutoff $b_j:=\sqrt{j/\log(j+2)}$ (the \emph{log}-level scale, strictly below the LIL
+scale $\sqrt{j/L(j)}$) and high cutoff $\sqrt j$. Split each increment into low, medium and
+high parts,
 \[
   Y_j^{\mathrm L}:=Y_j\indic_{\{|Y_j|\le b_j\}},\quad
   Y_j^{\mathrm M}:=Y_j\indic_{\{b_j<|Y_j|\le\sqrt j\}},\quad
@@ -415,39 +524,50 @@ $S_m=\tilde S_m+W_m+H_m+D_m$.
 \end{definition}
 
 \begin{lemma}[High part is eventually zero]\label{lem:hw_high}
+\lean{AlphaRAR.ae_eventually_abs_le_sqrt_of_identDistrib}\leanok
 \uses{def:hw_trunc, lem:trunc_tail_summable}
 Almost surely $Y_j^{\mathrm H}=0$ for all large $j$, so $H_m$ is eventually constant and
-$H_m=O(1)$ a.s.
+$H_m=O(1)$ a.s. (The formalized statement is the equivalent substance: almost surely
+$|Y_j|\le\sqrt j$ for all large $j$, whence $Y_j^{\mathrm H}=Y_j\indic_{\{|Y_j|>\sqrt j\}}=0$.)
 \end{lemma}
-\begin{proof}
+\begin{proof}\leanok
 $\sum_j\Prob(|Y_j|>\sqrt j)=\sum_j\Prob(Y_1^2>j)\le\E[Y_1^2]+1<\infty$ by the layer-cake
 bound (Lemma~\ref{lem:trunc_tail_summable}). The first Borel--Cantelli lemma places a.e.\
 $\omega$ in only finitely many $\{|Y_j|>\sqrt j\}$; past that index $Y_j^{\mathrm H}=0$.
 \end{proof}
 
-\begin{lemma}[Low part satisfies \textbf{(H)}]\label{lem:hw_low_H}
-\uses{def:hw_trunc, thm:llil_general, thm:llil_sharp}
-$\tilde S$ is a martingale with $|\Delta\tilde S_j|\le2b_j$ and
-$\langle\tilde S\rangle_m=\sum_{j\le m}\Var(Y_j^{\mathrm L})$. Since
-$\Var(Y_j^{\mathrm L})\to\sigma^2$ (as $b_j\to\infty$), $\langle\tilde S\rangle_m\sim
-\sigma^2 m$; in particular $\tfrac12\sigma^2 m\le\langle\tilde S\rangle_m\le\sigma^2 m$
-eventually. Hence $\tilde S$ satisfies \textbf{(H)} with $A=2A_0<1$, so
-Theorem~\ref{thm:llil_general} gives $\tilde S_m=O(\sqrt{m\,L(m)})$ a.s., and the sharp
-Theorem~\ref{thm:llil_sharp} gives $\limsup_m\tilde S_m/\sqrt{2\sigma^2 m\,L(m)}\le1$.
+\begin{lemma}[Sharp low-part LIL]\label{lem:hw_low_H}
+\lean{AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation_sharp,
+AlphaRAR.ae_limsup_abs_div_sqrt_nat_mul_loglog_centeredTruncation_le_one}\leanok
+\uses{def:hw_trunc, thm:llil_growth_sharp, lem:hw_martingale, lem:hw_qv}
+$\tilde S$ is a martingale with $|\Delta\tilde S_j|\le2b_j$ and $\langle\tilde
+S\rangle_m=\sum_{j<m}\Var(Y_j^{\mathrm L})\le\sigma^2 m$. With the log-level cutoff
+$b_j=\sqrt{j/\log(j+2)}$ the increments satisfy condition \textbf{(H)} in the sharp
+$\to0$ form, $2b_n\sqrt{L(n)/n}=2\sqrt{L(n)/\log(n+2)}\to0$, so
+Theorem~\ref{thm:llil_growth_sharp} gives, a.s., for every $\beta>1$ eventually
+$|\tilde S_m|\le\beta\sqrt{2\sigma^2 m\,L(m)}$, i.e.\
+$\limsup_m|\tilde S_m|/\sqrt{2\sigma^2 m\,L(m)}\le1$.
 \end{lemma}
-\begin{proof}
-$|\Delta\tilde S_j|=|Y_j^{\mathrm L}-\E Y_j^{\mathrm L}|\le2b_j=2A_0\sigma\sqrt{j/L(j)}
-\le2A_0\sqrt{\langle\tilde S\rangle_j/L(\langle\tilde S\rangle_j)}$ for large $j$, using
-$\langle\tilde S\rangle_j\ge\tfrac12\sigma^2 j$ and monotonicity of $t\mapsto t/L(t)$;
-this is \textbf{(H)} with $A=2A_0$. The variance facts $\Var(Y_j^{\mathrm L})\le\sigma^2$
-and $\Var(Y_j^{\mathrm L})=\E[Y^2\indic_{\{|Y|\le b_j\}}]-(\E Y_j^{\mathrm L})^2\to\sigma^2$
-(dominated convergence, $\E Y_j^{\mathrm L}\to0$) are the same statements formalized at
-level $\sqrt i$ as \texttt{AlphaRAR.truncVar\_le\_armVar} and the variance convergence
-$v_i\to\sigma^2$ (Lemma~\ref{lem:trunc_var_conv}). Then $\langle\tilde S\rangle_m/(\sigma^2
-m)\to1$, so $L(\langle\tilde S\rangle_m)\sim L(m)$, fixing the constant in the sharp bound.
+\begin{proof}\leanok
+$|\Delta\tilde S_j|=|Y_j^{\mathrm L}-\E Y_j^{\mathrm L}|\le2b_j$
+(\texttt{abs\_truncation\_sub\_integral\_le}), with $j\mapsto b_j$ monotone and
+nonnegative; the base-independent condition \textbf{(H)} $2b_n\sqrt{L(n)/n}=
+2\sqrt{L(n)/\log(n+2)}\to0$ holds because $L(n)/\log(n+2)\to0$. The martingale $\tilde S$
+(\texttt{martingale\_centeredTruncation}) has the linear quadratic-variation bound
+$\langle\tilde S\rangle_m\le\sigma^2 m$ (\texttt{predQuadVar\_centeredTruncation\_le}, via
+\texttt{integral\_truncation\_sub\_integral\_sq\_le} for $\Var(Y^{\mathrm L})\le\sigma^2$).
+These three feed the sharp growing-increment engine
+(\texttt{ae\_eventually\_abs\_le\_sqrt\_nat\_mul\_loglog\_of\_growth\_sharp\_all}) with growth
+$g=2b$; the block scheme uses deterministic horizons $N_j=\lceil\rho^j\rceil$ with $\rho\downarrow1$,
+so \emph{no random stopping time} is needed --- the linear bound $\langle\tilde S\rangle\le\sigma^2 m$
+lets a deterministic time horizon play the role of quadratic-variation stopping. The upper bound uses
+only $\langle\tilde S\rangle_m\le\sigma^2 m$; that $\Var(Y_j^{\mathrm L})\to\sigma^2$ (so
+$\langle\tilde S\rangle_m/(\sigma^2 m)\to1$) is not needed for $\limsup\le1$, but confirms the
+constant is sharp.
 \end{proof}
 
 \begin{lemma}[Medium variance series converges under a bare second moment]\label{lem:hw_medium_var}
+\lean{AlphaRAR.medium_variance_summable}\leanok
 \uses{def:hw_trunc}
 $\displaystyle\sum_{j\ge3}\frac{\Var(Y_j^{\mathrm M})}{j\,L(j)}<\infty$.
 \end{lemma}
@@ -458,25 +578,49 @@ so by Tonelli
   \sum_{j\ge3}\frac{\Var(Y_j^{\mathrm M})}{j\,L(j)}\ \le\
   \E\Big[Y^2\!\!\sum_{j:\,b_j<|Y|\le\sqrt j}\frac{1}{j\,L(j)}\Big].
 \]
-Fix $y=|Y|$. The condition $b_j<y\le\sqrt j$ means $y^2\le j$ and
-$j/L(j)<(y/(A_0\sigma))^2$; as $t\mapsto t/L(t)$ is increasing the latter is $j<j_0(y)$,
-where $j_0(y)/L(j_0(y))=(y/(A_0\sigma))^2$, so $j_0(y)\asymp y^2 L(y^2)$. Thus $j$ runs
-over $[y^2,j_0(y))$, an interval of multiplicative width $\asymp L(y^2)$ on which
-$L(j)\asymp L(y^2)$; hence
+Fix $y=|Y|$. With the log-level cutoff $b_j=\sqrt{j/\log(j+2)}$ the condition
+$b_j<y\le\sqrt j$ means $y^2\le j$ and $j/\log(j+2)<y^2$; as $t\mapsto t/\log(t+2)$ is
+increasing the latter is $j<j_0(y)$, where $j_0(y)/\log(j_0(y)+2)=y^2$, so
+$j_0(y)\asymp y^2\log(y^2)$. Thus $j$ runs over $[y^2,j_0(y))$, an interval of
+multiplicative width $\asymp\log(y^2)$ on which $L(j)\asymp L(y^2)$; hence
 \[
   \sum_{y^2\le j<j_0(y)}\frac{1}{j\,L(j)}\ \asymp\
-  \frac{1}{L(y^2)}\log\frac{j_0(y)}{y^2}\ \asymp\ \frac{\log L(y^2)}{L(y^2)}\ =\ O(1),
+  \frac{1}{L(y^2)}\log\frac{j_0(y)}{y^2}\ \asymp\
+  \frac{\log\log(y^2)}{L(y^2)}\ =\ O(1),
 \]
-bounded uniformly in $y$ (indeed $\to0$). The inner factor being bounded, the double sum
-is $\le C\,\E[Y^2]<\infty$. The mechanism: the medium band is only a $\log\log$-factor
-wide, so the harmonic inner sum is $O(\log\log\log/\log\log)=O(1)$; this is exactly where
-the bare second moment suffices --- a $\sqrt j$ high cutoff makes the band any wider and
-the sum would need $\E[Y^2\log\log|Y|]$.
+bounded uniformly in $y$. The inner factor being bounded, the double sum is
+$\le C\,\E[Y^2]<\infty$. The mechanism: the medium band is only a $\log$-factor wide, so
+the harmonic inner sum is $O(\log\log/\log\log)=O(1)$; this is exactly where the bare
+second moment suffices. (The LIL-scale low cutoff $\sqrt{j/L(j)}$ would make the band a
+mere $\log\log$-factor wide and the inner sum $\to0$; the log-level cutoff trades that
+slack for the sharp-constant condition \textbf{(H)}$\to0$ of the low part, and $O(1)$
+still gives convergence.)
+
+\emph{Formalization.} Both the analytic heart and the measure-theoretic wrapper are formalized.
+The uniform inner-sum bound $\sum_{j:\,t\le j<t\log(j+2)}1/(j\,L(j))\le C$ (with $t=y^2$) is
+\texttt{AlphaRAR.medium\_inner\_tsum\_le}, built from \texttt{AlphaRAR.medium\_sum\_Icc\_big} (the
+$t\ge9$ estimate: pull out $1/L(\lceil t\rceil)$ and bound the harmonic sum by
+$\log(B/A)\le\log(5\log t)=\log5+L(t)$) via the range bounds \texttt{medium\_crude} ($j<8t^2$) and
+\texttt{medium\_tight} ($j<t(\log9+2\log t)$), the harmonic comparison
+\texttt{sum\_Icc\_one\_div\_le}, and \texttt{loglog\_le\_loglog}. The wrapper
+\texttt{AlphaRAR.medium\_variance\_series\_le} turns it into the second-moment series: by finite-sum
+linearity $\sum_{j<n}\big(\int X^2\indic_{\{b_j<|X|\le\sqrt j\}}\big)/(j\,L(j))=\int X^2\sum_{j<n}
+\indic_{\{\dots\}}/(j\,L(j))$, the inner sum is $\le C$ pointwise (at $t=X(\omega)^2$, using
+$b_j<|x|\le\sqrt j\iff x^2\le j<x^2\log(j+2)$), so each partial sum is $\le C\,\E[X^2]$ and
+$\sum'_j(\dots)\le C\,\E[X^2]$ with the series summable. The reduction
+$\Var(X\indic_{\{b_j<|X|\le\sqrt j\}})\le\E[(X\indic_{\{\dots\}})^2]=\E[X^2\indic_{\{\dots\}}]$
+(\texttt{variance\_le\_expectation\_sq}, $(X\indic_S)^2=X^2\indic_S$) plus comparison of nonnegative
+series (\texttt{Summable.of\_nonneg\_of\_le}) gives \texttt{AlphaRAR.medium\_variance\_summable}:
+$\sum_{j\ge3}\Var(X\indic_{\{b_j<|X|\le\sqrt j\}})/(j\,L(j))<\infty$. Taking $X=Y_0$ and using
+$\Var(Y_j^{\mathrm M})=\Var(Y_0\indic_{\{b_j<|Y_0|\le\sqrt j\}})$ (identical distribution) is the
+stated series.
 \end{proof}
 
 \begin{lemma}[Medium part is negligible]\label{lem:hw_medium}
+\lean{AlphaRAR.ae_medium_div_weight_tendsto_zero}\leanok
 \uses{lem:hw_medium_var, lem:slln_l2_conv, lem:kronecker_general}
-$W_m=o(\sqrt{m\,L(m)})$ a.s.
+$W_m=o(\sqrt{m\,L(m)})$ a.s. (precisely, $W_m/\sqrt{2(m+3)L(m+3)}\to0$, and
+$\sqrt{2(m+3)L(m+3)}\sim\sqrt{2m\,L(m)}$).
 \end{lemma}
 \begin{proof}
 Put $a_j:=\sqrt{2\,j\,L(j)}$, positive nondecreasing with $a_j\to\infty$. The partial
@@ -498,10 +642,14 @@ already formalized.
 \end{proof}
 
 \begin{lemma}[Drift is negligible]\label{lem:hw_drift}
+\lean{AlphaRAR.abs_sum_integral_truncation_le}\leanok
 \uses{def:hw_trunc}
-$|D_m|\le2\sigma^2\sqrt m$, so $D_m=O(\sqrt m)=o(\sqrt{m\,L(m)})$.
+$|D_m|\le2\sigma^2\sqrt m$, so $D_m=O(\sqrt m)=o(\sqrt{m\,L(m)})$. (The formalized statement is the
+deterministic core $|\sum_{j<m}\!\int\operatorname{trunc}(X,\sqrt j)|\le2(\int X^2)\sqrt m$ for a
+single centred $X$; since the i.i.d.\ $Y_j$ share the law of $X$, $D_m=\sum_{j<m}\!\int
+\operatorname{trunc}(X,\sqrt j)$ and this is exactly $|D_m|\le2\sigma^2\sqrt m$.)
 \end{lemma}
-\begin{proof}
+\begin{proof}\leanok
 Each summand $\E[Y_j\indic_{\{|Y_j|\le\sqrt j\}}]$ is the mean of the truncation of the
 centred $Y_j$ at level $\sqrt j$, so the already-formalized centred truncated-mean bound
 $|\!\int\operatorname{trunc}(X,A)|\le\E[X^2]/A$
@@ -516,21 +664,35 @@ $\sqrt j$ instead of $\sqrt i$.
 \end{proof}
 
 \begin{theorem}[i.i.d.\ Hartman--Wintner, upper half]\label{thm:hw}
+\lean{AlphaRAR.iid_hartmanWintner_limsup_le_one}\leanok
 \uses{lem:hw_high, lem:hw_low_H, lem:hw_medium, lem:hw_drift}
-For i.i.d.\ $(Y_j)$ with $\E[Y_1]=0$ and $\E[Y_1^2]=\sigma^2<\infty$, almost surely
+For i.i.d.\ $(Y_j)$ with $\E[Y_1]=0$ and $0<\E[Y_1^2]=\sigma^2<\infty$, almost surely
 \[
   \limsup_{m\to\infty}\frac{S_m}{\sqrt{2\sigma^2 m\,\log\log m}}\ \le\ 1,
 \]
 in particular $S_m=O(\sqrt{m\log\log m})$; the two-sided form follows from $-Y$.
 \end{theorem}
-\begin{proof}
+\begin{proof}\leanok
 By Definition~\ref{def:hw_trunc}, $S_m=\tilde S_m+W_m+H_m+D_m$, and the three remainders
 are $o(\sqrt{m\,L(m)})$: $H_m=O(1)$ (Lemma~\ref{lem:hw_high}), $W_m=o(\sqrt{m\,L(m)})$
 (Lemma~\ref{lem:hw_medium}) and $D_m=o(\sqrt m)$ (Lemma~\ref{lem:hw_drift}). Hence
 $\limsup_m S_m/\sqrt{2\sigma^2 m\,L(m)}=\limsup_m\tilde S_m/\sqrt{2\sigma^2 m\,L(m)}\le1$
-by the sharp low-part bound (Lemma~\ref{lem:hw_low_H}). No $A_0\to0$ limit is needed: the
-low truncation $b_j\to\infty$ already gives $\Var(Y_j^{\mathrm L})\to\sigma^2$, so the
-constant is sharp. The two-sided statement applies this to $-Y$.
+by the sharp low-part bound (Lemma~\ref{lem:hw_low_H}). No $A_0\to0$ limit (as in
+de~Acosta's LIL-scale truncation) is needed: the log-level cutoff $b_j\to\infty$ already
+gives $\Var(Y_j^{\mathrm L})\to\sigma^2$, so the constant is sharp. The two-sided statement
+applies this to $-Y$.
+
+\emph{Formalization} (\texttt{AlphaRAR.iid\_hartmanWintner\_limsup\_le\_one}). Because Mathlib's
+\texttt{truncation} is half-open $(-b_j,b_j]$, the pointwise identity $Y_j=Y_j^{\mathrm L}+
+Y_j^{\mathrm M}+Y_j^{\mathrm H}$ fails only at the single boundary atom $\{Y_j=-b_j\}$, where the
+uncovered mass is $-b_j\le0$; \emph{dropping} it gives the one-sided pointwise bound $Y_j\le
+Y_j^{\mathrm L}+Y_j^{\mathrm M}+Y_j\indic_{\{|Y_j|>\sqrt j\}}$ (\texttt{le\_lowMedHigh}), enough for the
+upper half. The drift picks up the atom in expectation, controlled by $\sum_j b_j\,\Prob(Y_j=-b_j)\le
+\E|Y_0|<\infty$ (\texttt{sum\_atom\_le}, using that the distinct $-b_j$ index disjoint events).
+A coboundedness-free core (\texttt{hw\_eventually}) proves ``a.s.\ $\forall\beta>1$ eventually
+$S_m\le\beta\sqrt{2\sigma^2 m\,L(m)}$''; applying it to $-Y$ gives the matching lower bound
+$S_m\ge-\beta\sqrt{2\sigma^2 m\,L(m)}$, which supplies the coboundedness needed to pass to the
+$\limsup$. The nondegeneracy $\sigma^2>0$ is used so the weight is eventually positive.
 \end{proof}
 
 \begin{remark}[de~Acosta's one-shot alternative]\label{rem:hw_deacosta}
@@ -600,14 +762,87 @@ $O$-corollary (Corollary~\ref{cor:llil_nat}) supersedes Corollaries~\ref{cor:lil
 and \ref{cor:lil_upper_nat} with the $\log\log$ rate; Theorem~\ref{thm:hw} +
 Corollary~\ref{cor:subsampled_lil} supersede the growing-increment truncation route
 (the $\log$-rate \texttt{measure\_exists\_ge\_le\_exp\_block} family), which remains a
-valid $\log$-rate fallback. Nothing in this chapter is formalized yet; it reuses the
+valid $\log$-rate fallback. It reuses the
 formalized supermartingale, Ville, Freedman, horizon and Borel--Cantelli lemmas of
 Chapter~\ref{chap:pre_lil}, and, for the i.i.d.\ layer, the already-formalized tools of
 the SLLN chapter: the layer-cake summability
 Lemma~\ref{lem:trunc_tail_summable} (high part), the $L^2$ martingale convergence
 theorem Lemma~\ref{lem:slln_l2_conv} and Kronecker's lemma
-Lemma~\ref{lem:kronecker_general} (medium part). The genuinely new devices are just the
-stopping-time quadratic-variation stop (Lemma~\ref{lem:llil_qv_stop}), the refined
-one-step estimate (Lemma~\ref{lem:llil_refined_ineq}), the medium-band variance estimate
-that carries the bare second moment (Lemma~\ref{lem:hw_medium_var}, the analytic crux),
-and optional skipping (Lemma~\ref{lem:opt_skip}).
+Lemma~\ref{lem:kronecker_general} (medium part).
+
+\noindent\textbf{Formalization status.} The general martingale $O$-rate LIL of
+Sections~\ref{sec:llil_bounded}--\ref{sec:llil_forms} is formalized (bounded increments, and
+$\sqrt i$-growing increments via the block engine \texttt{ae\_eventually\_abs\_le\_sqrt\_nat\_mul\_loglog\_of\_growing}), together with the consumable normalized
+forms (Corollaries~\ref{cor:llil_norm}, \ref{cor:llil_nat}). For the i.i.d.\ Hartman--Wintner layer
+the following are formalized: the martingale structure and quadratic variation of a partial sum of
+independent centred variables (Lemmas~\ref{lem:hw_martingale}, \ref{lem:hw_qv}), the resulting
+\emph{fully formalized bounded-increment i.i.d.\ loglog LIL} (Corollary~\ref{cor:hw_bounded}), the
+high part (Lemma~\ref{lem:hw_high}), the drift bound (Lemma~\ref{lem:hw_drift}), the low-part
+second-moment bound $\int\operatorname{trunc}(X,A)^2\le\int X^2$
+(\texttt{AlphaRAR.integral\_sq\_truncation\_le}), and --- now in full --- the \emph{sharp low-part
+LIL} (Lemma~\ref{lem:hw_low_H}, both as ``$\forall\beta>1$ eventually'' and as a genuine $\limsup$):
+the centred-truncation martingale $\tilde S$, its increment bound $|\Delta\tilde S_j|\le2b_j$, its
+linear quadratic variation $\langle\tilde S\rangle_m\le\sigma^2 m$, and the sharp constant
+$\limsup_m|\tilde S_m|/\sqrt{2\sigma^2 m\,L(m)}\le1$ --- with \emph{no random stopping time}.
+The \emph{sharp-constant} engine is fully formalized in two forms: for bounded increments the refined
+one-step estimate (Lemma~\ref{lem:llil_refined_ineq}), the refined MGF and Freedman bounds
+(Lemmas~\ref{lem:llil_refined_mgf}, \ref{lem:llil_refined_freedman}), the sharp block
+(Lemma~\ref{lem:llil_sharp_block}) and the sharp theorem (Theorem~\ref{thm:llil_sharp}); and for
+growing increments with a linear quadratic variation the sharp growing-increment theorem
+(Theorem~\ref{thm:llil_growth_sharp}) via deterministic base-$\rho$ blocking --- both as
+``$\forall b>1$ eventually'' and as genuine $\limsup$ statements.
+
+\medskip
+\noindent\textbf{Recommended formalization path (matching the literature).} The route above is the
+standard martingale-LIL argument of Stout \cite{Stout1970} and Hall--Heyde \cite{HallHeyde1980},
+built on Freedman's exponential inequality \cite{Freedman1975} (the formalized
+\texttt{measure\_exists\_ge\_le\_exp} family). The full i.i.d.\ Hartman--Wintner upper half
+(Theorem~\ref{thm:hw}, \texttt{AlphaRAR.iid\_hartmanWintner\_limsup\_le\_one}) is now complete:
+the coboundedness-free core \texttt{hw\_eventually} assembles the sharp low part, the negligible
+medium (Lemma~\ref{lem:hw_medium}) and high (Lemma~\ref{lem:hw_high}) parts, and the deterministic
+drift (\texttt{hw\_drift\_bound}, combining Lemma~\ref{lem:hw_drift} with the boundary-atom bound
+\texttt{sum\_atom\_le}); applied to $\pm Y$ it yields the $\limsup$. The two ingredients this rested
+on --- both now \textbf{done}:
+\begin{enumerate}
+  \item \emph{Block base $\eta\downarrow1$ for growing increments} --- \textbf{done.} The sharp
+        constant for \emph{growing} increments needs the geometric block base to tend to $1$. For a
+        \emph{fully general} $L^2$-martingale this would act on $\langle M\rangle$ via the random
+        quadratic-variation stopping (Lemma~\ref{lem:llil_qv_stop}, the identity
+        $\langle M^{\tau_v}\rangle=\langle M\rangle_{\cdot\wedge\tau_v}$). \emph{But the low part
+        $\tilde S$ carries a \textbf{linear} quadratic-variation bound
+        $\langle\tilde S\rangle_m\le\sigma^2 m$
+        (\texttt{predQuadVar\_centeredTruncation\_le}), which makes time and quadratic variation
+        proportional; there a \textbf{deterministic} time horizon $N_j=\lceil\eta^j\rceil$ with
+        $\eta\downarrow1$ delivers the sharp constant with \textbf{no random stopping time}.} This is
+        fully formalized: the horizon-parametrised refined Freedman engine
+        (\texttt{measure\_exists\_ge\_le\_exp\_block\_loglog\_sharp},
+        \texttt{ae\_eventually\_lt\_block\_of\_growing\_loglog\_sharp}), the repackaging with
+        $N_j=\lceil\eta^j\rceil$ ($N_j\le\eta\,n(1+o(1))$, constant $\sqrt{(1+\delta)\eta}\to1$), the
+        base-independent condition \textbf{(H)} bridge (\texttt{tendsto\_growth\_horizon}), the
+        $\forall\beta>1$/two-sided/$\limsup$ forms (Theorem~\ref{thm:llil_growth_sharp}) and the
+        low-part connector (Lemma~\ref{lem:hw_low_H}). \emph{Only the fixed base $2$ is forbidden: it
+        caps the constant at $\sqrt2$; the log-level cutoff makes \textbf{(H)} hold in the $\to0$ form
+        that the deterministic route consumes.}
+  \item \emph{Medium-band variance estimate} (Lemma~\ref{lem:hw_medium_var}): the analytic heart of
+        the i.i.d.\ truncation, i.e.\ Kolmogorov's classical method as in Stout \cite[Ch.~5]{Stout1974}.
+        The three-level cut (with high cutoff $\sqrt j$) is \emph{necessary}: a single truncation at
+        the LIL scale gives a variance series requiring $\E[Y^2\log|Y|/\log\log|Y|]$, not the bare
+        $\E[Y^2]$. With the log-level low cutoff the high cutoff restricts the medium band to
+        $j\in[y^2,j_0(y))$ of multiplicative width $\asymp\log$, making the harmonic inner sum $O(1)$
+        under $\E[Y^2]$ alone. \emph{This lemma is now formalized
+        (\texttt{medium\_variance\_summable}): the uniform inner-sum bound $\le C$
+        (\texttt{medium\_inner\_tsum\_le} via \texttt{medium\_sum\_Icc\_big}), the Tonelli/variance
+        wrapper (\texttt{medium\_variance\_series\_le}) and the $\Var\le\E[\cdot^2]$ reduction give
+        $\sum_{j\ge3}\Var(X\indic_{\{b_j<|X|\le\sqrt j\}})/(j\,L(j))<\infty$; only the identical-%
+        distribution identification $\Var(Y_j^{\mathrm M})=\Var(Y_0\indic_{\{\dots\}})$ connects it to
+        $Y_j^{\mathrm M}$.}
+\end{enumerate}
+For the \emph{i.i.d.} layer only (Theorem~\ref{thm:hw}, used for $Q_{n,k}$ via optional skipping),
+two reference alternatives avoid the medium-band estimate but need infrastructure this project
+lacks: de~Acosta's exponential-inequality proof \cite{deAcosta1983}
+(Remark~\ref{rem:hw_deacosta}), and the Skorokhod-embedding proof
+\cite{Steele2001} (embed the i.i.d.\ sum into Brownian motion and invoke the Brownian LIL), which
+requires a Brownian motion and the Skorokhod embedding theorem not present in Mathlib. The
+bounded assignment martingale $M_{\cdot,k}$ is \emph{not} i.i.d.\ and must go through the martingale
+route; it is already covered by the formalized bounded sharp theorem
+(Theorem~\ref{thm:llil_sharp}).
