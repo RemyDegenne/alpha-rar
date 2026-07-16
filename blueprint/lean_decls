@@ -134,6 +134,9 @@ AlphaRAR.medium_variance_summable
 AlphaRAR.ae_medium_div_weight_tendsto_zero
 AlphaRAR.abs_sum_integral_truncation_le
 AlphaRAR.iid_hartmanWintner_limsup_le_one
+AlphaRAR.iIndepFun_sampledResponse
+AlphaRAR.map_sampledResponse_eq
+AlphaRAR.abs_respMart_le_sqrt_nat_mul_loglog
 AlphaRAR.norm_expI_sub_taylor_le
 AlphaRAR.abs_exp_mul_one_sub_le
 AlphaRAR.abs_exp_mul_one_sub_le'

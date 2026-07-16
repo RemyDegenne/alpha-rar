@@ -3,6 +3,7 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
+import AlphaRAR.Auxiliary.Deterministic
 import Mathlib.Order.CompletePartialOrder
 import Mathlib.Probability.Martingale.Centering
 
@@ -57,22 +58,14 @@ def _root_.MeasureTheory.Filtration.shiftDown (ℱ : Filtration ℕ m0) : Filtra
     | zero => exact bot_le
     | succ m => exact ℱ.le m
 
-/-- The assignment count process of a fixed arm, `N n = ∑_{i<n} X i` (0-indexed). -/
-def acount (X : ℕ → Ω → ℝ) (n : ℕ) : Ω → ℝ := ∑ i ∈ Finset.range n, X i
-
-@[simp] lemma acount_zero : acount X 0 = 0 := by simp [acount]
-
-lemma acount_succ (n : ℕ) : acount X (n + 1) = acount X n + X n := by
-  simp [acount, Finset.sum_range_succ]
-
 /-- The assignment martingale, i.e. the martingale part of the count process `N` in its Doob
 decomposition with respect to the previous-history filtration `ℱ.shiftDown` (blueprint `def:M`).
 Its increments are `X n - μ[X n | ℱ (n-1)]`. -/
 noncomputable def assignMart (X : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) : ℕ → Ω → ℝ :=
-  martingalePart (acount X) ℱ.shiftDown μ
+  martingalePart (count X) ℱ.shiftDown μ
 
-lemma stronglyAdapted_acount (hX : StronglyAdapted ℱ X) :
-    StronglyAdapted ℱ.shiftDown (acount X) := by
+lemma stronglyAdapted_count (hX : StronglyAdapted ℱ X) :
+    StronglyAdapted ℱ.shiftDown (count X) := by
   intro n
   apply Finset.stronglyMeasurable_sum
   intro i hi
@@ -81,8 +74,8 @@ lemma stronglyAdapted_acount (hX : StronglyAdapted ℱ X) :
   exact (hX i).mono (ℱ.mono (by omega : i ≤ m))
 
 @[fun_prop]
-lemma integrable_acount (hX : ∀ n, Integrable (X n) μ) (n : ℕ) :
-    Integrable (acount X n) μ :=
+lemma integrable_count (hX : ∀ n, Integrable (X n) μ) (n : ℕ) :
+    Integrable (count X n) μ :=
   integrable_finsetSum' _ fun i _ ↦ hX i
 
 /-- **The assignment process is a martingale** (blueprint `lem:M_martingale`).
@@ -91,15 +84,15 @@ is a martingale for the previous-history filtration `ℱ.shiftDown`. -/
 lemma martingale_assignMart [IsFiniteMeasure μ]
     (hX : StronglyAdapted ℱ X) (hX_int : ∀ n, Integrable (X n) μ) :
     Martingale (assignMart X ℱ μ) ℱ.shiftDown μ :=
-  martingale_martingalePart (stronglyAdapted_acount hX) (integrable_acount hX_int)
+  martingale_martingalePart (stronglyAdapted_count hX) (integrable_count hX_int)
 
 /-- The increment of the assignment martingale is `X n - μ[X n | ℱ (n-1)]`,
 matching the blueprint's `ΔM = X - p` with `p_n = μ[X n | ℱ (n-1)]`. -/
 lemma assignMart_succ_sub (n : ℕ) :
     assignMart X ℱ μ (n + 1) - assignMart X ℱ μ n = X n - μ[X n | ℱ.shiftDown n] := by
-  have hg : acount X (n + 1) - acount X n = X n := by rw [acount_succ]; abel
+  have hg : count X (n + 1) - count X n = X n := by rw [count_succ]; abel
   unfold assignMart martingalePart
-  rw [predictablePart_add_one, hg, acount_succ]
+  rw [predictablePart_add_one, hg, count_succ]
   abel
 
 /-- The increments of the assignment martingale are bounded by `1` (blueprint

@@ -42,7 +42,7 @@ omit [MeasurableSingletonClass 𝓐] [Fintype 𝓐] [DecidableEq 𝓐] [IsMarkov
 /-- Distinct-arm increments have vanishing product (disjoint indicators). -/
 lemma respIncr_mul_eq_zero {a b : 𝓐} (hab : a ≠ b) (i : ℕ) (ω : Ω) :
     respIncr ν A Y a i ω * respIncr ν A Y b i ω = 0 := by
-  simp only [respIncr]
+  simp only [respIncr, armIndicator]
   rcases eq_or_ne (A i ω) a with ha | ha
   · rw [Set.indicator_of_notMem (show ω ∉ {ω | A i ω = b} by
       simp only [Set.mem_setOf_eq, ha]; exact hab)]
@@ -144,9 +144,13 @@ omit [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] [IsMarkovKernel ν] [IsP
 lemma wIncr_eq_single {a : 𝓐} {i : ℕ} {ω : Ω} (ha : A i ω = a) (w : 𝓐 → ℝ) :
     wIncr ν A Y w i ω = w a * (Y i ω - (ν a)[id]) := by
   rw [wIncr, Finset.sum_eq_single a]
-  · rw [respIncr, Set.indicator_of_mem (show ω ∈ {ω | A i ω = a} from ha), one_mul]
+  · rw [respIncr]
+    simp only [armIndicator]
+    rw [Set.indicator_of_mem (show ω ∈ {ω | A i ω = a} from ha), one_mul]
   · intro b _ hba
-    rw [respIncr, Set.indicator_of_notMem (show ω ∉ {ω | A i ω = b} by
+    rw [respIncr]
+    simp only [armIndicator]
+    rw [Set.indicator_of_notMem (show ω ∉ {ω | A i ω = b} by
       simp only [Set.mem_setOf_eq, ha]; exact fun hh ↦ hba hh.symm), zero_mul, mul_zero]
   · exact fun h ↦ absurd (Finset.mem_univ a) h
 
@@ -888,8 +892,7 @@ lemma respMart_eq_zero_of_count_zero (k : 𝓐) (n : ℕ) (ω : Ω)
   have harm := (Finset.sum_eq_zero_iff_of_nonneg fun j _ ↦ armIndicator_nonneg A k j ω).mp h0
   simp only [respMart, Finset.sum_apply]
   refine Finset.sum_eq_zero fun m hm ↦ ?_
-  rw [show Set.indicator {ω | A m ω = k} (fun _ ↦ (1 : ℝ)) ω = armIndicator A k m ω from rfl,
-    harm m hm, zero_mul]
+  rw [harm m hm, zero_mul]
 
 omit [Fintype 𝓐] [DecidableEq 𝓐] in
 /-- The `√n`-normalized estimator-error vector `(√n(θ̂_{n,k}-θ_k))_k` is measurable. -/

@@ -714,39 +714,60 @@ into a genuine i.i.d.\ partial sum, so Theorem~\ref{thm:hw} applies to it direct
 no separate martingale finite-variance LIL is needed.
 
 \begin{lemma}[Optional skipping]\label{lem:opt_skip}
-Let $(Y_j)_{j\ge1}$ be i.i.d.\ with law $\rho$, adapted to $\filt$ with $Y_j$
-independent of $\filt_{j-1}$, and $(D_j)$ predictable ($D_j$ is $\filt_{j-1}$-measurable)
-$\{0,1\}$-valued with $\sum_j D_j=\infty$ a.s. Let $\tau_1<\tau_2<\cdots$ enumerate
-$\{j:D_j=1\}$. Then $(Y_{\tau_m})_{m\ge1}$ is i.i.d.\ with law $\rho$; consequently, for
-every $\theta$,
-\[
-  \sum_{j<n}D_j\,(Y_j-\theta)\ =\ S_{N_n},\qquad
-  S_m:=\sum_{i\le m}(Y_{\tau_i}-\theta),\quad N_n:=\sum_{j<n}D_j.
-\]
+\lean{AlphaRAR.iIndepFun_sampledResponse, AlphaRAR.map_sampledResponse_eq}\leanok
+Consider an algorithm--environment sequence $(A_j,Y_j)_{j\ge0}$ in a stationary environment with
+per-arm reward kernel $\nu$: the response $Y_j$ is drawn from $\nu(A_j)$, independent of the history
+given the current arm (the action-augmented filtration $\filt_{j-1}\vee\sigma(A_j)$). Fix an arm $k$
+pulled infinitely often a.s., and let $\tau_0<\tau_1<\cdots$ enumerate the pulls $\{j:A_j=k\}$. Then
+the sampled responses $(Y_{\tau_m})_{m\ge0}$ are i.i.d.\ with law $\nu_k$.
 \end{lemma}
-\begin{proof}
-The classical optional-skipping / optional-sampling argument for i.i.d.\ sequences: for
-any bounded measurable $g_1,\dots,g_p$, conditioning successively on
-$\filt_{\tau_i-1}$ and using $Y_{\tau_i}\perp\filt_{\tau_i-1}$ with law $\rho$ (as
-$\{\tau_i=j\}\in\filt_{j-1}$) gives $\E\prod_i g_i(Y_{\tau_i})=\prod_i\int g_i\,d\rho$,
-which is the i.i.d.\ law. The displayed identity is just a reindexing of the nonzero
-summands. Mathlib building blocks: the independence/`Kernel` API and `Filtration`
-machinery; this general statement is not yet in Mathlib and is a worthwhile
-contribution.
+\begin{proof}\leanok
+The classical optional-skipping argument, with the selector $D_j=\indic_{\{A_j=k\}}$. Decompose over
+the value $j$ of the $m$-th pull time $\tau_m$: the event $\{\tau_m=j\}$ coincides a.s.\ with the
+predictable hit event $\{N_j=m,\ A_j=k\}$ (where $N_j=\#\{i<j:A_i=k\}$), which is measurable for the
+action-augmented $\sigma$-algebra at time $j$, and on it the conditional law of $Y_j$ is the constant
+$\nu_k$ (\texttt{condExp\_feedback}). Hence, for any prefix and measurable sets $E_i$,
+$\Prob\!\big(\bigcap_{i<N}Y_{\tau_i}^{-1}E_i\big)=\prod_{i<N}\nu_k(E_i)$ by induction on $N$, peeling
+the newest sample and summing over its a.s.-covering, pairwise-disjoint pull events; this is
+independence together with each marginal $=\nu_k$.
+
+\emph{Formalization.} The combinatorial core is generic (\texttt{AlphaRAR.iIndepFun\_sampledSeq},
+\texttt{map\_sampledSeq\_eq}): for a predictable $\{0,1\}$-selector $D$ and a process $Y$ whose value
+is $\rho$-fresh given the current $\sigma$-algebra on $\{D_j=1\}$
+(\texttt{hfact}: $\mu(Y_j^{-1}E\cap S)=\rho(E)\,\mu(S)$ for $S\subseteq\{D_j=1\}$), the samples at the
+hit times of $D$ are i.i.d.\ $\rho$. The hit time $\tau_m$ is \texttt{Nat.nth}, and the honestly
+$\sigma$-algebra-measurable hit events replace the (absent from Mathlib) random stopping-time
+$\sigma$-algebra. The freshness \texttt{hfact} is discharged for the response process
+(\texttt{hfact\_stationaryEnv}) from the stationary-environment conditional distribution. This
+general statement is not yet in Mathlib and is a worthwhile contribution.
 \end{proof}
 
 \begin{corollary}[LIL for a predictably-sampled i.i.d.\ sum]\label{cor:subsampled_lil}
+\lean{AlphaRAR.abs_respMart_le_sqrt_nat_mul_loglog}\leanok
 \uses{lem:opt_skip, thm:hw}
-With the notation of Lemma~\ref{lem:opt_skip}, if $\E[Y_1]=\theta$ and
-$\Var(Y_1)=V<\infty$, then almost surely
+In the setting of Lemma~\ref{lem:opt_skip}, write $D_j=\indic_{\{A_j=k\}}$, let $\theta_k$ be the
+mean of $\nu_k$ and $N_n=\sum_{j<n}D_j$ (the number of pulls of arm $k$ before $n$). If
+$\Var(\nu_k)=V<\infty$, then almost surely
 \[
-  \Big|\sum_{j<n}D_j(Y_j-\theta)\Big|\ =\ O\!\big(\sqrt{N_n\,\log\log N_n}\big).
+  \Big|\sum_{j<n}D_j(Y_j-\theta_k)\Big|\ =\ O\!\big(\sqrt{N_n\,\log\log N_n}\big).
 \]
 \end{corollary}
-\begin{proof}
-By Lemma~\ref{lem:opt_skip} the left side is $|S_{N_n}|$ for the i.i.d.\ centred sum
-$S$; since $N_n\to\infty$ a.s., Theorem~\ref{thm:hw} (two-sided) gives
-$|S_{N_n}|=O(\sqrt{N_n\log\log N_n})$.
+\begin{proof}\leanok
+Reindexing the nonzero summands, $\sum_{j<n}D_j(Y_j-\theta_k)=S_{N_n}$ with
+$S_m:=\sum_{i<m}(Y_{\tau_i}-\theta_k)$. By Lemma~\ref{lem:opt_skip} the $(Y_{\tau_i})$ are i.i.d.\ with
+law $\nu_k$, so $S$ is an i.i.d.\ centred sum with variance $V$; since $N_n\to\infty$ a.s.,
+Theorem~\ref{thm:hw} (two-sided) gives $|S_{N_n}|=O(\sqrt{N_n\log\log N_n})$.
+
+\emph{Formalization} (\texttt{AlphaRAR.abs\_respMart\_le\_sqrt\_nat\_mul\_loglog}). The formalized
+statement is the sharp two-sided form: a.s., for every $\beta>1$, eventually
+$|Q_{n,k}|\le\beta\sqrt{2V\,N_{n,k}\log\log N_{n,k}}$. The reindexing $Q_{n,k}=S_{N_{n,k}}$
+(\texttt{respMart\_eq\_sum\_sampledSeq}) is an exact pointwise identity proved by induction on $n$
+(a pull advances the sample rank via \texttt{Nat.nth\_count}). Hartman--Wintner is applied through
+the coboundedness-free \emph{eventually} core (\texttt{hw\_eventually}) to the centred samples and
+their negatives; the time-change $N_{n,k}\to\infty$ (\texttt{hitCount\_tendsto\_atTop}) transports
+the eventual bound. The i.i.d.\ hypotheses and law $\nu_k$ of the samples come from
+Lemma~\ref{lem:opt_skip}; the moments are transported to $\nu_k$ by change of variables. Requires
+$\int x\,d\nu_k$, $\int x^2\,d\nu_k$ finite and $V=\Var(\nu_k)>0$.
 \end{proof}
 
 \textbf{Application.} This is the shape used in Lemma~\ref{lem:theta_LIL}: with
@@ -791,6 +812,16 @@ one-step estimate (Lemma~\ref{lem:llil_refined_ineq}), the refined MGF and Freed
 growing increments with a linear quadratic variation the sharp growing-increment theorem
 (Theorem~\ref{thm:llil_growth_sharp}) via deterministic base-$\rho$ blocking --- both as
 ``$\forall b>1$ eventually'' and as genuine $\limsup$ statements.
+
+Finally, \emph{optional skipping} (Lemma~\ref{lem:opt_skip}) is formalized in the
+\texttt{IsAlgEnvSeq} algorithm--environment framework: for a stationary environment, the responses
+sampled at the pulls of a fixed arm $k$ form an i.i.d.\ sequence with law $\nu_k$
+(\texttt{AlphaRAR.iIndepFun\_sampledResponse}, \texttt{AlphaRAR.map\_sampledResponse\_eq}). The
+combinatorial heart is a \emph{generic} result on sampling a process at the hit times of a
+predictable $\{0,1\}$-selector (\texttt{AlphaRAR.iIndepFun\_sampledSeq}), discharged for the response
+process via the stationary-environment conditional law (\texttt{condExp\_feedback}). It is built
+without any random stopping-time $\sigma$-algebra (absent from Mathlib), using \texttt{Nat.nth} hit
+times and their predictable hit events.
 
 \medskip
 \noindent\textbf{Recommended formalization path (matching the literature).} The route above is the

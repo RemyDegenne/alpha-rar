@@ -42,8 +42,13 @@ namespace AlphaRAR
 
 variable (X p ρ : ℕ → ℝ) (α : ℝ)
 
-/-- Allocation count of a fixed arm, `N n = ∑_{j<n} X j` (blueprint `def:counts`). -/
-def count (n : ℕ) : ℝ := ∑ j ∈ range n, X j
+/-- Allocation count of a fixed arm, `N n = ∑_{j<n} X j` (blueprint `def:counts`). Stated for a
+general `AddCommMonoid` so it serves both the deterministic per-path counts (`X : ℕ → ℝ`) and the
+process-level count (`X : ℕ → Ω → ℝ`, the assignment count process of `Assignment.lean`). -/
+def count {M : Type*} [AddCommMonoid M] (X : ℕ → M) (n : ℕ) : M := ∑ j ∈ range n, X j
+
+@[simp] lemma count_zero {M : Type*} [AddCommMonoid M] (X : ℕ → M) : count X 0 = 0 := by
+  simp [count]
 
 /-- Assignment martingale of a fixed arm, `M n = ∑_{j<n} (X j - p j)`
 (blueprint `def:M`). -/
@@ -56,7 +61,8 @@ lemma count_eq (n : ℕ) : count X n = (∑ m ∈ range n, p m) + assignMG X p n
   grind
 
 /-- Increment of the count: `N (n+1) = N n + X n`. -/
-lemma count_succ (n : ℕ) : count X (n + 1) = count X n + X n := by
+lemma count_succ {M : Type*} [AddCommMonoid M] (X : ℕ → M) (n : ℕ) :
+    count X (n + 1) = count X n + X n := by
   unfold count
   rw [Finset.sum_range_succ]
 

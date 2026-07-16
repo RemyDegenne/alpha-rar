@@ -854,7 +854,7 @@ finite-sum linearity `∑_{j<n} … = ∫ X²·∑_{j<n}𝟙{…}/(j log log j)`
 each partial sum is `≤ C·∫X²`; `summable_of_sum_range_le` / `Real.tsum_le_of_sum_range_le` finish.
 With `Var(Y_j^M) ≤ E[(Y_j^M)²] = E[X² 𝟙{…}]` (identical distribution) this gives
 `lem:hw_medium_var`. -/
-lemma medium_variance_series_le [IsProbabilityMeasure μ] {X : Ω → ℝ} (hX : Measurable X)
+lemma medium_variance_series_le {X : Ω → ℝ} (hX : Measurable X)
     (hX2 : Integrable (fun ω ↦ X ω ^ 2) μ) :
     ∃ C : ℝ, 0 ≤ C ∧
       Summable (fun j : ℕ ↦ if 3 ≤ j then
@@ -1383,7 +1383,7 @@ lemma lowMed_le {bj sj x : ℝ} (hb : 0 ≤ bj) (hbs : bj ≤ sj) :
 events `{Y_0 = -b_j}` are disjoint, and on `{Y_0 = -b_j}` we have `|Y_0| = b_j`, so
 `b_j μ{Y_0=-b_j} = ∫_{Y_0=-b_j}|Y_0|` and the disjoint sum is `≤ ∫|Y_0|`. This lets the boundary
 term be absorbed into the (deterministic) Hartman–Wintner drift. -/
-lemma sum_atom_le [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : ∀ i, Measurable (Y i))
+lemma sum_atom_le {Y : ℕ → Ω → ℝ} (hY : ∀ i, Measurable (Y i))
     (hident : ∀ j, IdentDistrib (Y j) (Y 0) μ μ)
     (hint : Integrable (fun ω ↦ |Y 0 ω|) μ) (m : ℕ) :
     ∑ j ∈ Finset.range m, hwCutoff j * (μ {ω | Y j ω = -hwCutoff j}).toReal

@@ -12,7 +12,7 @@ import AlphaRAR.Probability.AssignmentRate
 The deterministic consistency lemmas (`pos_part_vanishes`, …) are stated in terms of the
 per-path count `count X'` and the assignment martingale `assignMG X' p` of a real assignment
 sequence `X' : ℕ → ℝ`. The probabilistic assignment martingale `assignMart X ℱ μ` (the martingale
-part of the 0-indexed count `acount X`, compensated against the previous-history filtration
+part of the 0-indexed count `count X`, compensated against the previous-history filtration
 `ℱ.shiftDown`) is the same object, read along a path:
 
 `assignMart X ℱ μ n ω = assignMG (fun j ↦ X j ω) (fun j ↦ μ[X j | ℱ.shiftDown j] ω) n`,
@@ -45,7 +45,7 @@ lemma assignMart_eq_assignMG (n : ℕ) (ω : Ω) :
     assignMart X ℱ μ n ω
       = assignMG (fun j ↦ X j ω) (fun j ↦ (μ[X j | ℱ.shiftDown j]) ω) n := by
   have h0 : assignMart X ℱ μ 0 ω = 0 := by
-    have : assignMart X ℱ μ 0 = 0 := by rw [assignMart, martingalePart_zero, acount_zero]
+    have : assignMart X ℱ μ 0 = 0 := by rw [assignMart, martingalePart_zero, count_zero]
     rw [this]; rfl
   have htel : assignMart X ℱ μ n ω
       = ∑ i ∈ Finset.range n, (assignMart X ℱ μ (i + 1) ω - assignMart X ℱ μ i ω) := by

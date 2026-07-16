@@ -54,10 +54,6 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
 
 /-! ### The aRTS derived processes -/
 
-/-- The `{0,1}`-valued assignment indicator of arm `k`: `armIndicator A k n ω = 𝟙{A n ω = k}`. -/
-noncomputable def armIndicator (A : ℕ → Ω → 𝓐) (k : 𝓐) (n : ℕ) (ω : Ω) : ℝ :=
-  Set.indicator {ω | A n ω = k} (fun _ ↦ (1 : ℝ)) ω
-
 /-- The aRTS plug-in target `ρ̂_{n,k} = T(θ̂_n)_k`: the continuous target map `T` applied to the
 vector of sequential estimators of the arm means. -/
 noncomputable def aRTSTarget (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ)

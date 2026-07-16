@@ -33,7 +33,7 @@ lemma isBigOpOne_assignMart_div_sqrt [IsFiniteMeasure μ]
     (hX : StronglyAdapted ℱ X) (hX_int : ∀ n, Integrable (X n) μ)
     (h0X : ∀ n, 0 ≤ᵐ[μ] X n) (h1X : ∀ n, X n ≤ᵐ[μ] fun _ ↦ (1 : ℝ)) :
     IsBigOpOne μ (fun n ω ↦ assignMart X ℱ μ n ω / Real.sqrt n) := by
-  have h0 : assignMart X ℱ μ 0 = 0 := by rw [assignMart, martingalePart_zero, acount_zero]
+  have h0 : assignMart X ℱ μ 0 = 0 := by rw [assignMart, martingalePart_zero, count_zero]
   have hM0 : assignMart X ℱ μ 0 =ᵐ[μ] 0 := by filter_upwards with ω; rw [h0]
   have hΔ : ∀ n, ∀ᵐ ω ∂μ,
       |assignMart X ℱ μ (n + 1) ω - assignMart X ℱ μ n ω| ≤ 1 := by
@@ -50,7 +50,7 @@ lemma assignMart_div_atTop_ae_tendsto_zero [IsProbabilityMeasure μ]
     (hX : StronglyAdapted ℱ X) (hX_int : ∀ n, Integrable (X n) μ)
     (h0X : ∀ n, 0 ≤ᵐ[μ] X n) (h1X : ∀ n, X n ≤ᵐ[μ] fun _ ↦ (1 : ℝ)) :
     ∀ᵐ ω ∂μ, Tendsto (fun n ↦ assignMart X ℱ μ n ω / n) atTop (𝓝 0) := by
-  have h0 : assignMart X ℱ μ 0 = 0 := by rw [assignMart, martingalePart_zero, acount_zero]
+  have h0 : assignMart X ℱ μ 0 = 0 := by rw [assignMart, martingalePart_zero, count_zero]
   have hM0 : assignMart X ℱ μ 0 =ᵐ[μ] 0 := by filter_upwards with ω; rw [h0]
   have hΔ : ∀ k, ∀ᵐ ω ∂μ,
       |assignMart X ℱ μ (k + 1) ω - assignMart X ℱ μ k ω| ≤ 1 := by

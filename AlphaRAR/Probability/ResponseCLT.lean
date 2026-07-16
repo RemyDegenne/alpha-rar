@@ -48,7 +48,7 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
 `respIncr ν A Y k i ω = 𝟙{A i ω = k}(Y i ω - (ν k)[id])`. This is `Q_{k}(i+1) - Q_k i`. -/
 noncomputable def respIncr (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (k : 𝓐) (i : ℕ) :
     Ω → ℝ :=
-  fun ω ↦ Set.indicator {ω | A i ω = k} (fun _ ↦ (1 : ℝ)) ω * (Y i ω - (ν k)[id])
+  fun ω ↦ armIndicator A k i ω * (Y i ω - (ν k)[id])
 
 omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] [IsProbabilityMeasure P] in
 /-- The partial sums of the increments are the response martingale:
@@ -212,7 +212,7 @@ lemma lindeberg_respArray_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
         rcases eq_or_ne (A i ω) k with hak | hak
         · have hmemω : ω ∈ ({ω | A i ω = k} : Set Ω) := hak
           have hri : respIncr ν A Y k i ω = Y i ω - θ := by
-            simp only [respIncr, Set.indicator_of_mem hmemω, one_mul, hθ]
+            simp only [respIncr, armIndicator, Set.indicator_of_mem hmemω, one_mul, hθ]
           have harm : armIndicator A k i ω = 1 := by
             simp only [armIndicator, Set.indicator_of_mem hmemω]
           have hcond : (ε < |s⁻¹ * (Y i ω - θ)|) ↔ (ε * s < |Y i ω - θ|) := by
@@ -229,7 +229,7 @@ lemma lindeberg_respArray_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
             ring
         · have hnotmem : ω ∉ ({ω | A i ω = k} : Set Ω) := by simpa using hak
           have hri0 : respIncr ν A Y k i ω = 0 := by
-            simp only [respIncr, Set.indicator_of_notMem hnotmem, zero_mul]
+            simp only [respIncr, armIndicator, Set.indicator_of_notMem hnotmem, zero_mul]
           have harm0 : armIndicator A k i ω = 0 := by
             simp only [armIndicator, Set.indicator_of_notMem hnotmem]
           rw [Set.indicator_of_notMem (show ω ∉ {ω | ε < |s⁻¹ * respIncr ν A Y k i ω|} by
