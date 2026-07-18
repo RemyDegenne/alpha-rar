@@ -190,6 +190,7 @@ $\langle M+N\rangle = \langle M\rangle + \langle N\rangle$.
 \label{sec:pre_taylor}
 
 \begin{lemma}[First-order expansion with quadratic remainder]\label{lem:taylor_first_order}
+\lean{AlphaRAR.norm_sub_fderiv_le_mul_sq}\leanok
 Let $f : \R^K \to \R^d$ be $C^2$ on a convex open set $\hilb$, and suppose
 $\|\mathrm{D}^2 f(z)\| \le C$ for all $z$ in a convex neighborhood of $y \in \hilb$.
 Then for $x$ in that neighborhood,
@@ -198,11 +199,19 @@ Then for $x$ in that neighborhood,
 \]
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 Apply the mean-value / Taylor formula to $t \mapsto f(y + t(x-y))$ on $[0,1]$:
 $f(x) - f(y) - \mathrm{D}f(y)(x-y)
 = \int_0^1 (1-t)\, \mathrm{D}^2 f(y + t(x-y))[x-y, x-y]\, dt$, and bound the
 integrand by $C\|x-y\|^2$.
+
+\emph{Formalization.} \texttt{AlphaRAR.norm\_sub\_fderiv\_le\_mul\_sq} states the equivalent bound
+$\|f(x)-f(y)-\mathrm{D}f(y)(x-y)\| \le K\|x-y\|^2$ under the (weaker, and here more convenient)
+hypothesis that the derivative is $K$-Lipschitz relative to $y$ on a convex set,
+$\|\mathrm{D}f(z)-\mathrm{D}f(y)\| \le K\|z-y\|$ --- which the second-derivative bound
+$\|\mathrm{D}^2 f\|\le C$ supplies with $K = C$ by the mean value inequality. The proof applies the
+mean value inequality \texttt{Convex.norm\_image\_sub\_le\_of\_norm\_hasFDerivWithin\_le'} on the
+segment $[y,x]$, where $\|\mathrm{D}f(z)-\mathrm{D}f(y)\|\le K\|z-y\|\le K\|x-y\|$ gives the constant.
 \end{proof}
 
 \textbf{Formalization note.} Mathlib has the pieces —

@@ -80,6 +80,7 @@ Lemma~\ref{lem:theta_limit_finite}.
 \end{proof}
 
 \begin{lemma}[Dichotomy for the estimator limit]\label{lem:theta_limit_dichotomy}
+\lean{AlphaRAR.estimator_limit_mem_attainableSet}\leanok
 \uses{def:estimator, def:condA, def:attainable, lem:theta_converges}
 Under Condition~\textbf{A}, for each $k$ the estimator $\hat{\theta}_{n,k}$
 converges a.s.\ to a limit in $I_k$: on $\{N_{n,k}\to\infty\}$ it converges to
@@ -87,13 +88,18 @@ $\theta_k$ by the strong law of large numbers; on $\{\sup_n N_{n,k} < \infty\}$
 it is eventually constant and its limit lies in $V_k^{\mathrm{att}}$.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:theta_limit_infinite}
 On $\{N_{n,k}\to\infty\}$, the estimator converges a.s.\ to $\theta_k$ by
 Lemma~\ref{lem:theta_limit_infinite} (the martingale strong law applied to $Q_{\cdot,k}$). On
 $\{\sup_n N_{n,k}<\infty\}$, only finitely many responses on arm $k$ are ever
 observed, so $\hat{\theta}_{n,k}$ is eventually constant with a value in
 $V_k^{\mathrm{att}}$.
+
+\emph{Formalization} (\texttt{AlphaRAR.estimator\_limit\_mem\_attainableSet}). With the closure form
+of $I_k$ (Definition~\ref{def:attainable}) the case split is unnecessary: \emph{any} pointwise limit
+of $\hat{\theta}_{\cdot,k}$ is a limit of values in the range of the estimator, hence lies in the
+closure of that range, i.e.\ in $I_k$ (Mathlib's \texttt{mem\_closure\_of\_tendsto}).
 \end{proof}
 
 \begin{lemma}[The estimator vector converges a.s.]\label{lem:theta_converges_vec}
@@ -128,13 +134,14 @@ $\hat\rho_{n,k}\to u_k$.
 \end{proof}
 
 \begin{lemma}[Non-sparse limit of $\estTarget$]\label{lem:rho_converges}
+\lean{AlphaRAR.rho_converges_pos}\leanok
 \uses{def:condB, def:plugin_target, lem:rho_converges_cont}
 Under Conditions~\textbf{A}--\textbf{B} there is a random $u \in (0,1)^K$ with
 $\estTarget_n \to u$ a.s. Concretely $u = \Target(z)$ where $z\in I_1\times\dots\times I_K$
 is the a.s.\ limit of $\estParams_n$.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:rho_converges_cont, lem:theta_limit_dichotomy}
 By Lemma~\ref{lem:rho_converges_cont} (with $\Target$ continuous on $\hilb$ by Condition~\textbf{B})
 and Lemma~\ref{lem:theta_limit_dichotomy}, $\estParams_n \to z$ a.s.\ with
@@ -142,6 +149,15 @@ $z \in I_1\times\dots\times I_K$. By Condition~\textbf{B}, $\Target$ is
 continuous on the open set $\hilb \supseteq I_1\times\dots\times I_K$ and maps
 $I_1\times\dots\times I_K$ into $(0,1)^K$; hence
 $\estTarget_n = \Target(\estParams_n) \to \Target(z) =: u \in (0,1)^K$.
+
+\emph{Formalization} (\texttt{AlphaRAR.rho\_converges\_pos}). Condition~\textbf{B}'s non-sparsity
+enters as the hypothesis \texttt{hTpos}: $\Target$ maps the product of the attainable sets
+(Definition~\ref{def:attainable}) into the positive orthant. With $z$ the a.s.\ estimator-vector
+limit (\texttt{estimator\_ae\_tendsto\_pi}), each $z_k\in I_k$
+(Lemma~\ref{lem:theta_limit_dichotomy}), so \texttt{hTpos} gives $u_k=\Target(z)_k>0$ while
+continuity of $\Target$ gives $\hat\rho_{n,k}\to u_k$. The formalized conclusion is the positivity
+$u_k>0$ (the non-sparsity used downstream in Lemma~\ref{lem:theta_consistent}); the matching upper
+bound $u_k<1$ is the immediate consequence of the simplex constraint $\sum_k\Target(z)_k=1$.
 \end{proof}
 
 \section{Convergence of the auxiliary process}
@@ -276,63 +292,105 @@ over the arms gives the simultaneous statement.
 \end{proof}
 
 \begin{lemma}[Estimator consistency]\label{lem:theta_consistent}
+\lean{AlphaRAR.aRTS_theta_consistent, AlphaRAR.theta_consistent_pi_of_condB,
+AlphaRAR.theta_consistent}\leanok
 \uses{def:estimator, def:target, lem:consistency_matching}
 Under the same hypotheses, $\estParams_n \to \Params$ a.s., and consequently
 $\hat{\rho}_n \to v = \Target(\Params)$ and $\frac{N_{n,k}}{n}\to v_k$ a.s.
 \end{lemma}
 
-\begin{proof}
-\uses{lem:all_arms_infinite, lem:theta_limit_dichotomy, lem:match}
+\begin{proof}\leanok
+\uses{lem:all_arms_infinite, lem:theta_limit_dichotomy, lem:match, lem:rho_converges}
 By Lemma~\ref{lem:all_arms_infinite} every arm is sampled infinitely often, so
 the first branch of Lemma~\ref{lem:theta_limit_dichotomy} applies to every $k$:
 $\hat{\theta}_{n,k}\to\theta_k$. Continuity of $\Target$ gives
 $\hat{\rho}_n\to\Target(\Params)=v$, and by Lemma~\ref{lem:match} the limit $u$ of
 $N_n/n$ equals $v$.
+
+\emph{Formalization.} \texttt{AlphaRAR.theta\_consistent\_pi\_of\_condB} discharges this from the
+\emph{joint} consistency (a common a.s.\ limit $u$ with both $N_{n,k}/n\to u_k$ and
+$\hat\rho_{n,k}\to u_k$) plus Condition~\textbf{B}: since $\hat\rho_{n,k}=\Target(\estParams_n)_k\to
+\Target(z)_k$ ($z$ the estimator-vector limit) the shared limit is $u=\Target(z)$, which
+Condition~\textbf{B}'s non-sparsity (\texttt{hTpos}, Lemma~\ref{lem:rho_converges}) makes positive;
+positivity gives $N_{n,k}\to\infty$ (\texttt{all\_arms\_infinite}), so the dichotomy's infinite branch
+(\texttt{estimator\_ae\_tendsto\_of\_pullCount\_atTop}) identifies each limit as the arm mean. For an
+aRTS design the joint consistency is exactly \texttt{aRTS\_consistency\_of\_isARTS} (whose plug-in
+target \texttt{aRTSTarget} is by definition $\Target(\estParams_n)$), giving the fully discharged
+\texttt{AlphaRAR.aRTS\_theta\_consistent}: $\estParams_n\to\Params$ a.s.\ under only the aRTS design
+hypotheses and Condition~\textbf{B}. (\texttt{AlphaRAR.theta\_consistent} is the per-arm core taking
+the positive proportion as hypothesis.)
 \end{proof}
 
 \section{Convergence rates}
 \label{sec:cons_rates}
 
 \begin{lemma}[LIL rate for the estimator]\label{lem:theta_LIL}
-\lean{AlphaRAR.abs_estimator_sub_le_rate, AlphaRAR.abs_estimator_sub_le_rate_ae}\leanok
+\lean{AlphaRAR.abs_estimator_sub_le_rate_loglog_of_proportion,
+AlphaRAR.abs_estimator_sub_le_rate_loglog_ae, AlphaRAR.abs_estimator_sub_le_rate,
+AlphaRAR.abs_estimator_sub_le_rate_ae}\leanok
 \uses{def:estimator}
 Under the same hypotheses,
-$\estParams_n - \Params = O\!\big(\sqrt{\tfrac{\log n}{n}}\big)$ a.s. (the $\log$, not $\log\log$,
-form; see the LIL chapter's remark on the constant). The formalized statement
-\texttt{abs\_estimator\_sub\_le\_rate} is the pathwise core: from the exact error identity
-(Lemma~\ref{lem:estimator_bahadur}), a two-sided bound $|Q_{n,k}|\le C\sqrt{n\log n}$
-(Lemma~\ref{lem:lil_truncation}) and $N_{n,k}/n\to v_k>0$ (Lemma~\ref{lem:match}), it gives
-$|\hat\theta_{n,k}-\theta_k|\le C'\,\sqrt{n\log n}/n = C'\sqrt{\log n/n}$ for large $n$.
+$\estParams_n - \Params = O\!\big(\sqrt{\tfrac{\log\log n}{n}}\big)$ a.s. (the sharp $\log\log$ rate;
+a coarser $\log$ form is also formalized). The formalized statement
+\texttt{abs\_estimator\_sub\_le\_rate\_loglog\_of\_proportion} assembles the pathwise core: from the
+exact error identity (Lemma~\ref{lem:estimator_bahadur}), the two-sided $\log\log$ bound
+$|Q_{n,k}|\le C\sqrt{n\log\log n}$ (Corollary~\ref{cor:subsampled_lil}, converted from the pull count
+$N_{n,k}$ to the time index $n$ via $N_{n,k}\sim v_k n$) and $N_{n,k}/n\to v_k>0$
+(Lemma~\ref{lem:match}), it gives $|\hat\theta_{n,k}-\theta_k|\le C'\,\sqrt{n\log\log n}/n =
+C'\sqrt{\log\log n/n}$ for large $n$.
 \end{lemma}
 
 \begin{proof}\leanok
-\uses{lem:all_arms_infinite, lem:Q_quad_var, lem:estimator_bahadur, lem:lil_truncation, lem:match}
+\uses{lem:all_arms_infinite, lem:estimator_bahadur, cor:subsampled_lil, lem:match, lem:lil_truncation}
 By Lemma~\ref{lem:estimator_bahadur} the error is exactly
-$\hat{\theta}_{n,k}-\theta_k = (Q_{n,k}+(\theta_{0,k}-\theta_k))/(N_{n,k}+1)$. The martingale
-$Q_{\cdot,k}$ has quadratic variation $V_k N_{n,k}$ (Lemma~\ref{lem:Q_quad_var}), so the
-finite-variance LIL (Lemma~\ref{lem:lil_truncation}, applied two-sided) gives
-$|Q_{n,k}| = O(\sqrt{n\log n})$ a.s. Since $N_{n,k}\sim v_k n$ (Lemma~\ref{lem:match}), $N_{n,k}+1
-\gtrsim (v_k/2)n$, and dividing bounds $|\hat{\theta}_{n,k}-\theta_k| \le
-(2/v_k)(C+|\theta_{0,k}-\theta_k|)\sqrt{n\log n}/n = O(\sqrt{\log n / n})$.
+$\hat{\theta}_{n,k}-\theta_k = (Q_{n,k}+(\theta_{0,k}-\theta_k))/(N_{n,k}+1)$. Optional skipping turns
+$Q_{\cdot,k}$ into a predictably subsampled i.i.d.\ partial sum, so the subsampled Hartman--Wintner
+LIL (Corollary~\ref{cor:subsampled_lil}) gives $|Q_{n,k}| = O(\sqrt{N_{n,k}\log\log N_{n,k}})$ a.s.;
+since $N_{n,k}\sim v_k n$ (Lemma~\ref{lem:match}), eventually $N_{n,k}\le 2v_k n$ and
+$\log\log N_{n,k}\le 2\log\log n$, whence $|Q_{n,k}| = O(\sqrt{n\log\log n})$
+(\texttt{ae\_eventually\_abs\_respMart\_le\_sqrt\_nat\_mul\_loglog}). Dividing by $N_{n,k}+1
+\gtrsim (v_k/2)n$ bounds $|\hat{\theta}_{n,k}-\theta_k| \le
+(2/v_k)(C+|\theta_{0,k}-\theta_k|)\sqrt{n\log\log n}/n = O(\sqrt{\log\log n / n})$, via the shared
+deterministic core \texttt{abs\_estimator\_sub\_le\_rate\_gen}. The coarser $\log$-rate route through
+the truncation LIL (Lemma~\ref{lem:lil_truncation}, \texttt{abs\_estimator\_sub\_le\_rate\_ae})
+remains available.
 \end{proof}
 
 \begin{lemma}[Rate for the plug-in target]\label{lem:rho_rate}
+\lean{AlphaRAR.aRTS_rho_rate, AlphaRAR.rho_rate}\leanok
 \uses{def:plugin_target}
 Under the same hypotheses,
 $\hat{\rho}_n - v = O\!\big(\sqrt{\tfrac{\log\log n}{n}}\big)$ and hence
 $n(\hat{\rho}_n - v) = O(\sqrt{n\log\log n})$ a.s.
 \end{lemma}
 
-\begin{proof}
-\uses{lem:theta_LIL, def:condB, lem:taylor_rho}
+\begin{proof}\leanok
+\uses{lem:theta_LIL, def:condB, lem:taylor_rho, lem:theta_consistent}
 A first-order Taylor expansion of $\Target$ around $\Params$ (twice
 differentiable by Condition~\textbf{B}) gives
 $\hat{\rho}_n - v = G(\estParams_n-\Params) + O(\|\estParams_n-\Params\|^2)$
 with $G := \nabla\Target|_\Params$. Both terms are
 $O(\sqrt{\log\log n / n})$ by Lemma~\ref{lem:theta_LIL}.
+
+\emph{Formalization.} The delta-method core is formalized as \texttt{AlphaRAR.rho\_rate}: for a target
+map $\Target$ merely \emph{differentiable} at $\Params$ (the first-order part of Condition~\textbf{B};
+the second-order term is unnecessary for the $O$-rate), if the estimator vector converges,
+$\estParams_n\to\Params$ a.s.\ (Lemma~\ref{lem:theta_consistent}), with each coordinate at the rate
+$\hat\theta_{n,k}-\theta_k = O(r_n)$ a.s.\ (Lemma~\ref{lem:theta_LIL}, $r_n=\sqrt{\log\log n/n}$),
+then every coordinate of the plug-in target satisfies $\hat\rho_{n,k}-v_k = O(r_n)$ a.s. The
+mechanism is the generic estimate \texttt{AlphaRAR.isBigO\_target\_sub\_of\_tendsto}: a differentiable
+map sends $\estParams_n-\Params$ to $\Target(\estParams_n)-\Target(\Params)$ of the same big-$O$ order
+(\texttt{AlphaRAR.isBigO\_sub\_comp\_of\_differentiableAt}, from \texttt{HasFDerivAt.isBigO\_sub}),
+combined coordinatewise via \texttt{isBigO\_pi}. For a concrete aRTS design this is fully discharged in
+\texttt{AlphaRAR.aRTS\_rho\_rate}: consistency $\estParams_n\to\Params$ is
+\texttt{aRTS\_theta\_consistent} (Lemma~\ref{lem:theta_consistent}) and the coordinatewise rate is the
+subsampled loglog LIL (Lemma~\ref{lem:theta_LIL}), fed through the positive allocation proportion, so
+the only remaining hypotheses are Condition~\textbf{B} (differentiability and non-sparsity) and the
+Condition~\textbf{A} moments.
 \end{proof}
 
 \begin{theorem}[Strong consistency and rates]\label{thm:LLN}
+\lean{AlphaRAR.aRTS_LLN}\leanok
 \uses{def:generic_cond, def:condA, def:condB, def:counts, def:plugin_target}
 Under the generic conditions and Conditions~\textbf{A}--\textbf{B}, for every
 $k\in[K]$, as $n\to\infty$,
@@ -343,8 +401,12 @@ $k\in[K]$, as $n\to\infty$,
 \]
 \end{theorem}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:theta_consistent, lem:theta_LIL, lem:rho_rate}
 Combine Lemma~\ref{lem:theta_consistent} (first statement), Lemma~\ref{lem:theta_LIL}
-(second) and Lemma~\ref{lem:rho_rate} (third).
+(second) and Lemma~\ref{lem:rho_rate} (third). The formalization \texttt{AlphaRAR.aRTS\_LLN} bundles
+the three conclusions for an aRTS design: $N_{n,k}/n\to v_k$ (\texttt{aRTS\_proportion\_tendsto}),
+$\hat\theta_{n,k}\to\theta_k$ (\texttt{aRTS\_theta\_consistent}) and $\hat\rho_{n,k}-v_k=
+O(\sqrt{\log\log n/n})$ (\texttt{aRTS\_rho\_rate}), under the aRTS design hypotheses and
+Conditions~\textbf{A}--\textbf{B}.
 \end{proof}

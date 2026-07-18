@@ -5,6 +5,7 @@ Authors: Rémy Degenne
 -/
 import AlphaRAR.Probability.OptionalSkipping
 import AlphaRAR.Probability.LILHartmanWintner
+import AlphaRAR.Probability.ResponseConsistency
 
 /-!
 # Loglog law of the iterated logarithm for the response martingale
@@ -192,5 +193,108 @@ theorem abs_respMart_le_sqrt_nat_mul_loglog
   simp only [neg_sq] at hn_lo
   rw [Finset.sum_neg_distrib] at hn_lo
   exact abs_le.mpr ⟨by linarith [hn_lo], hn_up⟩
+
+/-- **A positive pull proportion forces infinitely many pulls** (blueprint `lem:all_arms_infinite`,
+pathwise). If `N_{n,k}/n → v > 0` then arm `k` is pulled infinitely often, i.e. `{j | A j ω = k}` is
+infinite. Indeed `N_{n,k} = (N_{n,k}/n)·n → ∞`, while a finite pull set would cap the count at its
+cardinality. -/
+lemma infinite_setOf_eq_of_tendsto_div {k : 𝓐} {ω : Ω} {v : ℝ} (hv : 0 < v)
+    (hN : Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 v)) :
+    (setOf (fun j ↦ A j ω = k)).Infinite := by
+  have hRinf : Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop := by
+    have hmul := hN.pos_mul_atTop hv (tendsto_natCast_atTop_atTop (R := ℝ))
+    refine hmul.congr' ?_
+    filter_upwards [eventually_ge_atTop 1] with n hn
+    have hne : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
+    rw [div_mul_cancel₀ _ hne]
+  intro hfin
+  have hbound : ∀ n, (pullCount A k n ω : ℝ) ≤ (hfin.toFinset.card : ℝ) := by
+    intro n
+    have hle : pullCount A k n ω ≤ hfin.toFinset.card := by
+      rw [pullCount]
+      refine Finset.card_le_card ?_
+      intro s hs
+      rw [Finset.mem_filter] at hs
+      exact hfin.mem_toFinset.mpr hs.2
+    exact_mod_cast hle
+  obtain ⟨n, hn⟩ := (hRinf.eventually_gt_atTop (hfin.toFinset.card : ℝ)).exists
+  exact absurd (hbound n) (not_le.mpr hn)
+
+/-- **Response martingale is `O(√(n log log n))` end-to-end** (blueprint `cor:subsampled_lil`,
+`n`-indexed form). Discharging the `hQ` input of
+`ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog` with the subsampled loglog LIL
+`abs_respMart_le_sqrt_nat_mul_loglog`, the response martingale is a.s.
+`|Q_{n,k}| ≤ C√(n log log n)` eventually, provided the pull proportion `N_{n,k}/n → v_k > 0`
+(blueprint `lem:match`). Arm `k` being pulled infinitely often (`lem:all_arms_infinite`) is
+*derived* from that positive proportion (`infinite_setOf_eq_of_tendsto_div`), so the only remaining
+hypotheses
+are the reward-law moment conditions on `ν k` (integrable mean/second moment, positive variance;
+Condition **A**). -/
+lemma ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog_of_proportion
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
+    (hint_id : Integrable (fun x : ℝ ↦ x) (ν k))
+    (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : 0 < armVar ν k)
+    {v : Ω → ℝ} (hv : ∀ᵐ ω ∂P, 0 < v ω)
+    (hN : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω))) :
+    ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
+      |respMart ν A Y k n ω| ≤ C * √((n : ℝ) * log (log (n : ℝ))) := by
+  have hk_inf : ∀ᵐ ω ∂P, (setOf (fun j ↦ A j ω = k)).Infinite := by
+    filter_upwards [hv, hN] with ω hvω hNω
+    exact infinite_setOf_eq_of_tendsto_div hvω hNω
+  exact ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog k hv hN
+    (abs_respMart_le_sqrt_nat_mul_loglog h k hk_inf hint_id hint_sq hVpos)
+
+/-- **Loglog LIL rate for the estimator, end-to-end** (blueprint `lem:theta_LIL`, loglog form). The
+sequential estimator error is a.s. `O(√(log log n / n))`:
+`|θ̂_{n,k} - θ_k| ≤ C'·√(n log log n)/n` eventually. This is the `log log`, sharp-constant upgrade
+of the `log`-rate `abs_estimator_sub_le_rate_ae`, obtained by feeding the end-to-end subsampled
+loglog bound (`ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog_of_proportion`) through the exact
+estimator error identity (blueprint `lem:estimator_bahadur`). Its only probabilistic input is the
+pull proportion `N_{n,k}/n → v_k > 0` (`lem:match`) — infinitely-many pulls
+(`lem:all_arms_infinite`) is derived from it — together with the reward-law moment conditions
+(Condition **A**). -/
+lemma abs_estimator_sub_le_rate_loglog_of_proportion
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
+    (hint_id : Integrable (fun x : ℝ ↦ x) (ν k))
+    (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : 0 < armVar ν k)
+    {v : Ω → ℝ} (hv : ∀ᵐ ω ∂P, 0 < v ω)
+    (hN : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω))) :
+    ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
+      |estimator (fun j ↦ armIndicator A k j ω)
+          (fun j ↦ Y j ω) θ₀ n - (ν k)[id]|
+        ≤ C' * (√((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) :=
+  abs_estimator_sub_le_rate_loglog_ae k θ₀ hv hN
+    (ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog_of_proportion
+      h k hint_id hint_sq hVpos hv hN)
+
+/-- **Loglog estimator rate from a positive proportion, count form** (blueprint `lem:theta_LIL`).
+A convenience wrapper on `abs_estimator_sub_le_rate_loglog_of_proportion` that (i) takes the
+positive
+allocation proportion as a per-`ω` existential `∃ u_k > 0, N_{n,k}/n → u_k` — the shape produced by
+the consistency layer — instead of a globally-named limit, and (ii) states it with the assignment
+count `count (𝟙{A · = k})` in place of `pullCount`, so callers need no `Decidable`/`Classical`
+instance for the pull count (the two agree by `count_indicator_eq_pullCount`). This is the form
+consumed when discharging `rho_rate`'s per-arm rate hypothesis for a concrete design. -/
+lemma abs_estimator_sub_le_rate_loglog_of_pos_count
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
+    (hint_id : Integrable (fun x : ℝ ↦ x) (ν k))
+    (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : 0 < armVar ν k)
+    (hpp : ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n
+      / (n : ℝ)) atTop (𝓝 uk)) :
+    ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
+      |estimator (fun j ↦ armIndicator A k j ω)
+          (fun j ↦ Y j ω) θ₀ n - (ν k)[id]|
+        ≤ C' * (√((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) := by
+  obtain ⟨v, hv, hN⟩ : ∃ v : Ω → ℝ, (∀ᵐ ω ∂P, 0 < v ω) ∧ ∀ᵐ ω ∂P,
+      Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω)) := by
+    refine ⟨fun ω ↦ if hω : ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ count
+      (fun j ↦ armIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 uk) then hω.choose else 0, ?_, ?_⟩
+    · filter_upwards [hpp] with ω hppω
+      rw [dif_pos hppω]
+      exact hppω.choose_spec.1
+    · filter_upwards [hpp] with ω hppω
+      rw [dif_pos hppω]
+      exact (hppω.choose_spec.2).congr fun n ↦ by rw [count_indicator_eq_pullCount]
+  exact abs_estimator_sub_le_rate_loglog_of_proportion h k θ₀ hint_id hint_sq hVpos hv hN
 
 end AlphaRAR

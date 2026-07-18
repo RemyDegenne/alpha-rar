@@ -1,0 +1,120 @@
+/-
+Copyright (c) 2026 Rémy Degenne. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Rémy Degenne
+-/
+import AlphaRAR.Probability.ARTSAlgorithm
+import AlphaRAR.Probability.PluginTargetRate
+
+/-!
+# Strong consistency and rates for the aRTS design
+
+Assembling the chapter's headline theorem `thm:LLN` for a concrete aRTS design: under Conditions
+**A** (reward second moments) and **B** (`T` differentiable and non-sparse), almost surely for every
+arm `k`,
+* the allocation proportion converges to the target, `N_{n,k}/n → v_k = T(θ)_k`;
+* the estimator is consistent, `θ̂_{n,k} → θ_k`;
+* the plug-in target achieves the loglog rate, `ρ̂_{n,k} - v_k = O(√(log log n / n))`.
+
+The first two are `aRTS_proportion_tendsto` and `aRTS_theta_consistent`; the rate combines the
+delta-method rate `rho_rate` with the subsampled loglog LIL for the estimator, discharged through
+the positive allocation proportion. Condition **B** enters as `hTpos` (non-sparsity) and `hT_diff`
+(differentiability at `θ`).
+-/
+
+open MeasureTheory Filter ProbabilityTheory Learning Real Asymptotics
+
+open scoped Topology
+
+namespace AlphaRAR
+
+variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐}
+  [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+  {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν]
+  {P : Measure Ω} [IsProbabilityMeasure P]
+  {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
+
+/-- **Positive allocation proportion for an aRTS design** (count form, per-arm). Under Condition
+**B**, for each arm the allocation proportion `N_{n,k}/n = count(𝟙{A · = k})/n` converges a.s. to a
+*positive* limit `v_k = T(θ)_k`. The target `θ` is attainable (it is the a.s. limit of the
+estimator, which exists by `aRTS_theta_consistent`, hence lies in every `attainableSet`), so
+Condition **B**'s non-sparsity `hTpos` makes `T(θ)` positive; the joint aRTS consistency identifies
+the proportion limit with `T(θ)`. This is the positive per-`ω` proportion feeding the rate. -/
+theorem aRTS_count_proportion_pos
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hY2 : ∀ n, MemLp (Y n) 2 P) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
+    (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
+    {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
+    (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) (k : 𝓐) :
+    ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n
+      / (n : ℝ)) atTop (𝓝 uk) := by
+  have hmem : ∀ k', (ν k')[id] ∈ attainableSet A Y (θ₀ k') k' := by
+    obtain ⟨ω, hω⟩ := (aRTS_theta_consistent h hY2 hT hTnn hTsum hα hARTS hTpos).exists
+    exact fun k' ↦ estimator_limit_mem_attainableSet k' (θ₀ k') (tendsto_pi_nhds.mp hω k')
+  have hposk : 0 < T (fun k ↦ (ν k)[id]) k := hTpos (fun k ↦ (ν k)[id]) hmem k
+  filter_upwards [aRTS_consistency_of_isARTS h hY2 hT hTnn hTsum hα hARTS,
+    aRTS_theta_consistent h hY2 hT hTnn hTsum hα hARTS hTpos] with ω hjω hθω
+  obtain ⟨u, hu⟩ := hjω
+  have hrho : Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop
+      (𝓝 (T (fun k ↦ (ν k)[id]) k)) := tendsto_pi_nhds.mp ((hT.tendsto _).comp hθω) k
+  have huk : u k = T (fun k ↦ (ν k)[id]) k := tendsto_nhds_unique (hu k).2 hrho
+  exact ⟨u k, huk.symm ▸ hposk, (hu k).1⟩
+
+/-- **Loglog rate of the plug-in target for an aRTS design** (blueprint `lem:rho_rate`, `thm:LLN`
+third conclusion). Under Conditions **A**--**B**, the aRTS plug-in target achieves the loglog rate
+`ρ̂_{n,k} - v_k = O(√(log log n / n))` a.s. Feeds `aRTS_theta_consistent` (estimator consistency)
+and the per-arm loglog estimator rate — discharged via the positive allocation proportion
+(`aRTS_count_proportion_pos`) — through the delta-method rate `rho_rate`. -/
+theorem aRTS_rho_rate
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hY2 : ∀ n, MemLp (Y n) 2 P) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
+    (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
+    {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
+    (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
+    (hT_diff : DifferentiableAt ℝ T (fun k ↦ (ν k)[id]))
+    (hint_id : ∀ k, Integrable (fun x : ℝ ↦ x) (ν k))
+    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : ∀ k, 0 < armVar ν k) (k : 𝓐) :
+    ∀ᵐ ω ∂P, (fun n ↦ T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
+      (fun j ↦ Y j ω) (θ₀ k') n) k - T (fun k ↦ (ν k)[id]) k)
+        =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) := by
+  refine rho_rate hT_diff (aRTS_theta_consistent h hY2 hT hTnn hTsum hα hARTS hTpos) (fun k' ↦ ?_) k
+  filter_upwards [abs_estimator_sub_le_rate_loglog_of_pos_count h k' (θ₀ k')
+    (hint_id k') (hint_sq k') (hVpos k')
+    (aRTS_count_proportion_pos h hY2 hT hTnn hTsum hα hARTS hTpos k')] with ω hω
+  obtain ⟨C', hC'⟩ := hω
+  refine isBigO_iff.mpr ⟨C', ?_⟩
+  filter_upwards [hC'] with n hn
+  rw [Real.norm_eq_abs, Real.norm_eq_abs,
+    abs_of_nonneg (div_nonneg (Real.sqrt_nonneg _) (Nat.cast_nonneg n))]
+  exact hn
+
+/-- **Strong consistency and rates for an aRTS design** (blueprint `thm:LLN`). Under Conditions
+**A** (`hint_id`, `hint_sq`, `hVpos`) and **B** (`hT`, `hTpos`, `hT_diff`, and the simplex
+conditions `hTnn`, `hTsum`) an `α`-throttled aRTS design satisfies, almost surely for every arm `k`:
+the allocation proportion converges to the target `N_{n,k}/n → v_k = T(θ)_k`; the estimator is
+consistent `θ̂_{n,k} → θ_k`; and the plug-in target achieves the loglog rate
+`ρ̂_{n,k} - v_k = O(√(log log n / n))`. Bundles `aRTS_proportion_tendsto`, `aRTS_theta_consistent`,
+`aRTS_rho_rate`. -/
+theorem aRTS_LLN
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hY2 : ∀ n, MemLp (Y n) 2 P) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
+    (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
+    {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
+    (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
+    (hT_diff : DifferentiableAt ℝ T (fun k ↦ (ν k)[id]))
+    (hint_id : ∀ k, Integrable (fun x : ℝ ↦ x) (ν k))
+    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : ∀ k, 0 < armVar ν k) (k : 𝓐) :
+    ∀ᵐ ω ∂P,
+      Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (T (fun k ↦ (ν k)[id]) k)) ∧
+      Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
+        (fun j ↦ Y j ω) (θ₀ k) n) atTop (𝓝 ((ν k)[id])) ∧
+      (fun n ↦ T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
+        (fun j ↦ Y j ω) (θ₀ k') n) k - T (fun k ↦ (ν k)[id]) k)
+          =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) := by
+  filter_upwards [aRTS_proportion_tendsto h hY2 hT hTnn hTsum hα hARTS hTpos k,
+    aRTS_theta_consistent h hY2 hT hTnn hTsum hα hARTS hTpos,
+    aRTS_rho_rate h hY2 hT hTnn hTsum hα hARTS hTpos hT_diff hint_id hint_sq hVpos k]
+    with ω hprop hθ hrate
+  exact ⟨hprop, tendsto_pi_nhds.mp hθ k, hrate⟩
+
+end AlphaRAR

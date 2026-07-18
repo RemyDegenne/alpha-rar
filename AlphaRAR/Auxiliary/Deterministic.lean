@@ -134,6 +134,141 @@ lemma auxU_telescope (n ℓ : ℕ) (hℓn : ℓ ≤ n) :
   congr 1
   exact sum_Ico_succ_sub (fun m ↦ count X m - (m : ℝ) * ρ m) ℓ n hℓn
 
+/-- **Exact `M`-explicit `U`-increment identity** (algebraic backbone of blueprint
+`lem:diff_U_decomp`).
+
+For `ℓ ≤ n`, directly from the definition `U n = ∑_{m<n} α ρ_m + M n - n ρ n`,
+`U n - U ℓ = ∑_{m=ℓ}^{n-1} α ρ_m + (M n - M ℓ) + (ℓ ρ_ℓ - n ρ_n)`,
+keeping the assignment martingale `M = assignMG` explicit (unlike `auxU_telescope`, which expands it
+through the throttling increments). This is the form the normality-chapter decomposition uses, since
+the martingale LIL then applies to `M n - M ℓ`. -/
+lemma auxU_sub (n ℓ : ℕ) (hℓn : ℓ ≤ n) :
+    auxU X p ρ α n - auxU X p ρ α ℓ
+      = (∑ m ∈ Ico ℓ n, α * ρ m) + (assignMG X p n - assignMG X p ℓ)
+        + ((ℓ : ℝ) * ρ ℓ - (n : ℝ) * ρ n) := by
+  unfold auxU
+  rw [Finset.sum_Ico_eq_sub _ hℓn]
+  ring
+
+/-- **Windowed Cesàro drift bound** (drift-control behind blueprint `lem:diff_U_decomp`).
+
+If `u m → v`, then for an arbitrary window sequence `ℓ_n ≤ n` (bounded or diverging), the deviation
+sum over the window `[ℓ_n, n)` is `o(n - ℓ_n)`: for every `ε > 0`, eventually
+`|∑_{m=ℓ_n}^{n-1} (u m - v)| ≤ ε (n - ℓ_n)`.
+
+The window is split at a threshold `N` past which `|u m - v| ≤ ε/2`. The tail terms (`m ≥ N`)
+contribute at most `(ε/2)(n - ℓ_n)`; the finitely many head terms (`m < N`) contribute at most a
+fixed constant `S`, which is `≤ (ε/2)(n - ℓ_n)` once `n` is large (and vanishes outright once the
+window starts past `N`). -/
+lemma abs_sum_Ico_sub_le_of_tendsto {u : ℕ → ℝ} {v : ℝ} (hu : Tendsto u atTop (𝓝 v))
+    {ℓ : ℕ → ℕ} (hℓ : ∀ n, ℓ n ≤ n) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ n in atTop, |∑ m ∈ Ico (ℓ n) n, (u m - v)| ≤ ε * ((n : ℝ) - ℓ n) := by
+  obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp hu (ε / 2) (by positivity)
+  simp only [Real.dist_eq] at hN
+  set S : ℝ := ∑ m ∈ range N, |u m - v| with hSdef
+  have hSnn : 0 ≤ S := Finset.sum_nonneg fun m _ ↦ abs_nonneg _
+  have hthresh : Tendsto (fun n : ℕ ↦ ε * ((n : ℝ) - N)) atTop atTop :=
+    Tendsto.const_mul_atTop hε (tendsto_atTop_add_const_right atTop (-(N : ℝ))
+      tendsto_natCast_atTop_atTop)
+  filter_upwards [hthresh.eventually_ge_atTop (2 * S)] with n hn
+  have hℓn : ℓ n ≤ n := hℓ n
+  have hℓnR : (ℓ n : ℝ) ≤ n := by exact_mod_cast hℓn
+  have hcard : (((Ico (ℓ n) n).filter (fun m ↦ ¬ m < N)).card : ℝ) ≤ (n : ℝ) - ℓ n := by
+    calc (((Ico (ℓ n) n).filter (fun m ↦ ¬ m < N)).card : ℝ)
+        ≤ ((Ico (ℓ n) n).card : ℝ) := by exact_mod_cast Finset.card_filter_le _ _
+      _ = (n : ℝ) - ℓ n := by rw [Nat.card_Ico, Nat.cast_sub hℓn]
+  have hbad : (∑ m ∈ (Ico (ℓ n) n).filter (· < N), |u m - v|) ≤ ε / 2 * ((n : ℝ) - ℓ n) := by
+    rcases Nat.lt_or_ge (ℓ n) N with hlN | hlN
+    · have hbadS : (∑ m ∈ (Ico (ℓ n) n).filter (· < N), |u m - v|) ≤ S := by
+        refine Finset.sum_le_sum_of_subset_of_nonneg (fun m hm ↦ ?_) (fun m _ _ ↦ abs_nonneg _)
+        simp only [Finset.mem_filter, Finset.mem_Ico] at hm
+        exact Finset.mem_range.mpr hm.2
+      have hlNR : (ℓ n : ℝ) < N := by exact_mod_cast hlN
+      nlinarith [hn, hbadS, hSnn]
+    · have hempty : (Ico (ℓ n) n).filter (· < N) = ∅ := by
+        rw [Finset.filter_eq_empty_iff]
+        intro m hm
+        simp only [Finset.mem_Ico] at hm
+        omega
+      rw [hempty, Finset.sum_empty]
+      have : (0 : ℝ) ≤ (n : ℝ) - ℓ n := by linarith
+      positivity
+  have hgood : (∑ m ∈ (Ico (ℓ n) n).filter (fun m ↦ ¬ m < N), |u m - v|)
+      ≤ ε / 2 * ((n : ℝ) - ℓ n) := by
+    calc (∑ m ∈ (Ico (ℓ n) n).filter (fun m ↦ ¬ m < N), |u m - v|)
+        ≤ ∑ _m ∈ (Ico (ℓ n) n).filter (fun m ↦ ¬ m < N), (ε / 2) := by
+          refine Finset.sum_le_sum fun m hm ↦ ?_
+          simp only [Finset.mem_filter, not_lt] at hm
+          exact (hN m hm.2).le
+      _ = (((Ico (ℓ n) n).filter (fun m ↦ ¬ m < N)).card : ℝ) * (ε / 2) := by
+          rw [Finset.sum_const, nsmul_eq_mul]
+      _ ≤ ((n : ℝ) - ℓ n) * (ε / 2) := by
+          exact mul_le_mul_of_nonneg_right hcard (by positivity)
+      _ = ε / 2 * ((n : ℝ) - ℓ n) := by ring
+  calc |∑ m ∈ Ico (ℓ n) n, (u m - v)|
+      ≤ ∑ m ∈ Ico (ℓ n) n, |u m - v| := Finset.abs_sum_le_sum_abs _ _
+    _ = (∑ m ∈ (Ico (ℓ n) n).filter (· < N), |u m - v|)
+          + ∑ m ∈ (Ico (ℓ n) n).filter (fun m ↦ ¬ m < N), |u m - v| :=
+        (Finset.sum_filter_add_sum_filter_not _ _ _).symm
+    _ ≤ ε / 2 * ((n : ℝ) - ℓ n) + ε / 2 * ((n : ℝ) - ℓ n) := add_le_add hbad hgood
+    _ = ε * ((n : ℝ) - ℓ n) := by ring
+
+/-- **Additive decomposition of the `U`-increment** (blueprint `lem:diff_U_decomp`).
+
+If the plug-in target converges, `ρ n → v`, then for an arbitrary window `ℓ_n ≤ n`, the
+`U`-increment equals its leading drift `(n - ℓ_n)(-(1-α)v)`, the increment `M_n - M_{ℓ_n}`, and the
+boundary term `ℓ_n(ρ_{ℓ_n} - ρ_n)`, up to an `o(n - ℓ_n)` remainder: for every `ε > 0`, eventually
+`|(U_n - U_{ℓ_n}) - [(n-ℓ_n)(-(1-α)v) + (M_n - M_{ℓ_n}) + ℓ_n(ρ_{ℓ_n} - ρ_n)]| ≤ ε (n - ℓ_n)`.
+
+The exact identity is `auxU_sub`; the remainder `α·∑_{[ℓ_n,n)}(ρ_m - v) - (n-ℓ_n)(ρ_n - v)` is
+controlled by the windowed Cesàro bound `abs_sum_Ico_sub_le_of_tendsto` (first term) and by
+`ρ_n → v` (second term). -/
+lemma diff_U_decomp {v : ℝ} (hρ : Tendsto ρ atTop (𝓝 v)) {ℓ : ℕ → ℕ} (hℓ : ∀ n, ℓ n ≤ n)
+    {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ n in atTop, |auxU X p ρ α n - auxU X p ρ α (ℓ n)
+        - (((n : ℝ) - ℓ n) * (-(1 - α) * v) + (assignMG X p n - assignMG X p (ℓ n))
+          + (ℓ n : ℝ) * (ρ (ℓ n) - ρ n))| ≤ ε * ((n : ℝ) - ℓ n) := by
+  have hε' : 0 < ε / (2 * (|α| + 1)) := by positivity
+  have hces := abs_sum_Ico_sub_le_of_tendsto hρ hℓ hε'
+  have hρev : ∀ᶠ n in atTop, |ρ n - v| ≤ ε / 2 := by
+    obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp hρ (ε / 2) (by positivity)
+    filter_upwards [eventually_ge_atTop N] with n hn
+    rw [← Real.dist_eq]; exact (hN n hn).le
+  have hfactor : |α| * (ε / (2 * (|α| + 1))) ≤ ε / 2 := by
+    have hp : (0 : ℝ) < 2 * (|α| + 1) := by positivity
+    rw [← mul_div_assoc, div_le_iff₀ hp]
+    nlinarith [abs_nonneg α, hε.le]
+  filter_upwards [hces, hρev] with n hcesn hρn
+  have hℓn : ℓ n ≤ n := hℓ n
+  have hℓnR : (ℓ n : ℝ) ≤ n := by exact_mod_cast hℓn
+  have hdnn : (0 : ℝ) ≤ (n : ℝ) - ℓ n := by linarith
+  have hsum : ∑ m ∈ Ico (ℓ n) n, α * ρ m
+      = α * (∑ m ∈ Ico (ℓ n) n, (ρ m - v)) + α * ((n : ℝ) - ℓ n) * v := by
+    have hsv : ∑ m ∈ Ico (ℓ n) n, (ρ m - v)
+        = (∑ m ∈ Ico (ℓ n) n, ρ m) - ((n : ℝ) - ℓ n) * v := by
+      rw [Finset.sum_sub_distrib, Finset.sum_const, Nat.card_Ico, nsmul_eq_mul, Nat.cast_sub hℓn]
+    rw [hsv, ← Finset.mul_sum]
+    ring
+  have hdrift : auxU X p ρ α n - auxU X p ρ α (ℓ n)
+        - (((n : ℝ) - ℓ n) * (-(1 - α) * v) + (assignMG X p n - assignMG X p (ℓ n))
+          + (ℓ n : ℝ) * (ρ (ℓ n) - ρ n))
+      = α * (∑ m ∈ Ico (ℓ n) n, (ρ m - v)) - ((n : ℝ) - ℓ n) * (ρ n - v) := by
+    rw [auxU_sub X p ρ α n (ℓ n) hℓn, hsum]
+    ring
+  rw [hdrift]
+  calc |α * (∑ m ∈ Ico (ℓ n) n, (ρ m - v)) - ((n : ℝ) - ℓ n) * (ρ n - v)|
+      ≤ |α * (∑ m ∈ Ico (ℓ n) n, (ρ m - v))| + |((n : ℝ) - ℓ n) * (ρ n - v)| :=
+        abs_sub _ _
+    _ = |α| * |∑ m ∈ Ico (ℓ n) n, (ρ m - v)| + ((n : ℝ) - ℓ n) * |ρ n - v| := by
+        rw [abs_mul, abs_mul, abs_of_nonneg hdnn]
+    _ ≤ |α| * (ε / (2 * (|α| + 1)) * ((n : ℝ) - ℓ n)) + ((n : ℝ) - ℓ n) * (ε / 2) :=
+        add_le_add (mul_le_mul_of_nonneg_left hcesn (abs_nonneg _))
+          (mul_le_mul_of_nonneg_left hρn hdnn)
+    _ = ((n : ℝ) - ℓ n) * (|α| * (ε / (2 * (|α| + 1))) + ε / 2) := by ring
+    _ ≤ ((n : ℝ) - ℓ n) * (ε / 2 + ε / 2) :=
+        mul_le_mul_of_nonneg_left (by linarith [hfactor]) hdnn
+    _ = ε * ((n : ℝ) - ℓ n) := by ring
+
 /-- **Counts sum to time** (blueprint `lem:counts_sum`).
 If the assignment vector sums to one at each time, then the arm counts sum to the
 time index. -/
@@ -142,6 +277,13 @@ lemma counts_sum {ι : Type*} [Fintype ι] (Y : ℕ → ι → ℝ) (hY : ∀ j,
   simp only [count]
   rw [Finset.sum_comm]
   simp only [hY, Finset.sum_const, Finset.card_range, nsmul_eq_mul, mul_one]
+
+/-- **Deviation simplex identity** (backbone of the `lem:prop_dev` reverse step). If the assignment
+vector and the target vector each sum to one, then the deviations `N_{n,k} - n r_k` sum to zero. -/
+lemma sum_count_sub_smul_eq_zero {ι : Type*} [Fintype ι] (Y : ℕ → ι → ℝ) (r : ι → ℝ)
+    (hY : ∀ j, ∑ k, Y j k = 1) (hr : ∑ k, r k = 1) (n : ℕ) :
+    ∑ k, (count (fun j ↦ Y j k) n - (n : ℝ) * r k) = 0 := by
+  rw [Finset.sum_sub_distrib, counts_sum Y hY n, ← Finset.mul_sum, hr, mul_one, sub_self]
 
 /-- Last under-sampling time (blueprint `def:hitting`): the largest `m ≤ n` at
 which the arm is under-sampled, encoded via `Nat.findGreatest` (which returns `0`
@@ -310,6 +452,100 @@ lemma estimator_sub_eq (ξ : ℕ → ℝ) (θ θ₀ : ℝ) (n : ℕ) (hN : count
   field_simp
   ring
 
+/-- **Estimator difference identity** (algebraic backbone of `lem:ell_rho_control`). The estimator
+difference at two times splits into a "reweighting" term (carrying `Q_ℓ`, scaled by the count
+increment `N_n - N_ℓ`) and an "increment" term (carrying `Q_n - Q_ℓ`):
+`θ̂_ℓ - θ̂_n = (Q_ℓ + (θ₀-θ))(N_n - N_ℓ)/((N_ℓ+1)(N_n+1)) - (Q_n - Q_ℓ)/(N_n+1)`. -/
+lemma estimator_diff_eq (ξ : ℕ → ℝ) (θ θ₀ : ℝ) (ℓ n : ℕ)
+    (hℓ : count X ℓ + 1 ≠ 0) (hn : count X n + 1 ≠ 0) :
+    estimator X ξ θ₀ ℓ - estimator X ξ θ₀ n
+      = (respMG X ξ θ ℓ + (θ₀ - θ)) * (count X n - count X ℓ)
+          / ((count X ℓ + 1) * (count X n + 1))
+        - (respMG X ξ θ n - respMG X ξ θ ℓ) / (count X n + 1) := by
+  have hℓ' := estimator_sub_eq X ξ θ θ₀ ℓ hℓ
+  have hn' := estimator_sub_eq X ξ θ θ₀ n hn
+  have hkey : estimator X ξ θ₀ ℓ - estimator X ξ θ₀ n
+      = (estimator X ξ θ₀ ℓ - θ) - (estimator X ξ θ₀ n - θ) := by ring
+  rw [hkey, hℓ', hn']
+  field_simp
+  ring
+
+/-- **Deterministic increment bound for the scaled estimator difference** (deterministic core of
+`lem:ell_rho_control`). For `{0,1}`-bounded increments `X` and `ℓ ≤ n`, the scaled difference
+`ℓ|θ̂_ℓ - θ̂_n|` splits into a reweighting part `∝ (n-ℓ)` and an increment part `∝ |Q_n - Q_ℓ|`:
+`ℓ|θ̂_ℓ - θ̂_n| ≤ ℓ(|Q_ℓ|+|θ₀-θ|)/((N_ℓ+1)(N_n+1))·(n-ℓ) + ℓ/(N_n+1)·|Q_n - Q_ℓ|`. -/
+lemma abs_estimator_diff_le (hX0 : ∀ j, 0 ≤ X j) (hX1 : ∀ j, X j ≤ 1)
+    (ξ : ℕ → ℝ) (θ θ₀ : ℝ) {ℓ n : ℕ} (hℓn : ℓ ≤ n) :
+    (ℓ : ℝ) * |estimator X ξ θ₀ ℓ - estimator X ξ θ₀ n|
+      ≤ (ℓ : ℝ) * (|respMG X ξ θ ℓ| + |θ₀ - θ|) / ((count X ℓ + 1) * (count X n + 1))
+          * ((n : ℝ) - ℓ)
+        + (ℓ : ℝ) / (count X n + 1) * |respMG X ξ θ n - respMG X ξ θ ℓ| := by
+  have hNℓ : (0 : ℝ) ≤ count X ℓ := Finset.sum_nonneg fun j _ ↦ hX0 j
+  have hNn : (0 : ℝ) ≤ count X n := Finset.sum_nonneg fun j _ ↦ hX0 j
+  have hNℓ1 : (0 : ℝ) < count X ℓ + 1 := by linarith
+  have hNn1 : (0 : ℝ) < count X n + 1 := by linarith
+  have hΔ : count X n - count X ℓ = ∑ j ∈ Finset.Ico ℓ n, X j := (Finset.sum_Ico_eq_sub X hℓn).symm
+  have hΔnn : (0 : ℝ) ≤ count X n - count X ℓ := by
+    rw [hΔ]; exact Finset.sum_nonneg fun j _ ↦ hX0 j
+  have hΔle : count X n - count X ℓ ≤ (n : ℝ) - ℓ := by
+    rw [hΔ]
+    calc ∑ j ∈ Finset.Ico ℓ n, X j
+        ≤ ∑ _j ∈ Finset.Ico ℓ n, (1 : ℝ) := Finset.sum_le_sum fun j _ ↦ hX1 j
+      _ = (n : ℝ) - ℓ := by
+          rw [Finset.sum_const, Nat.card_Ico, nsmul_eq_mul, mul_one, Nat.cast_sub hℓn]
+  have hℓnn : (0 : ℝ) ≤ (ℓ : ℝ) := Nat.cast_nonneg ℓ
+  rw [estimator_diff_eq X ξ θ θ₀ ℓ n hNℓ1.ne' hNn1.ne']
+  set A := (respMG X ξ θ ℓ + (θ₀ - θ)) * (count X n - count X ℓ)
+    / ((count X ℓ + 1) * (count X n + 1)) with hAdef
+  set B := (respMG X ξ θ n - respMG X ξ θ ℓ) / (count X n + 1) with hBdef
+  have hAabs : |A| = |respMG X ξ θ ℓ + (θ₀ - θ)| * (count X n - count X ℓ)
+      / ((count X ℓ + 1) * (count X n + 1)) := by
+    rw [hAdef, abs_div, abs_mul, abs_of_nonneg hΔnn, abs_of_pos (mul_pos hNℓ1 hNn1)]
+  have hBabs : |B| = |respMG X ξ θ n - respMG X ξ θ ℓ| / (count X n + 1) := by
+    rw [hBdef, abs_div, abs_of_pos hNn1]
+  have hDEN : (0 : ℝ) < (count X ℓ + 1) * (count X n + 1) := mul_pos hNℓ1 hNn1
+  have hterm1 : (ℓ : ℝ) * |A| ≤ (ℓ : ℝ) * (|respMG X ξ θ ℓ| + |θ₀ - θ|)
+      / ((count X ℓ + 1) * (count X n + 1)) * ((n : ℝ) - ℓ) := by
+    rw [hAabs,
+      show (ℓ : ℝ) * (|respMG X ξ θ ℓ + (θ₀ - θ)| * (count X n - count X ℓ)
+          / ((count X ℓ + 1) * (count X n + 1)))
+        = (ℓ * |respMG X ξ θ ℓ + (θ₀ - θ)| * (count X n - count X ℓ))
+          / ((count X ℓ + 1) * (count X n + 1)) from by ring,
+      show (ℓ : ℝ) * (|respMG X ξ θ ℓ| + |θ₀ - θ|) / ((count X ℓ + 1) * (count X n + 1))
+          * ((n : ℝ) - ℓ)
+        = (ℓ * (|respMG X ξ θ ℓ| + |θ₀ - θ|) * ((n : ℝ) - ℓ))
+          / ((count X ℓ + 1) * (count X n + 1)) from by ring]
+    gcongr
+    exact abs_add_le _ _
+  have hterm2 : (ℓ : ℝ) * |B|
+      = (ℓ : ℝ) / (count X n + 1) * |respMG X ξ θ n - respMG X ξ θ ℓ| := by
+    rw [hBabs]; ring
+  calc (ℓ : ℝ) * |A - B|
+      ≤ (ℓ : ℝ) * (|A| + |B|) := by gcongr; exact abs_sub A B
+    _ = (ℓ : ℝ) * |A| + (ℓ : ℝ) * |B| := by ring
+    _ ≤ (ℓ : ℝ) * (|respMG X ξ θ ℓ| + |θ₀ - θ|) / ((count X ℓ + 1) * (count X n + 1))
+          * ((n : ℝ) - ℓ) + (ℓ : ℝ) / (count X n + 1) * |respMG X ξ θ n - respMG X ξ θ ℓ| :=
+        add_le_add hterm1 (le_of_eq hterm2)
+
+/-- **Coefficient bound for the increment term** (deterministic core of `lem:ell_rho_control`).
+If the count grows linearly, `N_n / n → v > 0`, then `n / (N_n + 1) ≤ 2/v` eventually. In particular
+`ℓ_n / (N_n + 1) ≤ 2/v` for `ℓ_n ≤ n`, so the coefficient `h_n = ℓ_n/(N_n+1)` is eventually
+bounded. -/
+lemma eventually_natCast_div_add_one_le {N : ℕ → ℝ} {v : ℝ} (hv : 0 < v)
+    (hN : Tendsto (fun n : ℕ ↦ N n / (n : ℝ)) atTop (𝓝 v)) :
+    ∀ᶠ n in atTop, ((n : ℕ) : ℝ) / (N n + 1) ≤ 2 / v := by
+  have hadd : Tendsto (fun n : ℕ ↦ (N n + 1) / (n : ℝ)) atTop (𝓝 v) := by
+    have hone : Tendsto (fun n : ℕ ↦ (1 : ℝ) / (n : ℝ)) atTop (𝓝 0) :=
+      tendsto_one_div_atTop_nhds_zero_nat
+    have h0 : Tendsto (fun n : ℕ ↦ N n / (n : ℝ) + 1 / (n : ℝ)) atTop (𝓝 (v + 0)) := hN.add hone
+    rw [add_zero] at h0
+    exact h0.congr fun n ↦ (add_div (N n) 1 (n : ℝ)).symm
+  have hinv : Tendsto (fun n : ℕ ↦ (n : ℝ) / (N n + 1)) atTop (𝓝 v⁻¹) :=
+    (hadd.inv₀ hv.ne').congr fun n ↦ inv_div (N n + 1) (n : ℝ)
+  refine (hinv.eventually_lt_const (show v⁻¹ < 2 / v from ?_)).mono fun n h ↦ h.le
+  have hvi : (0 : ℝ) < v⁻¹ := inv_pos.mpr hv
+  rw [div_eq_mul_inv]; linarith
+
 /-- **Absolute estimator error bound**: `|θ̂ n - θ| ≤ (|Q n| + |θ₀ - θ|) / (N n + 1)`.
 The pathwise backbone of the LIL rate `lem:theta_LIL`: with `|Q n| = O(√(n \log n))` and
 `N n + 1 ≍ v_k n`, it gives `|θ̂ n - θ| = O(√(\log n / n))`. -/
@@ -319,6 +555,48 @@ lemma abs_estimator_sub_le (ξ : ℕ → ℝ) (θ θ₀ : ℝ) (n : ℕ) (hN : 0
   gcongr
   exact abs_add_le _ _
 
+/-- **Generic estimator rate from an abstract martingale rate** (the shared core of the
+`log` and `log log` LIL rates for the estimator, blueprint `lem:theta_LIL`).
+
+If the response martingale is bounded by an abstract rate `r` — `|Q_n| ≤ C·r n` eventually — with
+`1 ≤ r n` eventually (so the constant numerator offset `θ₀ - θ` is absorbed), and the allocation
+proportion converges to a positive limit `N_n/n → v > 0`, then the estimator error is
+`|θ̂_n - θ| ≤ C'·(r n / n)` eventually, with `C' = (2/v)(C + |θ₀-θ|)`. Specializing to
+`r n = √(n log n)` gives the `log` rate (`abs_estimator_sub_le_rate`); `r n = √(n log log n)` gives
+the `log log` rate. -/
+lemma abs_estimator_sub_le_rate_gen (ξ : ℕ → ℝ) (θ θ₀ : ℝ) {v : ℝ} (hv : 0 < v)
+    (hN : Tendsto (fun n ↦ count X n / (n : ℝ)) atTop (𝓝 v)) {C : ℝ} (hC : 0 ≤ C)
+    {r : ℕ → ℝ} (hr : ∀ᶠ n in atTop, 1 ≤ r n)
+    (hQ : ∀ᶠ n in atTop, |respMG X ξ θ n| ≤ C * r n) :
+    ∃ C', ∀ᶠ n in atTop,
+      |estimator X ξ θ₀ n - θ| ≤ C' * (r n / (n : ℝ)) := by
+  refine ⟨2 / v * (C + |θ₀ - θ|), ?_⟩
+  have hNhalf : ∀ᶠ n : ℕ in atTop, v / 2 < count X n / (n : ℝ) :=
+    (tendsto_order.1 hN).1 (v / 2) (by linarith)
+  filter_upwards [hQ, hNhalf, hr, eventually_gt_atTop 0] with n hq hNh hrn hn0
+  have hnpos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn0
+  have hvn : 0 < v / 2 * (n : ℝ) := mul_pos (by linarith) hnpos
+  have hNlow : v / 2 * (n : ℝ) < count X n := (lt_div_iff₀ hnpos).1 hNh
+  have hden : v / 2 * (n : ℝ) < count X n + 1 := by linarith
+  have hdenpos : 0 < count X n + 1 := lt_trans hvn hden
+  have hnum : |respMG X ξ θ n + (θ₀ - θ)| ≤ C * r n + |θ₀ - θ| :=
+    (abs_add_le _ _).trans (add_le_add hq le_rfl)
+  have hnumnn : 0 ≤ C * r n + |θ₀ - θ| :=
+    add_nonneg (mul_nonneg hC (by linarith)) (abs_nonneg _)
+  rw [estimator_sub_eq X ξ θ θ₀ n (ne_of_gt hdenpos), abs_div, abs_of_pos hdenpos]
+  calc |respMG X ξ θ n + (θ₀ - θ)| / (count X n + 1)
+      ≤ (C * r n + |θ₀ - θ|) / (v / 2 * (n : ℝ)) :=
+        div_le_div₀ hnumnn hnum hvn hden.le
+    _ ≤ 2 / v * (C + |θ₀ - θ|) * (r n / (n : ℝ)) := by
+        rw [div_le_iff₀ hvn]
+        have hexpand : 2 / v * (C + |θ₀ - θ|) * (r n / (n : ℝ)) * (v / 2 * (n : ℝ))
+            = (C + |θ₀ - θ|) * r n := by
+          field_simp
+        rw [hexpand, add_mul]
+        have hkey := mul_le_mul_of_nonneg_left hrn (abs_nonneg (θ₀ - θ))
+        rw [mul_one] at hkey
+        linarith
+
 /-- **LIL rate for the estimator** (blueprint `lem:theta_LIL`, pathwise core).
 
 If the response martingale is `O(√(n log n))` — `|Q_n| ≤ C√(n log n)` eventually, supplied a.s. by
@@ -327,45 +605,21 @@ If the response martingale is `O(√(n log n))` — `|Q_n| ≤ C√(n log n)` ev
 `|θ̂_n - θ| ≤ C' · √(n log n)/n` eventually, i.e. `O(√(log n / n))` (since `√(n log n)/n =
 √(log n / n)`). This is the `√(\log n / n)` rate of `lem:theta_LIL` (the `\log`, not `\log\log`,
 form). Combining the exact error `θ̂_n - θ = (Q_n + (θ₀-θ))/(N_n+1)` with `|Q_n| ≤ C√(n log n)` and
-`N_n + 1 ≳ (v/2) n` gives the bound with `C' = (2/v)(C + |θ₀-θ|)`. -/
+`N_n + 1 ≳ (v/2) n` gives the bound with `C' = (2/v)(C + |θ₀-θ|)`. A special case of
+`abs_estimator_sub_le_rate_gen` with `r n = √(n log n)`. -/
 lemma abs_estimator_sub_le_rate (ξ : ℕ → ℝ) (θ θ₀ : ℝ) {v : ℝ} (hv : 0 < v)
     (hN : Tendsto (fun n ↦ count X n / (n : ℝ)) atTop (𝓝 v)) {C : ℝ} (hC : 0 ≤ C)
     (hQ : ∀ᶠ n in atTop, |respMG X ξ θ n| ≤ C * √((n : ℝ) * Real.log n)) :
     ∃ C', ∀ᶠ n in atTop,
       |estimator X ξ θ₀ n - θ| ≤ C' * (√((n : ℝ) * Real.log n) / (n : ℝ)) := by
-  refine ⟨2 / v * (C + |θ₀ - θ|), ?_⟩
-  have hNhalf : ∀ᶠ n : ℕ in atTop, v / 2 < count X n / (n : ℝ) :=
-    (tendsto_order.1 hN).1 (v / 2) (by linarith)
-  filter_upwards [hQ, hNhalf, eventually_ge_atTop 3] with n hq hNh hn3
+  refine abs_estimator_sub_le_rate_gen X ξ θ θ₀ hv hN hC ?_ hQ
+  filter_upwards [eventually_ge_atTop 3] with n hn3
   have hn3R : (3 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn3
   have hnpos : (0 : ℝ) < (n : ℝ) := by linarith
   have hlogn1 : (1 : ℝ) ≤ Real.log n :=
     (Real.le_log_iff_exp_le hnpos).mpr (le_trans Real.exp_one_lt_d9.le (by linarith))
-  have hsqrt1 : (1 : ℝ) ≤ √((n : ℝ) * Real.log n) := by
-    rw [show (1 : ℝ) = √1 from Real.sqrt_one.symm]
-    exact Real.sqrt_le_sqrt (by nlinarith)
-  have hvn : 0 < v / 2 * (n : ℝ) := mul_pos (by linarith) hnpos
-  have hNlow : v / 2 * (n : ℝ) < count X n := (lt_div_iff₀ hnpos).1 hNh
-  have hden : v / 2 * (n : ℝ) < count X n + 1 := by linarith
-  have hdenpos : 0 < count X n + 1 := lt_trans hvn hden
-  have hnum : |respMG X ξ θ n + (θ₀ - θ)| ≤ C * √((n : ℝ) * Real.log n) + |θ₀ - θ| :=
-    (abs_add_le _ _).trans (add_le_add hq le_rfl)
-  have hnumnn : 0 ≤ C * √((n : ℝ) * Real.log n) + |θ₀ - θ| :=
-    add_nonneg (mul_nonneg hC (Real.sqrt_nonneg _)) (abs_nonneg _)
-  rw [estimator_sub_eq X ξ θ θ₀ n (ne_of_gt hdenpos), abs_div, abs_of_pos hdenpos]
-  calc |respMG X ξ θ n + (θ₀ - θ)| / (count X n + 1)
-      ≤ (C * √((n : ℝ) * Real.log n) + |θ₀ - θ|) / (v / 2 * (n : ℝ)) :=
-        div_le_div₀ hnumnn hnum hvn hden.le
-    _ ≤ 2 / v * (C + |θ₀ - θ|) * (√((n : ℝ) * Real.log n) / (n : ℝ)) := by
-        rw [div_le_iff₀ hvn]
-        have hexpand : 2 / v * (C + |θ₀ - θ|) * (√((n : ℝ) * Real.log n) / (n : ℝ))
-            * (v / 2 * (n : ℝ))
-            = (C + |θ₀ - θ|) * √((n : ℝ) * Real.log n) := by
-          field_simp
-        rw [hexpand, add_mul]
-        have hkey := mul_le_mul_of_nonneg_left hsqrt1 (abs_nonneg (θ₀ - θ))
-        rw [mul_one] at hkey
-        linarith
+  rw [show (1 : ℝ) = √1 from Real.sqrt_one.symm]
+  exact Real.sqrt_le_sqrt (by nlinarith)
 
 /-- **Deterministic core of the limit of `U/n`** (blueprint `lem:U_over_n`).
 

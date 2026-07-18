@@ -21,6 +21,7 @@ Conditions~\textbf{A}--\textbf{B}. We introduce the notation
 \label{sec:norm_U}
 
 \begin{lemma}[Additive decomposition of the $U$-increment]\label{lem:diff_U_decomp}
+\lean{AlphaRAR.diff_U_decomp}\leanok
 \uses{def:U}
 For any non-decreasing sequence $(\ell_n)$ with $\ell_n\le n$, under
 Conditions~\textbf{A}--\textbf{B}, for each $k$,
@@ -32,7 +33,7 @@ Conditions~\textbf{A}--\textbf{B}, for each $k$,
 \]
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{thm:LLN}
 Expanding $U_{n,k}-U_{\ell_n,k}$ from Definition~\ref{def:U} and grouping the
 target terms around $v_k$,
@@ -43,9 +44,17 @@ $U_{n,k}-U_{\ell_n,k}
 By Theorem~\ref{thm:LLN}, $\hat{\rho}_n\to v$, so both $\hat{\rho}_{n,k}-v_k$ and
 the Cesàro average $\frac1{n-\ell_n}\sum_{m=\ell_n}^{n-1}(\hat{\rho}_{m,k}-v_k)$
 are $o(1)$ (treating separately the bounded and diverging cases of $\ell_n$).
+
+\emph{Formalization.} \texttt{AlphaRAR.diff\_U\_decomp}. The exact $M$-explicit identity is
+\texttt{AlphaRAR.auxU\_sub}; the $o(1)$ remainder $\alpha\sum_{[\ell_n,n)}(\hat\rho_m-v)
+-(n-\ell_n)(\hat\rho_n-v)$ is made rigorous as ``for every $\varepsilon>0$, eventually
+$|\cdot|\le\varepsilon(n-\ell_n)$'', its first term controlled by the windowed Cesàro bound
+\texttt{AlphaRAR.abs\_sum\_Ico\_sub\_le\_of\_tendsto} (valid for an arbitrary window, bounded or
+diverging) and its second by $\hat\rho_n\to v$.
 \end{proof}
 
 \begin{lemma}[Control of $\ell_n(\hat{\rho}_{\ell_n}-\hat{\rho}_n)$]\label{lem:ell_rho_control}
+\lean{AlphaRAR.ell_rho_control}\leanok
 \uses{def:plugin_target, def:Q}
 Under Conditions~\textbf{A}--\textbf{B} there is a constant $C\ge0$ with, for any
 non-decreasing $(\ell_n)$, $\ell_n\le n$,
@@ -55,7 +64,7 @@ non-decreasing $(\ell_n)$, $\ell_n\le n$,
 \]
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:theta_error_Q, lem:rho_rate, cor:mart_Op, lem:taylor_rho}
 By Corollary~\ref{cor:mart_Op}, $Q_{n,k}=O_p(\sqrt n)$, hence
 $\hat{\theta}_{n,k}-\theta_k = Q_{n,k}/N_{n,k} + o_p(N_{n,k}^{-1/2}) = O_p(n^{-1/2})$
@@ -70,12 +79,30 @@ $\sum_{j=\ell_n+1}^n$ and the reweighting of $\sum_{j\le\ell_n}$) and bounding
 each piece using $N_{n,k}-N_{\ell_n,k}\le n-\ell_n$ and the SLLN, the three
 resulting terms are respectively $C\|Q_n-Q_{\ell_n}\|$, $o(1)(n-\ell_n)$ and
 $o_p(\sqrt n)$.
+
+\emph{Formalization.} \texttt{AlphaRAR.ell\_rho\_control} produces the bound in the shape
+$\ell_n|\hat\rho_{\ell_n,k}-\hat\rho_{n,k}| \le V_\rho(n-\ell_n)+W_\rho$ with $V_\rho=o_p(1)$,
+$W_\rho=o_p(\sqrt n)$, which is what the drift-sign step consumes. The Condition-\textbf{B} input
+enters as the single hypothesis \texttt{hlip} (the target is Lipschitz near $\Params$, so
+$|\hat\rho_{\ell,k}-\hat\rho_{n,k}|\le L\sum_{k'}|\hat\theta_{\ell,k'}-\hat\theta_{n,k'}|$
+eventually) --- mirroring how \texttt{clt\_rho} takes the derivative as a hypothesis. The
+estimator-increment control $\ell|\hat\theta_{\ell,k'}-\hat\theta_{n,k'}|\le g_{k'}(n-\ell)+h_{k'}
+|Q_{n,k'}-Q_{\ell,k'}|$ is \texttt{AlphaRAR.abs\_estimator\_diff\_le}; the coefficients are
+$g_{k'}=o_p(1)$ (from the Doob-maximal bound \texttt{isBigOpOne\_sup'\_abs\_div\_sqrt} and the a.s.\
+bound \texttt{isBigOpOne\_of\_ae\_bounded}) and the reweighting coefficient
+$h_{k'}=\ell_n/(N_{n,k'}+1)$, which is only \emph{bounded in probability} ($O_p(1)$, converging a.s.\
+to $1/v_{k'}$, again via \texttt{isBigOpOne\_of\_ae\_bounded}), not by a uniform constant; it
+therefore enters the $o_p$ bookkeeping through $O_p\cdot o_p=o_p$
+(\texttt{IsBigOpOne.mul\_littleOp}). The $Q$-increment control
+$|Q_{n,k'}-Q_{\ell,k'}|\le Q_v(n-\ell)+Q_w$ is \texttt{qm\_increments\_resp}.
 \end{proof}
 
 \section{Sharp increment bounds}
 \label{sec:norm_bounds}
 
 \begin{lemma}[$Q$- and $M$-increments are $o_p(\sqrt n)$ plus drift]\label{lem:QM_increments}
+\lean{AlphaRAR.qm_increments_resp, AlphaRAR.qm_increments_of_bdd,
+AlphaRAR.norm_increment_le_vmaxSeq_wmaxSeq}\leanok
 \uses{def:Q, def:M, def:hitting}
 Under Conditions~\textbf{A}--\textbf{B}, for the hitting time $\ell_{n,k}$,
 \[
@@ -85,8 +112,9 @@ Under Conditions~\textbf{A}--\textbf{B}, for the hitting time $\ell_{n,k}$,
 \]
 \end{lemma}
 
-\begin{proof}
-\uses{lem:mart_maximal, lem:mart_maximal_dyadic, lem:increment_control, lem:expectation_to_O}
+\begin{proof}\leanok
+\uses{lem:mart_maximal, lem:mart_maximal_dyadic, lem:mart_maximal_pi, lem:increment_control,
+lem:expectation_to_O}
 Pick $L_n\to\infty$ with $L_n = o(n)$. Lemma~\ref{lem:mart_maximal} and
 Lemma~\ref{lem:mart_maximal_dyadic} bound the two maximal quantities
 $\E[\max_{m\le L_n}\|Q_n-Q_{n-m}\|]\le 2\sqrt{L_n C_0}$ and
@@ -95,9 +123,20 @@ Lemma~\ref{lem:expectation_to_O} these are $O_p(\sqrt{L_n})=o_p(\sqrt n)$ and
 $O_p(1/\sqrt{L_n})=o_p(1)$ respectively. Plugging into the deterministic
 inequality of Lemma~\ref{lem:increment_control} gives the bound for $Q$; the same
 argument applied to $M$ gives the second bound.
+
+\emph{Formalization.} The two maximal quantities are formalized as \texttt{wmaxSeq} and
+\texttt{vmaxSeq} (with the concrete window $L_n=\lfloor\sqrt n\rfloor$), and the two $o_p$ statements
+are \texttt{AlphaRAR.isLittleOpOne\_wmaxSeq\_div\_sqrt} ($o_p(\sqrt n)$) and
+\texttt{AlphaRAR.isLittleOpOne\_vmaxSeq} ($o_p(1)$), proved from the \emph{vector} maximal bounds
+(Lemma~\ref{lem:mart_maximal_pi}) and Markov's inequality. The deterministic increment control is
+\texttt{AlphaRAR.norm\_increment\_le\_vmaxSeq\_wmaxSeq}. For $Q$ (the response martingale, a
+square-integrable family) the $o_p$ statements are \texttt{AlphaRAR.qm\_increments\_resp}; for the
+scalar assignment martingale $M$ (bounded increments $|\Delta M|\le1$) they are
+\texttt{AlphaRAR.qm\_increments\_of\_bdd} (via the singleton family $\{M\}$).
 \end{proof}
 
 \begin{lemma}[Upper bound on the $U$-increment]\label{lem:U_increment_bound}
+\lean{AlphaRAR.isLittleOpOne_max_of_decomp}
 \uses{def:U, def:hitting}
 Under Conditions~\textbf{A}--\textbf{B}, for every $k$,
 \[
@@ -105,6 +144,8 @@ Under Conditions~\textbf{A}--\textbf{B}, for every $k$,
   \qquad
   U_{n,k} - U_{\ell_{n,k},k} \le O(\sqrt{n\log\log n})\ \text{a.s.}
 \]
+The $o_p(\sqrt n)$ half is formalized (generically) as \texttt{AlphaRAR.isLittleOpOne\_max\_of\_decomp};
+the a.s.\ $O(\sqrt{n\log\log n})$ half is not yet formalized.
 \end{lemma}
 
 \begin{proof}
@@ -123,6 +164,7 @@ substitution yields the second inequality.
 \end{proof}
 
 \begin{lemma}[Deviation between proportions and plug-in target]\label{lem:prop_dev}
+\lean{AlphaRAR.aRTS_prop_dev, AlphaRAR.prop_dev}
 \uses{def:generic_cond, def:counts, def:plugin_target}
 Under the generic conditions and Conditions~\textbf{A}--\textbf{B}, for every $k$,
 \begin{align*}
@@ -130,6 +172,30 @@ Under the generic conditions and Conditions~\textbf{A}--\textbf{B}, for every $k
   |N_{n,k} - n\hat{\rho}_{n,k}| &= O(\sqrt{n\log\log n})\ \text{a.s.}, \\
   N_{n,k} - n v_k &= O(\sqrt{n\log\log n})\ \text{a.s.}
 \end{align*}
+\emph{Formalization.} The generic $o_p(\sqrt n)$ assembly is \texttt{AlphaRAR.prop\_dev}: for a finite
+family with $\sum_k \mathrm{Dev}_k = 0$ (\texttt{sum\_count\_sub\_smul\_eq\_zero}), the generic
+inequality \eqref{eq:generic_ineq}, and the $U$-increment decomposition (drift $-(1-\alpha)v_k$, the
+$M$- and $\rho$-terms increment-controlled by \texttt{qm\_increments\_of\_bdd} and
+\texttt{ell\_rho\_control}, and an $o_p(1)$ perturbation from \texttt{diff\_U\_decomp}), it yields
+$\mathrm{Dev}_k=o_p(\sqrt n)$ via the drift-sign lemma
+\texttt{isLittleOpOne\_max\_div\_sqrt\_of\_drift} and the simplex reverse step
+\texttt{isLittleOpOne\_dev\_of\_sum\_zero}. The concrete paper-form statement
+$|N_{n,k}-n\hat\rho_{n,k}|=o_p(\sqrt n)$ is \texttt{AlphaRAR.aRTS\_prop\_dev}, the full, self-contained
+$\aRTS$ instantiation: from the $\aRTS$ design bundle (an \texttt{IsAlgEnvSeq} sequence, Condition
+\textbf{A} $Y\in L^2$, a continuous simplex-valued target $\Target$, the algorithm-level predicate
+\texttt{IsARTS} --- whence the throttle via \texttt{throttle\_of\_isARTS} ---, $\alpha\in[0,1)$,
+Condition \textbf{B} ($\Target$ Lipschitz near $\Params$ and non-sparsity $0<v_k$), and the
+$\mathrm{thm{:}LLN}$ consistencies $N_{n,k}/n\to v_k$ and $\estParams_n\to\Params$), it discharges
+\emph{every} hypothesis of \texttt{prop\_dev} internally: the generic inequality via
+\texttt{generic\_ineq\_of\_hitting} (a.e., from the throttle), the smallness via
+\texttt{preliminary\_small}, the $M$-increment via the seam $M=\texttt{assignMart}$
+(\texttt{assignMart\_eq\_assignMG}) and \texttt{qm\_increments\_of\_bdd}, the \texttt{diff\_U\_decomp}
+perturbation shown $o_p$ (a.e.\ $\to0$ by $\hat\rho_n\to v$), and the plug-in-target increment control
+(Lemma~\ref{lem:ell_rho_control}) via \texttt{ell\_rho\_control}, whose $g$- and $h$-coefficients are
+the random-hitting-time bounds \texttt{aRTS\_g\_littleOp} ($O_p\cdot o_p=o_p$, Doob running-max plus
+$\sqrt n/(N_n+1)\to0$) and \texttt{aRTS\_h\_bigOp} (a.s.\ bounded). All random-hitting-time terms are
+made measurable by \texttt{measurable\_eval\_of\_le}. Only the two a.s.\ $O(\sqrt{n\log\log n})$
+statements remain unformalized.
 \end{lemma}
 
 \begin{proof}
@@ -200,15 +266,32 @@ $\mathrm{diag}(1/\sqrt{v_k})$ of the Gaussian, whose covariance is $\mathrm{diag
 \end{proof}
 
 \begin{lemma}[CLT for the plug-in target]\label{lem:clt_rho}
+\lean{AlphaRAR.clt_rho}\leanok
 \uses{def:plugin_target}
 Under the standing hypotheses, $\sqrt n(\hat{\rho}_n - v)\eqdist\mathcal{N}(0,GVG^\top)$.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:clt_theta, lem:rho_rate, lem:taylor_rho}
 By the Taylor expansion (as in Lemma~\ref{lem:ell_rho_control}),
 $\sqrt n(\hat{\rho}_n-v)=G\sqrt n(\estParams_n-\Params)+O_p(1/\sqrt n)$. Apply
 Lemma~\ref{lem:clt_theta} and Slutsky.
+
+\emph{Formalization.} The delta method is assembled in
+\texttt{AlphaRAR.clt\_rho}. First, the product-space Slutsky lemma
+(\texttt{tendsto\_map\_comp\_of\_tendstoInMeasure\_const}) with $g(x,r)=Gx+r$ combines the estimator
+CLT (Lemma~\ref{lem:clt_theta}) with the fact that the first-order remainder
+$\sqrt n(\Target(\estParams_n)-\Target(\Params))-G\sqrt n(\estParams_n-\Params)=\sqrt n\,\varphi(\estParams_n-\Params)$
+tends to $0$ in probability, and the limiting law is the linear pushforward of the estimator's Gaussian
+(\texttt{AlphaRAR.multivariateGaussian\_map\_matrix}, giving the covariance $GVG^\top$). The
+remainder-in-probability is discharged by \texttt{MeasureTheory.tendstoInMeasure\_smul\_littleO\_of\_tight}
+(an abstract $\varepsilon$--$\delta$ lemma: if $X_n=a_n\cdot S_n$ is tight, $S_n\to0$ in probability and
+$\varphi=o(\|\cdot\|)$ at the origin, then $a_n\cdot\varphi(S_n)\to0$ in probability), whose tightness
+input is supplied from the estimator CLT via
+\texttt{MeasureTheory.tight\_of\_tendsto\_probabilityMeasure} (portmanteau plus continuity from above of
+the limit Gaussian over $\{\|x\|\ge j\}\downarrow\emptyset$). The differentiability of $\Target$ at
+$\Params$ (Jacobian $G$; Condition~\textbf{B}) and the a.s.\ consistency $\estParams_n\to\Params$
+(Theorem~\ref{thm:LLN}) enter as the hypotheses \texttt{hTderiv} and \texttt{hcons}.
 \end{proof}
 
 \begin{theorem}[Asymptotic normality]\label{thm:normality}
@@ -237,6 +320,17 @@ $\sqrt n(\hat{\rho}_n-v)$ have the same limit $\mathcal{N}(0,GVG^\top)$
 $(\sqrt n(N_n/n-v),\sqrt n(\hat{\rho}_n-v))$ therefore equals
 $(\sqrt n(\hat{\rho}_n-v),\sqrt n(\hat{\rho}_n-v))+o_p(1)$, which converges to
 $\mathcal{N}(0,\Omega)$ by Slutsky.
+
+\emph{Formalization.} The joint statement of part (ii) is
+\texttt{AlphaRAR.clt\_joint}: it takes the proportion-deviation fact
+$\sqrt n(N_n/n-\hat{\rho}_n)\to_p 0$ of part (i) as a hypothesis and assembles the joint CLT from
+\texttt{AlphaRAR.clt\_rho}. The joint vector is the image of $\sqrt n(\hat{\rho}_n-v)$ under the
+duplication map $x\mapsto(x,x)$ (the stacked matrix $[I;I]$) up to an $o_p(1)$ remainder, so the
+same product-space Slutsky lemma as in Lemma~\ref{lem:clt_rho} applies, and the limiting covariance
+$[I;I]\,GVG^\top\,[I;I]^\top$ is the block matrix $\Omega$ via the rectangular Gaussian pushforward
+\texttt{AlphaRAR.multivariateGaussian\_map\_matrix}. Part (i)
+(Lemma~\ref{lem:prop_dev}, the $o_p(\sqrt n)$ deviation machinery) is not yet formalized, so the
+theorem is not marked complete.
 \end{proof}
 
 \begin{remark}[Asymptotic efficiency]\label{rem:efficiency}

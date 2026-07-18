@@ -192,11 +192,16 @@ where the count $N(h)$ and target $\hat\rho(h)=\Target(\estParams(h))$ are compu
 \end{definition}
 
 \begin{corollary}[Consistency of an $\aRTS$ algorithm]\label{cor:aRTS_alg_consistency}
-\lean{AlphaRAR.aRTS_consistency_of_isARTS}\leanok
+\lean{AlphaRAR.aRTS_consistency_of_isARTS, AlphaRAR.aRTS_pullCount_div_ae_tendsto}\leanok
 \uses{def:aRTS_alg, cor:aRTS_consistency}
 If the driving algorithm is an $\aRTS$ design (Definition~\ref{def:aRTS_alg}), under the hypotheses
 of Corollary~\ref{cor:aRTS_consistency}, then almost surely $N_{n,k}/n\to v_k$ and
-$\hat\rho_{n,k}\to v_k$ for every arm $k$.
+$\hat\rho_{n,k}\to v_k$ for every arm $k$. The companion
+\texttt{AlphaRAR.aRTS\_pullCount\_div\_ae\_tendsto} restates the proportion limit
+$N_{n,k}/n\to v_k$ with the pull count $N_{n,k}=\texttt{pullCount}$, the vocabulary in which the
+loglog estimator rate (Lemma~\ref{lem:theta_LIL},
+\texttt{abs\_estimator\_sub\_le\_rate\_loglog\_of\_proportion}) consumes it; only the strict
+positivity $v_k>0$ is then still required to apply that rate.
 \end{corollary}
 
 \begin{proof}\leanok

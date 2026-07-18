@@ -38,6 +38,7 @@ to $X_n^2$ with rate $u_n^2$ to get $X_n^2 = O_p(u_n^2)$, then take square roots
 \end{proof}
 
 \begin{lemma}[Doob $L^2$ maximal bound for martingale differences]\label{lem:mart_maximal}
+\lean{AlphaRAR.mart_maximal}\leanok
 Let $\{M_n, \filt_n\}$ be a martingale with $\E|\Delta M_n|^2 \le C_0$ for all
 $n$. Then for any integer $L$,
 \[
@@ -45,7 +46,7 @@ $n$. Then for any integer $L$,
 \]
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 Fix $n$ and set $S_k := M_{n-L+k} - M_{n-L}$ for $0 \le k \le L$, a martingale for
 the shifted filtration $\mathcal{G}_k := \filt_{n-L+k}$. First,
 $\max_{1\le m\le L}|M_n - M_{n-m}| \le 2\max_{1\le k\le L}|S_k|$ by the triangle
@@ -56,25 +57,73 @@ Combining, $\Prob(\max_m |M_n - M_{n-m}| \ge x) \le 4 L C_0 / x^2$, and integrat
 the tail,
 $\E[\max_m |M_n-M_{n-m}|] \le \int_0^{2\sqrt{LC_0}} 1\,dx
  + 4\int_{2\sqrt{LC_0}}^\infty \frac{LC_0}{x^2}\,dx = 4\sqrt{LC_0}$.
+
+\emph{Formalization.} \texttt{AlphaRAR.mart\_maximal} states the equivalent $\int^-$ (lintegral)
+bound $\int^- \max_{m\le L}|M_n - M_{n-m}| \le 4\sqrt{C_0 L}$ (the $m=0$ term is $0$, so
+$\max_{m\le L}=\max_{1\le m\le L}$), which is the form consumed downstream via
+\texttt{isBigOpOne\_of\_lintegral\_le}. The three substantive ingredients are separate reusable
+lemmas filling a Mathlib gap: the shifted martingale \texttt{AlphaRAR.martingale\_shift}, Doob's
+$L^2$ submartingale \texttt{AlphaRAR.submartingale\_sq}, and the $L^2$ maximal inequality
+\texttt{AlphaRAR.lintegral\_sup'\_abs\_le\_two\_mul\_sqrt} (whose analytic core is the tail-to-$L^1$
+lemma \texttt{MeasureTheory.lintegral\_le\_two\_mul\_sqrt\_of\_meas\_ge\_le}).
 \end{proof}
 
 \begin{lemma}[Dyadic maximal bound]\label{lem:mart_maximal_dyadic}
+\lean{AlphaRAR.mart_maximal_dyadic}\leanok
 Under the hypotheses of Lemma~\ref{lem:mart_maximal}, for any $L$ with
-$4 < L < n$,
+$0 < L \le n$,
 \[
-  \E\Big[\max_{L \le m \le n} \frac{|M_n - M_{n-m}|}{m}\Big] \le 12\sqrt{\frac{C_0}{L}}.
+  \E\Big[\max_{L \le m \le n} \frac{|M_n - M_{n-m}|}{m}\Big] \le 32\sqrt{\frac{C_0}{L}}.
 \]
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:mart_maximal}
 Split the range $[L,n]$ into dyadic blocks $2^{j-1} \le m < 2^j$. On such a block
 $\frac1m \le \frac{2}{2^j}$, so
 $\E[\max_{L\le m\le n}\frac{|M_n-M_{n-m}|}{m}]
  \le \sum_{j \ge \log_2 L} \frac{2}{2^j}\, \E[\max_{m<2^j}|M_n-M_{n-m}|]
- \le \sum_{j\ge\log_2 L} \frac{2}{2^j}\, 4\sqrt{C_0 2^j}$
-by Lemma~\ref{lem:mart_maximal}. The geometric sum is bounded by
-$12\sqrt{C_0/L}$.
+ \le \sum_{j\ge\log_2 L} \frac{2}{2^j}\, 4\sqrt{C_0 2^j}
+ = 8\sqrt{C_0}\sum_{j\ge\log_2 L} 2^{-j/2}$
+by Lemma~\ref{lem:mart_maximal}. The geometric sum
+$\sum_{j\ge\log_2 L} 2^{-j/2} = (2+\sqrt2)\,2^{-\lceil\log_2 L\rceil/2} \le 4/\sqrt L$
+(using $\tfrac1{1-1/\sqrt2} = 2+\sqrt2 \le 4$ and $2^{\lceil\log_2 L\rceil}\ge L$), giving the bound
+$32\sqrt{C_0/L}$.
+
+\emph{Formalization.} \texttt{AlphaRAR.mart\_maximal\_dyadic} states the equivalent $\int^-$
+(lintegral) bound $\int^- \max_{L\le m\le n}\frac{|M_n-M_{n-m}|}{m} \le 32\sqrt{C_0/L}$ (the
+constant $32 = 8(2+\sqrt2)$ rounded up, which suffices for the downstream $o_p$; the exact
+constant is immaterial). The dyadic index of $m$ is $\lfloor\log_2 m\rfloor+1$ (\texttt{Nat.log}),
+the per-scale bound is Lemma~\ref{lem:mart_maximal} applied at $L' = \min(2^j-1,n)$, and the
+geometric series is bounded via \texttt{geom\_sum\_eq} with ratio $1/\sqrt2 \le 3/4$.
+\end{proof}
+
+\begin{lemma}[Vector maximal bounds]\label{lem:mart_maximal_pi}
+\lean{AlphaRAR.mart_maximal_pi, AlphaRAR.mart_maximal_dyadic_pi}\leanok
+Let $(M_{\cdot,k})_{k\in[K]}$ be a finite family of martingales, each satisfying the hypotheses of
+Lemma~\ref{lem:mart_maximal} with the same bound $C_0$. Then, for $L\le n$,
+\[
+  \E\Big[\max_{m\le L}\|M_n - M_{n-m}\|\Big] \le 4K\sqrt{C_0 L},
+\]
+and, for $0<L\le n$,
+\[
+  \E\Big[\max_{L\le m\le n}\frac{\|M_n - M_{n-m}\|}{m}\Big] \le 32K\sqrt{\tfrac{C_0}{L}},
+\]
+where $\|\cdot\|$ is the Euclidean norm on $\R^K$.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:mart_maximal, lem:mart_maximal_dyadic}
+By the $\ell^2\le\ell^1$ inequality $\|v\| = \sqrt{\sum_k v_k^2}\le\sum_k|v_k|$, the running maximum of
+the norm is bounded by $\sum_k$ of the coordinatewise running maxima (maximum of a sum $\le$ sum of
+maxima), and each coordinate is controlled by Lemma~\ref{lem:mart_maximal} (resp.\
+Lemma~\ref{lem:mart_maximal_dyadic}). Summing the $K$ scalar bounds gives the factor $K$.
+
+\emph{Formalization.} \texttt{AlphaRAR.mart\_maximal\_pi} and
+\texttt{AlphaRAR.mart\_maximal\_dyadic\_pi} state the $\int^-$ forms with the norm written as
+$\sqrt{\sum_k(M_{n,k}-M_{n-m,k})^2}$. The coordinate interchange uses \texttt{Finset.sup'\_le} and
+\texttt{Finset.le\_sup'}; the $\ell^2\le\ell^1$ step is \texttt{sum\_sq\_le\_sq\_sum\_of\_nonneg};
+integration term-by-term is \texttt{lintegral\_finsetSum}.
 \end{proof}
 
 \begin{lemma}[Increment control from maximal bounds]\label{lem:increment_control}

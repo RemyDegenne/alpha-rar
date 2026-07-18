@@ -167,10 +167,15 @@ $\E|\xi_{1,k}|^2 < \infty$ (equivalently $V_k < \infty$).
 \end{definition}
 
 \begin{definition}[Attainable parameter values]\label{def:attainable}
+\lean{AlphaRAR.attainableSet}\leanok
 \uses{def:estimator}
 For each arm $k$, let $V_k^{\mathrm{att}}$ be the set of all values attainable by
 the estimator $\hat{\theta}_{n,k}$, over all $n$ and all realizations of the
 responses $\{\xi_{j,k}\}$, and set $I_k := \{\theta_k\} \cup V_k^{\mathrm{att}}$.
+(The formalized \texttt{AlphaRAR.attainableSet} is the \emph{closure} of the range of
+$\hat{\theta}_{\cdot,k}$ over all times and outcomes; being closed it already contains every a.s.\
+limit $z_k$ — in particular $\theta_k$ on the infinitely-sampled event — so the explicit union with
+$\{\theta_k\}$ is unnecessary.)
 \end{definition}
 
 \begin{definition}[Condition B: regular non-sparse target]\label{def:condB}

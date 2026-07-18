@@ -5,6 +5,7 @@ Authors: Rémy Degenne
 -/
 import AlphaRAR.Mathlib.MartingaleCLT
 import AlphaRAR.Probability.ARTSConsistency
+import AlphaRAR.Tactic.Tendsto
 
 /-!
 # The self-normalized central limit theorem for the response martingale
@@ -300,8 +301,7 @@ lemma tendstoInMeasure_lindeberg_respArray (h : IsAlgEnvSeq A Y alg (stationaryE
   have htail_nn : ∀ n : ℕ, (0 : ℝ) ≤ T n := fun n ↦ by
     rw [hT n]; exact integral_nonneg fun x ↦ Set.indicator_nonneg (fun _ _ ↦ sq_nonneg _) x
   have hb : Tendsto (fun n : ℕ ↦ (armVar ν k * vk)⁻¹ * T n) atTop (𝓝 0) := by
-    have := htail.const_mul (armVar ν k * vk)⁻¹
-    rwa [mul_zero] at this
+    tendsto
   have hcount_meas : ∀ n, Measurable (fun ω ↦ count (fun j ↦ armIndicator A k j ω) n) := by
     intro n
     simp only [count, armIndicator]

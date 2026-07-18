@@ -858,7 +858,7 @@ lemma ae_eventually_le_sqrt_nat_mul_loglog_of_growing_sharp [IsProbabilityMeasur
   -- Eventual admissibility from condition (H).
   have hAdm : ∀ᶠ (j : ℕ) in atTop, α * √(log ((j : ℝ) + 2) / (N j : ℝ)) * c j ≤ η := by
     have htend : Tendsto (fun j : ℕ ↦ α * (c j * √(log ((j : ℝ) + 2) / (N j : ℝ)))) atTop
-        (𝓝 0) := by have h := hH.const_mul α; rwa [mul_zero] at h
+        (𝓝 0) := by tendsto
     filter_upwards [htend.eventually (gt_mem_nhds hη0)] with j hj
     have he : α * √(log ((j : ℝ) + 2) / (N j : ℝ)) * c j
         = α * (c j * √(log ((j : ℝ) + 2) / (N j : ℝ))) := by ring
@@ -1067,7 +1067,7 @@ lemma tendsto_growth_horizon {ρ : ℝ} (hρ : 1 < ρ) {g : ℕ → ℝ} (hgnn :
   have hcomp : Tendsto (fun j : ℕ ↦ g (N j) * √(log (log (N j)) / (N j))) atTop (𝓝 0) :=
     hg.comp hNtop
   have hbdd : Tendsto (fun j : ℕ ↦ L * (g (N j) * √(log (log (N j)) / (N j)))) atTop (𝓝 0) := by
-    have h := hcomp.const_mul L; rwa [mul_zero] at h
+    tendsto
   refine squeeze_zero' (Eventually.of_forall fun j ↦
     mul_nonneg (hgnn _) (Real.sqrt_nonneg _)) ?_ hbdd
   filter_upwards [hNRtop.eventually_ge_atTop (exp (exp 1))] with j hj

@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
 import AlphaRAR.Probability.LIL
+import AlphaRAR.Tactic.Tendsto
 import Mathlib.Analysis.PSeries
 import Mathlib.Analysis.Complex.ExponentialBounds
 
@@ -113,8 +114,7 @@ lemma eventually_mul_add_two_le_two_pow (a : ℝ) :
     rw [add_zero] at hsum
     exact hsum.congr (fun k ↦ (add_div _ _ _).symm)
   have hlim : Tendsto (fun k : ℕ ↦ a * (((k : ℝ) + 2) / (2 : ℝ) ^ k)) atTop (𝓝 0) := by
-    have h := h0.const_mul a
-    rwa [mul_zero] at h
+    tendsto
   filter_upwards [hlim.eventually (gt_mem_nhds (show (0 : ℝ) < 1 by norm_num))] with k hk
   have h2k : (0 : ℝ) < (2 : ℝ) ^ k := by positivity
   rw [← mul_div_assoc, div_lt_one h2k] at hk

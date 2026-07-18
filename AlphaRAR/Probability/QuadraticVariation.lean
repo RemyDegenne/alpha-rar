@@ -197,6 +197,30 @@ lemma integrable_predQuadVar [IsFiniteMeasure μ]
   rw [hid]
   exact (hM2 n).sub hNk
 
+/-- **The square of a martingale is a submartingale.** For a square-integrable martingale `M`,
+`M²` is a submartingale: `M² = (M² - ⟨M⟩) + ⟨M⟩` is the sum of the martingale `M² - ⟨M⟩` and the
+nondecreasing predictable quadratic variation `⟨M⟩`. This is Doob's `L²` submartingale, the input
+to Doob's maximal inequality. -/
+lemma submartingale_sq [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
+    (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
+    (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ) :
+    Submartingale (fun n ω ↦ M n ω ^ 2) ℱ μ := by
+  have hN := martingale_sq_sub_predQuadVar hM.stronglyAdapted hM2
+  have hIqv := integrable_predQuadVar hM.stronglyAdapted hM2
+  refine submartingale_of_setIntegral_le_succ (fun n ↦ (hM.stronglyAdapted n).pow 2) hM2 ?_
+  intro i s hs
+  have hNeq := hN.setIntegral_eq (Nat.le_succ i) hs
+  have hexp : ∀ j, ∫ ω in s, ((fun ω ↦ M j ω ^ 2) - predQuadVar M ℱ μ j) ω ∂μ
+      = (∫ ω in s, M j ω ^ 2 ∂μ) - ∫ ω in s, predQuadVar M ℱ μ j ω ∂μ :=
+    fun j ↦ integral_sub (hM2 j).integrableOn (hIqv j).integrableOn
+  rw [hexp i, hexp (i + 1)] at hNeq
+  have hqvle : ∫ ω in s, predQuadVar M ℱ μ i ω ∂μ
+      ≤ ∫ ω in s, predQuadVar M ℱ μ (i + 1) ω ∂μ :=
+    setIntegral_mono_ae (hIqv i).integrableOn (hIqv (i + 1)).integrableOn
+      (predQuadVar_le_succ hM i (hd2 i) (hprod i))
+  linarith [hNeq, hqvle]
+
 /-- **Expected quadratic variation equals the second moment** (blueprint
 `lem:qv_second_moment`). For a square-integrable martingale `M` with `M 0 = 0`,
 `E[M n ²] = E[⟨M⟩ n]`. This is the discrete Itô isometry: `M² - ⟨M⟩` is a

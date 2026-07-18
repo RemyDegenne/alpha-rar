@@ -4,7 +4,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
 import AlphaRAR.Mathlib.CramerWold
+import AlphaRAR.Mathlib.MultivariateGaussianMap
 import AlphaRAR.Probability.ResponseCLT
+import AlphaRAR.Tactic.Tendsto
 import Mathlib.Probability.Distributions.Gaussian.Multivariate
 
 /-!
@@ -434,8 +436,7 @@ lemma tendstoInMeasure_lindeberg_wArray (h : IsAlgEnvSeq A Y alg (stationaryEnv 
           simp only [Set.mem_setOf_eq]
           rw [div_lt_iff₀ hwapos, mul_comm (|x - (ν a)[id]|) (|w a|)]
         rw [hset]
-      have := hGa.const_mul (w a ^ 2)
-      rwa [mul_zero] at this
+      tendsto
   have hb : Tendsto (fun n : ℕ ↦ ∑ a, w a ^ 2 * G n a) atTop (𝓝 0) := by
     have hbb := tendsto_finsetSum (Finset.univ : Finset 𝓐) fun a _ ↦ hGtail a
     rwa [Finset.sum_const_zero] at hbb
