@@ -36,7 +36,15 @@ estimator is chosen appropriately.
 \emph{property} of a RAR procedure, not a construction. The cleanest Lean design
 is to define a predicate \texttt{IsAlphaRTS} on RAR procedures and prove all
 asymptotic theorems from that predicate, then verify it for each concrete
-example below.
+example below. This is realized by \texttt{AlphaRAR.IsARTS} (the throttle predicate) and, for
+constructing concrete designs, the shared plumbing
+\texttt{AlphaRAR.aRTSAlgorithmOfProb}: it turns any measurable, history-dependent
+\emph{probability-vector} function $p$ into an \texttt{Algorithm} whose policy is the finite-support
+kernel $\sum_a p_a \delta_a$ (\texttt{AlphaRAR.probVecKernel}); the companion
+\texttt{AlphaRAR.aRTSAlgorithmOfProb\_isARTS} reduces verifying \texttt{IsARTS} for a design to the
+pure arithmetic of its throttle inequality (\texttt{AlphaRAR.probVecKernel\_apply\_singleton}
+identifies the policy mass on arm $k$ with $p_k$). Each concrete example below is then a
+probability-vector function whose simplex and throttle properties are elementary.
 
 \section{Examples}
 \label{sec:design_examples}
@@ -46,6 +54,7 @@ satisfy \eqref{eq:throttle}. These lemmas are independent of one another and are
 good small formalization targets.
 
 \begin{definition}[Distance-based design]\label{def:distance_design}
+\lean{AlphaRAR.distanceProb, AlphaRAR.distanceAlgorithm}\leanok
 \uses{def:plugin_target, def:counts}
 Given $\alpha \in [0,1)$, the \emph{distance-based} design sets, for
 $m \ge K m_0$ and $k \in [K]$,
@@ -60,12 +69,13 @@ $p_{m+1,j} = \hat{\rho}_{m,j}$ for all $j$.
 \end{definition}
 
 \begin{lemma}[Distance-based is a valid probability vector]\label{lem:distance_simplex}
+\lean{AlphaRAR.distanceProb_nonneg, AlphaRAR.distanceProb_sum}\leanok
 \uses{def:distance_design}
 For all $m \ge K m_0$, the vector $p_{m+1}$ of Definition~\ref{def:distance_design}
 lies in $\simplex_K$.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 Each coordinate is nonnegative, and
 $\sum_k p_{m+1,k} = \alpha \sum_k \hat{\rho}_{m,k}
  + (1-\alpha)\frac{\sum_k \delta_{m,k}}{\sum_i \delta_{m,i}} = \alpha + (1-\alpha) = 1$
@@ -73,19 +83,28 @@ when some $\delta_{m,i}>0$; in the degenerate case $p_{m+1}=\estTarget_m \in \si
 \end{proof}
 
 \begin{lemma}[Distance-based is $\aRTS$]\label{lem:distance_isARTS}
+\lean{AlphaRAR.distance_isARTS}\leanok
 \uses{def:distance_design, def:aRTS}
 The distance-based design satisfies the throttling condition \eqref{eq:throttle},
 hence belongs to the $\aRTS$ family.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:distance_simplex}
 Membership in $\simplex_K$ is Lemma~\ref{lem:distance_simplex}. For the throttle:
 if $N_{m,k}/m > \hat{\rho}_{m,k}$ then $\delta_{m,k} = 0$, so
 $p_{m+1,k} = \alpha\hat{\rho}_{m,k} \le \alpha \hat{\rho}_{m,k}$.
+
+\emph{Formalization.} The design is \texttt{AlphaRAR.distanceProb} (a probability-vector function of
+the history) and the algorithm \texttt{AlphaRAR.distanceAlgorithm}; \texttt{AlphaRAR.distanceProb\_%
+throttle} is the throttle inequality. The only subtlety is that the mixing normaliser $\sum_i
+\delta_{m,i}$ is positive whenever some arm is over-sampled: the signed deficits
+$N_{m,i}/m - \hat\rho_{m,i}$ sum to $0$ (\texttt{sum\_histProp}, \texttt{sum\_histTarget}), so an
+over-sampled arm forces an under-sampled one, giving $\delta_{m,j}>0$ for some $j$.
 \end{proof}
 
 \begin{definition}[ERADE 2025 design]\label{def:erade2025}
+\lean{AlphaRAR.eradeProb, AlphaRAR.eradeAlgorithm}\leanok
 \uses{def:plugin_target, def:counts}
 Given $\alpha \in [0,1)$, the \emph{ERADE 2025} design of
 \cite{alkhnefr2025efficient} sets, for $m \ge K m_0$ and $k \in [K]$,
@@ -103,12 +122,13 @@ and $T = \{ j : N_{m,j}/m < \hat{\rho}_{m,j}\}$ the set of under-sampled arms.
 \end{definition}
 
 \begin{lemma}[ERADE 2025 is a valid probability vector]\label{lem:erade2025_simplex}
+\lean{AlphaRAR.eradeProb_nonneg, AlphaRAR.eradeProb_sum}\leanok
 \uses{def:erade2025}
 For all $m \ge K m_0$, the vector $p_{m+1}$ of Definition~\ref{def:erade2025}
 lies in $\simplex_K$.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 Nonnegativity is clear. For the sum, the total mass removed from over-sampled
 arms is $\sum_{j\in S}(1-\alpha)\hat{\rho}_{m,j}$, which is exactly the mass
 added on the $|T|$ under-sampled arms, and arms with equality keep their target;
@@ -116,18 +136,26 @@ using $\sum_k \hat{\rho}_{m,k} = 1$ gives $\sum_k p_{m+1,k} = 1$.
 \end{proof}
 
 \begin{lemma}[ERADE 2025 is $\aRTS$]\label{lem:erade2025_isARTS}
+\lean{AlphaRAR.erade_isARTS}\leanok
 \uses{def:erade2025, def:aRTS}
 The ERADE 2025 design satisfies \eqref{eq:throttle}, hence belongs to the
 $\aRTS$ family.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:erade2025_simplex}
 Membership in $\simplex_K$ is Lemma~\ref{lem:erade2025_simplex}. For the throttle:
 if $N_{m,k}/m > \hat{\rho}_{m,k}$ then $p_{m+1,k} = \alpha\hat{\rho}_{m,k}$.
+
+\emph{Formalization.} \texttt{AlphaRAR.eradeProb}/\texttt{eradeAlgorithm} and
+\texttt{AlphaRAR.eradeProb\_throttle}. The simplex identity uses that the mass freed from the
+over-sampled arms, $\sum_{j\in S}(1-\alpha)\hat\rho_{m,j}$, is redistributed exactly over the $|T|$
+under-sampled arms; the degenerate case $|T|=0$ forces $S=\varnothing$ by mass conservation
+(\texttt{sum\_histProp}, \texttt{sum\_histTarget}).
 \end{proof}
 
 \begin{definition}[Interpolated D-Tracking]\label{def:d_tracking}
+\lean{AlphaRAR.dTrackingProb, AlphaRAR.dTrackingAlgorithm}\leanok
 \uses{def:plugin_target, def:counts}
 For $\alpha \in [0,1)$, the \emph{Interpolated D-Tracking} rule sets, for
 $m \ge K m_0$ and $k \in [K]$,
@@ -141,28 +169,35 @@ its target, so $k^\star$ is the most under-sampled arm.
 \end{definition}
 
 \begin{lemma}[Interpolated D-Tracking is a valid probability vector]\label{lem:d_tracking_simplex}
+\lean{AlphaRAR.dTrackingProb_nonneg, AlphaRAR.dTrackingProb_sum}\leanok
 \uses{def:d_tracking}
 For all $m \ge K m_0$, $p_{m+1} \in \simplex_K$.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 $\sum_k p_{m+1,k} = \alpha \sum_k \hat{\rho}_{m,k} + (1-\alpha) = 1$, and each
 coordinate is nonnegative.
 \end{proof}
 
 \begin{lemma}[Interpolated D-Tracking is $\aRTS$]\label{lem:d_tracking_isARTS}
+\lean{AlphaRAR.dTracking_isARTS}\leanok
 \uses{def:d_tracking, def:aRTS}
 For every $\alpha \in [0,1)$, the Interpolated D-Tracking rule satisfies
 \eqref{eq:throttle}, hence belongs to the $\aRTS$ family.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:counts_sum, lem:d_tracking_simplex}
 Membership in $\simplex_K$ is Lemma~\ref{lem:d_tracking_simplex}.
 If $N_{m,k}/m > \hat{\rho}_{m,k}$ then $m\hat{\rho}_{m,k} - N_{m,k} < 0$. Since
 $\sum_a (m\hat{\rho}_{m,a} - N_{m,a}) = 0$ by Lemma~\ref{lem:counts_sum}, the
 maximizing deficit is $\ge 0$, so $k \ne k^\star$ and
 $p_{m+1,k} = \alpha\hat{\rho}_{m,k}$.
+
+\emph{Formalization.} The favoured arm $k^\star=\arg\max_a(m\hat\rho_{m,a}-N_{m,a})$ is
+\texttt{argmax} of \texttt{AlphaRAR.dtDeficit} (LeanMachineLearning's measurable finite-tuple
+\texttt{argmax}, so the policy kernel is measurable without needing an order on the arms); the
+throttle is \texttt{AlphaRAR.dTrackingProb\_throttle}.
 \end{proof}
 
 \begin{remark}\label{rem:d_tracking_zero}

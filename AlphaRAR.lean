@@ -11,6 +11,7 @@ import AlphaRAR.Mathlib.TendstoInMeasure
 import AlphaRAR.Mathlib.TsumMeasureIoi
 import AlphaRAR.Probability.ARTSAlgorithm
 import AlphaRAR.Probability.ARTSConsistency
+import AlphaRAR.Probability.ARTSDesigns
 import AlphaRAR.Probability.ARTSNormality
 import AlphaRAR.Probability.ARTSRates
 import AlphaRAR.Probability.Assignment
