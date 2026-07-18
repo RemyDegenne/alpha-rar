@@ -11,6 +11,7 @@ import AlphaRAR.Mathlib.TendstoInMeasure
 import AlphaRAR.Mathlib.TsumMeasureIoi
 import AlphaRAR.Probability.ARTSAlgorithm
 import AlphaRAR.Probability.ARTSConsistency
+import AlphaRAR.Probability.ARTSNormality
 import AlphaRAR.Probability.ARTSRates
 import AlphaRAR.Probability.Assignment
 import AlphaRAR.Probability.AssignmentRate
@@ -27,13 +28,14 @@ import AlphaRAR.Probability.MartingaleMaximal
 import AlphaRAR.Probability.MartingaleRate
 import AlphaRAR.Probability.MartingaleSLLN
 import AlphaRAR.Probability.OptionalSkipping
-import AlphaRAR.Probability.QuadraticVariation
-import AlphaRAR.Probability.Response
-import AlphaRAR.Probability.ResponseCLT
 import AlphaRAR.Probability.PluginTargetCLT
 import AlphaRAR.Probability.PluginTargetRate
 import AlphaRAR.Probability.PropDev
 import AlphaRAR.Probability.PropDevARTS
+import AlphaRAR.Probability.PropDevLIL
+import AlphaRAR.Probability.QuadraticVariation
+import AlphaRAR.Probability.Response
+import AlphaRAR.Probability.ResponseCLT
 import AlphaRAR.Probability.ResponseCLTJoint
 import AlphaRAR.Probability.ResponseConsistency
 import AlphaRAR.Probability.ResponseIncrement

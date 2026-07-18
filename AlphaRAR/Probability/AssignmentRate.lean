@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
 import AlphaRAR.Probability.Assignment
+import AlphaRAR.Probability.LILLogLog
 import AlphaRAR.Probability.MartingaleRate
 import AlphaRAR.Probability.MartingaleSLLN
 
@@ -58,5 +59,27 @@ lemma assignMart_div_atTop_ae_tendsto_zero [IsProbabilityMeasure μ]
     filter_upwards [abs_assignMart_succ_sub_le hX_int h0X h1X k] with ω h
     simpa only [Pi.sub_apply] using h
   exact martingale_div_atTop_ae_tendsto_zero_of_bdd (martingale_assignMart hX hX_int) hM0 hΔ
+
+/-- **Loglog LIL for the assignment martingale** (blueprint `thm:lil_bounded` applied to `M_{·,k}`).
+For a `[0,1]`-valued adapted integrable assignment indicator `X` on a probability space, the
+assignment martingale `M` satisfies `|M_n| = O(√(n log log n))` almost surely. The increments are
+bounded by `1`, so the *unconditional* bounded-increment loglog LIL
+`ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd` applies — crucially **without** requiring
+`⟨M⟩_n → ∞`, which can fail here (a design whose selection probabilities degenerate to `{0,1}` has
+`⟨M⟩ ≡ 0`). -/
+lemma ae_eventually_abs_assignMart_le_sqrt_nat_mul_loglog [IsProbabilityMeasure μ]
+    (hX : StronglyAdapted ℱ X) (hX_int : ∀ n, Integrable (X n) μ)
+    (h0X : ∀ n, 0 ≤ᵐ[μ] X n) (h1X : ∀ n, X n ≤ᵐ[μ] fun _ ↦ (1 : ℝ)) :
+    ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop,
+      |assignMart X ℱ μ n ω| ≤ C * Real.sqrt ((n : ℝ) * Real.log (Real.log n)) := by
+  have h0 : assignMart X ℱ μ 0 = 0 := by rw [assignMart, martingalePart_zero, count_zero]
+  have hM0 : assignMart X ℱ μ 0 =ᵐ[μ] 0 := by filter_upwards with ω; rw [h0]
+  have hΔ : ∀ n, ∀ᵐ ω ∂μ,
+      |assignMart X ℱ μ (n + 1) ω - assignMart X ℱ μ n ω| ≤ 1 := by
+    intro n
+    filter_upwards [abs_assignMart_succ_sub_le hX_int h0X h1X n] with ω h
+    simpa only [Pi.sub_apply] using h
+  exact ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd (martingale_assignMart hX hX_int) hM0
+    one_pos hΔ
 
 end AlphaRAR

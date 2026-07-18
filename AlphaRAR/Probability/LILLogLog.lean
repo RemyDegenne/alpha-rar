@@ -594,6 +594,75 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growing [IsProbabilityMeasure 
   simp only [Pi.neg_apply] at hl
   rw [abs_le]; exact ⟨by linarith, hu⟩
 
+/-- **Unconditional bounded-increment loglog LIL at scale `√(n log log n)`.** For an `L²`-martingale
+`M` with `M 0 = 0` and `|ΔM_i| ≤ c` a.s. (`c > 0`), almost surely `|M_n| ≤ C √(n log log n)` for all
+large `n`, with a deterministic `C`. Unlike `ae_eventually_abs_le_sqrt_nat_mul_loglog`, this needs
+**no** hypothesis `⟨M⟩_n → ∞`: it applies the deterministic-horizon growing-increment engine
+`ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growing`, whose only quadratic-variation input is the
+*linear* bound `⟨M⟩_n ≤ c² n` (`predQuadVar_le_of_bound`), valid unconditionally for bounded
+increments. This is the form the (possibly degenerate) assignment martingale needs: a design that
+hits its target deterministically has `⟨M⟩ ≡ 0`, so `⟨M⟩ → ∞` genuinely fails, yet `M ≡ 0` is still
+`O(√(n log log n))`. Parameters `α = 1/c`, `C = 3c`, `v = c²` satisfy the engine's `hp` (`1 < 2`)
+and `hadm` (via `log(j+2) ≤ 2^j`). The `L²` side conditions are all derived from the increment
+bound (a.e. `|M_n| ≤ n c`, so `M_n` is square-integrable). -/
+lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd [IsProbabilityMeasure μ]
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0)
+    {c : ℝ} (hc : 0 < c) (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
+    ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop, |M n ω| ≤ C * √((n : ℝ) * log (log n)) := by
+  have hHolder : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 :=
+    ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
+  have hmeasM : ∀ n, AEMeasurable (M n) μ := fun n ↦
+    ((hM.stronglyMeasurable n).mono (ℱ.le n)).measurable.aemeasurable
+  -- Telescoping bound `|M_n| ≤ n c` a.e., whence `M_n` is square-integrable.
+  have hbdd : ∀ n, ∀ᵐ ω ∂μ, |M n ω| ≤ n * c := by
+    intro n
+    filter_upwards [ae_all_iff.mpr hb, hM0] with ω hbω hM0ω
+    simp only [Pi.zero_apply] at hM0ω
+    have htel : (∑ k ∈ Finset.range n, (M (k + 1) ω - M k ω)) = M n ω := by
+      rw [Finset.sum_range_sub (fun k ↦ M k ω) n, hM0ω, sub_zero]
+    calc |M n ω| = |∑ k ∈ Finset.range n, (M (k + 1) ω - M k ω)| := by rw [htel]
+      _ ≤ ∑ k ∈ Finset.range n, |M (k + 1) ω - M k ω| := Finset.abs_sum_le_sum_abs _ _
+      _ ≤ ∑ k ∈ Finset.range n, c := Finset.sum_le_sum fun k _ ↦ hbω k
+      _ = n * c := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+  have hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ := fun n ↦
+    (integrable_const (((n : ℝ) * c) ^ 2)).mono' ((hmeasM n).pow_const 2).aestronglyMeasurable
+      (by filter_upwards [hbdd n] with ω hb'
+          rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]
+          exact sq_le_sq' (neg_le_of_abs_le hb') (le_of_abs_le hb'))
+  have haesm_d : ∀ i, AEStronglyMeasurable (fun ω ↦ M (i + 1) ω - M i ω) μ := fun i ↦
+    (((hM.stronglyMeasurable (i + 1)).mono (ℱ.le _)).sub
+      ((hM.stronglyMeasurable i).mono (ℱ.le _))).aestronglyMeasurable
+  have hdmem : ∀ i, MemLp (fun ω ↦ M (i + 1) ω - M i ω) 2 μ := fun i ↦
+    MemLp.of_bound (haesm_d i) c (by filter_upwards [hb i] with ω h; rwa [norm_eq_abs])
+  have hd2 : ∀ i, Integrable (fun ω ↦ (M (i + 1) ω - M i ω) ^ 2) μ :=
+    fun i ↦ (hdmem i).integrable_sq
+  have hMmem : ∀ n, MemLp (M n) 2 μ := fun n ↦
+    (memLp_two_iff_integrable_sq
+      ((hM.stronglyMeasurable n).mono (ℱ.le n)).aestronglyMeasurable).mpr (hM2 n)
+  have hprod : ∀ i, Integrable (M i * (M (i + 1) - M i)) μ := fun i ↦
+    (hMmem i).integrable_mul ((hMmem (i + 1)).sub (hMmem i))
+  have hqv : ∀ᵐ ω ∂μ, ∀ n, predQuadVar M ℱ μ n ω ≤ c ^ 2 * (n : ℝ) :=
+    predQuadVar_le_of_bound hM hd2 hprod hb
+  refine ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growing (α := 1 / c) (C := 3 * c) (v := c ^ 2)
+    hM hM0 hM2 (by positivity) (fun _ ↦ c) (fun _ ↦ hc.le) ?_ ?_ (fun j i _ ↦ hb i)
+    (by positivity) hqv
+  · -- `hp : 1 < (1/c)·(3c) - (1/c)²·c²`, which equals `2`.
+    have hkey : (1 : ℝ) / c * (3 * c) - (1 / c) ^ 2 * c ^ 2 = 2 := by field_simp; ring
+    rw [hkey]; norm_num
+  · -- `hadm : ∀ j, (1/c)·√(log(j+2)/2^j)·c ≤ 1`, i.e. `√(log(j+2)/2^j) ≤ 1`.
+    intro j
+    rw [mul_right_comm, one_div_mul_cancel hc.ne', one_mul]
+    have hjpow : (j : ℝ) + 1 ≤ (2 : ℝ) ^ j := by
+      have h : j + 1 ≤ 2 ^ j := Nat.lt_two_pow_self
+      calc (j : ℝ) + 1 = ((j + 1 : ℕ) : ℝ) := by push_cast; ring
+        _ ≤ ((2 ^ j : ℕ) : ℝ) := by exact_mod_cast h
+        _ = (2 : ℝ) ^ j := by push_cast; ring
+    have hlog : log ((j : ℝ) + 2) ≤ (2 : ℝ) ^ j :=
+      (Real.log_le_sub_one_of_pos (by positivity)).trans (by linarith)
+    calc √(log ((j : ℝ) + 2) / (2 : ℝ) ^ j) ≤ √1 :=
+          Real.sqrt_le_sqrt ((div_le_one (by positivity)).mpr hlog)
+      _ = 1 := Real.sqrt_one
+
 /-! ### A monotonicity fact for the finite-variance increment bound
 
 The truncated main part of a finite-variance sum has increments bounded by `2 √(i/log(i+2))` (the

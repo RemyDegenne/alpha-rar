@@ -398,7 +398,8 @@ Theorem~\ref{thm:llil_general} is formalized.)
 \end{corollary}
 
 \begin{corollary}[Bound at scale $\sqrt{n\log\log n}$]\label{cor:llil_nat}
-\lean{AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog}\leanok
+\lean{AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog,
+AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd}\leanok
 \uses{cor:llil_norm}
 If moreover $\langle M\rangle_n\le K n$ for a constant $K$ (e.g.\ $|\Delta M_i|\le c$
 gives $\langle M\rangle_n\le c^2 n$, Lemma~\ref{lem:qv_linear_bound}), then almost
@@ -409,10 +410,26 @@ $\langle M\rangle_n\le Kn$ gives $\log\log\langle M\rangle_n\le\log\log(Kn)\le
 \log\log n+o(1)$ for large $n$; substitute into Corollary~\ref{cor:llil_norm}.
 \end{proof}
 
+\begin{remark}[The bounded-increment version is unconditional]\label{rem:llil_bdd_uncond}
+The normalized Corollary~\ref{cor:llil_norm} (\texttt{AlphaRAR.ae\_eventually\_abs\_le\_sqrt\_pred%
+QuadVar\_mul\_loglog}) --- and hence \texttt{ae\_eventually\_abs\_le\_sqrt\_nat\_mul\_loglog} ---
+carries the standing hypothesis $\langle M\rangle_n\to\infty$. For a \emph{bounded-increment}
+martingale this hypothesis is \emph{unnecessary and can genuinely fail}: a deterministic path (all
+selection probabilities in $\{0,1\}$) has $\langle M\rangle\equiv0$, yet $M\equiv0$ is trivially
+$O(\sqrt{n\log\log n})$. The version \texttt{AlphaRAR.ae\_eventually\_abs\_le\_sqrt\_nat\_mul\_loglog%
+\_of\_bdd} drops $\langle M\rangle\to\infty$ entirely: it applies the deterministic-horizon
+growing-increment engine \texttt{ae\_eventually\_abs\_le\_sqrt\_nat\_mul\_loglog\_of\_growing}, whose
+only quadratic-variation input is the \emph{linear} bound $\langle M\rangle_n\le c^2n$
+(\texttt{predQuadVar\_le\_of\_bound}), with parameters $\alpha=1/c$, $C=3c$, $v=c^2$ satisfying its
+admissibility (via $\log(j+2)\le 2^j$) and summability (exponent $1<2$). This is the form the
+possibly-degenerate assignment martingale requires.
+\end{remark}
+
 These are the $\log\log$ replacements for Corollaries~\ref{cor:lil_upper} and
 \ref{cor:lil_upper_nat}: the bounded assignment martingale $M_{\cdot,k}$ of
-Lemma~\ref{lem:U_increment_bound} is covered by Corollary~\ref{cor:llil_nat} via
-Theorem~\ref{thm:llil_bounded}.
+Lemma~\ref{lem:U_increment_bound} is covered by the unconditional
+Corollary~\ref{cor:llil_nat}/Remark~\ref{rem:llil_bdd_uncond} (formalized as
+\texttt{AlphaRAR.ae\_eventually\_abs\_assignMart\_le\_sqrt\_nat\_mul\_loglog}, $|\Delta M|\le1$).
 
 \section{Application: the i.i.d.\ Hartman--Wintner LIL}
 \label{sec:llil_hw}

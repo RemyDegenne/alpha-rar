@@ -145,7 +145,11 @@ Under Conditions~\textbf{A}--\textbf{B}, for every $k$,
   U_{n,k} - U_{\ell_{n,k},k} \le O(\sqrt{n\log\log n})\ \text{a.s.}
 \]
 The $o_p(\sqrt n)$ half is formalized (generically) as \texttt{AlphaRAR.isLittleOpOne\_max\_of\_decomp};
-the a.s.\ $O(\sqrt{n\log\log n})$ half is not yet formalized.
+the a.s.\ $O(\sqrt{n\log\log n})$ half is formalized (for the $\aRTS$ objects, inline) inside
+\texttt{AlphaRAR.aRTS\_dev\_upper} --- the $U$-increment decomposition \texttt{diff\_U\_decomp} with
+$\varepsilon=(1-\alpha)v_k/2$ makes the drift $\le0$, and the $M$- and $\rho$-differences are
+$O(\sqrt{n\log\log n})$ a.s.\ by the assignment-martingale LIL (Cor.~\ref{cor:llil_nat}) and the
+plug-in-target rate (Lemma~\ref{lem:rho_rate}).
 \end{lemma}
 
 \begin{proof}
@@ -164,7 +168,8 @@ substitution yields the second inequality.
 \end{proof}
 
 \begin{lemma}[Deviation between proportions and plug-in target]\label{lem:prop_dev}
-\lean{AlphaRAR.aRTS_prop_dev, AlphaRAR.prop_dev}
+\lean{AlphaRAR.aRTS_prop_dev, AlphaRAR.prop_dev, AlphaRAR.aRTS_prop_dev_ae,
+AlphaRAR.aRTS_count_sub_smul_ae}\leanok
 \uses{def:generic_cond, def:counts, def:plugin_target}
 Under the generic conditions and Conditions~\textbf{A}--\textbf{B}, for every $k$,
 \begin{align*}
@@ -194,8 +199,26 @@ perturbation shown $o_p$ (a.e.\ $\to0$ by $\hat\rho_n\to v$), and the plug-in-ta
 (Lemma~\ref{lem:ell_rho_control}) via \texttt{ell\_rho\_control}, whose $g$- and $h$-coefficients are
 the random-hitting-time bounds \texttt{aRTS\_g\_littleOp} ($O_p\cdot o_p=o_p$, Doob running-max plus
 $\sqrt n/(N_n+1)\to0$) and \texttt{aRTS\_h\_bigOp} (a.s.\ bounded). All random-hitting-time terms are
-made measurable by \texttt{measurable\_eval\_of\_le}. Only the two a.s.\ $O(\sqrt{n\log\log n})$
-statements remain unformalized.
+made measurable by \texttt{measurable\_eval\_of\_le}.
+
+The two a.s.\ $O(\sqrt{n\log\log n})$ statements are also formalized, as
+\texttt{AlphaRAR.aRTS\_prop\_dev\_ae} ($N_{n,k}-n\hat\rho_{n,k}=O(\sqrt{n\log\log n})$ a.s.) and
+\texttt{AlphaRAR.aRTS\_count\_sub\_smul\_ae} ($N_{n,k}-nv_k=O(\sqrt{n\log\log n})$ a.s.). The a.s.\
+route is \emph{simpler} than the $o_p$ one --- it bypasses the entire \texttt{ell\_rho\_control} /
+\texttt{vmaxSeq} maximal-inequality machinery, resting instead on two pointwise a.s.\ loglog rates:
+the assignment-martingale LIL
+\texttt{AlphaRAR.ae\_eventually\_abs\_assignMart\_le\_sqrt\_nat\_mul\_loglog} ($M_{n,k}=O(\sqrt{n\log
+\log n})$ a.s.) and the plug-in-target rate \texttt{AlphaRAR.aRTS\_rho\_rate}
+($\hat\rho_{n,k}-v_k=O(\sqrt{n\log\log n}/n)$ a.s.). For each arm, \texttt{AlphaRAR.aRTS\_dev\_upper}
+combines the key inequality \eqref{eq:generic_ineq}, the smallness $\le 0$
+(\texttt{preliminary\_small}), and the $U$-increment decomposition \texttt{diff\_U\_decomp} with
+$\varepsilon=(1-\alpha)v_k/2$ (so the drift is $\le0$): the $M$- and $\rho$-differences at the random
+time $\ell_{n,k}\le n$ are controlled uniformly by \texttt{AlphaRAR.exists\_forall\_le\_mul\_logLogRate}
+(``$O(\sqrt{m\log\log m})$ at every $m\le n$ is $O(\sqrt{n\log\log n})$''), giving a one-sided
+$N_{n,k}-n\hat\rho_{n,k}\le O(\sqrt{n\log\log n})$; the reverse step
+\texttt{AlphaRAR.isBigO\_of\_forall\_upper\_of\_sum\_zero} (using $\sum_k \mathrm{Dev}_k=0$) upgrades it
+to the two-sided bound, and $N_{n,k}-nv_k$ adds $n(\hat\rho_{n,k}-v_k)$ via
+\texttt{AlphaRAR.isBigO\_natMul\_logLogRate}.
 \end{lemma}
 
 \begin{proof}
@@ -310,7 +333,7 @@ $n\to\infty$:
 \end{enumerate}
 \end{theorem}
 
-\begin{proof}
+\begin{proof}\leanok
 \uses{lem:prop_dev, lem:clt_theta, lem:clt_rho}
 Part (i) is Lemma~\ref{lem:prop_dev}. For (ii), the marginal CLT for
 $\estParams_n$ is Lemma~\ref{lem:clt_theta}. By part (i),
@@ -321,16 +344,25 @@ $(\sqrt n(N_n/n-v),\sqrt n(\hat{\rho}_n-v))$ therefore equals
 $(\sqrt n(\hat{\rho}_n-v),\sqrt n(\hat{\rho}_n-v))+o_p(1)$, which converges to
 $\mathcal{N}(0,\Omega)$ by Slutsky.
 
-\emph{Formalization.} The joint statement of part (ii) is
-\texttt{AlphaRAR.clt\_joint}: it takes the proportion-deviation fact
+\emph{Formalization.} Part (ii) is fully formalized for the $\aRTS$ design. The generic joint
+statement is \texttt{AlphaRAR.clt\_joint}: it takes the proportion-deviation fact
 $\sqrt n(N_n/n-\hat{\rho}_n)\to_p 0$ of part (i) as a hypothesis and assembles the joint CLT from
 \texttt{AlphaRAR.clt\_rho}. The joint vector is the image of $\sqrt n(\hat{\rho}_n-v)$ under the
 duplication map $x\mapsto(x,x)$ (the stacked matrix $[I;I]$) up to an $o_p(1)$ remainder, so the
 same product-space Slutsky lemma as in Lemma~\ref{lem:clt_rho} applies, and the limiting covariance
 $[I;I]\,GVG^\top\,[I;I]^\top$ is the block matrix $\Omega$ via the rectangular Gaussian pushforward
-\texttt{AlphaRAR.multivariateGaussian\_map\_matrix}. Part (i)
-(Lemma~\ref{lem:prop_dev}, the $o_p(\sqrt n)$ deviation machinery) is not yet formalized, so the
-theorem is not marked complete.
+\texttt{AlphaRAR.multivariateGaussian\_map\_matrix}. The self-contained $\aRTS$ instantiation is
+\texttt{AlphaRAR.aRTS\_clt\_joint}: from the same design bundle as \texttt{aRTS\_prop\_dev} plus the
+Condition-\textbf{B} differentiability of $\Target$ at $\Params$ (Jacobian $G$, exactly the
+\texttt{clt\_rho} input), it \emph{discharges} the proportion-deviation hypothesis of
+\texttt{clt\_joint} from \texttt{AlphaRAR.aRTS\_prop\_dev} --- via the generic bridge
+\texttt{AlphaRAR.tendstoInMeasure\_toLp\_of\_forall\_isLittleOpOne} (coordinatewise $o_p(1)$ gives
+vector convergence in measure) and the $\sqrt n$-scaling identity
+$\sqrt n(N_{n,k}/n-v_k)-\sqrt n(\hat\rho_{n,k}-v_k)=(N_{n,k}-n\hat\rho_{n,k})/\sqrt n$ --- and derives
+the $\mathrm{thm{:}LLN}$ consistencies as in \texttt{aRTS\_prop\_dev}. Part (i) is fully formalized:
+the $o_p(\sqrt n)$ statement is \texttt{aRTS\_prop\_dev} and the two a.s.\ $O(\sqrt{n\log\log n})$
+statements are \texttt{aRTS\_prop\_dev\_ae} and \texttt{aRTS\_count\_sub\_smul\_ae}
+(Lemma~\ref{lem:prop_dev}). Both parts of the theorem are therefore complete for the $\aRTS$ design.
 \end{proof}
 
 \begin{remark}[Asymptotic efficiency]\label{rem:efficiency}
