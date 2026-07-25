@@ -1621,16 +1621,41 @@ lemma hw_drift_bound [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : �
         exact (le_abs_self _).trans (abs_sum_integral_truncation_le hint0 hint2 hcent m)
 
 /-- **Hartman–Wintner upper bound, eventually form** (coboundedness-free core). For an i.i.d.,
-centred, `L²` sequence with `σ² = 𝔼[Y_0²] > 0`, a.s. `∀ β>1`, eventually
-`S_m = ∑_{j<m} Y_j ≤ β √(2σ² m log log m)`. Combining the sharp low part (`limsup ≤ 1`), the medium
-`o(√(m L(m)))`, the eventually-vanishing high part and the deterministic drift. -/
+centred, `L²` sequence, a.s. `∀ β>1`, eventually
+`S_m = ∑_{j<m} Y_j ≤ β √(2σ² m log log m)` with `σ² = 𝔼[Y_0²]`. Combining the sharp low part
+(`limsup ≤ 1`), the medium `o(√(m L(m)))`, the eventually-vanishing high part and the deterministic
+drift.
+
+No positivity of `σ²` is needed: if `σ² = 0` then every `Y_j` vanishes a.s. and both sides are `0`.
+(The *limsup* form `iid_hartmanWintner_limsup_le_one` does need `σ² > 0`, since it divides by
+`√(2σ² m log log m)`.) -/
 lemma hw_eventually [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i))
     (hindep : iIndepFun Y μ) (hident : ∀ j, IdentDistrib (Y j) (Y 0) μ μ)
-    (hint2 : Integrable (fun ω ↦ Y 0 ω ^ 2) μ) (hcent : ∫ ω, Y 0 ω ∂μ = 0)
-    (hσ : 0 < ∫ ω, Y 0 ω ^ 2 ∂μ) :
+    (hint2 : Integrable (fun ω ↦ Y 0 ω ^ 2) μ) (hcent : ∫ ω, Y 0 ω ∂μ = 0) :
     ∀ᵐ ω ∂μ, ∀ β : ℝ, 1 < β → ∀ᶠ m in atTop,
       (∑ j ∈ Finset.range m, Y j ω)
         ≤ β * √(2 * (∫ x, Y 0 x ^ 2 ∂μ) * (m : ℝ) * log (log (m : ℝ))) := by
+  rcases eq_or_lt_of_le (integral_nonneg (fun ω ↦ sq_nonneg (Y 0 ω)) :
+      (0 : ℝ) ≤ ∫ ω, Y 0 ω ^ 2 ∂μ) with hσ | hσ
+  · -- Degenerate case `σ² = 0`: every `Y j` vanishes a.s., and both sides are `0`.
+    have hY0 : Y 0 =ᵐ[μ] 0 := by
+      have hz := (integral_eq_zero_iff_of_nonneg_ae
+        (Eventually.of_forall fun ω ↦ sq_nonneg (Y 0 ω)) hint2).mp hσ.symm
+      filter_upwards [hz] with ω hω
+      have h2 : Y 0 ω ^ 2 = 0 := hω
+      simpa using sq_eq_zero_iff.mp h2
+    have hYj : ∀ j, Y j =ᵐ[μ] 0 := by
+      intro j
+      have h0 : μ (Y 0 ⁻¹' ({(0 : ℝ)}ᶜ)) = 0 := by
+        simpa [Set.preimage, Pi.zero_apply] using ae_iff.mp hY0
+      have hj : μ (Y j ⁻¹' ({(0 : ℝ)}ᶜ)) = 0 := by
+        rw [(hident j).measure_mem_eq (measurableSet_singleton (0 : ℝ)).compl]; exact h0
+      refine ae_iff.mpr ?_
+      simpa [Set.preimage, Pi.zero_apply] using hj
+    filter_upwards [ae_all_iff.mpr hYj] with ω hω β _
+    filter_upwards with m
+    rw [Finset.sum_eq_zero fun j _ ↦ hω j, ← hσ]
+    simp
   set σ2 := ∫ x, Y 0 x ^ 2 ∂μ with hσ2def
   set K := ∫ x, |Y 0 x| ∂μ with hKdef
   have hmem0 : MemLp (Y 0) 2 μ :=
@@ -1781,13 +1806,12 @@ theorem iid_hartmanWintner_limsup_le_one [IsProbabilityMeasure μ] {Y : ℕ → 
   have ha_pos : ∀ᶠ m : ℕ in atTop,
       0 < √(2 * (∫ x, Y 0 x ^ 2 ∂μ) * (m : ℝ) * log (log (m : ℝ))) :=
     (tendsto_hwWeight_atTop hσ).eventually_gt_atTop 0
-  have hY_ev := hw_eventually hY hindep hident hint2 hcent hσ
+  have hY_ev := hw_eventually hY hindep hident hint2 hcent
   have hnegY_ev := hw_eventually (Y := fun i ω ↦ -Y i ω) (fun i ↦ (hY i).neg)
     (hindep.comp (fun _ ↦ (- ·)) (fun _ ↦ measurable_neg))
     (fun j ↦ (hident j).comp (u := fun x : ℝ ↦ -x) measurable_neg)
     (hint2.congr (Eventually.of_forall fun ω ↦ (neg_sq (Y 0 ω)).symm))
     (by simp only [integral_neg, hcent, neg_zero])
-    (by rw [hσeq]; exact hσ)
   simp only [hσeq] at hnegY_ev
   filter_upwards [hY_ev, hnegY_ev] with ω h1 h2
   have hcobdd : IsCoboundedUnder (· ≤ ·) atTop (fun m ↦ (∑ j ∈ Finset.range m, Y j ω)

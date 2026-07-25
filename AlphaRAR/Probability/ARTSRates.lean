@@ -34,7 +34,7 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
   {P : Measure Ω} [IsProbabilityMeasure P]
   {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
-omit [DecidableEq 𝓐] in
+omit [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐] in
 /-- **Positive allocation proportion at an abstract hitting time** (count form, per-arm). The
 abstract-hitting-time generalisation of `aRTS_count_proportion_pos`: given the consistency
 throttle `hthrottle` and smallness `hgs`, together with Condition **B**'s non-sparsity `hTpos`, each
@@ -85,7 +85,7 @@ theorem aRTS_count_proportion_pos
       (fun j ↦ armIndicator A k j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k)
       (aRTSUnder A Y θ₀ T k ω) (fun _ hm ↦ hm) δ hδ) hTpos k
 
-omit [DecidableEq 𝓐] in
+omit [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐] in
 /-- **Loglog rate of the plug-in target at an abstract hitting time** (blueprint `lem:rho_rate`,
 `thm:LLN` third conclusion, generic form). The abstract-hitting-time generalisation of
 `aRTS_rho_rate`: the plug-in target achieves `ρ̂_{n,k} - v_k = O(√(log log n / n))` a.s., combining
@@ -107,7 +107,7 @@ theorem rho_rate_of_hitting
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hT_diff : DifferentiableAt ℝ T (fun k ↦ (ν k)[id]))
     (hint_id : ∀ k, Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : ∀ k, 0 < armVar ν k) (k : 𝓐) :
+    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (k : 𝓐) :
     ∀ᵐ ω ∂P, (fun n ↦ T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
       (fun j ↦ Y j ω) (θ₀ k') n) k - T (fun k ↦ (ν k)[id]) k)
         =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) := by
@@ -115,7 +115,7 @@ theorem rho_rate_of_hitting
     (theta_consistent_of_hitting h hY2 θ₀ T hT hTnn hTsum α hα Q hthrottle hgs hTpos)
     (fun k' ↦ ?_) k
   filter_upwards [abs_estimator_sub_le_rate_loglog_of_pos_count h k' (θ₀ k')
-    (hint_id k') (hint_sq k') (hVpos k')
+    (hint_id k') (hint_sq k')
     (count_proportion_pos_of_hitting h hY2 hT hTnn hTsum hα Q hthrottle hgs hTpos k')] with ω hω
   obtain ⟨C', hC'⟩ := hω
   refine isBigO_iff.mpr ⟨C', ?_⟩
@@ -135,7 +135,7 @@ theorem aRTS_rho_rate
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hT_diff : DifferentiableAt ℝ T (fun k ↦ (ν k)[id]))
     (hint_id : ∀ k, Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : ∀ k, 0 < armVar ν k) (k : 𝓐) :
+    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (k : 𝓐) :
     ∀ᵐ ω ∂P, (fun n ↦ T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
       (fun j ↦ Y j ω) (θ₀ k') n) k - T (fun k ↦ (ν k)[id]) k)
         =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) :=
@@ -144,10 +144,10 @@ theorem aRTS_rho_rate
     (fun k ↦ Eventually.of_forall fun ω δ hδ ↦ generic_small_of_hitting
       (fun j ↦ armIndicator A k j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k)
       (aRTSUnder A Y θ₀ T k ω) (fun _ hm ↦ hm) δ hδ)
-    hTpos hT_diff hint_id hint_sq hVpos k
+    hTpos hT_diff hint_id hint_sq k
 
 /-- **Strong consistency and rates for an aRTS design** (blueprint `thm:LLN`). Under Conditions
-**A** (`hint_id`, `hint_sq`, `hVpos`) and **B** (`hT`, `hTpos`, `hT_diff`, and the simplex
+**A** (`hint_id`, `hint_sq`) and **B** (`hT`, `hTpos`, `hT_diff`, and the simplex
 conditions `hTnn`, `hTsum`) an `α`-throttled aRTS design satisfies, almost surely for every arm `k`:
 the allocation proportion converges to the target `N_{n,k}/n → v_k = T(θ)_k`; the estimator is
 consistent `θ̂_{n,k} → θ_k`; and the plug-in target achieves the loglog rate
@@ -161,7 +161,7 @@ theorem aRTS_LLN
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hT_diff : DifferentiableAt ℝ T (fun k ↦ (ν k)[id]))
     (hint_id : ∀ k, Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : ∀ k, 0 < armVar ν k) (k : 𝓐) :
+    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (k : 𝓐) :
     ∀ᵐ ω ∂P,
       Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (T (fun k ↦ (ν k)[id]) k)) ∧
       Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
@@ -171,7 +171,7 @@ theorem aRTS_LLN
           =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) := by
   filter_upwards [aRTS_proportion_tendsto h hY2 hT hTnn hTsum hα hARTS hTpos k,
     aRTS_theta_consistent h hY2 hT hTnn hTsum hα hARTS hTpos,
-    aRTS_rho_rate h hY2 hT hTnn hTsum hα hARTS hTpos hT_diff hint_id hint_sq hVpos k]
+    aRTS_rho_rate h hY2 hT hTnn hTsum hα hARTS hTpos hT_diff hint_id hint_sq k]
     with ω hprop hθ hrate
   exact ⟨hprop, tendsto_pi_nhds.mp hθ k, hrate⟩
 

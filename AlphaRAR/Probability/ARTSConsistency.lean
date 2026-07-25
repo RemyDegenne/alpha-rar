@@ -219,7 +219,7 @@ consistency `consistency_of_hitting` (whose throttle `hthrottle` and smallness `
 design-specific inputs) and Condition **B**'s non-sparsity `hTpos`, the sequential estimator
 converges a.s. to the true parameter `θ̂_n → θ = ((ν k)[id])_k`, via the design-independent
 `theta_consistent_pi_of_condB`. -/
-theorem theta_consistent_of_hitting [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+theorem theta_consistent_of_hitting [Fintype 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -246,8 +246,7 @@ theorem theta_consistent_of_hitting [Fintype 𝓐] [StandardBorelSpace 𝓐] [No
 (`N_{n,k}/n` and `ρ̂_{n,k}` share the random limit `u_k`) with the estimator consistency
 `theta_consistent_of_hitting` (so `ρ̂_{n,k} → T(θ)_k` by continuity) identifies the limit as the
 deterministic `v_k = T(θ)_k`: `N_{n,k}/n → v_k` a.s. -/
-theorem proportion_tendsto_of_hitting [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
-    [Nonempty 𝓐]
+theorem proportion_tendsto_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)

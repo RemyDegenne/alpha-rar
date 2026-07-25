@@ -315,7 +315,7 @@ hypothesis `hthrottle`, and the new ingredients are the forced-exploration small
 `thm:normality` part (i), `o_p` half). `|N_{n,k} - n ρ̂_{n,k}| = o_p(√n)` for the `aRTSFE` family.
 A direct reuse of `prop_dev_of_hitting`; the `o_p`-smallness is `aRTSFE_smallness_op` (using
 `h(n) = o(√n)`). -/
-theorem aRTSFE_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+theorem aRTSFE_prop_dev [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -343,7 +343,7 @@ theorem aRTSFE_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace �
 `thm:forced_valid`, `thm:normality` part (i), a.s. half). `N_{n,k} - n ρ̂_{n,k} = O(√(n log log n))`
 a.s. for the `aRTSFE` family. A direct reuse of `prop_dev_ae_of_hitting`; the loglog rate is
 `rho_rate_of_hitting` and the smallness is `aRTSFE_smallness_upper` (using `h(n) = o(√n)`). -/
-theorem aRTSFE_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+theorem aRTSFE_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -351,7 +351,7 @@ theorem aRTSFE_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hT_diff : DifferentiableAt ℝ T (fun k ↦ (ν k)[id]))
     (hint_id : ∀ k, Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : ∀ k, 0 < armVar ν k)
+    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k))
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched) (hlo : IsSqrtSmall hsched)
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ aRTSFEUnder A Y θ₀ T hsched k ω m →
       aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
@@ -364,13 +364,13 @@ theorem aRTSFE_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace
       (aRTSFEUnder A Y θ₀ T hsched) hthrottle hgs hTpos)
     (aRTSFEUnder A Y θ₀ T hsched) hthrottle
     (fun k' ↦ rho_rate_of_hitting h hY2 hT hTnn hTsum hα (aRTSFEUnder A Y θ₀ T hsched)
-      hthrottle hgs hTpos hT_diff hint_id hint_sq hVpos k')
+      hthrottle hgs hTpos hT_diff hint_id hint_sq k')
     (fun k' ↦ aRTSFE_smallness_upper θ₀ T hTnn hh hlo k') k
 
 /-- **A.s. `O(√(n log log n))` count-versus-target deviation under forced exploration** (blueprint
 `thm:forced_valid`, `thm:normality` part (i), last line). `N_{n,k} - n v_k = O(√(n log log n))` a.s.
 for the `aRTSFE` family. A direct reuse of `count_sub_smul_ae_of_hitting`. -/
-theorem aRTSFE_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+theorem aRTSFE_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -378,7 +378,7 @@ theorem aRTSFE_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBore
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hT_diff : DifferentiableAt ℝ T (fun k ↦ (ν k)[id]))
     (hint_id : ∀ k, Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : ∀ k, 0 < armVar ν k)
+    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k))
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched) (hlo : IsSqrtSmall hsched)
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ aRTSFEUnder A Y θ₀ T hsched k ω m →
       aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
@@ -391,7 +391,7 @@ theorem aRTSFE_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBore
       (aRTSFEUnder A Y θ₀ T hsched) hthrottle hgs hTpos)
     (aRTSFEUnder A Y θ₀ T hsched) hthrottle
     (fun k' ↦ rho_rate_of_hitting h hY2 hT hTnn hTsum hα (aRTSFEUnder A Y θ₀ T hsched)
-      hthrottle hgs hTpos hT_diff hint_id hint_sq hVpos k')
+      hthrottle hgs hTpos hT_diff hint_id hint_sq k')
     (fun k' ↦ aRTSFE_smallness_upper θ₀ T hTnn hh hlo k') k
 
 /-- **Joint central limit theorem under forced exploration** (blueprint `thm:forced_valid`,
@@ -399,7 +399,7 @@ theorem aRTSFE_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBore
 converges weakly to the block-Gaussian `𝒩(0, Ω)` for the `aRTSFE` family. A direct reuse of
 `clt_joint_of_hitting`; the smallness conditions are `aRTSFE_smallness_all` and
 `aRTSFE_smallness_op`. -/
-theorem aRTSFE_clt_joint [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+theorem aRTSFE_clt_joint [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -1538,16 +1538,16 @@ terms are `O(√(N log log N)/N)` and `O(1/N)`, both `O(√(log log N/N))` (once
 lemma abs_estimator_sub_le_rate_loglog_N [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (θ₀ : ℝ) (hint_id : Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : 0 < armVar ν k)
+    (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k))
     (hNinf : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop) :
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
       |estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) θ₀ n - (ν k)[id]|
         ≤ C' * √(Real.log (Real.log (pullCount A k n ω : ℝ)) / (pullCount A k n ω : ℝ)) := by
   have hk_inf : ∀ᵐ ω ∂P, (setOf (fun j ↦ A j ω = k)).Infinite := by
     filter_upwards [hNinf] with ω hNω; exact infinite_setOf_eq_of_pullCount_atTop hNω
-  filter_upwards [hNinf, abs_respMart_le_sqrt_nat_mul_loglog h k hk_inf hint_id hint_sq hVpos]
+  filter_upwards [hNinf, abs_respMart_le_sqrt_nat_mul_loglog h k hk_inf hint_id hint_sq]
     with ω hNω hQω
-  have hV : (0 : ℝ) ≤ armVar ν k := hVpos.le
+  have hV : (0 : ℝ) ≤ armVar ν k := variance_nonneg _ _
   refine ⟨2 * √(2 * armVar ν k) + |θ₀ - (ν k)[id]|, ?_⟩
   have hlogloginf : Tendsto (fun n ↦ Real.log (Real.log (pullCount A k n ω : ℝ))) atTop atTop :=
     Real.tendsto_log_atTop.comp (Real.tendsto_log_atTop.comp hNω)
@@ -1611,13 +1611,13 @@ positivity needed), whence `ρ̂ → T(θ)` and — through the matching `consis
 never uses positivity) — `N/n → T(θ)`; the rate is `abs_estimator_sub_le_rate_loglog_N`. The design
 enters through the throttle `hthrottle` (matching) and the action-level rule `hfe`
 (no-starvation). -/
-theorem aRTSFE_sparse_rate [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+theorem aRTSFE_sparse_rate [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
     (hint_id : ∀ k, Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : ∀ k, 0 < armVar ν k)
+    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k))
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched)
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ aRTSFEUnder A Y θ₀ T hsched k ω m →
       aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
@@ -1662,7 +1662,7 @@ theorem aRTSFE_sparse_rate [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace
     rw [← tendsto_nhds_unique (hu k).2 hρω]
     exact (hu k).1
   filter_upwards [aRTSFE_no_starvation hh.tendsto_atTop hfe k, hprop,
-    abs_estimator_sub_le_rate_loglog_N h k (θ₀ k) (hint_id k) (hint_sq k) (hVpos k)
+    abs_estimator_sub_le_rate_loglog_N h k (θ₀ k) (hint_id k) (hint_sq k)
       (hNinf.mono fun ω hω ↦ hω k)] with ω h1 h2 h3
   exact ⟨h1, h2, h3⟩
 
@@ -2039,44 +2039,11 @@ eventually fed only by forced exploration; here that assumption is *proved*, fro
   paper's `h(m) = o(√m)` and is satisfiable exactly where the paper's condition fails
   (`sched23_star`, `not_isSqrtSmall_sched23`);
 * `hT2` — the target is `C²` at `Θ` on the sparse arms.
-
-Sparsity of an arm is `T(Θ)_a = 0`, which is also the *definition* of the arm split fed to
-`aRTSFE_sparse_clt`: an arm with `T(Θ)_a = 0` is normalized by the schedule `h(n)`, one with
-`T(Θ)_a ≠ 0` by `T(Θ)_a · n`. No separate `FEfed` predicate is needed — once being fed by forced
-exploration is proved rather than assumed, the split is pinned by `T(Θ)` itself. The limiting
-proportions are then not assumed either: `aRTSFE_sparse_rate` already gives `N_{n,a}/n → T(Θ)_a`
-for *every* arm under Condition **A** alone, and positivity on the non-sparse side is just
-`T ≥ 0` together with `T(Θ)_a ≠ 0`. The same call supplies the `N`-scaled loglog rate.
-
-The chain: forced exploration puts a *deterministic* floor `L(n) = h(n - W(n))` under every count
-(`eventually_schedShift_le_pullCount`); against that floor the subsampled LIL becomes a
-deterministic-rate bound (`exists_rate_loglog_of_pullCount_ge`); `C²`-ness at the minimum `Θ` turns
-it into the loglog decay `ρ̂_{m,a} = O(log log m / L(m))` (`exists_decay_of_contDiffAt`), which
-`(⋆)` pushes below `h(m)/m`; the throttle then makes non-forced pulls of `a` `o(h)`
-(`fEfed_of_decay`). Note `L` is only `≍ h` — `hshift` is what says the floor is `h` to first order,
-and it is used both here and for the regularity itself.
-
-All the design's own requirements sit in the single predicate `IsARTSFE alg θ₀ T h α`, exactly as
-`IsARTS` packages them for the plain family; `throttle_of_isARTSFE` and `fe_of_isARTSFE` unpack it.
-Condition **A** is `hνk` alone: integrability of the mean and of the square follow from it, and so
-does `MemLp (Y n) 2 P` (`memLp_feedback` — the response's conditional law is `ν (A n)`, and with
-finitely many arms the second moments have a finite maximum).
-
-The remaining hypotheses group as: the environment (`hνk`, `hVpos`), the schedule (`hh`, `hshift`,
-`hstar`), and the target (`hT`, `hTnn`, `hTsum` — continuous and simplex-valued, as everywhere in
-the aRTS theory — plus `hT2`, the only new demand on `T`). Nothing else is assumed: the response's
-`L²` bound, the limiting proportions, the loglog rate, the compensator bound and the martingale
-majorant are all derived.
-
-The compensator bound `∑_{i<n} α ρ̂_{i,a} = o(h(n))` is *not* a hypothesis: it is the same loglog
-decay, summed (`tendsto_sum_div_sched_of_loglog_decay`), and `(⋆)` is exactly strong enough to sum
-it. As a hypothesis it would in fact have been *false* for `α > 0`: on a non-sparse arm
-`ρ̂_{i,a} → T(Θ)_a > 0`, so the sum grows like `n`, which dwarfs `h(n) = o(n)`. Deriving it confines
-the claim to the sparse arms, where it is true. -/
+. -/
 theorem aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
     [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
-    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) (hVpos : ∀ a, 0 < armVar ν a)
+    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a))
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched)
     (hshift : Tendsto
       (fun n ↦ hsched (n - (Fintype.card 𝓐 * ⌈hsched n⌉₊ + 1)) / hsched n) atTop (𝓝 1))
@@ -2110,7 +2077,7 @@ theorem aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [Stand
         |estimator (fun j ↦ armIndicator A a j ω) (fun j ↦ Y j ω) (θ₀ a) n - (ν a)[id]|
           ≤ C' * Real.sqrt (Real.log (Real.log (pullCount A a n ω : ℝ))
               / (pullCount A a n ω : ℝ)) :=
-    ae_all_iff.mpr fun a ↦ aRTSFE_sparse_rate h hY2 θ₀ T hT hTnn hTsum α hα hint_id hint_sq hVpos
+    ae_all_iff.mpr fun a ↦ aRTSFE_sparse_rate h hY2 θ₀ T hT hTnn hTsum α hα hint_id hint_sq
       hh hthrottle hfe a
   have hprop : ∀ᵐ ω ∂P, ∀ a : 𝓐, T (fun j ↦ (ν j)[id]) a ≠ 0 →
       Tendsto (fun n ↦ (pullCount A a n ω : ℝ) / (n : ℝ)) atTop

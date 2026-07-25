@@ -90,7 +90,7 @@ variable [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν]
 
 /-- **Loglog LIL for the response martingale** (blueprint `cor:subsampled_lil`). For an
 algorithm–environment sequence in a stationary environment, if arm `k` is pulled infinitely often
-a.s. and its reward law `ν k` has an integrable mean and second moment with `armVar ν k > 0`, then
+a.s. and its reward law `ν k` has an integrable mean and second moment, then
 almost surely, for every `β > 1`, eventually
 `|Q_k n| ≤ β √(2 · armVar ν k · N_{n,k} · log log N_{n,k})`, where `N_{n,k}` is the number of pulls
 of arm `k` before `n`. In particular `Q_k n = O(√(N_{n,k} log log N_{n,k}))`. -/
@@ -98,7 +98,7 @@ theorem abs_respMart_le_sqrt_nat_mul_loglog
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hk_inf : ∀ᵐ ω ∂P, (setOf (fun j ↦ A j ω = k)).Infinite)
     (hint_id : Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : 0 < armVar ν k) :
+    (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) :
     ∀ᵐ ω ∂P, ∀ β : ℝ, 1 < β → ∀ᶠ n in atTop,
       |respMart ν A Y k n ω| ≤ β * √(2 * armVar ν k * (pullCount A k n ω : ℝ)
         * log (log (pullCount A k n ω : ℝ))) := by
@@ -155,7 +155,6 @@ theorem abs_respMart_le_sqrt_nat_mul_loglog
   have hVeq : ∫ ω, W 0 ω ^ 2 ∂P = armVar ν k := by
     rw [show (fun ω ↦ W 0 ω ^ 2) = fun ω ↦ (fun x ↦ (x - θ) ^ 2) (sampledClean Y D 0 ω) from rfl,
       hcov (fun x ↦ (x - θ) ^ 2) hintCsq.aestronglyMeasurable, armVar_eq_integral]
-  have hσW : 0 < ∫ ω, W 0 ω ^ 2 ∂P := by rw [hVeq]; exact hVpos
   -- independence and identical distribution of the centred clean samples
   have hW_sm : ∀ i, StronglyMeasurable (W i) := fun i ↦ ((hCmeas i).sub_const θ).stronglyMeasurable
   have hindepW : iIndepFun W P := by
@@ -170,13 +169,12 @@ theorem abs_respMart_le_sqrt_nat_mul_loglog
     (IdentDistrib.mk (hCmeas j).aemeasurable (hCmeas 0).aemeasurable
       ((hmapC j).trans (hmapC 0).symm)).comp (measurable_id.sub_const θ)
   -- Hartman–Wintner (upper) for `W` and for `-W`
-  have hev_up := hw_eventually hW_sm hindepW hidW hint2W hcent hσW
+  have hev_up := hw_eventually hW_sm hindepW hidW hint2W hcent
   have hev_lo := hw_eventually (μ := P) (Y := fun i ω ↦ -(W i ω)) (fun i ↦ (hW_sm i).neg)
     (hindepW.comp (fun _ x ↦ -x) (fun _ ↦ measurable_neg))
     (fun j ↦ (hidW j).comp measurable_neg)
     (by simpa only [neg_pow, even_two.neg_pow] using hint2W)
     (by rw [integral_neg, hcent, neg_zero])
-    (by simpa only [neg_pow, even_two.neg_pow] using hσW)
   -- pull everything onto one full-measure set
   have hae_eq : ∀ᵐ ω ∂P, ∀ i, sampledSeq Y D i ω = sampledClean Y D i ω := by
     rw [ae_all_iff]; exact fun i ↦ sampledSeq_ae_eq_sampledClean hDinf i
@@ -228,12 +226,12 @@ lemma infinite_setOf_eq_of_tendsto_div {k : 𝓐} {ω : Ω} {v : ℝ} (hv : 0 < 
 (blueprint `lem:match`). Arm `k` being pulled infinitely often (`lem:all_arms_infinite`) is
 *derived* from that positive proportion (`infinite_setOf_eq_of_tendsto_div`), so the only remaining
 hypotheses
-are the reward-law moment conditions on `ν k` (integrable mean/second moment, positive variance;
-Condition **A**). -/
+are the reward-law moment conditions on `ν k` (integrable mean and second moment; Condition
+**A**). No positivity of `armVar ν k` is needed — a zero-variance arm has `Q_k ≡ 0`. -/
 lemma ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog_of_proportion
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hint_id : Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : 0 < armVar ν k)
+    (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k))
     {v : Ω → ℝ} (hv : ∀ᵐ ω ∂P, 0 < v ω)
     (hN : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω))) :
     ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
@@ -242,7 +240,7 @@ lemma ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog_of_proportion
     filter_upwards [hv, hN] with ω hvω hNω
     exact infinite_setOf_eq_of_tendsto_div hvω hNω
   exact ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog k hv hN
-    (abs_respMart_le_sqrt_nat_mul_loglog h k hk_inf hint_id hint_sq hVpos)
+    (abs_respMart_le_sqrt_nat_mul_loglog h k hk_inf hint_id hint_sq)
 
 /-- **Loglog LIL rate for the estimator, end-to-end** (blueprint `lem:theta_LIL`, loglog form). The
 sequential estimator error is a.s. `O(√(log log n / n))`:
@@ -256,7 +254,7 @@ pull proportion `N_{n,k}/n → v_k > 0` (`lem:match`) — infinitely-many pulls
 lemma abs_estimator_sub_le_rate_loglog_of_proportion
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
     (hint_id : Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : 0 < armVar ν k)
+    (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k))
     {v : Ω → ℝ} (hv : ∀ᵐ ω ∂P, 0 < v ω)
     (hN : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω))) :
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
@@ -265,7 +263,7 @@ lemma abs_estimator_sub_le_rate_loglog_of_proportion
         ≤ C' * (√((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) :=
   abs_estimator_sub_le_rate_loglog_ae k θ₀ hv hN
     (ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog_of_proportion
-      h k hint_id hint_sq hVpos hv hN)
+      h k hint_id hint_sq hv hN)
 
 omit [DecidableEq 𝓐] in
 /-- **Loglog estimator rate from a positive proportion, count form** (blueprint `lem:theta_LIL`).
@@ -279,7 +277,7 @@ consumed when discharging `rho_rate`'s per-arm rate hypothesis for a concrete de
 lemma abs_estimator_sub_le_rate_loglog_of_pos_count
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
     (hint_id : Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : 0 < armVar ν k)
+    (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k))
     (hpp : ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n
       / (n : ℝ)) atTop (𝓝 uk)) :
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
@@ -297,6 +295,6 @@ lemma abs_estimator_sub_le_rate_loglog_of_pos_count
     · filter_upwards [hpp] with ω hppω
       rw [dif_pos hppω]
       exact (hppω.choose_spec.2).congr fun n ↦ by rw [count_indicator_eq_pullCount]
-  exact abs_estimator_sub_le_rate_loglog_of_proportion h k θ₀ hint_id hint_sq hVpos hv hN
+  exact abs_estimator_sub_le_rate_loglog_of_proportion h k θ₀ hint_id hint_sq hv hN
 
 end AlphaRAR

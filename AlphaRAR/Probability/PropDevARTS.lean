@@ -124,7 +124,7 @@ lemma measurable_hitting_cast {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (
 `1/v_{k''}`), for an abstract hitting time `hitting (Q ·) n ≤ n`. This is the coefficient `h` fed to
 `ell_rho_control`; the argument only uses `ℓ ≤ n` and the proportion consistency, so it is
 design-independent (the `aRTS`/`aRTSFE` hitting times just supply the measurable predicate `Q`). -/
-lemma h_bigOp_of_hitting [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma h_bigOp_of_hitting (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (Q ω)] (hQmeas : ∀ m, MeasurableSet {ω | Q ω m})
     (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
     (hN : ∀ᵐ ω ∂P, Tendsto (fun m ↦ count (fun j ↦ armIndicator A k'' j ω) m / (m : ℝ))
@@ -176,7 +176,7 @@ lemma tendsto_sqrt_div_count (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
 `F₁ = ℓ/(N_ℓ+1) = O_p(1)` (a.s. bounded) and `F₂ = (|Q_ℓ|+|a|)/(N_n+1) = o_p(1)` (via the Doob
 running-max `sup_{m≤n}|Q_m| = O_p(√n)` and `√n/(N_n+1) → 0`); then `O_p·o_p = o_p`. The argument
 uses only `ℓ ≤ n` and measurability of `Q`, so it is design-independent. -/
-lemma g_littleOp_of_hitting [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma g_littleOp_of_hitting (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
     {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (Q ω)] (hQmeas : ∀ m, MeasurableSet {ω | Q ω m})
     (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
@@ -278,7 +278,7 @@ the key inequality `generic_ineq_of_hitting`, the `diff_U_decomp` perturbation, 
 martingale `M`-increment, and the `ell_rho_control` `g`/`h`-coefficients (`g_littleOp_of_hitting`,
 `h_bigOp_of_hitting`) — depends only on `hitting (Q k ·) n ≤ n`, so it is discharged uniformly. The
 `aRTS`/`aRTSFE` designs then instantiate it with their respective predicates. -/
-theorem prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+theorem prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)

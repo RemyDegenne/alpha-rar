@@ -82,7 +82,7 @@ vector `(√n(N_n/n - v), √n(ρ̂_n - v))` converges weakly to the block-Gauss
 `thm:LLN` consistencies `θ̂ → θ` (`theta_consistent_of_hitting`), `N/n → v`
 (`proportion_tendsto_of_hitting`) and the non-sparsity are derived, and the proportion-deviation
 `√n(N_n/n - ρ̂_n) →ₚ 0` is discharged from `prop_dev_of_hitting` (part (i)). -/
-theorem clt_joint_of_hitting [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+theorem clt_joint_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
