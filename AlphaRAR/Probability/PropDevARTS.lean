@@ -60,14 +60,29 @@ lemma measurable_aRTSTarget_coord [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (statio
   simp only [aRTSTarget]
   exact (measurable_pi_apply k').comp (hT.measurable.comp (measurable_estimatorVec h θ₀ n))
 
-/-- Measurability of the hitting time `ω ↦ ℓ_{n,k}(ω)`. -/
-lemma measurable_hitting_aRTSUnder [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (k' : 𝓐) (n : ℕ) :
-    Measurable (fun ω ↦ hitting (aRTSUnder A Y θ₀ T k' ω) n) := by
+/-- **Measurability of an abstract last-hitting time.** For a per-path predicate `Q : Ω → ℕ → Prop`
+whose level sets `{ω | Q ω m}` are all measurable, the last-hitting time `ω ↦ hitting (Q ω) n` is
+measurable (`Nat.findGreatest` of a measurable family). This is the design-independent core of the
+hitting-time measurability, used for both `aRTSUnder` and the forced-exploration predicate. -/
+lemma measurable_hitting {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (Q ω)]
+    (hQmeas : ∀ m, MeasurableSet {ω | Q ω m}) (n : ℕ) :
+    Measurable (fun ω ↦ hitting (Q ω) n) := by
   apply measurable_findGreatest
   intro m _
-  exact measurableSet_le (measurable_count_armIndicator h k' m)
+  exact hQmeas m
+
+/-- The level sets of the aRTS under-sampling predicate are measurable. -/
+lemma measurableSet_aRTSUnder [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (k' : 𝓐) (m : ℕ) :
+    MeasurableSet {ω | aRTSUnder A Y θ₀ T k' ω m} :=
+  measurableSet_le (measurable_count_armIndicator h k' m)
     ((measurable_aRTSTarget_coord h θ₀ hT m k').const_mul _)
+
+/-- Measurability of the aRTS hitting time `ω ↦ ℓ_{n,k}(ω)`. -/
+lemma measurable_hitting_aRTSUnder [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (k' : 𝓐) (n : ℕ) :
+    Measurable (fun ω ↦ hitting (aRTSUnder A Y θ₀ T k' ω) n) :=
+  measurable_hitting (measurableSet_aRTSUnder h θ₀ hT k') n
 
 /-- **Uniform bound on `m/(N_m+1)` from `N_m/m → v > 0`.** If `N_m ≥ 0` and `N_m/m → v > 0`, then
 `m/(N_m+1)` is bounded uniformly in `m` (it converges to `1/v`). This is the pathwise ingredient
@@ -98,22 +113,25 @@ lemma count_armIndicator_nonneg (A : ℕ → Ω → 𝓐) (k'' : 𝓐) (m : ℕ)
     0 ≤ count (fun j ↦ armIndicator A k'' j ω) m :=
   Finset.sum_nonneg fun j _ ↦ armIndicator_nonneg A k'' j ω
 
-/-- Measurability of `ω ↦ (ℓ_{n,k'}(ω) : ℝ)`. -/
-lemma measurable_hitting_cast [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (k' : 𝓐) (n : ℕ) :
-    Measurable (fun ω ↦ ((hitting (aRTSUnder A Y θ₀ T k' ω) n : ℕ) : ℝ)) :=
+/-- Measurability of `ω ↦ (hitting (Q ω) n : ℝ)` for a measurable-level-set predicate `Q`. -/
+lemma measurable_hitting_cast {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (Q ω)]
+    (hQmeas : ∀ m, MeasurableSet {ω | Q ω m}) (n : ℕ) :
+    Measurable (fun ω ↦ ((hitting (Q ω) n : ℕ) : ℝ)) :=
   measurable_eval_of_le (H := fun _ m ↦ (m : ℝ)) (fun _ ↦ measurable_const)
-    (measurable_hitting_aRTSUnder h θ₀ hT k' n) (fun _ ↦ Nat.findGreatest_le n)
+    (measurable_hitting hQmeas n) (fun _ ↦ Nat.findGreatest_le n)
 
-/-- **The aRTS reweighting coefficient `ℓ_{n,k'}/(N_{n,k''}+1)` is `O_p(1)`** (converging a.s. to
-`1/v_{k''}`). This is the coefficient `h` fed to `ell_rho_control`. -/
-lemma aRTS_h_bigOp [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (k' k'' : 𝓐) {v : ℝ} (hv : 0 < v)
+/-- **The reweighting coefficient `ℓ_{n}/(N_{n,k''}+1)` is `O_p(1)`** (converging a.s. to
+`1/v_{k''}`), for an abstract hitting time `hitting (Q ·) n ≤ n`. This is the coefficient `h` fed to
+`ell_rho_control`; the argument only uses `ℓ ≤ n` and the proportion consistency, so it is
+design-independent (the `aRTS`/`aRTSFE` hitting times just supply the measurable predicate `Q`). -/
+lemma h_bigOp_of_hitting [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (Q ω)] (hQmeas : ∀ m, MeasurableSet {ω | Q ω m})
+    (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
     (hN : ∀ᵐ ω ∂P, Tendsto (fun m ↦ count (fun j ↦ armIndicator A k'' j ω) m / (m : ℝ))
       atTop (𝓝 v)) :
-    IsBigOpOne P (fun n ω ↦ (hitting (aRTSUnder A Y θ₀ T k' ω) n : ℝ)
+    IsBigOpOne P (fun n ω ↦ (hitting (Q ω) n : ℝ)
       / (count (fun j ↦ armIndicator A k'' j ω) n + 1)) := by
-  refine isBigOpOne_of_ae_bounded (fun n ↦ (measurable_hitting_cast h θ₀ hT k' n).div
+  refine isBigOpOne_of_ae_bounded (fun n ↦ (measurable_hitting_cast hQmeas n).div
     ((measurable_count_armIndicator h k'' n).add_const 1)) ?_
   filter_upwards [hN] with ω hNω
   obtain ⟨B, hB⟩ := exists_bound_natCast_div
@@ -123,7 +141,7 @@ lemma aRTS_h_bigOp [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
   have hden : (0 : ℝ) < count (fun j ↦ armIndicator A k'' j ω) n + 1 := by
     linarith [count_armIndicator_nonneg A k'' n ω]
   rw [abs_of_nonneg (by positivity)]
-  calc (hitting (aRTSUnder A Y θ₀ T k' ω) n : ℝ) / (count (fun j ↦ armIndicator A k'' j ω) n + 1)
+  calc (hitting (Q ω) n : ℝ) / (count (fun j ↦ armIndicator A k'' j ω) n + 1)
       ≤ (n : ℝ) / (count (fun j ↦ armIndicator A k'' j ω) n + 1) := by
         gcongr; exact_mod_cast Nat.findGreatest_le n
     _ ≤ B := hB n
@@ -153,21 +171,23 @@ lemma tendsto_sqrt_div_count (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
     nlinarith [hgt, count_armIndicator_nonneg A k'' n ω, hsn, hsqn]
   simpa using hden.inv_tendsto_atTop.congr (fun n ↦ (inv_div _ _))
 
-/-- **The aRTS `g`-coefficient of `ell_rho_control` is `o_p(1)`.** With
-`g = ℓ(|Q_ℓ| + |θ_0-θ|)/((N_ℓ+1)(N_n+1))`, write `g = F₁·F₂` with
+/-- **The `g`-coefficient of `ell_rho_control` is `o_p(1)`**, at an abstract measurable hitting time
+`hitting (Q ·) n ≤ n`. With `g = ℓ(|Q_ℓ| + |θ_0-θ|)/((N_ℓ+1)(N_n+1))`, write `g = F₁·F₂` with
 `F₁ = ℓ/(N_ℓ+1) = O_p(1)` (a.s. bounded) and `F₂ = (|Q_ℓ|+|a|)/(N_n+1) = o_p(1)` (via the Doob
-running-max `sup_{m≤n}|Q_m| = O_p(√n)` and `√n/(N_n+1) → 0`); then `O_p·o_p = o_p`. -/
-lemma aRTS_g_littleOp [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
-    (k' k'' : 𝓐) {v : ℝ} (hv : 0 < v)
+running-max `sup_{m≤n}|Q_m| = O_p(√n)` and `√n/(N_n+1) → 0`); then `O_p·o_p = o_p`. The argument
+uses only `ℓ ≤ n` and measurability of `Q`, so it is design-independent. -/
+lemma g_littleOp_of_hitting [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
+    {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (Q ω)] (hQmeas : ∀ m, MeasurableSet {ω | Q ω m})
+    (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
     (hN : ∀ᵐ ω ∂P, Tendsto (fun m ↦ count (fun j ↦ armIndicator A k'' j ω) m / (m : ℝ))
       atTop (𝓝 v)) :
-    IsLittleOpOne P (fun n ω ↦ (hitting (aRTSUnder A Y θ₀ T k' ω) n : ℝ)
-      * (|respMart ν A Y k'' (hitting (aRTSUnder A Y θ₀ T k' ω) n) ω| + |θ₀ k'' - (ν k'')[id]|)
-      / ((count (fun j ↦ armIndicator A k'' j ω) (hitting (aRTSUnder A Y θ₀ T k' ω) n) + 1)
+    IsLittleOpOne P (fun n ω ↦ (hitting (Q ω) n : ℝ)
+      * (|respMart ν A Y k'' (hitting (Q ω) n) ω| + |θ₀ k'' - (ν k'')[id]|)
+      / ((count (fun j ↦ armIndicator A k'' j ω) (hitting (Q ω) n) + 1)
         * (count (fun j ↦ armIndicator A k'' j ω) n + 1))) := by
   have hint : ∀ n, Integrable (Y n) P := fun n ↦ (hY2 n).integrable one_le_two
-  set ℓ : ℕ → Ω → ℕ := fun n ω ↦ hitting (aRTSUnder A Y θ₀ T k' ω) n with hℓ
+  set ℓ : ℕ → Ω → ℕ := fun n ω ↦ hitting (Q ω) n with hℓ
   set Nc : ℕ → Ω → ℝ := fun n ω ↦ count (fun j ↦ armIndicator A k'' j ω) n with hNc
   have hNcnn : ∀ m ω, 0 ≤ Nc m ω := fun m ω ↦ count_armIndicator_nonneg A k'' m ω
   set a : ℝ := |θ₀ k'' - (ν k'')[id]| with ha
@@ -176,7 +196,7 @@ lemma aRTS_g_littleOp [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) 
     refine isBigOpOne_of_ae_bounded (fun n ↦ ?_) ?_
     · exact measurable_eval_of_le (H := fun ω m ↦ (m : ℝ) / (Nc m ω + 1))
         (fun m ↦ measurable_const.div ((measurable_count_armIndicator h k'' m).add_const 1))
-        (measurable_hitting_aRTSUnder h θ₀ hT k' n) (fun _ ↦ Nat.findGreatest_le n)
+        (measurable_hitting hQmeas n) (fun _ ↦ Nat.findGreatest_le n)
     · filter_upwards [hN] with ω hNω
       obtain ⟨B, hB⟩ := exists_bound_natCast_div (N := fun m ↦ Nc m ω) hv
         (fun m ↦ count_armIndicator_nonneg A k'' m ω) hNω
@@ -247,34 +267,37 @@ lemma aRTS_g_littleOp [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) 
   rw [hgeq]
   exact hF1.mul_littleOp hF2
 
-/-- **Deviation between proportions and plug-in target for the aRTS design**
-(blueprint `lem:prop_dev`, `thm:normality` part (i), `o_p(√n)` half). For every arm `k`,
-`|N_{n,k} - n ρ̂_{n,k}| = o_p(√n)`.
-
-This is the concrete `aRTS` instantiation of the generic `prop_dev`, fully self-contained: the
-*entire* deviation machinery is discharged internally from the same `aRTS` design bundle as
-`aRTS_LLN` — an `IsAlgEnvSeq` algorithm–environment sequence, `Y ∈ L²` (Condition **A**), a
-simplex-valued target `T` that is `LipschitzWith K` (Condition **B**; its continuity is derived via
-`LipschitzWith.continuous`), the algorithm-level aRTS predicate `IsARTS` (whence the throttle, via
-`throttle_of_isARTS`), `α ∈ [0,1)`, and the Condition **B** non-sparsity `hTpos` (`T > 0` on the
-attainable set). This is *exactly* the `aRTS_LLN` bundle: the `thm:LLN` consistencies `N/n → v`
-(`aRTS_proportion_tendsto`), `θ̂ → θ` (`aRTS_theta_consistent`), and the non-sparsity `0 < v_k` (the
-mean `(ν k)[id]` lies in every `attainableSet` via `estimator_limit_mem_attainableSet`, so `hTpos`
-applies) are all *derived*, not assumed. In particular:
-the generic key inequality is `generic_ineq_of_hitting`; the drift-sign step is
-`isLittleOpOne_max_div_sqrt_of_drift`; the `M`-increment of the assignment martingale is controlled
-by the seam `assignMart_eq_assignMG` and `qm_increments_of_bdd`; the `diff_U_decomp` perturbation is
-shown `o_p`; the plug-in-target increment control (`lem:ell_rho_control`) is instantiated via
-`ell_rho_control`, whose `g`- and `h`-coefficients are the random-hitting-time `o_p`/`O_p` bounds
-`aRTS_g_littleOp` and `aRTS_h_bigOp`; and the reverse step is the simplex identity
-`sum_count_sub_smul_eq_zero`. The a.s. `O(√(n log log n))` bounds are not part of this statement. -/
-theorem aRTS_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+/-- **Deviation between proportions and plug-in target at an abstract hitting time** (blueprint
+`lem:prop_dev`, `thm:normality` part (i), `o_p(√n)` half, generic form). The abstract-hitting-time
+generalisation of `aRTS_prop_dev`: for any per-arm predicate `Q` with measurable level sets
+(`hQmeas`), given the `thm:LLN` consistencies `θ̂ → θ` (`hθconv`) and `N/n → v` (`hNconv`), the
+throttle `¬ Q → p ≤ α ρ̂` (`hthrottle`), and the smallness `o_p`-bound `hsmall_op` (that
+`(1 + N_ℓ - ℓ ρ̂_ℓ)^+/√n = o_p(1)`), the deviation `N_{n,k} - n ρ̂_{n,k} = o_p(√n)`. Everything
+else —
+the key inequality `generic_ineq_of_hitting`, the `diff_U_decomp` perturbation, the assignment-
+martingale `M`-increment, and the `ell_rho_control` `g`/`h`-coefficients (`g_littleOp_of_hitting`,
+`h_bigOp_of_hitting`) — depends only on `hitting (Q k ·) n ≤ n`, so it is discharged uniformly. The
+`aRTS`/`aRTSFE` designs then instantiate it with their respective predicates. -/
+theorem prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
-    (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1) (hARTS : IsARTS alg θ₀ T α)
+    (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
     {K : ℝ≥0} (hlip : LipschitzWith K T)
-    (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) (k : 𝓐) :
+    (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
+    (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
+      (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 (fun k ↦ (ν k)[id])))
+    (hNconv : ∀ k', ∀ᵐ ω ∂P, Tendsto (fun n ↦ count (fun j ↦ armIndicator A k' j ω) n / (n : ℝ))
+      atTop (𝓝 (T (fun k'' ↦ (ν k'')[id]) k')))
+    (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
+    (hQmeas : ∀ k m, MeasurableSet {ω | Q k ω m})
+    (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
+      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+        ≤ α * aRTSTarget A Y θ₀ T m ω k)
+    (hsmall_op : ∀ k, IsLittleOpOne P (fun n ω ↦
+      max ((1 + (count (fun j ↦ armIndicator A k j ω) (hitting (Q k ω) n)
+        - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k)) / √n) 0))
+    (k : 𝓐) :
     IsLittleOpOne P (fun n ω ↦ ((pullCount A k n ω : ℝ)
       - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k) / √n) := by
   classical
@@ -283,20 +306,12 @@ theorem aRTS_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐
   -- Continuity and the `ℓ¹`-form Lipschitz bound both follow from `LipschitzWith K T`.
   set L : ℝ := (K : ℝ) with hLdef
   have hT : Continuous T := hlip.continuous
-  -- The `thm:LLN` consistencies, derived from the design bundle (not assumed):
-  -- `θ̂ → θ` (`aRTS_theta_consistent`), `N/n → v` (`aRTS_proportion_tendsto`), and the non-sparsity
-  -- `0 < v_k` (the mean `(ν k)[id]` lies in every `attainableSet`, so `hTpos` applies).
-  have hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-      (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 (fun k ↦ (ν k)[id])) :=
-    aRTS_theta_consistent h hY2 hT hTnn hTsum hα hARTS hTpos
+  -- The non-sparsity `0 < v_k` (the mean `(ν k)[id]` lies in every `attainableSet`, so `hTpos`
+  -- applies), from the estimator consistency `hθconv`.
   have hmem : ∀ k', (ν k')[id] ∈ attainableSet A Y (θ₀ k') k' := by
     obtain ⟨ω, hω⟩ := hθconv.exists
     exact fun k' ↦ estimator_limit_mem_attainableSet k' (θ₀ k') (tendsto_pi_nhds.mp hω k')
   have hv : ∀ k, 0 < T (fun k' ↦ (ν k')[id]) k := fun k ↦ hTpos (fun k ↦ (ν k)[id]) hmem k
-  have hNconv : ∀ k', ∀ᵐ ω ∂P, Tendsto (fun n ↦ count (fun j ↦ armIndicator A k' j ω) n / (n : ℝ))
-      atTop (𝓝 (T (fun k'' ↦ (ν k'')[id]) k')) := fun k' ↦
-    (aRTS_proportion_tendsto h hY2 hT hTnn hTsum hα hARTS hTpos k').mono
-      fun ω hω ↦ hω.congr fun n ↦ by rw [count_indicator_eq_pullCount]
   have hL : (0 : ℝ) ≤ L := K.coe_nonneg
   have hTlip : ∀ z z' : 𝓐 → ℝ, ∀ k, |T z k - T z' k| ≤ L * ∑ k', |z k' - z' k'| := by
     intro z z' k
@@ -311,13 +326,9 @@ theorem aRTS_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐
           intro k'
           rw [Real.dist_eq]
           exact Finset.single_le_sum (fun i _ ↦ abs_nonneg (z i - z' i)) (Finset.mem_univ k')
-  -- The aRTS throttle, discharged from the algorithm-level `IsARTS` structure.
-  have hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ aRTSUnder A Y θ₀ T k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
-        ≤ α * aRTSTarget A Y θ₀ T m ω k := fun k ↦ throttle_of_isARTS h hARTS k
   set ℱ := IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback with hℱ
-  -- Concrete objects.
-  set ℓ : 𝓐 → ℕ → Ω → ℕ := fun k n ω ↦ hitting (aRTSUnder A Y θ₀ T k ω) n with hℓdef
+  -- Concrete objects (the hitting time is the abstract `hitting (Q k ·) n`).
+  set ℓ : 𝓐 → ℕ → Ω → ℕ := fun k n ω ↦ hitting (Q k ω) n with hℓdef
   set Dev : 𝓐 → ℕ → Ω → ℝ := fun k n ω ↦
     count (fun j ↦ armIndicator A k j ω) n - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k with hDevdef
   set d : 𝓐 → ℕ → Ω → ℝ := fun k n ω ↦ (n : ℝ) - (ℓ k n ω : ℝ) with hddef
@@ -383,26 +394,26 @@ theorem aRTS_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐
     · -- hlip: the Condition-B Lipschitz bound on `T`.
       intro n ω
       simp only [hrhodef, hℓdef]
-      have hℓnn : (0 : ℝ) ≤ (hitting (aRTSUnder A Y θ₀ T k' ω) n : ℝ) := Nat.cast_nonneg _
-      have hTb : aRTSTarget A Y θ₀ T (hitting (aRTSUnder A Y θ₀ T k' ω) n) ω k'
+      have hℓnn : (0 : ℝ) ≤ (hitting (Q k' ω) n : ℝ) := Nat.cast_nonneg _
+      have hTb : aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k'
             - aRTSTarget A Y θ₀ T n ω k'
           ≤ L * ∑ k'', |estimator (fun j ↦ armIndicator A k'' j ω) (fun j ↦ Y j ω) (θ₀ k'')
-              (hitting (aRTSUnder A Y θ₀ T k' ω) n)
+              (hitting (Q k' ω) n)
             - estimator (fun j ↦ armIndicator A k'' j ω) (fun j ↦ Y j ω) (θ₀ k'') n| := by
         refine le_trans (le_abs_self _) ?_
         simp only [aRTSTarget]
         exact hTlip _ _ k'
-      calc (hitting (aRTSUnder A Y θ₀ T k' ω) n : ℝ)
-            * (aRTSTarget A Y θ₀ T (hitting (aRTSUnder A Y θ₀ T k' ω) n) ω k'
+      calc (hitting (Q k' ω) n : ℝ)
+            * (aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k'
               - aRTSTarget A Y θ₀ T n ω k')
-          ≤ (hitting (aRTSUnder A Y θ₀ T k' ω) n : ℝ)
+          ≤ (hitting (Q k' ω) n : ℝ)
             * (L * ∑ k'', |estimator (fun j ↦ armIndicator A k'' j ω) (fun j ↦ Y j ω) (θ₀ k'')
-                (hitting (aRTSUnder A Y θ₀ T k' ω) n)
+                (hitting (Q k' ω) n)
               - estimator (fun j ↦ armIndicator A k'' j ω) (fun j ↦ Y j ω) (θ₀ k'') n|) :=
             mul_le_mul_of_nonneg_left hTb hℓnn
-        _ = L * ∑ k'', (hitting (aRTSUnder A Y θ₀ T k' ω) n : ℝ)
+        _ = L * ∑ k'', (hitting (Q k' ω) n : ℝ)
               * |estimator (fun j ↦ armIndicator A k'' j ω) (fun j ↦ Y j ω) (θ₀ k'')
-                (hitting (aRTSUnder A Y θ₀ T k' ω) n)
+                (hitting (Q k' ω) n)
               - estimator (fun j ↦ armIndicator A k'' j ω) (fun j ↦ Y j ω) (θ₀ k'') n| := by
             rw [← Finset.mul_sum]; ring
     · -- hdiff: `abs_estimator_diff_le`, bridged from `respMG` to `respMart`.
@@ -411,45 +422,45 @@ theorem aRTS_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐
       have hae := abs_estimator_diff_le (fun j ↦ armIndicator A k'' j ω)
         (fun j ↦ armIndicator_nonneg A k'' j ω)
         (fun j ↦ armIndicator_le_one A k'' j ω) (fun j ↦ Y j ω) ((ν k'')[id]) (θ₀ k'')
-        (ℓ := hitting (aRTSUnder A Y θ₀ T k' ω) n) (Nat.findGreatest_le n)
+        (ℓ := hitting (Q k' ω) n) (Nat.findGreatest_le n)
       simp only [respMG_indicator_eq_respMart] at hae
       exact hae
     · -- hg
       intro k''
-      exact aRTS_g_littleOp h hY2 θ₀ hT k' k'' (hv k'') (hNconv k'')
+      exact g_littleOp_of_hitting h hY2 θ₀ (hQmeas k') k'' (hv k'') (hNconv k'')
     · -- hhnn
       intro k'' n ω
       exact div_nonneg (Nat.cast_nonneg _) (by linarith [count_armIndicator_nonneg A k'' n ω])
     · -- hh
       intro k''
-      exact aRTS_h_bigOp h θ₀ hT k' k'' (hv k'') (hNconv k'')
+      exact h_bigOp_of_hitting h (hQmeas k') k'' (hv k'') (hNconv k'')
     · -- hQinc: `‖Q_n - Q_ℓ‖ ≤ (n-ℓ)·vmaxSeq + wmaxSeq` (per-coordinate ≤ L² norm), for `n ≥ 2`.
       filter_upwards [eventually_ge_atTop 2] with n hn2
       intro k'' ω
       simp only [hddef, hℓdef]
-      have hℓle : hitting (aRTSUnder A Y θ₀ T k' ω) n ≤ n := Nat.findGreatest_le n
+      have hℓle : hitting (Q k' ω) n ≤ n := Nat.findGreatest_le n
       have hni := norm_increment_le_vmaxSeq_wmaxSeq (M := fun k''' ↦ respMart ν A Y k''')
         n hn2 hℓle ω
       have hcoord : |respMart ν A Y k'' n ω
-            - respMart ν A Y k'' (hitting (aRTSUnder A Y θ₀ T k' ω) n) ω|
+            - respMart ν A Y k'' (hitting (Q k' ω) n) ω|
           ≤ √(∑ k''', (respMart ν A Y k''' n ω
-            - respMart ν A Y k''' (hitting (aRTSUnder A Y θ₀ T k' ω) n) ω) ^ 2) := by
+            - respMart ν A Y k''' (hitting (Q k' ω) n) ω) ^ 2) := by
         rw [← Real.sqrt_sq_eq_abs]
         exact Real.sqrt_le_sqrt (Finset.single_le_sum
           (f := fun k''' ↦ (respMart ν A Y k''' n ω
-            - respMart ν A Y k''' (hitting (aRTSUnder A Y θ₀ T k' ω) n) ω) ^ 2)
+            - respMart ν A Y k''' (hitting (Q k' ω) n) ω) ^ 2)
           (fun i _ ↦ sq_nonneg _) (Finset.mem_univ k''))
-      have hcast : ((n - hitting (aRTSUnder A Y θ₀ T k' ω) n : ℕ) : ℝ)
-          = (n : ℝ) - (hitting (aRTSUnder A Y θ₀ T k' ω) n : ℝ) := by rw [Nat.cast_sub hℓle]
+      have hcast : ((n - hitting (Q k' ω) n : ℕ) : ℝ)
+          = (n : ℝ) - (hitting (Q k' ω) n : ℝ) := by rw [Nat.cast_sub hℓle]
       calc |respMart ν A Y k'' n ω
-            - respMart ν A Y k'' (hitting (aRTSUnder A Y θ₀ T k' ω) n) ω|
+            - respMart ν A Y k'' (hitting (Q k' ω) n) ω|
           ≤ √(∑ k''', (respMart ν A Y k''' n ω
-            - respMart ν A Y k''' (hitting (aRTSUnder A Y θ₀ T k' ω) n) ω) ^ 2) := hcoord
-        _ ≤ ((n - hitting (aRTSUnder A Y θ₀ T k' ω) n : ℕ) : ℝ)
+            - respMart ν A Y k''' (hitting (Q k' ω) n) ω) ^ 2) := hcoord
+        _ ≤ ((n - hitting (Q k' ω) n : ℕ) : ℝ)
               * vmaxSeq (fun k''' ↦ respMart ν A Y k''') n ω
             + wmaxSeq (fun k''' ↦ respMart ν A Y k''') n ω := hni
         _ = vmaxSeq (fun k''' ↦ respMart ν A Y k''') n ω
-              * ((n : ℝ) - (hitting (aRTSUnder A Y θ₀ T k' ω) n : ℝ))
+              * ((n : ℝ) - (hitting (Q k' ω) n : ℝ))
             + wmaxSeq (fun k''' ↦ respMart ν A Y k''') n ω := by rw [hcast]; ring
   choose Vρ Wρ hρbd hVρ hWρ using hρctrl
   -- Selection probabilities are `≤ 1` (conditional expectation of a `≤ 1` indicator).
@@ -486,26 +497,11 @@ theorem aRTS_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐
     simp only [hDevdef, hsmalldef, hUdef, hℓdef]
     have hgen := generic_ineq_of_hitting (fun j ↦ armIndicator A k' j ω)
       (fun j ↦ aRTSSelProb A k' ℱ P j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k') α
-      (aRTSUnder A Y θ₀ T k' ω) hthr hp1ω (fun m ↦ mul_nonneg hα.1 (hTnn _ k')) n
+      (Q k' ω) hthr hp1ω (fun m ↦ mul_nonneg hα.1 (hTnn _ k')) n
     linarith [hgen]
-  · -- hsmall
+  · -- hsmall (the design-specific smallness `o_p`-bound, taken as the hypothesis `hsmall_op`)
     intro k'
-    have hsmall_le : ∀ n ω, small k' n ω ≤ 1 := by
-      intro n ω
-      have hps := preliminary_small (fun j ↦ armIndicator A k' j ω)
-        (fun j ↦ aRTSTarget A Y θ₀ T j ω k') (aRTSUnder A Y θ₀ T k' ω) n (fun m hm ↦ hm)
-      simp only [hsmalldef, hℓdef]
-      linarith [hps]
-    refine IsLittleOpOne.of_abs_le (Y := fun n (_ : Ω) ↦ (1 : ℝ) / √n) ?_
-      (isLittleOpOne_const_div_sqrt 1)
-    intro n ω
-    rw [abs_of_nonneg (le_max_right _ _), abs_of_nonneg (by positivity)]
-    rcases Nat.eq_zero_or_pos n with hn | hn
-    · subst hn; simp
-    · have hsn : (0 : ℝ) < √n := Real.sqrt_pos.mpr (by exact_mod_cast hn)
-      refine max_le ?_ (by positivity)
-      gcongr
-      exact hsmall_le n ω
+    simpa only [hsmalldef, hℓdef] using hsmall_op k'
   · -- hc
     intro k'
     exact mul_pos (by linarith [hα1] : (0 : ℝ) < 1 - α) (hv k')
@@ -540,7 +536,7 @@ theorem aRTS_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐
     have hrhomeas : ∀ m, Measurable (fun ω ↦ aRTSTarget A Y θ₀ T m ω k') :=
       fun m ↦ measurable_aRTSTarget_coord h θ₀ hT m k'
     have hℓmeas : ∀ n, Measurable (fun ω ↦ ℓ k' n ω) := fun n ↦ by
-      simp only [hℓdef]; exact measurable_hitting_aRTSUnder h θ₀ hT k' n
+      simp only [hℓdef]; exact measurable_hitting (hQmeas k') n
     have hℓleN : ∀ n ω, ℓ k' n ω ≤ n := fun n ω ↦ Nat.findGreatest_le n
     have hℓcast : ∀ n, Measurable (fun ω ↦ ((ℓ k' n ω : ℕ) : ℝ)) := fun n ↦
       measurable_eval_of_le (H := fun _ m ↦ (m : ℝ)) (fun _ ↦ measurable_const)
@@ -648,5 +644,50 @@ theorem aRTS_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐
     exact hVρ
   · -- hWρ
     exact hWρ
+
+/-- **Deviation between proportions and plug-in target for the aRTS design**
+(blueprint `lem:prop_dev`, `thm:normality` part (i), `o_p(√n)` half). For every arm `k`,
+`|N_{n,k} - n ρ̂_{n,k}| = o_p(√n)`.
+
+The `aRTS` instantiation of `prop_dev_of_hitting` at the last under-sampling time
+`hitting (aRTSUnder …)`, fully self-contained: the `thm:LLN` consistencies `θ̂ → θ`
+(`aRTS_theta_consistent`), `N/n → v` (`aRTS_proportion_tendsto`), the throttle
+(`throttle_of_isARTS`, from the algorithm-level `IsARTS` predicate), and the smallness are all
+discharged from the same
+`aRTS_LLN` design bundle — an `IsAlgEnvSeq` sequence, `Y ∈ L²` (Condition **A**), a simplex-valued
+`LipschitzWith K` target `T` (Condition **B**), `α ∈ [0,1)`, and the non-sparsity `hTpos`. The
+smallness is automatic: at the last under-sampling time `N_ℓ - ℓ ρ̂_ℓ ≤ 0` (`preliminary_small`), so
+`(1 + N_ℓ - ℓ ρ̂_ℓ)^+/√n ≤ 1/√n = o_p(1)`. The a.s. `O(√(n log log n))` bounds are a separate
+statement. -/
+theorem aRTS_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
+    (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
+    (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1) (hARTS : IsARTS alg θ₀ T α)
+    {K : ℝ≥0} (hlip : LipschitzWith K T)
+    (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) (k : 𝓐) :
+    IsLittleOpOne P (fun n ω ↦ ((pullCount A k n ω : ℝ)
+      - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k) / √n) := by
+  have hT : Continuous T := hlip.continuous
+  refine prop_dev_of_hitting h hY2 θ₀ T hTnn hTsum α hα hα1 hlip hTpos
+    (aRTS_theta_consistent h hY2 hT hTnn hTsum hα hARTS hTpos)
+    (fun k' ↦ (aRTS_proportion_tendsto h hY2 hT hTnn hTsum hα hARTS hTpos k').mono
+      fun ω hω ↦ hω.congr fun n ↦ by rw [count_indicator_eq_pullCount])
+    (aRTSUnder A Y θ₀ T) (fun k m ↦ measurableSet_aRTSUnder h θ₀ hT k m)
+    (fun k ↦ throttle_of_isARTS h hARTS k) ?_ k
+  -- The aRTS smallness `o_p`-bound: `1 + N_ℓ - ℓ ρ̂_ℓ ≤ 1` (`preliminary_small`), so `/√n → 0`.
+  intro k'
+  refine IsLittleOpOne.of_abs_le (Y := fun n (_ : Ω) ↦ (1 : ℝ) / √n) ?_
+    (isLittleOpOne_const_div_sqrt 1)
+  intro n ω
+  have hps := preliminary_small (fun j ↦ armIndicator A k' j ω)
+    (fun j ↦ aRTSTarget A Y θ₀ T j ω k') (aRTSUnder A Y θ₀ T k' ω) n (fun m hm ↦ hm)
+  rw [abs_of_nonneg (le_max_right _ _), abs_of_nonneg (by positivity)]
+  rcases Nat.eq_zero_or_pos n with hn | hn
+  · subst hn; simp
+  · have hsn : (0 : ℝ) < √n := Real.sqrt_pos.mpr (by exact_mod_cast hn)
+    refine max_le ?_ (by positivity)
+    gcongr
+    linarith [hps]
 
 end AlphaRAR

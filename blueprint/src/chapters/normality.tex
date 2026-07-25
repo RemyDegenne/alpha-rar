@@ -237,31 +237,56 @@ Theorem~\ref{thm:LLN}.
 \label{sec:norm_clt}
 
 \begin{lemma}[Componentwise joint CLT]\label{lem:componentwise}
+\lean{AlphaRAR.estimatorError_joint_tendsto_multivariateGaussian}\leanok
 \uses{def:estimator, def:counts, def:condA}
-Consider any RAR procedure with $N_{n,k}\to\infty$ a.s.\ for all $k$. Under
-Condition~\textbf{A}, with $D_n := \mathrm{diag}(\sqrt{N_{n,1}},\dots,\sqrt{N_{n,K}})$,
+Consider any RAR procedure whose pull counts are \emph{regular}: for every $k$ there is a
+deterministic sequence $c_{k,n}\to\infty$ with
+\[
+  \frac{N_{n,k}}{c_{k,n}}\xrightarrow{a.s.}1 .
+\]
+Under Condition~\textbf{A}, with $D_n := \mathrm{diag}(\sqrt{N_{n,1}},\dots,\sqrt{N_{n,K}})$,
 \[
   D_n(\estParams_n - \Params) \eqdist \mathcal{N}\!\big(0, \mathrm{diag}(V_1,\dots,V_K)\big).
 \]
+No positivity of the limiting proportions is required, so this covers \emph{sparse} arms $v_k=0$.
 \end{lemma}
 
-\begin{proof}
-\uses{lem:Q_martingale, lem:Q_quad_var, thm:mart_clt, cor:mart_clt_componentwise}
-The vector martingale $M_{n,k}=\sum_{i\le n} X_{i,k}Y_{i,k}$ (with $Y_{i,k}=\xi_{i,k}-\theta_k$)
-has quadratic variation $\langle M_{\cdot,k}\rangle_n = V_k N_{n,k}$ and zero
-cross-variation (Lemma~\ref{lem:Q_quad_var}). The Lindeberg condition holds: for
-$\varepsilon>0$, $L_{n,k}(\varepsilon)\le \frac1{V_k}\E[Y_{1,k}^2\indic_{\{|Y_{1,k}|>\varepsilon\sqrt{V_k}\sqrt m\}}]$
-on $\{N_{n,k}\ge m\}$, which is small for $m$ large by dominated convergence
-(using $\E|Y_{1,k}|^2<\infty$), and $\Prob(N_{n,k}<m)\to0$. The martingale CLT
-gives $M_n/\sqrt{\langle M\rangle_n}\eqdist \mathcal{N}(0,I_K)$. Finally
-$D_n(\estParams_n-\Params) = \mathrm{diag}(\sqrt{V_1},\dots,\sqrt{V_K})\,M_n/\sqrt{\langle M\rangle_n}$
-(up to a Bahadur $o_p(1)$ term), giving the stated limit.
-\end{proof}
+\begin{remark}[The regularity hypothesis is necessary]\label{rem:componentwise_regularity}
+The weaker hypothesis ``$N_{n,k}\to\infty$ a.s.'' does \emph{not} suffice when the index is chosen
+adaptively. Take one arm with i.i.d.\ $\mathcal N(\theta,V)$ responses; by the law of the iterated
+logarithm $\limsup_m S_m/\sqrt{Vm}=+\infty$ a.s., so an algorithm may pull the arm until
+$S_M/\sqrt{VM}>1$, then pause it for the next $M$ rounds, and repeat forever. Then
+$N_{n,k}\to\infty$, yet during every pause $Q_{n,k}/\sqrt{V N_{n,k}}=S_M/\sqrt{VM}>1$ is frozen
+above its typical value on a positive fraction of rounds, so no $\mathcal N(0,1)$ limit is possible.
+This is why the statement is formulated with the regularity $N_{n,k}/c_{k,n}\to1$, which is exactly
+what the Slutsky step consumes.
+\end{remark}
 
-\textbf{Lean remark.} Lemma~\ref{lem:componentwise} uses only $N_{n,k}\to\infty$,
-not any property of the limiting proportions. It is the crux of both the
-non-sparse and the sparse (Chapter~\ref{chap:forced}) analyses and should be a
-standalone theorem depending on a martingale-CLT lemma from Mathlib.
+\begin{proof}\leanok
+\uses{lem:Q_martingale, lem:Q_quad_var, thm:mart_clt, lem:mart_clt_joint, lem:estimator_bahadur}
+Normalize arm $k$ by the \emph{deterministic} $\sqrt{c_{k,n}}$. By the Cramér--Wold device it
+suffices to treat a scalar projection $\sum_k w_k Q_{n,k}/\sqrt{c_{k,n}}$; since the arm indicators
+are disjoint, this is again a single martingale-difference array (row $n$ has increments
+$\sum_k (w_k/\sqrt{c_{k,n}})X_{i,k}(\xi_{i,k}-\theta_k)$), whose predictable variation is
+$\sum_k w_k^2 V_k N_{n,k}/c_{k,n}\to\sum_k w_k^2V_k$ by regularity, and which satisfies the
+conditional Lindeberg condition since $c_{k,n}\to\infty$. Theorem~\ref{thm:mart_clt} and
+Cramér--Wold give $(Q_{n,k}/\sqrt{c_{k,n}})_k\eqdist\mathcal N(0,\mathrm{diag}(V_k))$. The
+coordinatewise scaling $\sqrt{c_{k,n}/N_{n,k}}\to1$ in probability, so multivariate Slutsky
+transfers the limit to the self-normalized vector $(Q_{n,k}/\sqrt{N_{n,k}})_k$. Finally the Bahadur
+identity (Lemma~\ref{lem:estimator_bahadur}) and one more Slutsky step give the statement for
+$D_n(\estParams_n-\Params)$.
+
+\emph{Formalization.} \texttt{AlphaRAR.estimatorError\_joint\_tendsto\_multivariateGaussian}. The key
+device is that the weighted martingale array \texttt{AlphaRAR.wArray} carries \emph{row-dependent}
+weights $w^{(n)}_k = w_k/\sqrt{c_{k,n}}$, so one array covers both a common normalizer and per-arm
+ones; the Cramér--Wold projection is
+\texttt{AlphaRAR.wLinComb\_scaled\_tendsto\_gaussianReal}. Taking $c_{k,n}=n$ (with
+$N_{n,k}/n\to v_k>0$) recovers Corollary~\ref{cor:mart_clt_componentwise}; taking per-arm $c_{k,n}$
+with limit $1$ gives the sparse form used in Chapter~\ref{chap:forced}. Note that a linear
+combination of \emph{random-time} sums is not itself a random-time sum, so the Anscombe route
+(Lemma~\ref{lem:anscombe_clt}) does not jointify; the martingale-array route above does, precisely
+because the arm indicators are disjoint.
+\end{proof}
 
 \section{The normality theorem}
 \label{sec:norm_main}

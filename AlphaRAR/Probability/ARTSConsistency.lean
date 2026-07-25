@@ -110,31 +110,27 @@ lemma integrable_armIndicator (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k 
 
 /-! ### The concrete aRTS consistency theorem -/
 
-/-- **Consistency of the aRTS allocation proportions** (blueprint `thm:LLN`, consistency direction,
-instantiated for the aRTS family via `thm:generic_main`).
-
-Let `A, Y` be an `IsAlgEnvSeq` algorithm–environment sequence under a stationary environment, with
-`Y n ∈ L²` (Condition **A**). Let `T` be a continuous target map into the simplex
-(`0 ≤ T z k`, `∑ k, T z k = 1`), `θ₀` the estimator offsets, and `α ∈ [0,1]` the throttling
-parameter. Suppose the aRTS **throttle** holds a.s. — whenever arm `k` is over-sampled at time `m`,
-its selection probability satisfies `p_{m,k} ≤ α ρ̂_{m,k}`.
-
-Then almost surely there is a common limit vector `u` with `N_{n,k}/n → u_k` and `ρ̂_{n,k} → u_k`
-for every arm `k`.
-
-The proof discharges the generic conditions of `consistency_of_generic_ae`: the key inequality
-(`generic_ineq_of_hitting`, constant `1`) at the last under-sampling time
-`hitting (aRTSUnder …)`, the smallness (`generic_small_of_hitting`), the vanishing normalized
-assignment martingale (`assignMG_path_div_ae_tendsto_zero`), and the plug-in-target convergence
-(`rho_converges`). -/
-theorem aRTS_consistency [Fintype 𝓐]
+/-- **Generic a.s. consistency of the aRTS proportions at an abstract hitting time** (blueprint
+`thm:generic_main`, consistency direction, for any design with a suitable hitting predicate). This
+generalises `aRTS_consistency` from the last under-sampling time `aRTSUnder` to an *arbitrary*
+per-arm predicate `Q` for the hitting time `ℓ_{n,k} = hitting (Q k ω) n`: only the throttle
+`¬ Q → p ≤ α ρ̂` (`hthrottle`) and the smallness `(N_ℓ - ℓ ρ̂_ℓ)/n → 0` (`hgs`) are design-specific,
+and both are taken as hypotheses. The `aRTS` and `aRTSFE` designs then instantiate it with their
+respective predicates (last under-sampling time, resp. forced-exploration hitting time). Everything
+else — the vanishing normalised martingale, the plug-in-target convergence, and the generic key
+inequality (`generic_ineq_of_hitting`, valid for *any* predicate) — is discharged uniformly. -/
+theorem consistency_of_hitting [Fintype 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
-    (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ aRTSUnder A Y θ₀ T k ω m →
+    (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
+    (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
       aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
-        ≤ α * aRTSTarget A Y θ₀ T m ω k) :
+        ≤ α * aRTSTarget A Y θ₀ T m ω k)
+    (hgs : ∀ k, ∀ᵐ ω ∂P, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
+      (count (fun j ↦ armIndicator A k j ω) (hitting (Q k ω) n)
+          - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k) / (n : ℝ) < δ) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
       Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 (u k))
         ∧ Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop (𝓝 (u k)) := by
@@ -153,7 +149,7 @@ theorem aRTS_consistency [Fintype 𝓐]
     Eventually.of_forall fun ω j ↦ sum_armIndicator A j ω
   have hrsum : ∀ᵐ ω ∂P, ∀ n, ∑ k, aRTSTarget A Y θ₀ T n ω k = 1 :=
     Eventually.of_forall fun ω n ↦ by simp only [aRTSTarget]; exact hTsum _
-  have hℓle : ∀ k, ∀ᵐ ω ∂P, ∀ n, hitting (aRTSUnder A Y θ₀ T k ω) n ≤ n :=
+  have hℓle : ∀ k, ∀ᵐ ω ∂P, ∀ n, hitting (Q k ω) n ≤ n :=
     fun k ↦ Eventually.of_forall fun ω n ↦ Nat.findGreatest_le n
   have hu : ∀ k, ∀ᵐ ω ∂P,
       (limUnder atTop fun n ↦ aRTSTarget A Y θ₀ T n ω k) ∈ Set.Icc (0 : ℝ) 1 := by
@@ -187,43 +183,115 @@ theorem aRTS_consistency [Fintype 𝓐]
     rw [condExp_const (ℱ.shiftDown.le m)] at hmono
     filter_upwards [hmono] with ω hω
     exact hω
-  -- Key inequality (`generic_ineq_of_hitting`, constant `1`).
+  -- Key inequality (`generic_ineq_of_hitting`, constant `1`), valid for any predicate.
   have hgen : ∀ k, ∀ᵐ ω ∂P, ∀ n,
       count (fun j ↦ armIndicator A k j ω) n - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k
-        ≤ 1 + (count (fun j ↦ armIndicator A k j ω) (hitting (aRTSUnder A Y θ₀ T k ω) n)
-              - (hitting (aRTSUnder A Y θ₀ T k ω) n : ℝ)
-                * aRTSTarget A Y θ₀ T (hitting (aRTSUnder A Y θ₀ T k ω) n) ω k)
+        ≤ 1 + (count (fun j ↦ armIndicator A k j ω) (hitting (Q k ω) n)
+              - (hitting (Q k ω) n : ℝ)
+                * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k)
           + (auxU (fun j ↦ armIndicator A k j ω) (fun j ↦ aRTSSelProb A k ℱ P j ω)
                 (fun j ↦ aRTSTarget A Y θ₀ T j ω k) α n
               - auxU (fun j ↦ armIndicator A k j ω) (fun j ↦ aRTSSelProb A k ℱ P j ω)
                 (fun j ↦ aRTSTarget A Y θ₀ T j ω k) α
-                (hitting (aRTSUnder A Y θ₀ T k ω) n)) := by
+                (hitting (Q k ω) n)) := by
     intro k
     filter_upwards [hthrottle k, hp1 k] with ω hthr hp1ω
     exact generic_ineq_of_hitting (fun j ↦ armIndicator A k j ω)
       (fun j ↦ aRTSSelProb A k ℱ P j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k) α
-      (aRTSUnder A Y θ₀ T k ω) hthr hp1ω (fun m ↦ mul_nonneg hα.1 (htgt_nn m ω k))
-  -- Smallness at the last under-sampling time (`generic_small_of_hitting`).
-  have hgs : ∀ k, ∀ᵐ ω ∂P, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
-      (count (fun j ↦ armIndicator A k j ω) (hitting (aRTSUnder A Y θ₀ T k ω) n)
-          - (hitting (aRTSUnder A Y θ₀ T k ω) n : ℝ)
-            * aRTSTarget A Y θ₀ T (hitting (aRTSUnder A Y θ₀ T k ω) n) ω k) / (n : ℝ) < δ := by
-    intro k
-    refine Eventually.of_forall fun ω δ hδ ↦ ?_
-    exact generic_small_of_hitting (fun j ↦ armIndicator A k j ω)
-      (fun j ↦ aRTSTarget A Y θ₀ T j ω k) (aRTSUnder A Y θ₀ T k ω) (fun m hm ↦ hm) δ hδ
-  -- Assemble via the modular theorem.
+      (Q k ω) hthr hp1ω (fun m ↦ mul_nonneg hα.1 (htgt_nn m ω k))
+  -- Assemble via the modular theorem (the smallness `hgs` is the design-specific hypothesis).
   have hcons := consistency_of_generic_ae (μ := P)
     (Y := fun j ω k ↦ armIndicator A k j ω)
     (pp := fun j ω k ↦ aRTSSelProb A k ℱ P j ω)
     (r := fun n ω k ↦ aRTSTarget A Y θ₀ T n ω k)
     (u := fun ω k ↦ limUnder atTop fun n ↦ aRTSTarget A Y θ₀ T n ω k)
-    (α := α) (C := 1) (ℓ := fun k ω n ↦ hitting (aRTSUnder A Y θ₀ T k ω) n)
+    (α := α) (C := 1) (ℓ := fun k ω n ↦ hitting (Q k ω) n)
     hα hYsum hrsum hℓle hu hru hM hgen hgs
   filter_upwards [hcons, hrho] with ω hcons_ω hrho_ω
   obtain ⟨uu, huu⟩ := hrho_ω
   refine ⟨uu, fun k ↦ ⟨?_, huu k⟩⟩
   have hk := hcons_ω k
   rwa [(huu k).limUnder_eq] at hk
+
+/-- **Estimator consistency at an abstract hitting time** (blueprint `lem:theta_consistent`, generic
+form). The abstract-hitting-time generalisation of `aRTS_theta_consistent`: from the joint
+consistency `consistency_of_hitting` (whose throttle `hthrottle` and smallness `hgs` are the
+design-specific inputs) and Condition **B**'s non-sparsity `hTpos`, the sequential estimator
+converges a.s. to the true parameter `θ̂_n → θ = ((ν k)[id])_k`, via the design-independent
+`theta_consistent_pi_of_condB`. -/
+theorem theta_consistent_of_hitting [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
+    (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
+    (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
+    (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
+    (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
+      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+        ≤ α * aRTSTarget A Y θ₀ T m ω k)
+    (hgs : ∀ k, ∀ᵐ ω ∂P, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
+      (count (fun j ↦ armIndicator A k j ω) (hitting (Q k ω) n)
+          - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k) / (n : ℝ) < δ)
+    (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) :
+    ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
+      (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 (fun k ↦ (ν k)[id])) := by
+  classical
+  refine theta_consistent_pi_of_condB h hY2 θ₀ T hT hTpos ?_
+  filter_upwards [consistency_of_hitting h hY2 θ₀ T hT hTnn hTsum α hα Q hthrottle hgs] with ω hω
+  obtain ⟨u, hu⟩ := hω
+  exact ⟨u, fun k ↦ ⟨((hu k).1).congr fun n ↦ by rw [count_indicator_eq_pullCount], (hu k).2⟩⟩
+
+/-- **Allocation proportions converge to the target at an abstract hitting time** (blueprint
+`thm:LLN`, first conclusion, generic form). The abstract-hitting-time generalisation of
+`aRTS_proportion_tendsto`: combining the joint consistency `consistency_of_hitting`
+(`N_{n,k}/n` and `ρ̂_{n,k}` share the random limit `u_k`) with the estimator consistency
+`theta_consistent_of_hitting` (so `ρ̂_{n,k} → T(θ)_k` by continuity) identifies the limit as the
+deterministic `v_k = T(θ)_k`: `N_{n,k}/n → v_k` a.s. -/
+theorem proportion_tendsto_of_hitting [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
+    [Nonempty 𝓐]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
+    (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
+    (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
+    (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
+    (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
+      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+        ≤ α * aRTSTarget A Y θ₀ T m ω k)
+    (hgs : ∀ k, ∀ᵐ ω ∂P, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
+      (count (fun j ↦ armIndicator A k j ω) (hitting (Q k ω) n)
+          - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k) / (n : ℝ) < δ)
+    (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) (k : 𝓐) :
+    ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ))
+      atTop (𝓝 (T (fun k ↦ (ν k)[id]) k)) := by
+  filter_upwards [consistency_of_hitting h hY2 θ₀ T hT hTnn hTsum α hα Q hthrottle hgs,
+    theta_consistent_of_hitting h hY2 θ₀ T hT hTnn hTsum α hα Q hthrottle hgs hTpos]
+    with ω hjω hθω
+  obtain ⟨u, hu⟩ := hjω
+  have hrho : Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop
+      (𝓝 (T (fun k ↦ (ν k)[id]) k)) :=
+    tendsto_pi_nhds.mp ((hT.tendsto _).comp hθω) k
+  have huk : u k = T (fun k ↦ (ν k)[id]) k := tendsto_nhds_unique (hu k).2 hrho
+  rw [← huk]
+  exact ((hu k).1).congr fun n ↦ by rw [count_indicator_eq_pullCount]
+
+/-- **Consistency of the aRTS allocation proportions** (blueprint `thm:LLN`, consistency direction).
+The `aRTS` instantiation of `consistency_of_hitting` at the last under-sampling time
+`hitting (aRTSUnder …)`: whenever arm `k` is over-sampled its selection probability is throttled
+(`hthrottle`), so the smallness `N_{ℓ} - ℓ ρ̂_{ℓ} ≤ 0` is automatic (`generic_small_of_hitting`).
+Almost surely there is a common limit `u` with `N_{n,k}/n → u_k`, `ρ̂_{n,k} → u_k` for every `k`. -/
+theorem aRTS_consistency [Fintype 𝓐]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
+    (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
+    (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
+    (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ aRTSUnder A Y θ₀ T k ω m →
+      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+        ≤ α * aRTSTarget A Y θ₀ T m ω k) :
+    ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
+      Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 (u k))
+        ∧ Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop (𝓝 (u k)) :=
+  consistency_of_hitting h hY2 θ₀ T hT hTnn hTsum α hα (aRTSUnder A Y θ₀ T) hthrottle
+    (fun k ↦ Eventually.of_forall fun ω δ hδ ↦ generic_small_of_hitting
+      (fun j ↦ armIndicator A k j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k)
+      (aRTSUnder A Y θ₀ T k ω) (fun _ hm ↦ hm) δ hδ)
 
 end AlphaRAR

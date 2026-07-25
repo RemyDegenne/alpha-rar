@@ -26,10 +26,8 @@ time-change `N_{n,k} → ∞` transports the `limsup` bound to `Q_k`.
 * `AlphaRAR.respMart_eq_sum_sampledSeq`: the reindexing `Q_k n = ∑_{i<N_{n,k}} (Y_{τ_i} − θ_k)`.
 -/
 
-set_option linter.style.openClassical false
-
 open MeasureTheory Filter ProbabilityTheory Learning Real
-open scoped Topology ENNReal Classical
+open scoped Topology ENNReal
 
 namespace AlphaRAR
 
@@ -53,8 +51,10 @@ lemma hitCount_tendsto_atTop {D : ℕ → Ω → ℝ} {ω : Ω}
   rw [Nat.count_succ, Nat.count_nth_of_infinite hinf, if_pos (Nat.nth_mem_of_infinite hinf M)]
   omega
 
-variable {𝓐 : Type*} {m𝓐 : MeasurableSpace 𝓐} {ν : Kernel 𝓐 ℝ} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ}
+variable {𝓐 : Type*} {m𝓐 : MeasurableSpace 𝓐} [DecidableEq 𝓐]
+  {ν : Kernel 𝓐 ℝ} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ}
 
+omit [DecidableEq 𝓐] in
 /-- **Reindexing: the response martingale is the subsampled i.i.d. partial sum.** For every `ω`,
 `Q_k n ω = ∑_{i < N_{n,k}} (Y_{τ_i} − θ_k)`, where `N_{n,k} = pullCount A k n ω` counts the pulls of
 arm `k` before `n` and `Y_{τ_i} = sampledSeq Y (armIndicator A k) i` is the response at the `i`-th
@@ -267,6 +267,7 @@ lemma abs_estimator_sub_le_rate_loglog_of_proportion
     (ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog_of_proportion
       h k hint_id hint_sq hVpos hv hN)
 
+omit [DecidableEq 𝓐] in
 /-- **Loglog estimator rate from a positive proportion, count form** (blueprint `lem:theta_LIL`).
 A convenience wrapper on `abs_estimator_sub_le_rate_loglog_of_proportion` that (i) takes the
 positive
@@ -285,6 +286,7 @@ lemma abs_estimator_sub_le_rate_loglog_of_pos_count
       |estimator (fun j ↦ armIndicator A k j ω)
           (fun j ↦ Y j ω) θ₀ n - (ν k)[id]|
         ≤ C' * (√((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) := by
+  classical
   obtain ⟨v, hv, hN⟩ : ∃ v : Ω → ℝ, (∀ᵐ ω ∂P, 0 < v ω) ∧ ∀ᵐ ω ∂P,
       Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω)) := by
     refine ⟨fun ω ↦ if hω : ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ count

@@ -187,36 +187,43 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
   {P : Measure Ω} [IsProbabilityMeasure P]
   {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
-/-- **Per-arm one-sided a.s. loglog bound on the deviation.** For each arm `k'`, almost surely the
-deviation `N_{n,k'} - n ρ̂_{n,k'}` is bounded above by `C · √(n log log n)` eventually. This is the
-one-sided ingredient that the simplex reverse step (`isBigO_of_forall_upper_of_sum_zero`) upgrades
-to the two-sided bound. The chain: the key inequality (`generic_ineq_of_hitting`) gives
-`Dev ≤ 1 + small + Uincr` with `small ≤ 0` (`preliminary_small`); the `U`-increment decomposes
-(`diff_U_decomp`, with `ε = (1-α)v/2`) as `Uincr ≤ (drift ≤ 0) + (M_n - M_ℓ) + ℓ(ρ̂_ℓ - ρ̂_n)`; the
-`M`-difference is bounded by the assignment-martingale LIL and the `ρ̂`-difference by the
-plug-in-target loglog rate, both lifted over the random time `ℓ ≤ n` via
-`exists_forall_le_mul_logLogRate`. -/
-lemma aRTS_dev_upper [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
-    (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
-    (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
-    (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1) (hARTS : IsARTS alg θ₀ T α)
-    {K : ℝ≥0} (hlip : LipschitzWith K T)
+/-- **Per-arm one-sided a.s. loglog bound on the deviation, at an abstract hitting time.** The
+abstract-hitting-time generalisation of `aRTS_dev_upper`: for arm `k'`, given the estimator
+consistency `hθconv`, the plug-in-target loglog rate `hρrate` (`ρ̂ - v = O(√(log log/·))`), the
+throttle `hthrottle`, and the smallness upper bound `hsmall_upper`
+(`N_ℓ - ℓ ρ̂_ℓ = O(√(n loglog n))` at the hitting time), the deviation `N_{n,k'} - n ρ̂_{n,k'}`
+is `≤ C · √(n log log n)` eventually. The chain: `generic_ineq_of_hitting` gives
+`Dev ≤ 1 + small + Uincr`; the `U`-increment decomposes (`diff_U_decomp`, `ε = (1-α)v/2`) as
+`Uincr ≤ (drift ≤ 0) + (M_n - M_ℓ) + ℓ(ρ̂_ℓ - ρ̂_n)`; the `M`-difference is bounded by the
+assignment-martingale LIL and the `ρ̂`-difference by the loglog rate, both lifted over the random
+time `ℓ ≤ n` via `exists_forall_le_mul_logLogRate`. Everything but `hsmall_upper` and the throttle
+is design-independent. -/
+lemma dev_upper_of_hitting [Finite 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
+    (hTnn : ∀ z k, 0 ≤ T z k)
+    (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
-    (hT_diff : DifferentiableAt ℝ T (fun k ↦ (ν k)[id]))
-    (hint_id : ∀ k, Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : ∀ k, 0 < armVar ν k) (k' : 𝓐) :
+    (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
+      (fun j ↦ Y j ω) (θ₀ k'') n) atTop (𝓝 (fun k ↦ (ν k)[id])))
+    (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
+    (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
+      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+        ≤ α * aRTSTarget A Y θ₀ T m ω k) (k' : 𝓐)
+    (hρrate : ∀ᵐ ω ∂P, (fun n ↦ T (fun k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
+      (fun j ↦ Y j ω) (θ₀ k'') n) k' - T (fun k ↦ (ν k)[id]) k')
+        =O[atTop] (fun n ↦ √((n : ℝ) * Real.log (Real.log (n : ℝ))) / (n : ℝ)))
+    (hsmall_upper : ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
+      (count (fun j ↦ armIndicator A k' j ω) (hitting (Q k' ω) n)
+        - (hitting (Q k' ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k')
+          ≤ C * logLogRate n) :
     ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
       (count (fun j ↦ armIndicator A k' j ω) n
         - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k') ≤ C * logLogRate n := by
   classical
-  have hT : Continuous T := hlip.continuous
   set v : ℝ := T (fun k'' ↦ (ν k'')[id]) k' with hvdef
   set ℱ := IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback with hℱ
-  -- Non-sparsity `v > 0` and the aRTS consistency `ρ̂ → v` from `thm:LLN`.
-  have hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
-      (fun j ↦ Y j ω) (θ₀ k'') n) atTop (𝓝 (fun k ↦ (ν k)[id])) :=
-    aRTS_theta_consistent h hY2 hT hTnn hTsum hα hARTS hTpos
+  -- Non-sparsity `v > 0` and the consistency `ρ̂ → v` from the estimator consistency.
   have hvpos : 0 < v := by
     obtain ⟨ω, hω⟩ := hθconv.exists
     exact hTpos (fun k'' ↦ (ν k'')[id])
@@ -239,10 +246,9 @@ lemma aRTS_dev_upper [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
     ae_eventually_abs_assignMart_le_sqrt_nat_mul_loglog (stronglyAdapted_armIndicator h k')
       (integrable_armIndicator h k') (fun n ↦ ae_of_all _ fun ω ↦ armIndicator_nonneg A k' n ω)
       (fun n ↦ ae_of_all _ fun ω ↦ armIndicator_le_one A k' n ω)
-  have hρrate : ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
+  have hρratebd : ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
       ((n : ℕ) : ℝ) * |aRTSTarget A Y θ₀ T n ω k' - v| ≤ C * logLogRate n := by
-    filter_upwards [aRTS_rho_rate h hY2 hT hTnn hTsum hα hARTS hTpos hT_diff hint_id hint_sq
-      hVpos k'] with ω hbigO
+    filter_upwards [hρrate] with ω hbigO
     rw [Asymptotics.isBigO_iff] at hbigO
     obtain ⟨C, hC⟩ := hbigO
     refine ⟨C, ?_⟩
@@ -257,10 +263,11 @@ lemma aRTS_dev_upper [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
       = C * Real.sqrt ((n : ℝ) * Real.log (Real.log n)) by field_simp] at hmul
     exact hmul
   -- The seam `assignMG (…, aRTSSelProb) = assignMart`.
-  filter_upwards [hρconv, throttle_of_isARTS h hARTS k', hp1, hMLIL, hρrate]
-    with ω hρc hthr hp1ω hMlilω hρrω
+  filter_upwards [hρconv, hthrottle k', hp1, hMLIL, hρratebd, hsmall_upper]
+    with ω hρc hthr hp1ω hMlilω hρrω hsuω
   obtain ⟨CM, hCM⟩ := hMlilω
   obtain ⟨Cρ, hCρ⟩ := hρrω
+  obtain ⟨Cs, hCs⟩ := hsuω
   obtain ⟨CM', hCM'⟩ := exists_forall_le_mul_logLogRate
     (g := fun m ↦ |assignMart (fun j ↦ armIndicator A k' j) ℱ P m ω|)
     (fun m ↦ abs_nonneg _) hCM
@@ -273,18 +280,16 @@ lemma aRTS_dev_upper [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
     (assignMart_eq_assignMG m ω).symm
   have hdU := diff_U_decomp (X := fun j ↦ armIndicator A k' j ω)
     (p := fun j ↦ aRTSSelProb A k' ℱ P j ω) (ρ := fun m ↦ aRTSTarget A Y θ₀ T m ω k') (α := α)
-    hρc (ℓ := fun n ↦ hitting (aRTSUnder A Y θ₀ T k' ω) n) (fun n ↦ Nat.findGreatest_le n) hεpos
-  refine ⟨1 + (2 * CM' + (Cρ' + Cρ)), ?_⟩
-  filter_upwards [hdU, hCM', hCρ', hCρ, eventually_one_le_logLogRate]
-    with n hdUn hCM'n hCρ'n hCρn hrn
-  set ℓn : ℕ := hitting (aRTSUnder A Y θ₀ T k' ω) n with hℓndef
+    hρc (ℓ := fun n ↦ hitting (Q k' ω) n) (fun n ↦ Nat.findGreatest_le n) hεpos
+  refine ⟨1 + (2 * CM' + (Cρ' + Cρ) + Cs), ?_⟩
+  filter_upwards [hdU, hCM', hCρ', hCρ, hCs, eventually_one_le_logLogRate]
+    with n hdUn hCM'n hCρ'n hCρn hCsn hrn
+  set ℓn : ℕ := hitting (Q k' ω) n with hℓndef
   have hℓle : ℓn ≤ n := Nat.findGreatest_le n
-  -- Key inequality and smallness.
+  -- Key inequality; the smallness at the hitting time enters through `hCsn`.
   have hgen := generic_ineq_of_hitting (fun j ↦ armIndicator A k' j ω)
     (fun j ↦ aRTSSelProb A k' ℱ P j ω) (fun m ↦ aRTSTarget A Y θ₀ T m ω k') α
-    (aRTSUnder A Y θ₀ T k' ω) hthr hp1ω (fun m ↦ mul_nonneg hα.1 (hTnn _ k')) n
-  have hsmall := preliminary_small (fun j ↦ armIndicator A k' j ω)
-    (fun m ↦ aRTSTarget A Y θ₀ T m ω k') (aRTSUnder A Y θ₀ T k' ω) n (fun m hm ↦ hm)
+    (Q k' ω) hthr hp1ω (fun m ↦ mul_nonneg hα.1 (hTnn _ k')) n
   -- `Uincr ≤ (drift + M-diff + ρ-term) + ε(n-ℓ)`.
   have hUle : auxU (fun j ↦ armIndicator A k' j ω) (fun j ↦ aRTSSelProb A k' ℱ P j ω)
         (fun m ↦ aRTSTarget A Y θ₀ T m ω k') α n
@@ -332,25 +337,93 @@ lemma aRTS_dev_upper [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
       rw [abs_mul, Nat.abs_cast]
       exact mul_le_mul_of_nonneg_right (by exact_mod_cast hℓle) (abs_nonneg _)
     rw [hsplit]; linarith
-  -- Assemble: `Dev ≤ 1 + Uincr ≤ 1 + (2CM' + Cρ' + Cρ) rate ≤ C rate`.
+  -- Assemble: `Dev ≤ 1 + small_ℓ + Uincr ≤ 1 + (Cs + 2CM' + Cρ' + Cρ) rate ≤ C rate`.
   have hDev : count (fun j ↦ armIndicator A k' j ω) n - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k'
-      ≤ 1 + (2 * CM' * logLogRate n + (Cρ' + Cρ) * logLogRate n) := by
+      ≤ 1 + (2 * CM' * logLogRate n + (Cρ' + Cρ) * logLogRate n + Cs * logLogRate n) := by
     have := hgen
-    simp only [hℓndef] at this hsmall hUle
-    linarith [hUle, hdrift, hMbound, hρbound, hsmall]
+    simp only [hℓndef] at this hCsn hUle
+    linarith [hUle, hdrift, hMbound, hρbound, hCsn]
   have hone : (1 : ℝ) ≤ logLogRate n := hrn
   nlinarith [hDev, hone, logLogRate_nonneg n]
+
+/-- **Per-arm one-sided a.s. loglog deviation bound for the aRTS design.** The `aRTS`
+instantiation of `dev_upper_of_hitting` at the last under-sampling time: the estimator consistency,
+loglog rate and throttle are the `aRTS_LLN` bundle (`aRTS_theta_consistent`, `aRTS_rho_rate`,
+`throttle_of_isARTS`), and the smallness is automatic — at the last under-sampling time
+`N_ℓ - ℓ ρ̂_ℓ ≤ 0` (`preliminary_small`), so it is trivially `O(√(n log log n))`. -/
+lemma aRTS_dev_upper [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
+    (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
+    (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1) (hARTS : IsARTS alg θ₀ T α)
+    {K : ℝ≥0} (hlip : LipschitzWith K T)
+    (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
+    (hT_diff : DifferentiableAt ℝ T (fun k ↦ (ν k)[id]))
+    (hint_id : ∀ k, Integrable (fun x : ℝ ↦ x) (ν k))
+    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : ∀ k, 0 < armVar ν k) (k' : 𝓐) :
+    ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
+      (count (fun j ↦ armIndicator A k' j ω) n
+        - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k') ≤ C * logLogRate n :=
+  dev_upper_of_hitting h θ₀ T hlip.continuous hTnn α hα hα1 hTpos
+    (aRTS_theta_consistent h hY2 hlip.continuous hTnn hTsum hα hARTS hTpos)
+    (aRTSUnder A Y θ₀ T) (fun k ↦ throttle_of_isARTS h hARTS k) k'
+    (aRTS_rho_rate h hY2 hlip.continuous hTnn hTsum hα hARTS hTpos hT_diff hint_id hint_sq hVpos k')
+    (Eventually.of_forall fun ω ↦ ⟨0, Eventually.of_forall fun n ↦ by
+      rw [zero_mul]
+      exact preliminary_small (fun j ↦ armIndicator A k' j ω)
+        (fun m ↦ aRTSTarget A Y θ₀ T m ω k') (aRTSUnder A Y θ₀ T k' ω) n (fun m hm ↦ hm)⟩)
+
+/-- **A.s. loglog deviation between proportions and plug-in target at an abstract hitting time**
+(blueprint `lem:prop_dev`, `thm:normality` part (i), `O(√(n log log n))` a.s. half, generic form).
+The abstract-hitting-time generalisation of `aRTS_prop_dev_ae`: from the per-arm one-sided bounds
+`dev_upper_of_hitting` (for *all* arms) via the simplex reverse step
+`isBigO_of_forall_upper_of_sum_zero`, whose `∑_k Dev_k = 0` input is `sum_count_sub_smul_eq_zero`.
+The design enters only through `hθconv`, the throttle `hthrottle`, the per-arm loglog rate `hρrate`,
+and the per-arm smallness `hsmall_upper`. -/
+theorem prop_dev_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
+    (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
+    (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
+    (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
+    (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
+      (fun j ↦ Y j ω) (θ₀ k'') n) atTop (𝓝 (fun k ↦ (ν k)[id])))
+    (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
+    (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
+      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+        ≤ α * aRTSTarget A Y θ₀ T m ω k)
+    (hρrate : ∀ k', ∀ᵐ ω ∂P, (fun n ↦ T (fun k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
+      (fun j ↦ Y j ω) (θ₀ k'') n) k' - T (fun k ↦ (ν k)[id]) k')
+        =O[atTop] (fun n ↦ √((n : ℝ) * Real.log (Real.log (n : ℝ))) / (n : ℝ)))
+    (hsmall_upper : ∀ k', ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
+      (count (fun j ↦ armIndicator A k' j ω) (hitting (Q k' ω) n)
+        - (hitting (Q k' ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k')
+          ≤ C * logLogRate n) (k : 𝓐) :
+    ∀ᵐ ω ∂P, (fun n ↦ (pullCount A k n ω : ℝ) - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k)
+      =O[atTop] logLogRate := by
+  classical
+  have hupper : ∀ k', ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
+      count (fun j ↦ armIndicator A k' j ω) n
+        - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k' ≤ C * logLogRate n := fun k' ↦
+    dev_upper_of_hitting h θ₀ T hT hTnn α hα hα1 hTpos hθconv Q hthrottle k'
+      (hρrate k') (hsmall_upper k')
+  filter_upwards [ae_all_iff.mpr hupper] with ω hω
+  simp only [← count_indicator_eq_pullCount]
+  refine isBigO_of_forall_upper_of_sum_zero
+    (Dev := fun k' n ↦ count (fun j ↦ armIndicator A k' j ω) n
+      - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k') (fun n ↦ ?_) hω k
+  exact sum_count_sub_smul_eq_zero (fun j k' ↦ armIndicator A k' j ω)
+    (fun k' ↦ aRTSTarget A Y θ₀ T n ω k') (fun j ↦ sum_armIndicator A j ω)
+    (by simp only [aRTSTarget]; exact hTsum _) n
 
 /-- **A.s. loglog deviation between proportions and plug-in target for the aRTS design**
 (blueprint `lem:prop_dev`, `thm:normality` part (i), `O(√(n log log n))` a.s. half). For every arm
 `k`, almost surely `N_{n,k} - n ρ̂_{n,k} = O(√(n log log n))`.
 
-Assembled from the per-arm one-sided bounds `aRTS_dev_upper` (for *all* arms) via the simplex
-reverse step `isBigO_of_forall_upper_of_sum_zero`, whose `∑_k Dev_k = 0` input is the counts/target
-identity `sum_count_sub_smul_eq_zero`. This is the a.s. companion of the `o_p(√n)` statement
-`aRTS_prop_dev`, and takes the same `thm:LLN`-rate bundle as `aRTS_LLN` (the extra Condition **A**
-integrability `hint_id`, `hint_sq`, `hVpos` and Condition **B** differentiability `hT_diff` feed the
-plug-in-target loglog rate `aRTS_rho_rate`). -/
+The `aRTS` instantiation of `prop_dev_ae_of_hitting`: the estimator consistency, throttle and loglog
+rate are the `aRTS_LLN` bundle, and the smallness is automatic (`N_ℓ - ℓ ρ̂_ℓ ≤ 0`,
+`preliminary_small`). The extra Condition **A** integrability `hint_id`, `hint_sq`, `hVpos` and
+Condition **B** differentiability `hT_diff` feed the loglog rate `aRTS_rho_rate`. -/
 theorem aRTS_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
@@ -362,28 +435,56 @@ theorem aRTS_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace �
     (hint_id : ∀ k, Integrable (fun x : ℝ ↦ x) (ν k))
     (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : ∀ k, 0 < armVar ν k) (k : 𝓐) :
     ∀ᵐ ω ∂P, (fun n ↦ (pullCount A k n ω : ℝ) - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k)
+      =O[atTop] logLogRate :=
+  prop_dev_ae_of_hitting h θ₀ T hlip.continuous hTnn hTsum α hα hα1 hTpos
+    (aRTS_theta_consistent h hY2 hlip.continuous hTnn hTsum hα hARTS hTpos)
+    (aRTSUnder A Y θ₀ T) (fun k ↦ throttle_of_isARTS h hARTS k)
+    (fun k' ↦ aRTS_rho_rate h hY2 hlip.continuous hTnn hTsum hα hARTS hTpos hT_diff hint_id hint_sq
+      hVpos k')
+    (fun k' ↦ Eventually.of_forall fun ω ↦ ⟨0, Eventually.of_forall fun n ↦ by
+      rw [zero_mul]
+      exact preliminary_small (fun j ↦ armIndicator A k' j ω)
+        (fun m ↦ aRTSTarget A Y θ₀ T m ω k') (aRTSUnder A Y θ₀ T k' ω) n (fun m hm ↦ hm)⟩) k
+
+/-- **A.s. loglog deviation between the count and the target proportion at an abstract hitting
+time** (blueprint `lem:prop_dev`, `thm:normality` part (i), last line, generic form). For every arm
+`k`, almost surely `N_{n,k} - n v_k = O(√(n log log n))`. Writing
+`N_{n,k} - n v_k = (N_{n,k} - n ρ̂_{n,k}) + n(ρ̂_{n,k} - v_k)`, the first term is
+`prop_dev_ae_of_hitting` and the second is `n · O(√(n log log n)/n) = O(√(n log log n))` by the
+loglog rate `hρrate` and `isBigO_natMul_logLogRate`. -/
+theorem count_sub_smul_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
+    (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
+    (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
+    (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
+    (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
+      (fun j ↦ Y j ω) (θ₀ k'') n) atTop (𝓝 (fun k ↦ (ν k)[id])))
+    (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
+    (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
+      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+        ≤ α * aRTSTarget A Y θ₀ T m ω k)
+    (hρrate : ∀ k', ∀ᵐ ω ∂P, (fun n ↦ T (fun k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
+      (fun j ↦ Y j ω) (θ₀ k'') n) k' - T (fun k ↦ (ν k)[id]) k')
+        =O[atTop] (fun n ↦ √((n : ℝ) * Real.log (Real.log (n : ℝ))) / (n : ℝ)))
+    (hsmall_upper : ∀ k', ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
+      (count (fun j ↦ armIndicator A k' j ω) (hitting (Q k' ω) n)
+        - (hitting (Q k' ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k')
+          ≤ C * logLogRate n) (k : 𝓐) :
+    ∀ᵐ ω ∂P, (fun n ↦ (pullCount A k n ω : ℝ) - (n : ℝ) * T (fun k' ↦ (ν k')[id]) k)
       =O[atTop] logLogRate := by
-  classical
-  have hupper : ∀ k', ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      count (fun j ↦ armIndicator A k' j ω) n
-        - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k' ≤ C * logLogRate n := fun k' ↦
-    aRTS_dev_upper h hY2 θ₀ T hTnn hTsum α hα hα1 hARTS hlip hTpos hT_diff hint_id hint_sq hVpos k'
-  filter_upwards [ae_all_iff.mpr hupper] with ω hω
-  simp only [← count_indicator_eq_pullCount]
-  refine isBigO_of_forall_upper_of_sum_zero
-    (Dev := fun k' n ↦ count (fun j ↦ armIndicator A k' j ω) n
-      - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k') (fun n ↦ ?_) hω k
-  exact sum_count_sub_smul_eq_zero (fun j k' ↦ armIndicator A k' j ω)
-    (fun k' ↦ aRTSTarget A Y θ₀ T n ω k') (fun j ↦ sum_armIndicator A j ω)
-    (by simp only [aRTSTarget]; exact hTsum _) n
+  filter_upwards [prop_dev_ae_of_hitting h θ₀ T hT hTnn hTsum α hα hα1 hTpos hθconv Q hthrottle
+    hρrate hsmall_upper k, hρrate k] with ω hdev hrate
+  have hrate2 : (fun n : ℕ ↦ (n : ℝ) * (aRTSTarget A Y θ₀ T n ω k - T (fun k' ↦ (ν k')[id]) k))
+      =O[atTop] logLogRate := isBigO_natMul_logLogRate hrate
+  have hsum := hdev.add hrate2
+  refine hsum.congr' (Eventually.of_forall fun n ↦ ?_) (Eventually.of_forall fun n ↦ rfl)
+  simp only [aRTSTarget]; ring
 
 /-- **A.s. loglog deviation between the count and the target proportion for the aRTS design**
 (blueprint `lem:prop_dev`, `thm:normality` part (i), last line). For every arm `k`, almost surely
 `N_{n,k} - n v_k = O(√(n log log n))`, where `v_k = T((ν_k)[id])_k` is the limiting proportion.
-
-Writing `N_{n,k} - n v_k = (N_{n,k} - n ρ̂_{n,k}) + n(ρ̂_{n,k} - v_k)`, the first term is
-`aRTS_prop_dev_ae` and the second is `n · O(√(n log log n)/n) = O(√(n log log n))` by
-`aRTS_rho_rate` and `isBigO_natMul_logLogRate`. -/
+The `aRTS` instantiation of `count_sub_smul_ae_of_hitting`. -/
 theorem aRTS_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
@@ -395,15 +496,16 @@ theorem aRTS_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelS
     (hint_id : ∀ k, Integrable (fun x : ℝ ↦ x) (ν k))
     (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (hVpos : ∀ k, 0 < armVar ν k) (k : 𝓐) :
     ∀ᵐ ω ∂P, (fun n ↦ (pullCount A k n ω : ℝ) - (n : ℝ) * T (fun k' ↦ (ν k')[id]) k)
-      =O[atTop] logLogRate := by
-  filter_upwards [aRTS_prop_dev_ae h hY2 θ₀ T hTnn hTsum α hα hα1 hARTS hlip hTpos hT_diff hint_id
-    hint_sq hVpos k, aRTS_rho_rate h hY2 hlip.continuous hTnn hTsum hα hARTS hTpos hT_diff hint_id
-    hint_sq hVpos k] with ω hdev hrate
-  have hrate2 : (fun n : ℕ ↦ (n : ℝ) * (aRTSTarget A Y θ₀ T n ω k - T (fun k' ↦ (ν k')[id]) k))
-      =O[atTop] logLogRate := isBigO_natMul_logLogRate hrate
-  have hsum := hdev.add hrate2
-  refine hsum.congr' (Eventually.of_forall fun n ↦ ?_) (Eventually.of_forall fun n ↦ rfl)
-  simp only [aRTSTarget]; ring
+      =O[atTop] logLogRate :=
+  count_sub_smul_ae_of_hitting h θ₀ T hlip.continuous hTnn hTsum α hα hα1 hTpos
+    (aRTS_theta_consistent h hY2 hlip.continuous hTnn hTsum hα hARTS hTpos)
+    (aRTSUnder A Y θ₀ T) (fun k ↦ throttle_of_isARTS h hARTS k)
+    (fun k' ↦ aRTS_rho_rate h hY2 hlip.continuous hTnn hTsum hα hARTS hTpos hT_diff hint_id hint_sq
+      hVpos k')
+    (fun k' ↦ Eventually.of_forall fun ω ↦ ⟨0, Eventually.of_forall fun n ↦ by
+      rw [zero_mul]
+      exact preliminary_small (fun j ↦ armIndicator A k' j ω)
+        (fun m ↦ aRTSTarget A Y θ₀ T m ω k') (aRTSUnder A Y θ₀ T k' ω) n (fun m hm ↦ hm)⟩) k
 
 end ARTS
 

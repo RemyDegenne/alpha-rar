@@ -474,6 +474,12 @@ $D_n=\mathrm{diag}(\sqrt{N_{n,1}},\dots,\sqrt{N_{n,K}})$,
 \]
 \end{corollary}
 
+\emph{Formalization note.} The Lean statement is more general than the display above: it takes
+per-arm deterministic normalizers $c_{k,n}\to\infty$ with $N_{n,k}/c_{k,n}\to v_k>0$, of which
+$c_{k,n}=n$ is the instance stated here. The extra generality is what makes the same theorem give the
+sparse componentwise CLT (Corollary~\ref{cor:sparse_clt}), via $v\equiv1$ and per-arm $c_{k,n}$. The
+underlying array \texttt{AlphaRAR.wArray} carries row-dependent weights for exactly this reason.
+
 \begin{proof}\leanok
 \uses{lem:mart_clt_joint_selfnorm, lem:estimator_bahadur}
 By the exact Bahadur identity (Lemma~\ref{lem:estimator_bahadur}),
@@ -488,4 +494,93 @@ $\mathcal N(0,\mathrm{diag}(V_k))$ (Lemma~\ref{lem:mart_clt_joint_selfnorm}), wh
 coordinatewise scaling factors tend to $1$ and $0$ in probability (as $N_{n,k}\to\infty$).
 Multivariate Slutsky (a continuous coordinatewise affine map against the constant limit $(1,0)$)
 therefore leaves the Gaussian limit unchanged.
+\end{proof}
+
+\begin{lemma}[Anscombe random-time self-normalized CLT]\label{lem:anscombe_clt}
+\lean{AlphaRAR.tendsto_map_anscombe_iid}\leanok
+\uses{thm:mart_clt}
+Let $(\xi_i)_{i\ge0}$ be i.i.d.\ with mean $\mu$ and finite variance $v=\mathrm{Var}(\xi_0)$, and let
+$S_m=\sum_{i<m}(\xi_i-\mu)$. Let $(\tau_n)$ be positive-integer random indices for which there is a
+deterministic sequence $c_n\to\infty$ with $\tau_n/c_n\to1$ almost surely. Then
+\[
+  \frac{S_{\tau_n}}{\sqrt{\tau_n}}
+    = \frac1{\sqrt{\tau_n}}\Big(\sum_{i<\tau_n}\xi_i-\tau_n\mu\Big)
+  \;\eqdist\; \mathcal N(0,v).
+\]
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{thm:mart_clt}
+Decompose
+$S_{\tau_n}/\sqrt{\tau_n}=(S_{c_n}/\sqrt{c_n})\cdot\sqrt{c_n/\tau_n}+(S_{\tau_n}-S_{c_n})/\sqrt{\tau_n}$.
+The base term $S_{c_n}/\sqrt{c_n}\eqdist\mathcal N(0,v)$ is the i.i.d.\ central limit theorem
+(Theorem~\ref{thm:mart_clt}, in the form of the Lindeberg--L\'evy theorem) precomposed with the
+deterministic subsequence $c_n$; the scaling $\sqrt{c_n/\tau_n}\to1$ in probability by regularity, so
+Slutsky preserves the limit; and the window remainder $(S_{\tau_n}-S_{c_n})/\sqrt{\tau_n}\to0$ in
+probability, since on the event $|\tau_n-c_n|\le\varepsilon c_n$ (of probability $\to1$) the increment
+is bounded by the maximal increment over a window of length $\varepsilon c_n$, which is
+$O(\sqrt{\varepsilon c_n})$ in $L^1$ by Doob's maximal inequality; letting $\varepsilon\to0$ gives the
+claim.
+
+\emph{Formalization.} \texttt{AlphaRAR.tendsto\_map\_anscombe\_iid}, assembled from the base CLT along
+a subsequence (\texttt{tendsto\_map\_clt\_comp}, wrapping Mathlib's
+\texttt{tendstoInDistribution\_inv\_sqrt\_mul\_sum\_sub}), the negligibility of the window remainder
+(\texttt{AlphaRAR.tendstoInMeasure\_window}, via the Doob maximal inequality
+\texttt{AlphaRAR.mart\_maximal} on the i.i.d.-sum martingale \texttt{AlphaRAR.martingale\_iidSum}),
+and two Slutsky steps (\texttt{tendsto\_map\_mul\_of\_tendstoInMeasure\_one},
+\texttt{AlphaRAR.tendsto\_map\_add\_of\_tendstoInMeasure\_zero}). The regularity $\tau_n/c_n\to1$ is
+essential: for a general adaptive $\tau_n\to\infty$ the statement is false (one can freeze the
+self-normalized martingale above its typical value by pausing the index near a level crossing, using
+the law of the iterated logarithm). This lemma is the standalone martingale-CLT ingredient that
+Lemma~\ref{lem:componentwise} calls for, and the missing piece for the sparse componentwise CLT
+(Corollary~\ref{cor:sparse_clt}): with the per-arm regularity $N_{n,k}/c_{n,k}\to1$ supplied, applying
+it coordinatewise to the sampled response martingale $Q_{\cdot,k}$ yields
+$Q_{n,k}/\sqrt{N_{n,k}}\eqdist\mathcal N(0,V_k)$ even when $v_k=0$.
+\end{proof}
+
+\begin{lemma}[Per-arm self-normalized CLT, sparse]\label{lem:mart_clt_selfnorm_arm_sparse}
+\lean{AlphaRAR.respMart_selfNorm_anscombe_tendsto}\leanok
+\uses{lem:anscombe_clt, def:Q, def:counts}
+Fix an arm $k$ sampled infinitely often, and suppose its pull count obeys the regularity
+$N_{n,k}/c_n\to1$ a.s.\ for some deterministic $c_n\to\infty$. Then, under Condition~\textbf{A},
+\[
+  \frac{Q_{n,k}}{\sqrt{N_{n,k}}} \eqdist \mathcal N(0, V_k),\qquad V_k=\mathrm{armVar}(\nu_k).
+\]
+No positivity of a limiting proportion is required, so this holds for sparse arms $v_k=0$.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:anscombe_clt}
+The sampled responses of arm $k$ are i.i.d.\ with mean $\theta_k$ and variance $V_k$
+(a globally i.i.d.\ representative is \texttt{AlphaRAR.sampledClean}), and reindexing the pulls gives
+$Q_{n,k}=\sum_{i<N_{n,k}}(\xi_i-\theta_k)=S_{N_{n,k}}$ (\texttt{respMart\_eq\_sum\_sampledSeq}). Apply
+the Anscombe random-time CLT (Lemma~\ref{lem:anscombe_clt}) with $\tau_n=N_{n,k}$.
+
+\emph{Formalization.} \texttt{AlphaRAR.respMart\_selfNorm\_anscombe\_tendsto}: the clean-sample setup
+mirrors the LIL development (\texttt{iIndepFun\_sampledResponse}, \texttt{map\_sampledResponse\_eq},
+\texttt{sampledSeq\_ae\_eq\_sampledClean}), supplying the i.i.d.\ hypotheses of
+Lemma~\ref{lem:anscombe_clt}, and the almost-everywhere identity
+$S_{N_{n,k}}=Q_{n,k}$ transfers the limit law to $(\sqrt{N_{n,k}})^{-1}Q_{n,k}$.
+\end{proof}
+
+\begin{lemma}[Per-arm estimator CLT, sparse]\label{lem:clt_theta_arm_sparse}
+\lean{AlphaRAR.estimator_sqrtN_anscombe_tendsto}\leanok
+\uses{lem:mart_clt_selfnorm_arm_sparse, def:estimator, lem:estimator_bahadur}
+Under the hypotheses of Lemma~\ref{lem:mart_clt_selfnorm_arm_sparse},
+$\sqrt{N_{n,k}}\,(\hat\theta_{n,k}-\theta_k)\eqdist\mathcal N(0,V_k)$. This is the componentwise
+statement of Corollary~\ref{cor:sparse_clt}.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:mart_clt_selfnorm_arm_sparse, lem:estimator_bahadur}
+By the exact Bahadur identity (Lemma~\ref{lem:estimator_bahadur}),
+$\sqrt{N_{n,k}}(\hat\theta_{n,k}-\theta_k)=(Q_{n,k}/\sqrt{N_{n,k}})\cdot\frac{N_{n,k}}{N_{n,k}+1}
+ + (\theta_{0,k}-\theta_k)\frac{\sqrt{N_{n,k}}}{N_{n,k}+1}$; the scaling factors tend to $1$ and $0$
+in probability (as $N_{n,k}\to\infty$), and Slutsky applied to
+Lemma~\ref{lem:mart_clt_selfnorm_arm_sparse} gives the claim.
+
+\emph{Formalization.} \texttt{AlphaRAR.estimator\_sqrtN\_anscombe\_tendsto}, from
+\texttt{respMart\_selfNorm\_anscombe\_tendsto} via \texttt{estimator\_sub\_eq} and the two Slutsky
+lemmas \texttt{tendsto\_map\_mul\_of\_tendstoInMeasure\_one},
+\texttt{AlphaRAR.tendsto\_map\_add\_of\_tendstoInMeasure\_zero}.
 \end{proof}

@@ -3,6 +3,9 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
+import Mathlib.Analysis.Calculus.ContDiff.Comp
+import Mathlib.Analysis.Calculus.ContDiff.RCLike
+import Mathlib.Analysis.Calculus.LocalExtr.Basic
 import Mathlib.Analysis.Calculus.MeanValue
 
 /-!
@@ -18,12 +21,24 @@ the constant. It is the multivariate first-order expansion with an explicit quad
 (blueprint `lem:taylor_rho`), obtained from a Lipschitz bound on the derivative (which
 Condition **B** supplies via the bounded second derivative).
 
-## Main result
+A `C²` map supplies that Lipschitz bound by itself, since `fderiv ℝ f` is then `C¹` and hence
+locally Lipschitz: this gives `exists_eventually_norm_sub_fderiv_le_mul_sq`. At a *minimum* the
+linear term vanishes by Fermat's theorem, and one gets the one-sided bound `f x - f θ ≤ K‖x - θ‖²`
+of `exists_eventually_sub_le_mul_sq_of_isLocalMin` — the second-order Taylor bound at a minimum,
+with no explicit Hessian.
 
-* `AlphaRAR.norm_sub_fderiv_le_mul_sq`.
+## Main results
+
+* `AlphaRAR.norm_sub_fderiv_le_mul_sq` — the mean-value form, from a Lipschitz derivative.
+* `AlphaRAR.exists_eventually_norm_sub_fderiv_le_mul_sq` — its `C²` form.
+* `AlphaRAR.exists_eventually_sub_le_mul_sq_of_isLocalMin` — the `C²` form at a local minimum.
+* `AlphaRAR.sq_norm_le_sum_sq` — sup-norm to sum-of-squares, converting the bounds above into the
+  coordinatewise form used downstream.
 -/
 
-open Set
+open Filter Set
+
+open scoped Topology NNReal
 
 namespace AlphaRAR
 
@@ -56,5 +71,55 @@ theorem norm_sub_fderiv_le_mul_sq {f : E → F} {f' : E → E →L[ℝ] F} {s : 
   calc ‖f x - f θ - f' θ (x - θ)‖
       ≤ K * ‖x - θ‖ * ‖x - θ‖ := key
     _ = K * ‖x - θ‖ ^ 2 := by ring
+
+/-- **The `C²` form of `norm_sub_fderiv_le_mul_sq`.** A map that is twice continuously
+differentiable at `θ` has a first-order Taylor remainder that is `O(‖x - θ‖²)` near `θ`.
+
+No Hessian appears: being `C²` makes `fderiv ℝ f` a `C¹` map, hence Lipschitz on a neighbourhood of
+`θ` (`ContDiffAt.exists_lipschitzOnWith`), which is exactly the input `norm_sub_fderiv_le_mul_sq`
+consumes. -/
+theorem exists_eventually_norm_sub_fderiv_le_mul_sq {f : E → F} {θ : E}
+    (hf : ContDiffAt ℝ 2 f θ) :
+    ∃ K : ℝ, 0 ≤ K ∧
+      ∀ᶠ x in 𝓝 θ, ‖f x - f θ - fderiv ℝ f θ (x - θ)‖ ≤ K * ‖x - θ‖ ^ 2 := by
+  obtain ⟨K, t, ht, hlip⟩ := (hf.fderiv_right (m := 1) (by norm_num)).exists_lipschitzOnWith
+  have hdiff : ∀ᶠ y in 𝓝 θ, DifferentiableAt ℝ f y := by
+    filter_upwards [hf.eventually (by norm_num)] with y hy
+    exact hy.differentiableAt two_ne_zero
+  obtain ⟨r, hr, hsub⟩ := Metric.mem_nhds_iff.mp (Filter.inter_mem ht hdiff)
+  refine ⟨(K : ℝ), K.coe_nonneg, ?_⟩
+  filter_upwards [Metric.ball_mem_nhds θ hr] with x hx
+  refine norm_sub_fderiv_le_mul_sq (f' := fderiv ℝ f) K.coe_nonneg (convex_ball θ r)
+    (fun z hz ↦ (hsub hz).2.hasFDerivAt) (fun z hz ↦ ?_) (Metric.mem_ball_self hr) hx
+  have hd := hlip.dist_le_mul z (hsub hz).1 θ (hsub (Metric.mem_ball_self hr)).1
+  rwa [dist_eq_norm, dist_eq_norm] at hd
+
+/-- **A `C²` function is quadratically small near a local minimum**: `f x - f θ ≤ K‖x - θ‖²`.
+
+By Fermat's theorem the linear term of the Taylor expansion vanishes at `θ`, so the whole increment
+is the quadratic remainder of `exists_eventually_norm_sub_fderiv_le_mul_sq`. This is the standard
+"second-order expansion at a minimum" without ever naming the Hessian. -/
+theorem exists_eventually_sub_le_mul_sq_of_isLocalMin {f : E → ℝ} {θ : E} (hmin : IsLocalMin f θ)
+    (hf : ContDiffAt ℝ 2 f θ) :
+    ∃ K : ℝ, 0 ≤ K ∧ ∀ᶠ x in 𝓝 θ, f x - f θ ≤ K * ‖x - θ‖ ^ 2 := by
+  obtain ⟨K, hK, hbd⟩ := exists_eventually_norm_sub_fderiv_le_mul_sq hf
+  refine ⟨K, hK, ?_⟩
+  filter_upwards [hbd] with x hx
+  rw [hmin.fderiv_eq_zero] at hx
+  simp only [zero_apply, sub_zero, Real.norm_eq_abs] at hx
+  exact (le_abs_self _).trans hx
+
+/-- On a finite product carrying the sup norm, the squared norm is at most the sum of the squared
+coordinates. This converts the quadratic bounds above into the coordinatewise form in which
+per-coordinate rates plug in. -/
+theorem sq_norm_le_sum_sq {ι : Type*} [Fintype ι] (x : ι → ℝ) : ‖x‖ ^ 2 ≤ ∑ j, x j ^ 2 := by
+  rcases isEmpty_or_nonempty ι with hι | hι
+  · have hx : x = 0 := funext fun j ↦ hι.elim j
+    simp [hx]
+  · obtain ⟨j₀, hj₀⟩ := Finite.exists_max fun j ↦ ‖x j‖
+    have hnorm : ‖x‖ = ‖x j₀‖ :=
+      le_antisymm ((pi_norm_le_iff_of_nonneg (norm_nonneg _)).2 hj₀) (norm_le_pi_norm x j₀)
+    rw [hnorm, Real.norm_eq_abs, sq_abs]
+    exact Finset.single_le_sum (f := fun j ↦ x j ^ 2) (fun j _ ↦ sq_nonneg _) (Finset.mem_univ j₀)
 
 end AlphaRAR

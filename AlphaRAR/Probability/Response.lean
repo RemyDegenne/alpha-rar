@@ -32,9 +32,12 @@ information at each step, made rigorous here by the tower property through
 ## Main results
 
 * `AlphaRAR.condExp_feedback`: `𝔼[Y n | filtrationAction n] = (ν (A n))[id]`.
+* `AlphaRAR.memLp_feedback`: `Y n ∈ L²(P)` as soon as every arm's reward distribution is in `L²`.
 -/
 
 open MeasureTheory ProbabilityTheory Filter Learning
+
+open scoped ENNReal
 
 /-!
 ### Filtration facts for the algorithm–environment framework
@@ -133,6 +136,71 @@ lemma armIndicator_eq_one_iff {k : 𝓐} {n : ℕ} {ω : Ω} :
   by_cases h : A n ω = k
   · rw [Set.indicator_of_mem (show ω ∈ {ω | A n ω = k} from h)]; simp [h]
   · rw [Set.indicator_of_notMem (show ω ∉ {ω | A n ω = k} from h)]; simp [h]
+
+omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] in
+/-- **A conditionally-distributed real random variable is in `L²` as soon as its conditional laws
+have uniformly bounded second moments.** Disintegrating,
+`∫⁻ ‖f‖ₑ² dP = ∫⁻ x, (∫⁻ ‖y‖ₑ² dκ x) d(P.map X) ≤ C`, since `P.map X` is a probability measure. -/
+lemma memLp_two_of_hasCondDistrib {𝓧 : Type*} [MeasurableSpace 𝓧]
+    {f : Ω → ℝ} {X : Ω → 𝓧} {κ : Kernel 𝓧 ℝ} [IsSFiniteKernel κ] {C : ℝ≥0∞} (hC : C ≠ ⊤)
+    (hcd : HasCondDistrib f X κ P) (hf : AEStronglyMeasurable f P)
+    (hb : ∀ x, ∫⁻ y, ‖y‖ₑ ^ 2 ∂(κ x) ≤ C) :
+    MemLp f 2 P := by
+  have hXm : AEMeasurable X P := hcd.aemeasurable_fst
+  refine (memLp_two_iff_integrable_sq hf).mpr ⟨hf.pow 2, ?_⟩
+  have hg : Measurable fun p : 𝓧 × ℝ ↦ ‖p.2‖ₑ ^ 2 := (measurable_snd.enorm).pow_const 2
+  have hkey : ∫⁻ ω, ‖f ω ^ 2‖ₑ ∂P = ∫⁻ p : 𝓧 × ℝ, ‖p.2‖ₑ ^ 2 ∂((P.map X) ⊗ₘ κ) := by
+    rw [← hcd.map_eq, lintegral_map' hg.aemeasurable hcd.aemeasurable]
+    exact lintegral_congr fun ω ↦ by rw [enorm_pow]
+  rw [hasFiniteIntegral_iff_enorm, hkey, Measure.lintegral_compProd hg]
+  calc ∫⁻ x, ∫⁻ y, ‖y‖ₑ ^ 2 ∂(κ x) ∂(P.map X) ≤ ∫⁻ _, C ∂(P.map X) := lintegral_mono hb
+    _ = C * (P.map X) Set.univ := by rw [lintegral_const]
+    _ < ⊤ := by
+        rw [Measure.map_apply_of_aemeasurable hXm MeasurableSet.univ, Set.preimage_univ,
+          measure_univ, mul_one]
+        exact hC.lt_top
+
+omit [MeasurableSingletonClass 𝓐] in
+/-- **The response is in `L²` as soon as every arm's reward distribution is** (Condition **A**).
+With finitely many arms the second moments `∫ x² dν a` have a finite maximum, and the response's
+conditional law given the chosen arm is `ν (A n)`; so `hY2` need not be assumed alongside `hνk`.
+
+The two cases of `n` mirror `condExp_feedback_comp`: at `n = 0` the conditional distribution is `ν`
+given `A 0`, and at `n = m+1` it is `ν.prodMkLeft` given the history together with `A (m+1)`. -/
+lemma memLp_feedback [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) (n : ℕ) :
+    MemLp (Y n) 2 P := by
+  classical
+  letI := Fintype.ofFinite 𝓐
+  -- A uniform bound on the arms' second moments.
+  set C : ℝ≥0∞ := ∑ a : 𝓐, ∫⁻ y, ‖y‖ₑ ^ 2 ∂(ν a) with hCdef
+  have hone : ∀ a : 𝓐, ∫⁻ y, ‖y‖ₑ ^ 2 ∂(ν a) ≠ ⊤ := by
+    intro a
+    have hfin := (hνk a).integrable_sq.hasFiniteIntegral
+    rw [hasFiniteIntegral_iff_enorm] at hfin
+    refine ne_of_lt (lt_of_le_of_lt (le_of_eq ?_) hfin)
+    exact lintegral_congr fun y ↦ by rw [enorm_pow]
+  have hC : C ≠ ⊤ := by
+    rw [hCdef]
+    exact (ENNReal.sum_lt_top.mpr fun a _ ↦ (hone a).lt_top).ne
+  have hb : ∀ a : 𝓐, ∫⁻ y, ‖y‖ₑ ^ 2 ∂(ν a) ≤ C :=
+    fun a ↦ Finset.single_le_sum (f := fun a ↦ ∫⁻ y, ‖y‖ₑ ^ 2 ∂(ν a))
+      (fun _ _ ↦ zero_le) (Finset.mem_univ a)
+  have hmeas : AEStronglyMeasurable (Y n) P := (h.measurable_feedback n).aestronglyMeasurable
+  cases n with
+  | zero =>
+    have hcd : HasCondDistrib (Y 0) (A 0) ν P := by
+      have hf := h.hasCondDistrib_feedback_zero
+      rwa [ν0_stationaryEnv] at hf
+    exact memLp_two_of_hasCondDistrib hC hcd hmeas hb
+  | succ m =>
+    have hcd : HasCondDistrib (Y (m + 1)) (fun ω ↦ (history A Y m ω, A (m + 1) ω))
+        (ν.prodMkLeft _) P := by
+      have hf := h.hasCondDistrib_feedback m
+      rwa [feedback_stationaryEnv] at hf
+    refine memLp_two_of_hasCondDistrib hC hcd hmeas fun p ↦ ?_
+    rw [Kernel.prodMkLeft_apply]
+    exact hb p.2
 
 omit [MeasurableSingletonClass 𝓐] in
 /-- **Conditional expectation of a function of the feedback.**

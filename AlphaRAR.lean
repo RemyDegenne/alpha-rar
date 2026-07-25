@@ -9,6 +9,7 @@ import AlphaRAR.Mathlib.TailBoundLIntegral
 import AlphaRAR.Mathlib.TaylorRemainder
 import AlphaRAR.Mathlib.TendstoInMeasure
 import AlphaRAR.Mathlib.TsumMeasureIoi
+import AlphaRAR.Probability.AnscombeCLT
 import AlphaRAR.Probability.ARTSAlgorithm
 import AlphaRAR.Probability.ARTSConsistency
 import AlphaRAR.Probability.ARTSDesigns
@@ -18,6 +19,7 @@ import AlphaRAR.Probability.Assignment
 import AlphaRAR.Probability.AssignmentRate
 import AlphaRAR.Probability.ConsistencyMatching
 import AlphaRAR.Probability.DeviationBound
+import AlphaRAR.Probability.ForcedExploration
 import AlphaRAR.Probability.JointCLT
 import AlphaRAR.Probability.LIL
 import AlphaRAR.Probability.LILHartmanWintner
@@ -41,6 +43,7 @@ import AlphaRAR.Probability.ResponseCLTJoint
 import AlphaRAR.Probability.ResponseConsistency
 import AlphaRAR.Probability.ResponseIncrement
 import AlphaRAR.Probability.ResponseLIL
+import AlphaRAR.Probability.ResponseSparseCLT
 import AlphaRAR.Probability.ResponseTruncation
 import AlphaRAR.Probability.StochasticOrder
 import AlphaRAR.Tactic.Tendsto

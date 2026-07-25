@@ -12,11 +12,14 @@ Appendix~B of the paper.
 \label{sec:forced_def}
 
 \begin{definition}[Exploration schedule]\label{def:exploration_schedule}
+\lean{AlphaRAR.IsExplorationSchedule}\leanok
 An \emph{exploration schedule} is a function $h : \N \to \R$ with
 \begin{enumerate}
   \item[(i)] $\lim_{n\to\infty} h(n) = +\infty$;
   \item[(ii)] $h(n) = o(\sqrt n)$ as $n\to\infty$.
 \end{enumerate}
+(The Lean \texttt{AlphaRAR.IsExplorationSchedule} additionally records that $h$ is nondecreasing, a
+harmless convenience satisfied by the paper's examples that gives $h(\ell)\le h(n)$ for $\ell\le n$.)
 \end{definition}
 
 \begin{example}\label{ex:h_choice}
@@ -35,6 +38,7 @@ For a schedule $h$ and $m\ge1$,
 \end{definition}
 
 \begin{definition}[$\aRTSFE$ family]\label{def:aRTSFE}
+\lean{AlphaRAR.IsARTSFE}\leanok
 \uses{def:aRTS, def:underexplored_sets}
 Fix $\alpha\in[0,1)$ and a schedule $h$. A RAR procedure is in the $\aRTSFE$
 family if its allocation probabilities obey:
@@ -46,6 +50,11 @@ family if its allocation probabilities obey:
     &\mathbf{U}_m=\emptyset \Rightarrow p_{m+1}\ \text{satisfies the throttling condition \eqref{eq:throttle}.}
     \label{eq:fe_otherwise}
 \end{align}
+Like \texttt{AlphaRAR.IsARTS}, the Lean predicate \texttt{AlphaRAR.IsARTSFE} is stated on
+\emph{histories}, so it is a property of the algorithm alone; \texttt{throttle\_of\_isARTSFE} and
+\texttt{fe\_of\_isARTSFE} transport it to the process. It weakens \eqref{eq:fe_phase} to
+$a\notin\mathbf{S}_m\Rightarrow p_{m+1,a}=0$: uniformity on $\mathbf{S}_m$ is never used, only that
+no other arm can be drawn.
 \end{definition}
 
 \begin{remark}\label{rem:d_tracking_fe}
@@ -57,6 +66,7 @@ member with $\alpha=0$ (up to the choice of $h$).
 \label{sec:forced_hitting}
 
 \begin{definition}[$\aRTSFE$ last hitting time]\label{def:hitting_fe}
+\lean{AlphaRAR.aRTSFEUnder}\leanok
 \uses{def:hitting, def:underexplored_sets}
 For $k\in[K]$ and $n\ge1$,
 \[
@@ -69,6 +79,7 @@ least-sampled arm among the under-explored set.
 \end{definition}
 
 \begin{lemma}[Sign after the $\aRTSFE$ hitting time]\label{lem:hitting_fe_sign}
+\lean{AlphaRAR.throttle_of_isARTSFE, AlphaRAR.fe_of_isARTSFE}\leanok
 \uses{def:hitting_fe, def:aRTSFE}
 For an $\aRTSFE$ design and $m$ with $\ell_{n,k}^{\mathrm{FE}} < m \le n$,
 we have $\frac{N_{m,k}}{m} > \hat{\rho}_{m,k}$ and
@@ -87,6 +98,7 @@ $p_{m+1,k}\le\alpha\hat{\rho}_{m,k}$.
 \end{proof}
 
 \begin{lemma}[$\aRTSFE$ satisfies the generic conditions]\label{lem:preliminary_fe}
+\lean{AlphaRAR.aRTSFE_smallness}\leanok
 \uses{def:generic_cond, def:aRTSFE, def:hitting_fe}
 For any $\aRTSFE$ design, the generic conditions
 (Definition~\ref{def:generic_cond}) hold with $\ell_{n,k}^{\mathrm{FE}}$.
@@ -110,6 +122,8 @@ by Definition~\ref{def:exploration_schedule}.
 \label{sec:forced_nonsparse}
 
 \begin{theorem}[Validity under forced exploration]\label{thm:forced_valid}
+\lean{AlphaRAR.aRTSFE_proportion_tendsto, AlphaRAR.aRTSFE_prop_dev, AlphaRAR.aRTSFE_prop_dev_ae,
+AlphaRAR.aRTSFE_count_sub_smul_ae, AlphaRAR.aRTSFE_clt_joint}\leanok
 \uses{def:aRTSFE, def:condA, def:condB}
 Under Conditions~\textbf{A}--\textbf{B}, Theorem~\ref{thm:LLN} and
 Theorem~\ref{thm:normality} hold for every design in the $\aRTSFE$ family.
@@ -119,6 +133,23 @@ Theorem~\ref{thm:normality} hold for every design in the $\aRTSFE$ family.
 \uses{lem:preliminary_fe, thm:generic_main}
 By Lemma~\ref{lem:preliminary_fe} the $\aRTSFE$ design satisfies the generic
 conditions with $\ell^{\mathrm{FE}}$; apply Theorem~\ref{thm:generic_main}.
+
+\emph{Formalization.} Both directions are \emph{direct reuses} of abstract-hitting-time theorems
+with the forced-exploration hitting predicate \texttt{AlphaRAR.aRTSFEUnder}
+(``under-sampled or under-explored''); the throttle enters as the design hypothesis, and the only
+new ingredients are the forced-exploration smallness lemmas. The consistency direction
+($N_{n,k}/n\to v_k$, $\hat\rho_{n,k}\to v_k$) is \texttt{AlphaRAR.aRTSFE\_proportion\_tendsto}
+(reusing \texttt{AlphaRAR.consistency\_of\_hitting}), whose smallness is
+\texttt{AlphaRAR.aRTSFE\_smallness} ($N_\ell-\ell\hat\rho_\ell\le(h(\ell))^+=o(n)$). The
+asymptotic-normality direction (Theorem~\ref{thm:normality}) is: the $o_p(\sqrt n)$ deviation
+\texttt{AlphaRAR.aRTSFE\_prop\_dev} (reusing \texttt{AlphaRAR.prop\_dev\_of\_hitting}, smallness
+\texttt{aRTSFE\_smallness\_op} using $h(n)=o(\sqrt n)$), the a.s.\ $O(\sqrt{n\log\log n})$ deviations
+\texttt{AlphaRAR.aRTSFE\_prop\_dev\_ae} and \texttt{AlphaRAR.aRTSFE\_count\_sub\_smul\_ae} (reusing
+\texttt{prop\_dev\_ae\_of\_hitting}/\texttt{count\_sub\_smul\_ae\_of\_hitting}, smallness
+\texttt{aRTSFE\_smallness\_upper}), and the joint CLT \texttt{AlphaRAR.aRTSFE\_clt\_joint} (reusing
+\texttt{AlphaRAR.clt\_joint\_of\_hitting}). Each abstract-hitting-time theorem is the generalisation
+of the corresponding \texttt{aRTS} theorem to an arbitrary measurable hitting predicate, with the
+throttle and smallness taken as hypotheses.
 \end{proof}
 
 \section{Sparse target allocations}
@@ -129,6 +160,7 @@ exploration guarantees infinite sampling of all arms, which is the only
 ingredient the componentwise CLT needs.
 
 \begin{lemma}[Forced exploration prevents starvation]\label{lem:fe_no_starvation}
+\lean{AlphaRAR.aRTSFE_no_starvation}\leanok
 \uses{def:aRTSFE, def:exploration_schedule}
 For any $\aRTSFE$ design, $N_{n,k}\to\infty$ a.s.\ for every $k\in[K]$ (no
 assumption on the target).
@@ -143,9 +175,17 @@ whence $N_{n,I_{n+1}}\le N_{n,i}=M$ and $N_{n+1,I_{n+1}}\le M+1$. The potential
 $D(n):=\sum_j (M+1-N_{n,j})^+$ then satisfies $D(n+1)-D(n)=-1$ for all $n\ge N$,
 so $D$ becomes negative, contradicting $D\ge0$. Hence every arm is sampled
 infinitely often.
+
+\emph{Formalization.} \texttt{AlphaRAR.aRTSFE\_no\_starvation}, whose deterministic potential-function
+core is \texttt{AlphaRAR.no\_starvation\_pathwise}. It weakens ``$i$ stalls at $M$'' to ``$N_{n,i}<B$
+for all $n$'' (arm $k$ monotone but bounded), and the action-level forced-exploration rule enters as
+the a.s.\ hypothesis \texttt{hfe} (when some arm is under-explored, $A_m$ is a least-sampled
+under-explored arm). The potential $D(n)=\sum_j(B+1-N_{n,j})$ is $\N$-valued (truncated subtraction is
+the positive part), so $D(n+1)+1=D(n)$ for $n\ge N_1$ forces $t\le D(N_1)$ for all $t$, a contradiction.
 \end{proof}
 
 \begin{theorem}[Consistency and rate for sparse targets]\label{thm:sparse_rate}
+\lean{AlphaRAR.aRTSFE_sparse_rate}\leanok
 \uses{def:aRTSFE, def:condA, def:counts, def:estimator}
 Under Condition~\textbf{A} only, any $\aRTSFE$ design satisfies, for every $k$,
 \[
@@ -165,6 +205,15 @@ inequality valid by Lemma~\ref{lem:preliminary_fe}) gives $N_{n,k}/n\to v_k$,
 allowing $v_k=0$. The rate is the LIL for the martingale $Q_{\cdot,k}$ scaled by
 its own sample size $N_{n,k}$, as in Lemma~\ref{lem:theta_LIL} but without
 dividing by $n$.
+
+\emph{Formalization.} \texttt{AlphaRAR.aRTSFE\_sparse\_rate}. All three statements flow from
+no-starvation (\texttt{aRTSFE\_no\_starvation}, $N_{n,k}\to\infty$): it makes every arm sampled
+infinitely often, so $\hat\theta\to\theta$ (\texttt{estimator\_ae\_tendsto\_of\_pullCount\_atTop},
+\emph{no positivity}), whence $\hat\rho\to T(\theta)$, and the matching
+\texttt{consistency\_of\_hitting} (which never uses positivity, so allows $v_k=0$) gives
+$N_{n,k}/n\to T(\theta)_k$. The $N$-scaled rate is \texttt{AlphaRAR.abs\_estimator\_sub\_le\_rate\_loglog\_N},
+which combines the exact Bahadur identity \texttt{estimator\_sub\_eq} with the subsampled loglog LIL
+\texttt{abs\_respMart\_le\_sqrt\_nat\_mul\_loglog} (this uses \emph{only} $N_{n,k}\to\infty$).
 \end{proof}
 
 \begin{corollary}[Componentwise CLT for sparse targets]\label{cor:sparse_clt}
@@ -176,11 +225,68 @@ Under Condition~\textbf{A} only, any $\aRTSFE$ design satisfies
 \]
 \end{corollary}
 
-\begin{proof}
+\lean{AlphaRAR.aRTSFE_sparse_clt}\leanok
+
+\begin{proof}\leanok
 \uses{lem:fe_no_starvation, lem:componentwise}
-By Lemma~\ref{lem:fe_no_starvation}, $N_{n,k}\to\infty$ for all $k$, which is the
-sole hypothesis of Lemma~\ref{lem:componentwise}. Apply it.
+By Lemma~\ref{lem:fe_no_starvation}, $N_{n,k}\to\infty$ for all $k$. Given the regularity of the
+pull counts, Lemma~\ref{lem:componentwise} applies and gives the statement.
+
+\emph{Formalization.} \texttt{AlphaRAR.aRTSFE\_sparse\_clt}. Arms are split by a predicate
+$\mathrm{FEfed}$:
+\begin{itemize}
+  \item if arm $k$ is eventually fed \emph{only} by forced exploration, then its count is regular
+    against the \emph{deterministic} schedule, $N_{n,k}/h(n)\to1$
+    (\texttt{AlphaRAR.pullCount\_div\_sched\_tendsto\_one});
+  \item otherwise arm $k$ has a positive limiting proportion $v_k>0$ with $N_{n,k}/n\to v_k$, so it
+    is regular against $v_kn$.
+\end{itemize}
+Both are then covered by the single per-arm normalizer $c_{k,n}=h(n)$ or $v_kn$, which is what
+\texttt{estimatorError\_joint\_tendsto\_multivariateGaussian} consumes (at $v\equiv1$). The split is
+unavoidable: not every arm can be forced-exploration-fed, since $\sum_kN_{n,k}=n$ while
+$K\,h(n)=o(n)$.
+
+The regularity for a forced-exploration-fed arm comes from a two-sided bound. \emph{Upper}
+(\texttt{pullCount\_le\_sched\_of\_fe\_only}): at a forced-exploration round the selected arm is
+itself under-explored, so one pull leaves it at $h(m)+1\le h(n)+1$. \emph{Lower}
+(\texttt{pullCount\_ge\_min\_sched\_of\_fe}): the selected arm is a \emph{least-sampled}
+under-explored arm, hence sits at the global minimum, so the potential
+$D(m)=\sum_j(L-N_{m,j})^+$ drops by exactly one per round while the minimum stays below $L$; since
+$D\le K L$ this can persist for at most $KL$ rounds, so within any longer window the minimum has
+reached $L$ or forced exploration stopped firing (which already means every count exceeds $h$). This
+is the same potential-function device as Lemma~\ref{lem:fe_no_starvation}. A mild regularity of $h$
+itself is assumed (\texttt{hshift}: shifting the argument by the $O(h(n))$ catch-up window does not
+change $h$ to first order), satisfied by $h(n)=(n^{1/3}-K/2)^+$.
 \end{proof}
+
+\begin{remark}[Scope of the sparse CLT]\label{rem:sparse_clt_scope}
+The hypothesis that a sparse arm is eventually fed only by forced exploration is a genuine
+restriction, not an artifact. Since $T\ge0$ and $T(\Params)_k=0$, the point $\Params$ minimises
+$T_k$, so $\nabla T_k(\Params)=0$ and $T(\estParams_n)_k=O(\|\estParams_n-\Params\|^2)$. A design
+that \emph{chases} its target then allocates arm $k$ about $n\,T(\estParams_n)_k\asymp n/N_{n,k}$
+pulls, i.e.\ $N_{n,k}\asymp\sqrt n$ --- which dominates $h(n)=o(\sqrt n)$. For such designs (e.g.\ the
+distance-based example, where $\delta_{m,k}=(\hat\rho_{m,k}-N_{m,k}/m)^+>0$ keeps feeding arm $k$)
+forced exploration does \emph{not} set the scale, and whether $N_{n,k}/\sqrt n$ converges is a
+delicate question about the feedback between the estimator's own fluctuations and the sampling rate.
+By Remark~\ref{rem:componentwise_regularity} the conclusion cannot be obtained from
+$N_{n,k}\to\infty$ alone, so this case is genuinely open.
+\end{remark}
+
+\begin{remark}[Removing the forced-exploration-fed hypothesis]\label{rem:sparse_clt_fix}
+The hypothesis discussed in Remark~\ref{rem:sparse_clt_scope} can be \emph{discharged} rather than
+assumed, at the price of reversing condition (ii) of Definition~\ref{def:exploration_schedule}.
+Replacing $h(n)=o(\sqrt n)$ by $\sqrt{n\log\log n}\ll h(n)=o(n)$ puts a sparse arm in the
+forced-exploration-dominated regime, where its count is regular against the deterministic schedule.
+Condition (ii) is in any case not needed elsewhere: under Condition~\textbf{B} forced exploration
+switches itself off (\texttt{AlphaRAR.underExplored\_eventually\_empty}), so $h(n)=o(n)$ suffices for
+the whole $\sqrt n$-theory. The reversed condition is satisfiable precisely where (ii) fails, e.g.\
+$h(n)=n^{2/3}$ (\texttt{AlphaRAR.sched23\_satisfies\_schedule\_hypotheses}).
+
+\emph{Formalization.} \texttt{AlphaRAR.aRTSFE\_sparse\_clt\_of\_contDiffAt}: the conclusion of
+Corollary~\ref{cor:sparse_clt} with the forced-exploration-fed hypothesis replaced by the reversed
+schedule condition and $C^2$ smoothness of $T$ at $\Params$. This is a deviation from the paper, not
+a formalization of it; the argument is written up in \texttt{maths/sparse-clt-fix.md}.
+\end{remark}
 
 \begin{remark}\label{rem:sparse_normalization}
 The normalization in Corollary~\ref{cor:sparse_clt} is componentwise (by
