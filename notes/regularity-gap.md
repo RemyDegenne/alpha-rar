@@ -128,7 +128,7 @@ $\{N_{n,k}\ge m\}$ with deterministic $m$ is what repairs this, and the proof do
 > for every $k$ there is a deterministic $c_{k,n}\to\infty$ with $N_{n,k}/c_{k,n}\to1$ a.s.
 
 — and proved in that form: `AlphaRAR.estimatorError_joint_tendsto_multivariateGaussian`
-(`AlphaRAR/Probability/ResponseCLTJoint.lean`). It is stated with **per-arm** deterministic
+(`AlphaRAR/YDK2026/ResponseCLTJoint.lean`). It is stated with **per-arm** deterministic
 normalizers and covers both regimes as instances:
 
 * $c_{k,n}=n$, $\rho=v>0$ → the non-sparse result (recovers Lemma 1 of `hu2006asymptotically`);

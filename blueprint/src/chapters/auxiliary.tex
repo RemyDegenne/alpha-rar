@@ -121,7 +121,7 @@ $\mathcal{G}_n = \filt_{n-1}\vee\sigma(A_n)$ (\texttt{filtrationAction}),
   \E\big[(\Delta Q_{n,k})^2 \mid \mathcal{G}_n\big] = X_{n,k}\, V_k,
 \]
 where $V_k = \Var[\xi_{1,k}] = \int (x-\theta_k)^2\,\nu_k(dx)$ is the variance of arm $k$
-(Mathlib's \texttt{variance}, wrapped as \texttt{AlphaRAR.armVar}).
+(Mathlib's \texttt{variance}: \texttt{Var[id; ν k]}).
 \end{lemma}
 
 \begin{proof}\leanok
