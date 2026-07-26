@@ -73,6 +73,19 @@ lemma stronglyMeasurable_respIncr (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
   exact (stronglyMeasurable_const.indicator (hAm (measurableSet_singleton k))).mul
     (hYm.stronglyMeasurable.sub stronglyMeasurable_const)
 
+/-- Each increment is in `L²`: `memLp_respMart_increment` phrased in terms of `respIncr`. -/
+lemma memLp_respIncr (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (k : 𝓐) (i : ℕ) : MemLp (respIncr ν A Y k i) 2 P :=
+  memLp_respMart_increment k (h.measurable_action i) (hY2 i)
+
+/-- The increments are martingale differences for `𝒢`: `condExp_respMart_increment` phrased in
+terms of `respIncr`. -/
+lemma condExp_respIncr (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (k : 𝓐) (i : ℕ) :
+    P[respIncr ν A Y k i
+        | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i] =ᵐ[P] 0 :=
+  condExp_respMart_increment h k i ((hY2 i).integrable one_le_two)
+
 /-- The triangular martingale-difference array of arm `k`, normalized by the deterministic
 `a_n = V_k v_k n`: row `n` is `d_0/√a_n, …, d_{n-1}/√a_n` with `d_i = 𝟙{A i = k}(Y i - θ_k)`. Its
 row sum is `Q_{n,k}/√(V_k v_k n)`. -/
@@ -80,9 +93,7 @@ noncomputable def respArray (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (k : 𝓐) (vk : ℝ) : MartDiffArray P :=
   MartDiffArray.ofSeq (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback)
     (respIncr ν A Y k) (fun n ↦ Var[id; ν k] * vk * n)
-    (fun i ↦ memLp_respMart_increment k (h.measurable_action i) (hY2 i))
-    (fun i ↦ condExp_respMart_increment h k i ((hY2 i).integrable one_le_two))
-    (fun i ↦ stronglyMeasurable_respIncr h k i)
+    (memLp_respIncr h hY2 k) (condExp_respIncr h hY2 k) (stronglyMeasurable_respIncr h k)
 
 @[simp] lemma respArray_d (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (k : 𝓐) (vk : ℝ) (n i : ℕ) :
@@ -122,9 +133,7 @@ lemma predVar_respArray_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
   have h1 := MartDiffArray.predVar_ofSeq
     (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) (respIncr ν A Y k)
     (fun n ↦ Var[id; ν k] * vk * n)
-    (fun i ↦ memLp_respMart_increment k (h.measurable_action i) (hY2 i))
-    (fun i ↦ condExp_respMart_increment h k i ((hY2 i).integrable one_le_two))
-    (fun i ↦ stronglyMeasurable_respIncr h k i) ha n
+    (memLp_respIncr h hY2 k) (condExp_respIncr h hY2 k) (stronglyMeasurable_respIncr h k) ha n
   have hcondsq : ∀ i, P[fun ω ↦ (respIncr ν A Y k i ω) ^ 2
         | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i] =ᵐ[P]
       fun ω ↦ armIndicator A k i ω * Var[id; ν k] :=
@@ -225,11 +234,11 @@ lemma lindeberg_respArray_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
           rw [Set.indicator_apply]
           by_cases hc : ε * s < |Y i ω - θ|
           · rw [if_pos (show ω ∈ {ω | ε < |s⁻¹ * respIncr ν A Y k i ω|} by
-                rw [Set.mem_setOf_eq, hri]; exact hcond.mpr hc), hri, harm, one_mul, hφ,
+                rw [Set.mem_ofPred_eq, hri]; exact hcond.mpr hc), hri, harm, one_mul, hφ,
               Set.indicator_of_mem (show Y i ω ∈ {x | ε * s < |x - θ|} from hc),
               mul_pow, inv_pow, hs2]
           · rw [if_neg (show ω ∉ {ω | ε < |s⁻¹ * respIncr ν A Y k i ω|} by
-                rw [Set.mem_setOf_eq, hri]; exact fun hh ↦ hc (hcond.mp hh)), harm, one_mul, hφ,
+                rw [Set.mem_ofPred_eq, hri]; exact fun hh ↦ hc (hcond.mp hh)), harm, one_mul, hφ,
               Set.indicator_of_notMem (show Y i ω ∉ {x | ε * s < |x - θ|} from hc)]
             ring
         · have hnotmem : ω ∉ ({ω | A i ω = k} : Set Ω) := by simpa using hak
@@ -238,7 +247,7 @@ lemma lindeberg_respArray_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
           have harm0 : armIndicator A k i ω = 0 := by
             simp only [armIndicator, Set.indicator_of_notMem hnotmem]
           rw [Set.indicator_of_notMem (show ω ∉ {ω | ε < |s⁻¹ * respIncr ν A Y k i ω|} by
-                rw [Set.mem_setOf_eq, hri0, mul_zero, abs_zero]; exact not_lt.mpr hε.le),
+                rw [Set.mem_ofPred_eq, hri0, mul_zero, abs_zero]; exact not_lt.mpr hε.le),
             harm0, zero_mul, mul_zero]
       have hφint : Integrable (fun ω ↦ φ (Y i ω)) P := by
         have hcomp : (fun ω ↦ φ (Y i ω))

@@ -158,7 +158,7 @@ theorem clt_joint
     refine ((tendstoInMeasure_iff_dist.mp hprop) ε hε).congr fun n ↦ ?_
     congr 1
     ext ω
-    simp only [Set.mem_setOf_eq, dist_zero_right, hembed n ω, norm_toLp_sumElim_zero]
+    simp only [Set.mem_ofPred_eq, dist_zero_right, hembed n ω, norm_toLp_sumElim_zero]
   have hslut := tendsto_map_comp_of_tendstoInMeasure_const (P := P) (μ' := μ') g hg
     (fun n ↦ (hXmeas n).aemeasurable) hRmeas hclt hR
   -- The limit law: `μ'.map (d) = 𝒩(0, D M Dᵀ) = 𝒩(0, Ω)`.

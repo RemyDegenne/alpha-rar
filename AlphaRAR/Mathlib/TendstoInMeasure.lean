@@ -69,9 +69,9 @@ theorem tendstoInMeasure_smul_littleO_of_tight
   calc μ {ω | ε ≤ dist (a n • φ (S n ω)) 0}
       ≤ μ ({ω | δ ≤ dist (S n ω) 0} ∪ {ω | M ≤ dist (X n ω) 0}) := by
         refine measure_mono fun ω hω ↦ ?_
-        simp only [Set.mem_setOf_eq, dist_zero_right] at hω
+        simp only [Set.mem_ofPred_eq, dist_zero_right] at hω
         by_contra hcon
-        simp only [Set.mem_union, Set.mem_setOf_eq, dist_zero_right, not_or, not_le] at hcon
+        simp only [Set.mem_union, Set.mem_ofPred_eq, dist_zero_right, not_or, not_le] at hcon
         obtain ⟨hSlt, hXlt⟩ := hcon
         have hXnorm : ‖X n ω‖ = a n * ‖S n ω‖ := by
           rw [hrel, norm_smul, Real.norm_of_nonneg (ha n)]
@@ -106,7 +106,7 @@ theorem tight_of_tendsto_probabilityMeasure {mE : MeasurableSpace E} [OpensMeasu
   -- continuity from above: the finite measure `ν` of `{j ≤ ‖·‖}` tends to `ν ∅ = 0`
   have hCanti : Antitone (fun j : ℕ ↦ {x : E | (j : ℝ) ≤ dist x 0}) := by
     intro i j hij x hx
-    simp only [Set.mem_setOf_eq] at hx ⊢
+    simp only [Set.mem_ofPred_eq] at hx ⊢
     exact le_trans (by exact_mod_cast hij) hx
   have hCclosed : ∀ j : ℕ, IsClosed {x : E | (j : ℝ) ≤ dist x 0} := fun j ↦
     isClosed_le continuous_const (continuous_id.dist continuous_const)
@@ -127,7 +127,7 @@ theorem tight_of_tendsto_probabilityMeasure {mE : MeasurableSpace E} [OpensMeasu
     isClosed_le continuous_const (continuous_id.dist continuous_const)
   have hsub : {x : E | max (j : ℝ) 1 ≤ dist x 0} ⊆ {x : E | (j : ℝ) ≤ dist x 0} := by
     intro x hx
-    simp only [Set.mem_setOf_eq] at hx ⊢
+    simp only [Set.mem_ofPred_eq] at hx ⊢
     exact le_trans (le_max_left _ _) hx
   have hνF : (ν : Measure E) {x : E | max (j : ℝ) 1 ≤ dist x 0} < η :=
     lt_of_le_of_lt (measure_mono hsub) hj

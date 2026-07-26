@@ -67,11 +67,11 @@ lemma exists_meas_lt [IsFiniteMeasure μ] {f : Ω → ℝ} (hf : Measurable f)
     (measurableSet_lt measurable_const hf.abs).nullMeasurableSet
   have hanti : Antitone s := by
     intro a b hab ω hω
-    simp only [hs_def, Set.mem_setOf_eq] at hω ⊢
+    simp only [hs_def, Set.mem_ofPred_eq] at hω ⊢
     exact lt_of_le_of_lt (by exact_mod_cast hab) hω
   have hempty : ⋂ M, s M = ∅ := by
     ext ω
-    simp only [hs_def, Set.mem_iInter, Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false,
+    simp only [hs_def, Set.mem_iInter, Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false,
       not_forall, not_lt]
     obtain ⟨M, hM⟩ := exists_nat_ge |f ω|
     exact ⟨M, hM⟩
@@ -86,7 +86,7 @@ lemma IsLittleOpOne.tendsto_abs {Y : ℕ → Ω → ℝ} (hY : IsLittleOpOne μ 
   refine Tendsto.congr (fun n ↦ ?_) (hY (ENNReal.ofReal ε) (ENNReal.ofReal_pos.mpr hε))
   congr 1
   ext ω
-  simp only [Set.mem_setOf_eq, Pi.zero_apply, edist_zero_right, Real.enorm_eq_ofReal_abs,
+  simp only [Set.mem_ofPred_eq, Pi.zero_apply, edist_zero_right, Real.enorm_eq_ofReal_abs,
     ENNReal.ofReal_le_ofReal_iff (abs_nonneg _)]
 
 /-- Build `o_p(1)` from the `|·|`-form: if `μ {ε ≤ |Y n|} → 0` for all real `ε > 0`,
@@ -102,7 +102,7 @@ lemma isLittleOpOne_of_tendsto_abs {Y : ℕ → Ω → ℝ}
       funext n
       have hemp : {ω | (⊤ : ℝ≥0∞) ≤ edist (Y n ω) ((0 : Ω → ℝ) ω)} = ∅ := by
         ext ω
-        simp only [Set.mem_setOf_eq, Pi.zero_apply, edist_zero_right, Set.mem_empty_iff_false,
+        simp only [Set.mem_ofPred_eq, Pi.zero_apply, edist_zero_right, Set.mem_empty_iff_false,
           iff_false, top_le_iff]
         exact enorm_lt_top.ne
       rw [hemp, measure_empty]
@@ -111,7 +111,7 @@ lemma isLittleOpOne_of_tendsto_abs {Y : ℕ → Ω → ℝ}
   · refine Tendsto.congr (fun n ↦ ?_) (h ε.toReal (ENNReal.toReal_pos hε.ne' hεtop))
     congr 1
     ext ω
-    simp only [Set.mem_setOf_eq, Pi.zero_apply, edist_zero_right, Real.enorm_eq_ofReal_abs]
+    simp only [Set.mem_ofPred_eq, Pi.zero_apply, edist_zero_right, Real.enorm_eq_ofReal_abs]
     exact (ENNReal.le_ofReal_iff_toReal_le hεtop (abs_nonneg _)).symm
 
 /-- **Convergence in probability gives `o_p`** (blueprint `lem:op_of_tendsto`, first
@@ -137,7 +137,7 @@ lemma IsLittleOpOne.add {X Y : ℕ → Ω → ℝ} (hX : IsLittleOpOne μ X)
     (fun n ↦ zero_le) (fun n ↦ ?_)
   refine (measure_mono ?_).trans (measure_union_le _ _)
   intro ω hω
-  simp only [Set.mem_setOf_eq, Set.mem_union, Pi.zero_apply, edist_zero_right] at hω ⊢
+  simp only [Set.mem_ofPred_eq, Set.mem_union, Pi.zero_apply, edist_zero_right] at hω ⊢
   by_contra hcon
   rcases not_or.mp hcon with ⟨h1, h2⟩
   rw [not_le] at h1 h2
@@ -158,7 +158,7 @@ lemma IsBigOpOne.add {X Y : ℕ → Ω → ℝ} (hX : IsBigOpOne μ X) (hY : IsB
   have hsub : {ω | Mx + My < |X n ω + Y n ω|}
       ⊆ {ω | Mx < |X n ω|} ∪ {ω | My < |Y n ω|} := by
     intro ω hω
-    simp only [Set.mem_setOf_eq, Set.mem_union] at hω ⊢
+    simp only [Set.mem_ofPred_eq, Set.mem_union] at hω ⊢
     by_contra hcon
     rcases not_or.mp hcon with ⟨h1, h2⟩
     rw [not_lt] at h1 h2
@@ -187,11 +187,11 @@ lemma IsLittleOpOne.isBigOpOne [IsFiniteMeasure μ] {Y : ℕ → Ω → ℝ}
   rcases le_or_gt N n with hn | hn
   · refine le_trans (measure_mono ?_) (hN n hn)
     intro ω hω
-    simp only [Set.mem_setOf_eq] at hω ⊢
+    simp only [Set.mem_ofPred_eq] at hω ⊢
     linarith
   · refine le_trans (measure_mono ?_) (hMn n)
     intro ω hω
-    simp only [Set.mem_setOf_eq] at hω ⊢
+    simp only [Set.mem_ofPred_eq] at hω ⊢
     have hterm : |Mn n| + 1 ≤ ∑ k ∈ Finset.range N, (|Mn k| + 1) :=
       Finset.single_le_sum (f := fun k ↦ |Mn k| + 1) (fun k _ ↦ by positivity)
         (Finset.mem_range.mpr hn)
@@ -226,7 +226,7 @@ lemma IsBigOpOne.mul_littleOp {X Y : ℕ → Ω → ℝ} (hX : IsBigOpOne μ X)
   have hsub : {ω | ε ≤ |X n ω * Y n ω|}
       ⊆ {ω | M' < |X n ω|} ∪ {ω | ε / M' ≤ |Y n ω|} := by
     intro ω hω
-    simp only [Set.mem_setOf_eq, Set.mem_union, abs_mul] at hω ⊢
+    simp only [Set.mem_ofPred_eq, Set.mem_union, abs_mul] at hω ⊢
     by_contra hcon
     rcases not_or.mp hcon with ⟨h1, h2⟩
     rw [not_lt] at h1
@@ -252,7 +252,7 @@ lemma IsBigOpOne.bdd_mul {X : ℕ → Ω → ℝ} {c : ℕ → ℝ} {B : ℝ} (h
   refine ⟨B * M + 1, fun n ↦ ?_⟩
   have hsub : {ω | B * M + 1 < |c n * X n ω|} ⊆ {ω | M < |X n ω|} := by
     intro ω hω
-    simp only [Set.mem_setOf_eq] at hω ⊢
+    simp only [Set.mem_ofPred_eq] at hω ⊢
     rw [abs_mul] at hω
     by_contra hcon
     rw [not_lt] at hcon
@@ -270,7 +270,7 @@ lemma IsBigOpOne.of_sq {Z : ℕ → Ω → ℝ} (h : IsBigOpOne μ (fun n ω ↦
   refine ⟨√(max M' 0), fun n ↦ ?_⟩
   refine le_trans (measure_mono ?_) (hM' n)
   intro ω hω
-  simp only [Set.mem_setOf_eq] at hω ⊢
+  simp only [Set.mem_ofPred_eq] at hω ⊢
   have hs : (0 : ℝ) ≤ √(max M' 0) := Real.sqrt_nonneg _
   have hlt : √(max M' 0) < |Z n ω| := hω
   have hz : |(Z n ω) ^ 2| = (Z n ω) ^ 2 := abs_of_nonneg (sq_nonneg _)
@@ -301,7 +301,7 @@ lemma isBigOpOne_of_lintegral_le (X : ℕ → Ω → ℝ) (u : ℕ → ℝ) (C :
   have hsub : {ω | M < |X n ω / u n|}
       ⊆ {ω | ENNReal.ofReal (M * u n) ≤ ENNReal.ofReal |X n ω|} := by
     intro ω hω
-    simp only [Set.mem_setOf_eq] at hω ⊢
+    simp only [Set.mem_ofPred_eq] at hω ⊢
     rw [abs_div, abs_of_pos (hu n), lt_div_iff₀ (hu n)] at hω
     exact ENNReal.ofReal_le_ofReal hω.le
   have hle : ENNReal.ofReal (C / M) ≤ ε := by

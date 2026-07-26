@@ -378,7 +378,7 @@ lemma condExp_sq_le [IsProbabilityMeasure P] {d : Ω → ℝ} (hd : Measurable d
     by_cases h : ω ∈ s
     · rw [Set.indicator_of_mem h, sub_self]; exact sq_nonneg ε
     · rw [Set.indicator_of_notMem h, sub_zero]
-      have hd_le : |d ω| ≤ ε := by simpa only [hs_def, Set.mem_setOf_eq, not_lt] using h
+      have hd_le : |d ω| ≤ ε := by simpa only [hs_def, Set.mem_ofPred_eq, not_lt] using h
       nlinarith [sq_abs (d ω), abs_nonneg (d ω), hd_le]
   have hsub : P[(fun ω ↦ (d ω) ^ 2) - s.indicator (fun ω ↦ (d ω) ^ 2) | m]
       ≤ᵐ[P] fun _ ↦ ε ^ 2 := by
@@ -420,7 +420,7 @@ lemma condExp_min_le {d : Ω → ℝ} (hd : Measurable d)
       have hml := min_le_left (2 * t ^ 2 * (d ω) ^ 2) (|t| ^ 3 * |d ω| ^ 3)
       linarith
     · rw [Set.indicator_of_notMem h, mul_zero, add_zero]
-      have hd_le : |d ω| ≤ ε := by simpa only [hs_def, Set.mem_setOf_eq, not_lt] using h
+      have hd_le : |d ω| ≤ ε := by simpa only [hs_def, Set.mem_ofPred_eq, not_lt] using h
       have hmr := min_le_right (2 * t ^ 2 * (d ω) ^ 2) (|t| ^ 3 * |d ω| ^ 3)
       have hcube : |t| ^ 3 * |d ω| ^ 3 ≤ |t| ^ 3 * ε * (d ω) ^ 2 := by
         have h2 : |d ω| ^ 3 = |d ω| * (d ω) ^ 2 := by rw [pow_succ, sq_abs]; ring
@@ -469,7 +469,7 @@ lemma tendsto_integral_norm_of_tendstoInMeasure_zero [IsProbabilityMeasure P] {E
     have hset : ∀ n, {ω | ENNReal.ofReal (δ / 2) ≤ edist (g n ω) ((0 : Ω → E) ω)}
         = {ω | δ / 2 ≤ ‖g n ω‖} := by
       intro n; ext ω
-      simp only [Set.mem_setOf_eq, Pi.zero_apply, edist_zero_right]
+      simp only [Set.mem_ofPred_eq, Pi.zero_apply, edist_zero_right]
       rw [← ofReal_norm, ENNReal.ofReal_le_ofReal_iff (norm_nonneg _)]
     simp_rw [hset] at h0
     exact (ENNReal.tendsto_toReal_zero_iff (fun n ↦ measure_ne_top P _)).mpr h0
@@ -486,7 +486,7 @@ lemma tendsto_integral_norm_of_tendstoInMeasure_zero [IsProbabilityMeasure P] {E
       by_cases hmem : ω ∈ {ω | δ / 2 ≤ ‖g n ω‖}
       · rw [Set.indicator_of_mem hmem]; linarith [hω, hε.le]
       · rw [Set.indicator_of_notMem hmem, add_zero]
-        simp only [Set.mem_setOf_eq, not_le] at hmem
+        simp only [Set.mem_ofPred_eq, not_le] at hmem
         linarith [hmem]
     calc ∫ ω, ‖g n ω‖ ∂P
         ≤ ∫ ω, (δ / 2 + {ω | δ / 2 ≤ ‖g n ω‖}.indicator (fun _ ↦ C') ω) ∂P :=
@@ -1553,7 +1553,7 @@ lemma tendsto_measure_predVar_gt {σ2 B : ℝ} (hσB : σ2 < B)
   rw [tendstoInMeasure_iff_dist] at hV
   have hsub : ∀ n, {ω | B < A.predVar n ω} ⊆ {ω | B - σ2 ≤ dist (A.predVar n ω) σ2} := by
     intro n ω hω
-    simp only [Set.mem_setOf_eq] at hω ⊢
+    simp only [Set.mem_ofPred_eq] at hω ⊢
     rw [Real.dist_eq, abs_of_pos (by linarith)]
     linarith
   exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds (hV (B - σ2) (by linarith))
@@ -1576,10 +1576,10 @@ lemma lindeberg_trunc_le [IsFiniteMeasure P] (B : ℝ) (n : ℕ) (ε : ℝ) :
     by_cases hmem : ω ∈ {ω | A.partialVar n (i + 1) ω ≤ B}
     · have hdeq : (A.trunc B).d n i ω = A.d n i ω := Set.indicator_of_mem hmem _
       refine le_of_eq ?_
-      simp only [Set.indicator_apply, Set.mem_setOf_eq, hdeq]
+      simp only [Set.indicator_apply, Set.mem_ofPred_eq, hdeq]
     · have hd0 : (A.trunc B).d n i ω = 0 := Set.indicator_of_notMem hmem _
       rw [Set.indicator_apply]
-      simp only [Set.mem_setOf_eq, hd0, abs_zero, ne_eq, OfNat.ofNat_ne_zero,
+      simp only [Set.mem_ofPred_eq, hd0, abs_zero, ne_eq, OfNat.ofNat_ne_zero,
         not_false_eq_true, zero_pow, ite_self]
       exact Set.indicator_nonneg (fun _ _ ↦ sq_nonneg _) ω
   filter_upwards [ae_all_iff.mpr hcell] with ω hω

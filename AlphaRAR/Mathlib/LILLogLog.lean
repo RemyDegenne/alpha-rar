@@ -95,7 +95,7 @@ lemma ae_eventually_forall_lt_of_summable_eventually [IsProbabilityMeasure μ]
     exact ENNReal.ofReal_ne_top
   filter_upwards [ae_eventually_notMem hfin] with ω hω
   filter_upwards [hω] with k hk
-  simp only [hs_def, Set.mem_setOf_eq, not_exists, not_and] at hk
+  simp only [hs_def, Set.mem_ofPred_eq, not_exists, not_and] at hk
   intro n hn
   by_contra hcon
   rw [not_lt] at hcon

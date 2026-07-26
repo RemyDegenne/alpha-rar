@@ -81,14 +81,14 @@ lemma IsLittleOpOne.const_mul {X : ℕ → Ω → ℝ} (c : ℝ) (hX : IsLittleO
       funext n
       convert measure_empty (μ := μ)
       ext ω
-      simp only [zero_mul, abs_zero, Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_le]
+      simp only [zero_mul, abs_zero, Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_le]
       exact hε
     rw [hz]; exact tendsto_const_nhds
   · have hcpos : 0 < |c| := abs_pos.mpr hc
     refine (hX.tendsto_abs (div_pos hε hcpos)).congr fun n ↦ ?_
     congr 1
     ext ω
-    simp only [Set.mem_setOf_eq, abs_mul]
+    simp only [Set.mem_ofPred_eq, abs_mul]
     rw [div_le_iff₀ hcpos, mul_comm]
 
 /-- If `|X| = o_p(1)` then `X = o_p(1)`. -/
@@ -104,7 +104,7 @@ lemma isLittleOpOne_zero : IsLittleOpOne μ (fun _ _ ↦ (0 : ℝ)) := by
     funext n
     convert measure_empty (μ := μ)
     ext ω
-    simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_le, abs_zero]
+    simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_le, abs_zero]
     exact hε
   rw [hz]
   exact tendsto_const_nhds
@@ -127,7 +127,7 @@ lemma isBigOpOne_of_ae_bounded [IsFiniteMeasure μ] {X : ℕ → Ω → ℝ}
   set s : ℕ → Set Ω := fun M ↦ {ω | ∃ n, (M : ℝ) < |X n ω|} with hs
   have hsmeas : ∀ M, NullMeasurableSet (s M) μ := fun M ↦ by
     change NullMeasurableSet {ω | ∃ n, (M : ℝ) < |X n ω|} μ
-    rw [Set.setOf_exists]
+    rw [Set.ofPred_exists]
     exact (MeasurableSet.iUnion fun n ↦
       measurableSet_lt measurable_const (hmeas n).abs).nullMeasurableSet
   have hsanti : Antitone s := by

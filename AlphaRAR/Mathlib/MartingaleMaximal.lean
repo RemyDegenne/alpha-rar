@@ -86,7 +86,7 @@ lemma lintegral_sup'_abs_le_two_mul_sqrt (hM : Martingale M ℱ μ)
         = {ω | ((t ^ 2).toNNReal : ℝ)
             ≤ (range (N + 1)).sup' nonempty_range_add_one (fun k ↦ M k ω ^ 2)} := by
       ext ω
-      simp only [Set.mem_setOf_eq, hYdef, hcast, Finset.le_sup'_iff]
+      simp only [Set.mem_ofPred_eq, hYdef, hcast, Finset.le_sup'_iff]
       constructor
       · rintro ⟨k, hk, hkle⟩
         exact ⟨k, hk, (pow_le_pow_left₀ ht.le hkle 2).trans_eq (sq_abs (M k ω))⟩

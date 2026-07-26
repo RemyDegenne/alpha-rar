@@ -47,7 +47,7 @@ lemma respIncr_mul_eq_zero {a b : 𝓐} (hab : a ≠ b) (i : ℕ) (ω : Ω) :
   simp only [respIncr, armIndicator]
   rcases eq_or_ne (A i ω) a with ha | ha
   · rw [Set.indicator_of_notMem (show ω ∉ {ω | A i ω = b} by
-      simp only [Set.mem_setOf_eq, ha]; exact hab)]
+      simp only [Set.mem_ofPred_eq, ha]; exact hab)]
     ring
   · rw [Set.indicator_of_notMem (show ω ∉ {ω | A i ω = a} by simpa using ha)]
     ring
@@ -160,7 +160,7 @@ lemma wIncr_eq_single {a : 𝓐} {i : ℕ} {ω : Ω} (ha : A i ω = a) (w : 𝓐
     rw [respIncr]
     simp only [armIndicator]
     rw [Set.indicator_of_notMem (show ω ∉ {ω | A i ω = b} by
-      simp only [Set.mem_setOf_eq, ha]; exact fun hh ↦ hba hh.symm), zero_mul, mul_zero]
+      simp only [Set.mem_ofPred_eq, ha]; exact fun hh ↦ hba hh.symm), zero_mul, mul_zero]
   · exact fun h ↦ absurd (Finset.mem_univ a) h
 
 omit [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] [IsMarkovKernel ν] [IsProbabilityMeasure P] in
@@ -360,7 +360,7 @@ lemma lindeberg_wArray_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
           mul_zero]
     · have hb0 : armIndicator A b i ω = 0 := by
         simp only [armIndicator, Set.indicator_of_notMem
-          (show ω ∉ {ω | A i ω = b} by simp only [Set.mem_setOf_eq]; exact fun hh ↦ hb hh.symm)]
+          (show ω ∉ {ω | A i ω = b} by simp only [Set.mem_ofPred_eq]; exact fun hh ↦ hb hh.symm)]
       rw [hb0, zero_mul]
   have hsummand : ∀ i, (P[{ω | ε < |(wArray h hY2 wn).d n i ω|}.indicator
         (fun ω ↦ ((wArray h hY2 wn).d n i ω) ^ 2)
@@ -427,7 +427,7 @@ lemma tendstoInMeasure_lindeberg_wArray (h : IsAlgEnvSeq A Y alg (stationaryEnv 
         rw [hG]
         have hset : {x : ℝ | ε < |w a / √(c a n)| * |x - (ν a)[id]|} = ∅ := by
           ext x
-          simp only [hwa, zero_div, abs_zero, zero_mul, Set.mem_setOf_eq,
+          simp only [hwa, zero_div, abs_zero, zero_mul, Set.mem_ofPred_eq,
             Set.mem_empty_iff_false, iff_false, not_lt]
           exact hε.le
         rw [hset]
@@ -448,7 +448,7 @@ lemma tendstoInMeasure_lindeberg_wArray (h : IsAlgEnvSeq A Y alg (stationaryEnv 
       have hset : {x : ℝ | ε * √(c a n) / |w a| < |x - (ν a)[id]|}
           = {x : ℝ | ε < |w a / √(c a n)| * |x - (ν a)[id]|} := by
         ext x
-        simp only [Set.mem_setOf_eq, abs_div, abs_of_nonneg (Real.sqrt_nonneg (c a n))]
+        simp only [Set.mem_ofPred_eq, abs_div, abs_of_nonneg (Real.sqrt_nonneg (c a n))]
         rw [div_lt_iff₀ hwapos, div_mul_eq_mul_div, lt_div_iff₀ hsc,
           mul_comm (|w a|) (|x - (ν a)[id]|)]
       rw [hG, hset]
@@ -652,7 +652,7 @@ lemma respMart_joint_tendsto_multivariateGaussian
           (measurable_id.inner_const (c := t)).aemeasurable
       = ⟨gaussianReal 0 (∑ a, t.ofLp a ^ 2 * Var[id; ν a] * ρ a).toNNReal, inferInstance⟩ := by
     apply ProbabilityMeasure.toMeasure_injective
-    simp only [ProbabilityMeasure.toMeasure_map, ProbabilityMeasure.coe_mk]
+    simp only [ProbabilityMeasure.coe_mk]
     change (multivariateGaussian 0 (Matrix.diagonal fun a ↦ ρ a * Var[id; ν a])).map
       (fun x ↦ (⟪x, t⟫ : ℝ)) = _
     rw [multivariateGaussian_diag_map_inner _ (fun a ↦ mul_nonneg (hρ a) (hV a)) t]
@@ -666,7 +666,7 @@ lemma respMart_joint_tendsto_multivariateGaussian
             fun a _ ↦ (measurable_respMart h a n).const_mul _).aemeasurable⟩ := by
     intro n
     apply ProbabilityMeasure.toMeasure_injective
-    simp only [ProbabilityMeasure.toMeasure_map, ProbabilityMeasure.coe_mk]
+    simp only [ProbabilityMeasure.coe_mk]
     change P.map (fun ω ↦ (⟪respVec ν A Y c n ω, t⟫ : ℝ)) = _
     exact congrArg (P.map ·) (funext fun ω ↦ inner_respVec c n ω t)
   rw [hQ]
@@ -781,13 +781,11 @@ lemma respMart_joint_selfNorm_tendsto_multivariateGaussian
     have e2 : (⟨μ', inferInstance⟩ : ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
         = ProbabilityMeasure.map
           (⟨μ', inferInstance⟩ : ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-          measurable_id.aemeasurable := by
-      apply ProbabilityMeasure.toMeasure_injective
-      simp only [ProbabilityMeasure.toMeasure_map, ProbabilityMeasure.coe_mk, Measure.map_id]
+          measurable_id.aemeasurable :=
+      ProbabilityMeasure.toMeasure_injective Measure.map_id.symm
     rw [e2]
     refine Tendsto.congr (fun n ↦ ?_) hjoint
-    apply ProbabilityMeasure.toMeasure_injective
-    simp only [ProbabilityMeasure.toMeasure_map, ProbabilityMeasure.coe_mk]
+    exact ProbabilityMeasure.toMeasure_injective rfl
 
 omit [Fintype 𝓐] [DecidableEq 𝓐] in
 /-- The estimator-error vector `D_n(θ̂_n-θ)_k = √N_{n,k}(θ̂_{n,k}-θ_k)` is measurable. -/

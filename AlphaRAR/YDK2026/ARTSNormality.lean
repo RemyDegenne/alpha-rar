@@ -52,7 +52,7 @@ lemma tendstoInMeasure_of_isLittleOpOne_norm {F : Type*} [NormedAddCommGroup F]
   refine (hV ε hε).congr fun n ↦ ?_
   congr 1
   ext ω
-  simp only [Set.mem_setOf_eq, Pi.zero_apply, edist_zero_right, enorm_norm]
+  simp only [Set.mem_ofPred_eq, Pi.zero_apply, edist_zero_right, enorm_norm]
 
 omit [IsProbabilityMeasure P] in
 /-- **Coordinatewise `o_p(1)` gives vector convergence in measure.** If each coordinate `D k` of a

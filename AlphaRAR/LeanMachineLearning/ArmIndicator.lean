@@ -64,7 +64,7 @@ lemma armIndicator_le_one (A : ℕ → Ω → 𝓐) (k : 𝓐) (n : ℕ) (ω : �
 lemma sum_armIndicator [Fintype 𝓐] (A : ℕ → Ω → 𝓐) (j : ℕ) (ω : Ω) :
     ∑ k, armIndicator A k j ω = 1 := by
   classical
-  simp only [armIndicator, Set.indicator_apply, Set.mem_setOf_eq, Finset.sum_ite_eq,
+  simp only [armIndicator, Set.indicator_apply, Set.mem_ofPred_eq, Finset.sum_ite_eq,
     Finset.mem_univ, if_true]
 
 /-- **The partial sums of the arm indicator are the pull counts.** -/
@@ -75,7 +75,7 @@ lemma sum_range_armIndicator_eq_pullCount [DecidableEq 𝓐] (A : ℕ → Ω →
   rw [pullCount_eq_sum]
   push_cast
   refine Finset.sum_congr rfl fun j _ ↦ ?_
-  simp only [armIndicator, Set.indicator_apply, Set.mem_setOf_eq]
+  simp only [armIndicator, Set.indicator_apply, Set.mem_ofPred_eq]
 
 /-- **The reward-weighted partial sums of the arm indicator are the summed rewards.** -/
 lemma sum_armIndicator_mul [DecidableEq 𝓐] (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (k : 𝓐) (t : ℕ)
@@ -83,7 +83,7 @@ lemma sum_armIndicator_mul [DecidableEq 𝓐] (A : ℕ → Ω → 𝓐) (Y : ℕ
     ∑ j ∈ Finset.range t, armIndicator A k j ω * Y j ω = sumRewards A Y k t ω := by
   rw [sumRewards]
   refine Finset.sum_congr rfl fun j _ ↦ ?_
-  simp only [armIndicator, Set.indicator_apply, Set.mem_setOf_eq]
+  simp only [armIndicator, Set.indicator_apply, Set.mem_ofPred_eq]
   split_ifs <;> simp
 
 lemma measurable_armIndicator (hA : ∀ n, Measurable (A n)) (k : 𝓐) (n : ℕ) :

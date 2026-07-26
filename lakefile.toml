@@ -11,6 +11,7 @@ weak.linter.mathlibStandardSet = true
 [[require]]
 name = "LeanMachineLearning"
 git = "https://github.com/LeanMachineLearning/LML"
+rev = "main"
 
 [[require]]
 name = "checkdecls"

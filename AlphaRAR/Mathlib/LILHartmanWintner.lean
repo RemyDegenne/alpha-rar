@@ -157,7 +157,7 @@ lemma ae_eventually_abs_le_sqrt_of_identDistrib [IsProbabilityMeasure μ]
       have hset : MeasurableSet {x : ℝ | √(j : ℝ) < |x - 0|} :=
         measurableSet_lt measurable_const (by fun_prop)
       rw [show {ω | √(j : ℝ) < |Y j ω|} = (Y j) ⁻¹' {x | √(j : ℝ) < |x - 0|} by
-        ext ω; simp only [Set.mem_setOf_eq, Set.mem_preimage, sub_zero],
+        ext ω; simp only [Set.mem_ofPred_eq, Set.mem_preimage, sub_zero],
         (hident j).measure_mem_eq hset, ← Measure.map_apply (hmeas 0) hset]
     rw [tsum_congr hkey]
     exact tsum_measure_abs_sub_gt_sqrt_ne_top 0 hρ2
@@ -883,7 +883,7 @@ lemma medium_variance_series_le {X : Ω → ℝ} (hX : Measurable X)
     have hlogpos : (0 : ℝ) < log ((j : ℝ) + 2) :=
       Real.log_pos (by have : (0 : ℝ) ≤ (j : ℝ) := Nat.cast_nonneg j; linarith)
     have harg : (0 : ℝ) ≤ (j : ℝ) / log ((j : ℝ) + 2) := div_nonneg (Nat.cast_nonneg j) hlogpos.le
-    simp only [Set.mem_setOf_eq]
+    simp only [Set.mem_ofPred_eq]
     rw [Real.sqrt_lt harg (abs_nonneg _), Real.le_sqrt (abs_nonneg _) (Nat.cast_nonneg j)]
     simp only [sq_abs]
     rw [div_lt_iff₀ hlogpos]
@@ -1017,7 +1017,7 @@ lemma mediumTrunc_comp_eq {X : Ω → ℝ} (j : ℕ) :
     (fun ω ↦ mediumTrunc j (X ω))
       = Set.indicator {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)} X := by
   funext ω
-  simp only [mediumTrunc, Set.indicator_apply, Set.mem_setOf_eq, id_eq]
+  simp only [mediumTrunc, Set.indicator_apply, Set.mem_ofPred_eq, id_eq]
 
 /-- **Medium variance series for the i.i.d. sequence.** For identically distributed `Y` with a bare
 second moment, `∑_{j≥3} Var(Y_j^{\mathrm M})/(j log log j) < ∞`, where `Y_j^{\mathrm M} =
@@ -1289,9 +1289,9 @@ lemma le_lowMedHigh {bj sj x : ℝ} (hb : 0 ≤ bj) (hbs : bj ≤ sj) :
       apply Set.indicator_of_notMem; rw [Set.mem_Ioc]; rintro ⟨hxa, hxb⟩
       have : |x| ≤ bj := abs_le.mpr ⟨by linarith, hxb⟩; linarith
     have e2 : ({y : ℝ | bj < |y| ∧ |y| ≤ sj}).indicator id x = 0 := by
-      apply Set.indicator_of_notMem; rw [Set.mem_setOf_eq]; rintro ⟨_, hxs⟩; linarith
+      apply Set.indicator_of_notMem; rw [Set.mem_ofPred_eq]; rintro ⟨_, hxs⟩; linarith
     have e3 : ({y : ℝ | sj < |y|}).indicator id x = x :=
-      Set.indicator_of_mem (by rw [Set.mem_setOf_eq]; exact hR) id
+      Set.indicator_of_mem (by rw [Set.mem_ofPred_eq]; exact hR) id
     rw [e1, e2, e3]; simp
   · rw [not_lt] at hR
     by_cases hM : bj < |x|
@@ -1299,15 +1299,15 @@ lemma le_lowMedHigh {bj sj x : ℝ} (hb : 0 ≤ bj) (hbs : bj ≤ sj) :
         apply Set.indicator_of_notMem; rw [Set.mem_Ioc]; rintro ⟨hxa, hxb⟩
         have : |x| ≤ bj := abs_le.mpr ⟨by linarith, hxb⟩; linarith
       have e2 : ({y : ℝ | bj < |y| ∧ |y| ≤ sj}).indicator id x = x :=
-        Set.indicator_of_mem (by rw [Set.mem_setOf_eq]; exact ⟨hM, hR⟩) id
+        Set.indicator_of_mem (by rw [Set.mem_ofPred_eq]; exact ⟨hM, hR⟩) id
       have e3 : ({y : ℝ | sj < |y|}).indicator id x = 0 := by
-        apply Set.indicator_of_notMem; rw [Set.mem_setOf_eq]; exact not_lt.mpr hR
+        apply Set.indicator_of_notMem; rw [Set.mem_ofPred_eq]; exact not_lt.mpr hR
       rw [e1, e2, e3]; simp
     · rw [not_lt] at hM
       have e2 : ({y : ℝ | bj < |y| ∧ |y| ≤ sj}).indicator id x = 0 := by
-        apply Set.indicator_of_notMem; rw [Set.mem_setOf_eq]; rintro ⟨h, _⟩; linarith
+        apply Set.indicator_of_notMem; rw [Set.mem_ofPred_eq]; rintro ⟨h, _⟩; linarith
       have e3 : ({y : ℝ | sj < |y|}).indicator id x = 0 := by
-        apply Set.indicator_of_notMem; rw [Set.mem_setOf_eq]; intro h; linarith
+        apply Set.indicator_of_notMem; rw [Set.mem_ofPred_eq]; intro h; linarith
       rw [e2, e3, add_zero, add_zero]
       by_cases hIoc : x ∈ Set.Ioc (-bj) bj
       · rw [Set.indicator_of_mem hIoc]; exact le_rfl
@@ -1329,7 +1329,7 @@ lemma lowMed_le {bj sj x : ℝ} (hb : 0 ≤ bj) (hbs : bj ≤ sj) :
       apply Set.indicator_of_notMem; rw [Set.mem_Ioc]; rintro ⟨hxa, hxb⟩
       have : |x| ≤ bj := abs_le.mpr ⟨by linarith, hxb⟩; linarith
     have e2 : ({y : ℝ | bj < |y| ∧ |y| ≤ sj}).indicator id x = 0 := by
-      apply Set.indicator_of_notMem; rw [Set.mem_setOf_eq]; rintro ⟨_, hxs⟩; linarith
+      apply Set.indicator_of_notMem; rw [Set.mem_ofPred_eq]; rintro ⟨_, hxs⟩; linarith
     have e3 : (Set.Ioc (-sj) sj).indicator id x = 0 := by
       apply Set.indicator_of_notMem; rw [Set.mem_Ioc]; rintro ⟨hxa, hxb⟩
       have : |x| ≤ sj := abs_le.mpr ⟨by linarith, hxb⟩; linarith
@@ -1342,7 +1342,7 @@ lemma lowMed_le {bj sj x : ℝ} (hb : 0 ≤ bj) (hbs : bj ≤ sj) :
         apply Set.indicator_of_notMem; rw [Set.mem_Ioc]; rintro ⟨hxa, hxb⟩
         have : |x| ≤ bj := abs_le.mpr ⟨by linarith, hxb⟩; linarith
       have e2 : ({y : ℝ | bj < |y| ∧ |y| ≤ sj}).indicator id x = x :=
-        Set.indicator_of_mem (by rw [Set.mem_setOf_eq]; exact ⟨hM, hR⟩) id
+        Set.indicator_of_mem (by rw [Set.mem_ofPred_eq]; exact ⟨hM, hR⟩) id
       have e4 : (if x = -bj then bj else 0) = 0 := by
         rw [if_neg]; intro h; rw [h, abs_neg, abs_of_nonneg hb] at hM; linarith
       rw [e1, e2, e4, zero_add, add_zero]
@@ -1355,7 +1355,7 @@ lemma lowMed_le {bj sj x : ℝ} (hb : 0 ≤ bj) (hbs : bj ≤ sj) :
         · linarith [le_abs_self x]
     · rw [not_lt] at hM
       have e2 : ({y : ℝ | bj < |y| ∧ |y| ≤ sj}).indicator id x = 0 := by
-        apply Set.indicator_of_notMem; rw [Set.mem_setOf_eq]; rintro ⟨h, _⟩; linarith
+        apply Set.indicator_of_notMem; rw [Set.mem_ofPred_eq]; rintro ⟨h, _⟩; linarith
       rw [e2, add_zero]
       by_cases hbmem : x ∈ Set.Ioc (-bj) bj
       · rw [Set.indicator_of_mem hbmem]
@@ -1718,7 +1718,7 @@ lemma hw_eventually [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : ∀
         ({y : ℝ | √(j : ℝ) < |y|}).indicator id (Y j ω) = 0 := by
       filter_upwards [hhighω] with j hj
       apply Set.indicator_of_notMem
-      simp only [Set.mem_setOf_eq, not_lt]; exact hj
+      simp only [Set.mem_ofPred_eq, not_lt]; exact hj
     obtain ⟨J, hJ⟩ := eventually_atTop.mp hzero
     have hconst : ∀ᶠ m : ℕ in atTop, (∑ j ∈ Finset.range m,
         ({y : ℝ | √(j : ℝ) < |y|}).indicator id (Y j ω))

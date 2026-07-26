@@ -513,7 +513,7 @@ omit [IsProbabilityMeasure P] in
 hit set finite, the count would be bounded by its cardinality.) -/
 lemma infinite_setOf_eq_of_pullCount_atTop [DecidableEq 𝓐] {k : 𝓐} {ω : Ω}
     (hN : Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop) :
-    (setOf (fun j ↦ A j ω = k)).Infinite := by
+    {j | A j ω = k}.Infinite := by
   intro hfin
   have hbound : ∀ n, (pullCount A k n ω : ℝ) ≤ (hfin.toFinset.card : ℝ) := by
     intro n
@@ -1537,7 +1537,7 @@ lemma abs_estimator_sub_le_rate_loglog_N [DecidableEq 𝓐]
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
       |estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) θ₀ n - (ν k)[id]|
         ≤ C' * √(Real.log (Real.log (pullCount A k n ω : ℝ)) / (pullCount A k n ω : ℝ)) := by
-  have hk_inf : ∀ᵐ ω ∂P, (setOf (fun j ↦ A j ω = k)).Infinite := by
+  have hk_inf : ∀ᵐ ω ∂P, {j | A j ω = k}.Infinite := by
     filter_upwards [hNinf] with ω hNω; exact infinite_setOf_eq_of_pullCount_atTop hNω
   filter_upwards [hNinf, abs_respMart_le_sqrt_nat_mul_loglog h k hk_inf hint_id hint_sq]
     with ω hNω hQω

@@ -88,7 +88,7 @@ lemma hitCount_eq_sum (D : ℕ → Ω → ℝ) (j : ℕ) (ω : Ω) :
 /-- **Characterization of the hit time.** When there are infinitely many hits, `τ_m ω = j` iff `j`
 is a hit (`D j ω = 1`) preceded by exactly `m` earlier hits (`hitCount D j ω = m`). -/
 lemma sampleTime_eq_iff {D : ℕ → Ω → ℝ} {ω : Ω}
-    (hinf : (setOf (fun j ↦ D j ω = 1)).Infinite) {m j : ℕ} :
+    (hinf : {j | D j ω = 1}.Infinite) {m j : ℕ} :
     sampleTime D m ω = j ↔ D j ω = 1 ∧ hitCount D j ω = m := by
   rw [sampleTime, hitCount]
   constructor
@@ -100,13 +100,13 @@ lemma sampleTime_eq_iff {D : ℕ → Ω → ℝ} {ω : Ω}
 
 /-- The hit times are strictly increasing (when there are infinitely many hits). -/
 lemma sampleTime_strictMono {D : ℕ → Ω → ℝ} {ω : Ω}
-    (hinf : (setOf (fun j ↦ D j ω = 1)).Infinite) :
+    (hinf : {j | D j ω = 1}.Infinite) :
     StrictMono (fun m ↦ sampleTime D m ω) :=
   Nat.nth_strictMono hinf
 
 /-- Earlier samples happen strictly earlier: `i < n → τ_i ω < τ_n ω`. -/
 lemma sampleTime_lt_of_lt {D : ℕ → Ω → ℝ} {ω : Ω}
-    (hinf : (setOf (fun j ↦ D j ω = 1)).Infinite) {i n : ℕ} (hin : i < n) :
+    (hinf : {j | D j ω = 1}.Infinite) {i n : ℕ} (hin : i < n) :
     sampleTime D i ω < sampleTime D n ω :=
   sampleTime_strictMono hinf hin
 
@@ -169,7 +169,7 @@ lemma measurableSet_filt_hitEvent (hD : ∀ i, Measurable[𝒢 i] (D i)) (j m : 
   have h1 : MeasurableSet[𝒢 j] {ω | D j ω = 1} := (hD j) (measurableSet_singleton 1)
   have h2 : MeasurableSet[𝒢 j] {ω | hitCount D j ω = m} :=
     measurable_hitCount hD j (measurableSet_singleton m)
-  rw [hitEvent, Set.setOf_and]
+  rw [hitEvent, Set.ofPred_and]
   exact h1.inter h2
 
 /-- `hitEvent D j m` is measurable in the ambient space (via `𝒢 j ≤ m0`). -/
@@ -178,7 +178,7 @@ lemma measurableSet_hitEvent (hD : ∀ i, Measurable[𝒢 i] (D i)) (j m : ℕ) 
   (𝒢.le j) _ (measurableSet_filt_hitEvent hD j m)
 
 /-- Up to a null set, `{τ_m = j}` is the adapted hit event `hitEvent D j m`. -/
-lemma sampleTime_eq_ae (hDinf : ∀ᵐ ω ∂μ, (setOf (fun j ↦ D j ω = 1)).Infinite) (m j : ℕ) :
+lemma sampleTime_eq_ae (hDinf : ∀ᵐ ω ∂μ, {j | D j ω = 1}.Infinite) (m j : ℕ) :
     {ω | sampleTime D m ω = j} =ᵐ[μ] hitEvent D j m := by
   rw [Filter.eventuallyEq_set]
   filter_upwards [hDinf] with ω hinf
@@ -226,7 +226,7 @@ lemma measurableSet_filt_cleanBdd (hYlt : ∀ a b, a < b → Measurable[𝒢 b] 
 /-- **The sampled preimage equals `cleanPre` a.e.** On the full-measure set where hits are infinite,
 `Y (τ_i ω) ω ∈ E` iff some time `k` is the `i`-th hit with `Y k ω ∈ E` (namely `k = τ_i ω`). -/
 lemma sampledSeq_preimage_ae_cleanPre
-    (hDinf : ∀ᵐ ω ∂μ, (setOf (fun j ↦ D j ω = 1)).Infinite) (i : ℕ) :
+    (hDinf : ∀ᵐ ω ∂μ, {j | D j ω = 1}.Infinite) (i : ℕ) :
     (sampledSeq Y D i) ⁻¹' E =ᵐ[μ] cleanPre Y D E i := by
   rw [Filter.eventuallyEq_set]
   filter_upwards [hDinf] with ω hinf
@@ -285,7 +285,7 @@ lemma measure_iInter_cleanPre [IsProbabilityMeasure μ]
     (ρ : Measure ℝ)
     (hfact : ∀ (j : ℕ) (E' : Set ℝ), MeasurableSet E' → ∀ S, MeasurableSet[𝒢 j] S →
       S ⊆ {ω | D j ω = 1} → μ (Y j ⁻¹' E' ∩ S) = ρ E' * μ S)
-    (hDinf : ∀ᵐ ω ∂μ, (setOf (fun j ↦ D j ω = 1)).Infinite)
+    (hDinf : ∀ᵐ ω ∂μ, {j | D j ω = 1}.Infinite)
     (E : ℕ → Set ℝ) (hE : ∀ i, MeasurableSet (E i)) (N : ℕ) :
     μ (⋂ i ∈ Finset.range N, cleanPre Y D (E i) i) = ∏ i ∈ Finset.range N, ρ (E i) := by
   induction N with
@@ -377,7 +377,7 @@ lemma measure_iInter_sampledSeq_preimage
     (hD : ∀ i, Measurable[𝒢 i] (D i)) (ρ : Measure ℝ)
     (hfact : ∀ (j : ℕ) (E' : Set ℝ), MeasurableSet E' → ∀ S, MeasurableSet[𝒢 j] S →
       S ⊆ {ω | D j ω = 1} → μ (Y j ⁻¹' E' ∩ S) = ρ E' * μ S)
-    (hDinf : ∀ᵐ ω ∂μ, (setOf (fun j ↦ D j ω = 1)).Infinite)
+    (hDinf : ∀ᵐ ω ∂μ, {j | D j ω = 1}.Infinite)
     (E : ℕ → Set ℝ) (hE : ∀ i, MeasurableSet (E i)) (N : ℕ) :
     μ (⋂ i ∈ Finset.range N, sampledSeq Y D i ⁻¹' E i) = ∏ i ∈ Finset.range N, ρ (E i) := by
   rw [measure_congr (biInter_ae_eq _
@@ -391,7 +391,7 @@ lemma measure_iInter_sampledSeq_preimage_finset
     (hD : ∀ i, Measurable[𝒢 i] (D i)) (ρ : Measure ℝ) [IsProbabilityMeasure ρ]
     (hfact : ∀ (j : ℕ) (E' : Set ℝ), MeasurableSet E' → ∀ S, MeasurableSet[𝒢 j] S →
       S ⊆ {ω | D j ω = 1} → μ (Y j ⁻¹' E' ∩ S) = ρ E' * μ S)
-    (hDinf : ∀ᵐ ω ∂μ, (setOf (fun j ↦ D j ω = 1)).Infinite)
+    (hDinf : ∀ᵐ ω ∂μ, {j | D j ω = 1}.Infinite)
     (S : Finset ℕ) {sets : ℕ → Set ℝ} (hsets : ∀ i ∈ S, MeasurableSet (sets i)) :
     μ (⋂ i ∈ S, sampledSeq Y D i ⁻¹' sets i) = ∏ i ∈ S, ρ (sets i) := by
   classical
@@ -424,7 +424,7 @@ lemma measure_sampledSeq_preimage
     (hD : ∀ i, Measurable[𝒢 i] (D i)) (ρ : Measure ℝ) [IsProbabilityMeasure ρ]
     (hfact : ∀ (j : ℕ) (E' : Set ℝ), MeasurableSet E' → ∀ S, MeasurableSet[𝒢 j] S →
       S ⊆ {ω | D j ω = 1} → μ (Y j ⁻¹' E' ∩ S) = ρ E' * μ S)
-    (hDinf : ∀ᵐ ω ∂μ, (setOf (fun j ↦ D j ω = 1)).Infinite)
+    (hDinf : ∀ᵐ ω ∂μ, {j | D j ω = 1}.Infinite)
     (m : ℕ) {F : Set ℝ} (hF : MeasurableSet F) :
     μ (sampledSeq Y D m ⁻¹' F) = ρ F := by
   have h := measure_iInter_sampledSeq_preimage_finset hYmeas hYlt hD ρ hfact hDinf {m}
@@ -443,7 +443,7 @@ lemma measurable_sampledClean (hYmeas : ∀ k, Measurable (Y k))
 
 omit [IsProbabilityMeasure μ] in
 lemma sampledSeq_ae_eq_sampledClean
-    (hDinf : ∀ᵐ ω ∂μ, (setOf (fun j ↦ D j ω = 1)).Infinite) (m : ℕ) :
+    (hDinf : ∀ᵐ ω ∂μ, {j | D j ω = 1}.Infinite) (m : ℕ) :
     sampledSeq Y D m =ᵐ[μ] sampledClean Y D m := by
   filter_upwards [hDinf] with ω hinf
   have hzero : ∀ k, k ≠ sampleTime D m ω → (hitEvent D k m).indicator (Y k) ω = 0 := by
@@ -456,7 +456,7 @@ lemma sampledSeq_ae_eq_sampledClean
 
 omit [IsProbabilityMeasure μ] in
 lemma aemeasurable_sampledSeq (hYmeas : ∀ k, Measurable (Y k)) (hD : ∀ i, Measurable[𝒢 i] (D i))
-    (hDinf : ∀ᵐ ω ∂μ, (setOf (fun j ↦ D j ω = 1)).Infinite) (m : ℕ) :
+    (hDinf : ∀ᵐ ω ∂μ, {j | D j ω = 1}.Infinite) (m : ℕ) :
     AEMeasurable (sampledSeq Y D m) μ :=
   (measurable_sampledClean hYmeas hD m).aemeasurable.congr
     (sampledSeq_ae_eq_sampledClean hDinf m).symm
@@ -467,7 +467,7 @@ lemma map_sampledSeq_eq
     (hD : ∀ i, Measurable[𝒢 i] (D i)) (ρ : Measure ℝ) [IsProbabilityMeasure ρ]
     (hfact : ∀ (j : ℕ) (E' : Set ℝ), MeasurableSet E' → ∀ S, MeasurableSet[𝒢 j] S →
       S ⊆ {ω | D j ω = 1} → μ (Y j ⁻¹' E' ∩ S) = ρ E' * μ S)
-    (hDinf : ∀ᵐ ω ∂μ, (setOf (fun j ↦ D j ω = 1)).Infinite) (m : ℕ) :
+    (hDinf : ∀ᵐ ω ∂μ, {j | D j ω = 1}.Infinite) (m : ℕ) :
     μ.map (sampledSeq Y D m) = ρ := by
   refine Measure.ext (fun F hF ↦ ?_)
   rw [Measure.map_apply_of_aemeasurable (aemeasurable_sampledSeq hYmeas hD hDinf m) hF]
@@ -479,7 +479,7 @@ lemma iIndepFun_sampledSeq
     (hD : ∀ i, Measurable[𝒢 i] (D i)) (ρ : Measure ℝ) [IsProbabilityMeasure ρ]
     (hfact : ∀ (j : ℕ) (E' : Set ℝ), MeasurableSet E' → ∀ S, MeasurableSet[𝒢 j] S →
       S ⊆ {ω | D j ω = 1} → μ (Y j ⁻¹' E' ∩ S) = ρ E' * μ S)
-    (hDinf : ∀ᵐ ω ∂μ, (setOf (fun j ↦ D j ω = 1)).Infinite) :
+    (hDinf : ∀ᵐ ω ∂μ, {j | D j ω = 1}.Infinite) :
     iIndepFun (sampledSeq Y D) μ := by
   rw [iIndepFun_iff_measure_inter_preimage_eq_mul]
   intro S sets hsets
@@ -543,11 +543,11 @@ environment with per-arm reward kernel `ν`, if arm `k` is pulled infinitely oft
 then the responses observed at the pulls of arm `k`, `sampledSeq Y (armIndicator A k)`, are
 independent. (Blueprint `lem:opt_skip`.) -/
 theorem iIndepFun_sampledResponse {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) μ)
-    (k : 𝓐) (hk_inf : ∀ᵐ ω ∂μ, (setOf (fun j ↦ A j ω = k)).Infinite) :
+    (k : 𝓐) (hk_inf : ∀ᵐ ω ∂μ, {j | A j ω = k}.Infinite) :
     iIndepFun (sampledSeq Y (armIndicator A k)) μ := by
   set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with h𝒢
   haveI : IsProbabilityMeasure (ν k) := IsMarkovKernel.isProbabilityMeasure k
-  have hDinf : ∀ᵐ ω ∂μ, (setOf (fun j ↦ armIndicator A k j ω = 1)).Infinite := by
+  have hDinf : ∀ᵐ ω ∂μ, {j | armIndicator A k j ω = 1}.Infinite := by
     filter_upwards [hk_inf] with ω hω
     rwa [Set.ext (fun j ↦ armIndicator_eq_one_iff)]
   have hD : ∀ i, Measurable[𝒢 i] (armIndicator A k i) := by
@@ -565,11 +565,11 @@ theorem iIndepFun_sampledResponse {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y 
 has law `ν k`. Together with `iIndepFun_sampledResponse` this says the sampled responses are i.i.d.
 with the arm's reward law. (Blueprint `lem:opt_skip`.) -/
 theorem map_sampledResponse_eq {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) μ)
-    (k : 𝓐) (hk_inf : ∀ᵐ ω ∂μ, (setOf (fun j ↦ A j ω = k)).Infinite) (m : ℕ) :
+    (k : 𝓐) (hk_inf : ∀ᵐ ω ∂μ, {j | A j ω = k}.Infinite) (m : ℕ) :
     μ.map (sampledSeq Y (armIndicator A k) m) = ν k := by
   set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with h𝒢
   haveI : IsProbabilityMeasure (ν k) := IsMarkovKernel.isProbabilityMeasure k
-  have hDinf : ∀ᵐ ω ∂μ, (setOf (fun j ↦ armIndicator A k j ω = 1)).Infinite := by
+  have hDinf : ∀ᵐ ω ∂μ, {j | armIndicator A k j ω = 1}.Infinite := by
     filter_upwards [hk_inf] with ω hω
     rwa [Set.ext (fun j ↦ armIndicator_eq_one_iff)]
   have hD : ∀ i, Measurable[𝒢 i] (armIndicator A k i) := by

@@ -381,7 +381,7 @@ lemma measure_exists_ge_le_exp_all_refined [IsProbabilityMeasure μ] (hM : Marti
   have hmono : Monotone A := fun a b hab ω ⟨k, hk, h⟩ ↦ ⟨k, hk.trans hab, h⟩
   have hUnion : (⋃ n, A n) = {ω | ∃ k, lam ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v} := by
     ext ω
-    simp only [hA, Set.mem_iUnion, Set.mem_setOf_eq]
+    simp only [hA, Set.mem_iUnion, Set.mem_ofPred_eq]
     exact ⟨fun ⟨_, k, _, h⟩ ↦ ⟨k, h⟩, fun ⟨k, h⟩ ↦ ⟨k, k, le_rfl, h⟩⟩
   rw [← hUnion, hmono.measure_iUnion]
   exact iSup_le fun n ↦
@@ -417,7 +417,7 @@ lemma ae_eventually_forall_lt_of_summable_eventually_refined [IsProbabilityMeasu
     exact ENNReal.ofReal_ne_top
   filter_upwards [ae_eventually_notMem hfin] with ω hω
   filter_upwards [hω] with k hk
-  simp only [hs_def, Set.mem_setOf_eq, not_exists, not_and] at hk
+  simp only [hs_def, Set.mem_ofPred_eq, not_exists, not_and] at hk
   intro n hn
   by_contra hcon
   rw [not_lt] at hcon
@@ -732,7 +732,7 @@ lemma measure_exists_ge_le_exp_horizon_refined [IsProbabilityMeasure μ] (hM : M
   have hset : {ω | ∃ m ≤ N, lam ≤ M m ω ∧ predQuadVar M ℱ μ m ω ≤ v}
       = {ω | ∃ m ≤ N, lam ≤ stopMart M N m ω ∧ predQuadVar (stopMart M N) ℱ μ m ω ≤ v} := by
     ext ω
-    simp only [Set.mem_setOf_eq]
+    simp only [Set.mem_ofPred_eq]
     refine exists_congr fun m ↦ and_congr_right fun hm ↦ ?_
     rw [stopMart_apply, min_eq_left hm, predQuadVar_stopMart_of_le M N hm]
   rw [hset]; exact hmain

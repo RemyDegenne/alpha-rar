@@ -194,7 +194,7 @@ lemma tendstoInMeasure_window {S : ℕ → Ω → ℝ} {𝒢 : Filtration ℕ m�
         have hck0 : (0 : ℝ) < (c k : ℝ) := by exact_mod_cast hck1
         have hmemG : ω ∈ G k := by
           rw [hGdef]
-          simp only [Set.mem_setOf_eq]
+          simp only [Set.mem_ofPred_eq]
           rw [show (N k ω : ℝ) - (c k : ℝ) = ((N k ω : ℝ) / (c k : ℝ) - 1) * (c k : ℝ) by
             field_simp, abs_mul, abs_of_nonneg hck0.le]
           exact mul_le_mul_of_nonneg_right hk.le hck0.le
@@ -221,7 +221,7 @@ lemma tendstoInMeasure_window {S : ℕ → Ω → ℝ} {𝒢 : Filtration ℕ m�
         ≤ 2 * W k ω / √((1 - ε) * (c k : ℝ)) := by
       intro ω hωG
       rw [hGdef] at hωG
-      simp only [Set.mem_setOf_eq] at hωG
+      simp only [Set.mem_ofPred_eq] at hωG
       have hNlo : (1 - ε) * (c k : ℝ) ≤ (N k ω : ℝ) := by
         have := (abs_le.mp hωG).1; nlinarith [this]
       -- window membership of `N k ω` and `c k`
@@ -263,10 +263,10 @@ lemma tendstoInMeasure_window {S : ℕ → Ω → ℝ} {𝒢 : Filtration ℕ m�
     have hincl : {ω | δ ≤ |(√(N k ω : ℝ))⁻¹ * (S (N k ω) ω - S (c k) ω)|}
         ⊆ (G k)ᶜ ∪ {ω | δ * √((1 - ε) * (c k : ℝ)) / 2 ≤ W k ω} := by
       intro ω hω
-      simp only [Set.mem_setOf_eq] at hω
+      simp only [Set.mem_ofPred_eq] at hω
       rcases em (ω ∈ G k) with hG | hG
       · refine Or.inr ?_
-        simp only [Set.mem_setOf_eq]
+        simp only [Set.mem_ofPred_eq]
         have hb := (hfG ω hG).trans' hω
         have hsqrtpos : (0 : ℝ) < √((1 - ε) * (c k : ℝ)) :=
           Real.sqrt_pos.mpr h1εck

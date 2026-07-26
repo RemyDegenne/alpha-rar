@@ -43,7 +43,7 @@ lemma sampledSeq_hitCount_of_hit {D Y : ℕ → Ω → ℝ} {n : ℕ} {ω : Ω} 
 /-- **The hit count diverges** when there are infinitely many hits: `#{ i < n : D i = 1} → ∞`. The
 count is monotone and reaches `M + 1` by time `τ_M + 1` (`Nat.count_nth_of_infinite`). -/
 lemma hitCount_tendsto_atTop {D : ℕ → Ω → ℝ} {ω : Ω}
-    (hinf : (setOf (fun j ↦ D j ω = 1)).Infinite) :
+    (hinf : {j | D j ω = 1}.Infinite) :
     Tendsto (fun n ↦ hitCount D n ω) atTop atTop := by
   refine Monotone.tendsto_atTop_atTop (hitCount_mono D ω) (fun M ↦ ?_)
   refine ⟨Nat.nth (fun j ↦ D j ω = 1) M + 1, ?_⟩
@@ -96,7 +96,7 @@ almost surely, for every `β > 1`, eventually
 pulls of arm `k` before `n`. In particular `Q_k n = O(√(N_{n,k} log log N_{n,k}))`. -/
 theorem abs_respMart_le_sqrt_nat_mul_loglog
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
-    (hk_inf : ∀ᵐ ω ∂P, (setOf (fun j ↦ A j ω = k)).Infinite)
+    (hk_inf : ∀ᵐ ω ∂P, {j | A j ω = k}.Infinite)
     (hint_id : Integrable (fun x : ℝ ↦ x) (ν k))
     (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) :
     ∀ᵐ ω ∂P, ∀ β : ℝ, 1 < β → ∀ᶠ n in atTop,
@@ -114,7 +114,7 @@ theorem abs_respMart_le_sqrt_nat_mul_loglog
     exact Measurable.ite ((IsAlgEnvSeq.measurable_action_filtrationAction'
       h.measurable_action h.measurable_feedback i) (measurableSet_singleton k))
       measurable_const measurable_const
-  have hDinf : ∀ᵐ ω ∂P, (setOf (fun j ↦ D j ω = 1)).Infinite := by
+  have hDinf : ∀ᵐ ω ∂P, {j | D j ω = 1}.Infinite := by
     filter_upwards [hk_inf] with ω hω; rwa [Set.ext (fun j ↦ armIndicator_eq_one_iff)]
   have hCmeas : ∀ i, Measurable (sampledClean Y D i) :=
     fun i ↦ measurable_sampledClean h.measurable_feedback hD𝒢 i
@@ -198,7 +198,7 @@ infinite. Indeed `N_{n,k} = (N_{n,k}/n)·n → ∞`, while a finite pull set wou
 cardinality. -/
 lemma infinite_setOf_eq_of_tendsto_div {k : 𝓐} {ω : Ω} {v : ℝ} (hv : 0 < v)
     (hN : Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 v)) :
-    (setOf (fun j ↦ A j ω = k)).Infinite := by
+    {j | A j ω = k}.Infinite := by
   have hRinf : Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop := by
     have hmul := hN.pos_mul_atTop hv (tendsto_natCast_atTop_atTop (R := ℝ))
     refine hmul.congr' ?_
@@ -236,7 +236,7 @@ lemma ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog_of_proportion
     (hN : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω))) :
     ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
       |respMart ν A Y k n ω| ≤ C * √((n : ℝ) * log (log (n : ℝ))) := by
-  have hk_inf : ∀ᵐ ω ∂P, (setOf (fun j ↦ A j ω = k)).Infinite := by
+  have hk_inf : ∀ᵐ ω ∂P, {j | A j ω = k}.Infinite := by
     filter_upwards [hv, hN] with ω hvω hNω
     exact infinite_setOf_eq_of_tendsto_div hvω hNω
   exact ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog k hv hN

@@ -279,7 +279,7 @@ lemma smul_measure_sup_le_integral_zero [IsFiniteMeasure μ] {Z : ℕ → Ω →
   have hsv_nonneg : (0 : Ω → ℝ) ≤ stoppedValue Z τ := fun ω ↦ hnonneg _ _
   have hconst : ∀ ω ∈ s, (ε : ℝ) ≤ stoppedValue Z τ ω := by
     intro ω hω
-    rw [hs_def, Set.mem_setOf_eq, le_sup'_iff] at hω
+    rw [hs_def, Set.mem_ofPred_eq, le_sup'_iff] at hω
     obtain ⟨j, hj, hj₂⟩ := hω
     rw [mem_range, Nat.lt_succ_iff] at hj
     exact stoppedValue_hittingBtwn_mem ⟨j, ⟨Nat.zero_le _, hj⟩, hj₂⟩
@@ -299,7 +299,7 @@ lemma smul_measure_sup_le_integral_zero [IsFiniteMeasure μ] {Z : ℕ → Ω →
     setIntegral_le_integral hsv_int (Eventually.of_forall hsv_nonneg)
   have h3 : ∫ ω, stoppedValue Z τ ω ∂μ ≤ ∫ ω, Z 0 ω ∂μ := by
     have hos := (hZ.neg).expected_stoppedValue_mono (isStoppingTime_const ℱ 0) hτ_stop
-      (fun ω ↦ by positivity) hτ_le
+      (fun _ ↦ zero_le) hτ_le
     rw [stoppedValue_const] at hos
     simp only [stoppedValue, Pi.neg_apply, integral_neg] at hos ⊢
     linarith
@@ -462,7 +462,7 @@ lemma measure_exists_ge_le_exp_horizon [IsProbabilityMeasure μ] (hM : Martingal
   have hset : {ω | ∃ m ≤ N, lam ≤ M m ω ∧ predQuadVar M ℱ μ m ω ≤ v}
       = {ω | ∃ m ≤ N, lam ≤ stopMart M N m ω ∧ predQuadVar (stopMart M N) ℱ μ m ω ≤ v} := by
     ext ω
-    simp only [Set.mem_setOf_eq]
+    simp only [Set.mem_ofPred_eq]
     refine exists_congr fun m ↦ and_congr_right fun hm ↦ ?_
     rw [stopMart_apply, min_eq_left hm, predQuadVar_stopMart_of_le M N hm]
   rw [hset]; exact hmain
@@ -481,7 +481,7 @@ lemma measure_exists_ge_le_exp_all [IsProbabilityMeasure μ] (hM : Martingale M 
   have hmono : Monotone A := fun a b hab ω ⟨k, hk, h⟩ ↦ ⟨k, hk.trans hab, h⟩
   have hUnion : (⋃ n, A n) = {ω | ∃ k, lam ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v} := by
     ext ω
-    simp only [hA, Set.mem_iUnion, Set.mem_setOf_eq]
+    simp only [hA, Set.mem_iUnion, Set.mem_ofPred_eq]
     exact ⟨fun ⟨_, k, _, h⟩ ↦ ⟨k, h⟩, fun ⟨k, h⟩ ↦ ⟨k, k, le_rfl, h⟩⟩
   rw [← hUnion, hmono.measure_iUnion]
   exact iSup_le fun n ↦ measure_exists_ge_le_exp_optimized hM hM0 hM2 hb hlam hv hadm n
@@ -510,7 +510,7 @@ lemma ae_eventually_forall_lt_of_summable [IsProbabilityMeasure μ] (hM : Martin
     exact ne_top_of_le_ne_top ENNReal.ofReal_ne_top h1
   filter_upwards [ae_eventually_notMem hfin] with ω hω
   filter_upwards [hω] with k hk
-  simp only [hs_def, Set.mem_setOf_eq, not_exists, not_and] at hk
+  simp only [hs_def, Set.mem_ofPred_eq, not_exists, not_and] at hk
   intro n hn
   by_contra hcon
   rw [not_lt] at hcon

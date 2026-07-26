@@ -55,7 +55,7 @@ deterministic `c_n → ∞`, the response martingale normalized by its own rando
 is required, so this holds for sparse targets `v_k = 0`. -/
 theorem respMart_selfNorm_anscombe_tendsto
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
-    (hk_inf : ∀ᵐ ω ∂P, (setOf (fun j ↦ A j ω = k)).Infinite)
+    (hk_inf : ∀ᵐ ω ∂P, {j | A j ω = k}.Infinite)
     (hint_id : Integrable (fun x : ℝ ↦ x) (ν k))
     (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k))
     {c : ℕ → ℕ} (hc : Tendsto c atTop atTop)
@@ -74,7 +74,7 @@ theorem respMart_selfNorm_anscombe_tendsto
       (D i) := fun i ↦ Measurable.ite ((IsAlgEnvSeq.measurable_action_filtrationAction'
       h.measurable_action h.measurable_feedback i) (measurableSet_singleton k))
       measurable_const measurable_const
-  have hDinf : ∀ᵐ ω ∂P, (setOf (fun j ↦ D j ω = 1)).Infinite := by
+  have hDinf : ∀ᵐ ω ∂P, {j | D j ω = 1}.Infinite := by
     filter_upwards [hk_inf] with ω hω; rwa [Set.ext (fun j ↦ armIndicator_eq_one_iff)]
   have hCmeas : ∀ i, Measurable (sampledClean Y D i) :=
     fun i ↦ measurable_sampledClean h.measurable_feedback hD𝒢 i
@@ -171,7 +171,7 @@ proportion is required, so this is the componentwise ingredient of the sparse CL
 Slutsky steps (the scaling factors `N/(N+1) → 1` and `√N/(N+1) → 0` in probability). -/
 theorem estimator_sqrtN_anscombe_tendsto
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
-    (hk_inf : ∀ᵐ ω ∂P, (setOf (fun j ↦ A j ω = k)).Infinite)
+    (hk_inf : ∀ᵐ ω ∂P, {j | A j ω = k}.Infinite)
     (hint_id : Integrable (fun x : ℝ ↦ x) (ν k))
     (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (θ₀ : ℝ)
     {c : ℕ → ℕ} (hc : Tendsto c atTop atTop)
@@ -187,7 +187,7 @@ theorem estimator_sqrtN_anscombe_tendsto
   have hQ := respMart_selfNorm_anscombe_tendsto h k hk_inf hint_id hint_sq hc hreg
   -- pull count `→ ∞` a.e. (from infinitely many pulls)
   have hpcinf : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop := by
-    have hDinf : ∀ᵐ ω ∂P, (setOf (fun j ↦ armIndicator A k j ω = 1)).Infinite := by
+    have hDinf : ∀ᵐ ω ∂P, {j | armIndicator A k j ω = 1}.Infinite := by
       filter_upwards [hk_inf] with ω hω; rwa [Set.ext fun j ↦ armIndicator_eq_one_iff]
     filter_upwards [hDinf] with ω hinf
     exact tendsto_natCast_atTop_atTop.comp

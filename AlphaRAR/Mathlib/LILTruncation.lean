@@ -48,7 +48,7 @@ lemma ae_eventually_abs_le_of_tsum_ne_top {ξ : ℕ → Ω → ℝ} {b : ℕ →
     ∀ᵐ ω ∂μ, ∀ᶠ i in atTop, |ξ i ω| ≤ b i := by
   filter_upwards [ae_eventually_notMem h] with ω hω
   filter_upwards [hω] with i hi
-  simpa only [Set.mem_setOf_eq, not_lt] using hi
+  simpa only [Set.mem_ofPred_eq, not_lt] using hi
 
 /-- `exp(-a √k)` is summable in `k` for `a > 0`. Since `log = o(√·)`, eventually
 `2 log k ≤ a √k`, i.e. `exp(-a√k) ≤ 1/k²`, which is summable. -/

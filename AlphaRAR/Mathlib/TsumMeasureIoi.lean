@@ -75,7 +75,7 @@ lemma tsum_measure_abs_sub_gt_sqrt_ne_top {ρ : Measure ℝ} [IsFiniteMeasure ρ
   have hset : ∀ i : ℕ, {x | √i < |x - θ|} = {x | (i : ℝ) < (x - θ) ^ 2} := by
     intro i
     ext x
-    simp only [Set.mem_setOf_eq]
+    simp only [Set.mem_ofPred_eq]
     constructor
     · intro h
       have := mul_self_lt_mul_self (Real.sqrt_nonneg (i : ℝ)) h
@@ -100,7 +100,7 @@ lemma tsum_measure_abs_sub_ge_sqrt_ne_top {ρ : Measure ℝ} [IsFiniteMeasure ρ
       ρ {x | √(↑(i + 1)) ≤ |x - θ|} ≤ ρ {x | √i < |x - θ|} := by
     intro i
     refine measure_mono fun x hx ↦ ?_
-    simp only [Set.mem_setOf_eq] at hx ⊢
+    simp only [Set.mem_ofPred_eq] at hx ⊢
     exact lt_of_lt_of_le
       (Real.sqrt_lt_sqrt (Nat.cast_nonneg i) (by exact_mod_cast Nat.lt_succ_self i)) hx
   rw [tsum_eq_zero_add' ENNReal.summable]

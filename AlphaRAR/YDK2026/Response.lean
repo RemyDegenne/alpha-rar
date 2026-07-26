@@ -189,7 +189,7 @@ lemma respMart_increment_mul_eq_zero {k j : 𝓐} (hkj : k ≠ j) (n : ℕ) :
   simp only [Pi.mul_apply, Pi.sub_apply, Pi.zero_apply, respMart_succ_sub, armIndicator]
   rcases eq_or_ne (A n ω) k with hak | hak
   · rw [Set.indicator_of_notMem
-      (show ω ∉ {ω | A n ω = j} by simp only [Set.mem_setOf_eq]; rw [hak]; exact hkj)]
+      (show ω ∉ {ω | A n ω = j} by simp only [Set.mem_ofPred_eq]; rw [hak]; exact hkj)]
     ring
   · rw [Set.indicator_of_notMem
       (show ω ∉ {ω | A n ω = k} by simpa using hak)]
