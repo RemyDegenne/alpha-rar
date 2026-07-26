@@ -52,7 +52,7 @@ precomposed with the subsequence. -/
 lemma tendsto_map_clt_comp {X : ℕ → Ω → ℝ} (hX2 : MemLp (X 0) 2 P) (hindep : iIndepFun X P)
     (hident : ∀ i, IdentDistrib (X i) (X 0) P P) {c : ℕ → ℕ} (hc : Tendsto c atTop atTop) :
     Tendsto (β := ProbabilityMeasure ℝ)
-      (fun n ↦ (⟨P.map (fun ω ↦ (Real.sqrt (c n : ℝ))⁻¹ *
+      (fun n ↦ (⟨P.map (fun ω ↦ (√(c n : ℝ))⁻¹ *
           (∑ k ∈ Finset.range (c n), X k ω - (c n : ℝ) * P[X 0])),
         Measure.isProbabilityMeasure_map
           (((Finset.aemeasurable_fun_sum _ fun i _ ↦ (hident i).aemeasurable_fst).sub_const
@@ -107,7 +107,7 @@ lemma tendstoInMeasure_window {S : ℕ → Ω → ℝ} {𝒢 : Filtration ℕ m�
     {c : ℕ → ℕ} (hc : Tendsto (fun n ↦ (c n : ℕ)) atTop atTop)
     (hreg : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (N n ω : ℝ) / (c n : ℝ)) atTop (𝓝 1)) :
     TendstoInMeasure P
-      (fun n ω ↦ (Real.sqrt (N n ω : ℝ))⁻¹ * (S (N n ω) ω - S (c n) ω))
+      (fun n ω ↦ (√(N n ω : ℝ))⁻¹ * (S (N n ω) ω - S (c n) ω))
       atTop (fun _ ↦ 0) := by
   have hSmeas : ∀ k, Measurable (S k) := fun k ↦
     (hM.stronglyAdapted k).measurable.mono (𝒢.le k) le_rfl
@@ -131,7 +131,7 @@ lemma tendstoInMeasure_window {S : ℕ → Ω → ℝ} {𝒢 : Filtration ℕ m�
   have hεhalf : ε ≤ 1 / 2 := min_le_left _ _
   have hε1 : ε < 1 := lt_of_le_of_lt hεhalf (by norm_num)
   have h1ε : (0 : ℝ) < 1 - ε := by linarith
-  have hKε : (8 / δ) * Real.sqrt (2 * v * ε / (1 - ε)) ≤ ρ := by
+  have hKε : (8 / δ) * √(2 * v * ε / (1 - ε)) ≤ ρ := by
     have hεbound : ε ≤ (ρ * δ / 8) ^ 2 / (4 * (v + 1)) := min_le_right _ _
     have h4v : (0 : ℝ) < 4 * (v + 1) := by positivity
     have hs2 : 4 * (v + 1) * ε ≤ (ρ * δ / 8) ^ 2 := by
@@ -142,10 +142,10 @@ lemma tendstoInMeasure_window {S : ℕ → Ω → ℝ} {𝒢 : Filtration ℕ m�
       nlinarith [mul_nonneg hε0.le hv0, mul_nonneg (mul_nonneg hε0.le hv0)
         (by linarith : (0 : ℝ) ≤ 1 - 2 * ε), hε0.le, hv0]
     have harg : 2 * v * ε / (1 - ε) ≤ (ρ * δ / 8) ^ 2 := le_trans hs1 hs2
-    have hsqrt : Real.sqrt (2 * v * ε / (1 - ε)) ≤ ρ * δ / 8 :=
-      calc Real.sqrt (2 * v * ε / (1 - ε)) ≤ Real.sqrt ((ρ * δ / 8) ^ 2) := Real.sqrt_le_sqrt harg
+    have hsqrt : √(2 * v * ε / (1 - ε)) ≤ ρ * δ / 8 :=
+      calc √(2 * v * ε / (1 - ε)) ≤ √((ρ * δ / 8) ^ 2) := Real.sqrt_le_sqrt harg
         _ = ρ * δ / 8 := Real.sqrt_sq (by positivity)
-    calc (8 / δ) * Real.sqrt (2 * v * ε / (1 - ε)) ≤ (8 / δ) * (ρ * δ / 8) := by
+    calc (8 / δ) * √(2 * v * ε / (1 - ε)) ≤ (8 / δ) * (ρ * δ / 8) := by
           gcongr
       _ = ρ := by field_simp
   -- Window quantities: `L k = ⌊ε c_k⌋`, anchor `a k = c_k + L k`, maximal increment `W k`.
@@ -169,7 +169,7 @@ lemma tendstoInMeasure_window {S : ℕ → Ω → ℝ} {𝒢 : Filtration ℕ m�
       _ = c k := Nat.floor_natCast _
   -- Doob maximal inequality: `∫⁻ W k ≤ ofReal (4√(v·2L k))`.
   have hmax : ∀ k, ∫⁻ ω, ENNReal.ofReal (W k ω) ∂P
-      ≤ ENNReal.ofReal (4 * Real.sqrt (v * ((2 * L k : ℕ) : ℝ))) := fun k ↦ by
+      ≤ ENNReal.ofReal (4 * √(v * ((2 * L k : ℕ) : ℝ))) := fun k ↦ by
     simp only [hWdef]
     exact mart_maximal hM hM2 hd2 hcross hinc (L := 2 * L k) (n := a k)
       (by have h := hLle k; simp only [hadef]; omega)
@@ -209,7 +209,7 @@ lemma tendstoInMeasure_window {S : ℕ → Ω → ℝ} {𝒢 : Filtration ℕ m�
   have hA : ∀ᶠ k in atTop, P (G k)ᶜ ≤ ENNReal.ofReal ρ :=
     hGc.eventually_le_const (by simpa using ENNReal.ofReal_pos.mpr hρ0)
   have hB : ∀ᶠ k in atTop,
-      P {ω | δ ≤ |(Real.sqrt (N k ω : ℝ))⁻¹ * (S (N k ω) ω - S (c k) ω)|}
+      P {ω | δ ≤ |(√(N k ω : ℝ))⁻¹ * (S (N k ω) ω - S (c k) ω)|}
         ≤ P (G k)ᶜ + ENNReal.ofReal ρ := by
     filter_upwards [hc.eventually_ge_atTop 1] with k hck1
     have hck0 : (0 : ℝ) < (c k : ℝ) := by exact_mod_cast hck1
@@ -217,8 +217,8 @@ lemma tendstoInMeasure_window {S : ℕ → Ω → ℝ} {𝒢 : Filtration ℕ m�
     have hLle' := hLle k
     have h1εck : (0 : ℝ) < (1 - ε) * (c k : ℝ) := mul_pos h1ε hck0
     -- Pointwise bound on the good event.
-    have hfG : ∀ ω ∈ G k, |(Real.sqrt (N k ω : ℝ))⁻¹ * (S (N k ω) ω - S (c k) ω)|
-        ≤ 2 * W k ω / Real.sqrt ((1 - ε) * (c k : ℝ)) := by
+    have hfG : ∀ ω ∈ G k, |(√(N k ω : ℝ))⁻¹ * (S (N k ω) ω - S (c k) ω)|
+        ≤ 2 * W k ω / √((1 - ε) * (c k : ℝ)) := by
       intro ω hωG
       rw [hGdef] at hωG
       simp only [Set.mem_setOf_eq] at hωG
@@ -251,58 +251,58 @@ lemma tendstoInMeasure_window {S : ℕ → Ω → ℝ} {𝒢 : Filtration ℕ m�
               rw [abs_sub_comm (S (a k) ω) (S (N k ω) ω)]; exact abs_sub_le _ _ _
           _ ≤ W k ω + W k ω := add_le_add (hwin _ hNle hNge) (hwin _ hck_le_ak (by omega))
           _ = 2 * W k ω := by ring
-      have hsqrtle : Real.sqrt ((1 - ε) * (c k : ℝ)) ≤ Real.sqrt (N k ω : ℝ) :=
+      have hsqrtle : √((1 - ε) * (c k : ℝ)) ≤ √(N k ω : ℝ) :=
         Real.sqrt_le_sqrt hNlo
-      have hsqrtpos : (0 : ℝ) < Real.sqrt ((1 - ε) * (c k : ℝ)) := Real.sqrt_pos.mpr h1εck
-      have hNsqrtpos : (0 : ℝ) < Real.sqrt (N k ω : ℝ) :=
+      have hsqrtpos : (0 : ℝ) < √((1 - ε) * (c k : ℝ)) := Real.sqrt_pos.mpr h1εck
+      have hNsqrtpos : (0 : ℝ) < √(N k ω : ℝ) :=
         Real.sqrt_pos.mpr (lt_of_lt_of_le h1εck hNlo)
       rw [abs_mul, abs_of_nonneg (inv_nonneg.mpr (Real.sqrt_nonneg _)), mul_comm, ← div_eq_mul_inv,
         div_le_div_iff₀ hNsqrtpos hsqrtpos]
       exact mul_le_mul hSbnd hsqrtle (Real.sqrt_nonneg _) (by nlinarith [hWnn k ω])
     -- Inclusion into `Gᶜ ∪ {λ ≤ W}` and Markov.
-    have hincl : {ω | δ ≤ |(Real.sqrt (N k ω : ℝ))⁻¹ * (S (N k ω) ω - S (c k) ω)|}
-        ⊆ (G k)ᶜ ∪ {ω | δ * Real.sqrt ((1 - ε) * (c k : ℝ)) / 2 ≤ W k ω} := by
+    have hincl : {ω | δ ≤ |(√(N k ω : ℝ))⁻¹ * (S (N k ω) ω - S (c k) ω)|}
+        ⊆ (G k)ᶜ ∪ {ω | δ * √((1 - ε) * (c k : ℝ)) / 2 ≤ W k ω} := by
       intro ω hω
       simp only [Set.mem_setOf_eq] at hω
       rcases em (ω ∈ G k) with hG | hG
       · refine Or.inr ?_
         simp only [Set.mem_setOf_eq]
         have hb := (hfG ω hG).trans' hω
-        have hsqrtpos : (0 : ℝ) < Real.sqrt ((1 - ε) * (c k : ℝ)) :=
+        have hsqrtpos : (0 : ℝ) < √((1 - ε) * (c k : ℝ)) :=
           Real.sqrt_pos.mpr h1εck
         rw [le_div_iff₀ hsqrtpos] at hb
         nlinarith [hb, hWnn k ω, hsqrtpos]
       · exact Or.inl hG
-    have hMk : P {ω | δ * Real.sqrt ((1 - ε) * (c k : ℝ)) / 2 ≤ W k ω} ≤ ENNReal.ofReal ρ := by
-      have hlam : (0 : ℝ) < δ * Real.sqrt ((1 - ε) * (c k : ℝ)) / 2 := by
-        have : (0 : ℝ) < Real.sqrt ((1 - ε) * (c k : ℝ)) := Real.sqrt_pos.mpr h1εck
+    have hMk : P {ω | δ * √((1 - ε) * (c k : ℝ)) / 2 ≤ W k ω} ≤ ENNReal.ofReal ρ := by
+      have hlam : (0 : ℝ) < δ * √((1 - ε) * (c k : ℝ)) / 2 := by
+        have : (0 : ℝ) < √((1 - ε) * (c k : ℝ)) := Real.sqrt_pos.mpr h1εck
         positivity
-      have hset : {ω | δ * Real.sqrt ((1 - ε) * (c k : ℝ)) / 2 ≤ W k ω}
-          = {ω | ENNReal.ofReal (δ * Real.sqrt ((1 - ε) * (c k : ℝ)) / 2)
+      have hset : {ω | δ * √((1 - ε) * (c k : ℝ)) / 2 ≤ W k ω}
+          = {ω | ENNReal.ofReal (δ * √((1 - ε) * (c k : ℝ)) / 2)
               ≤ ENNReal.ofReal (W k ω)} := by
         ext ω; exact (ENNReal.ofReal_le_ofReal_iff (hWnn k ω)).symm
       -- real bound `4√(v·2L k)/λ ≤ Kε ≤ ρ`
       have hLkεck : (L k : ℝ) ≤ ε * (c k : ℝ) := Nat.floor_le (by positivity)
       have hδ0 : δ ≠ 0 := ne_of_gt hδ
-      have hKlam : (8 / δ) * Real.sqrt (2 * v * ε / (1 - ε))
-            * (δ * Real.sqrt ((1 - ε) * (c k : ℝ)) / 2)
-          = 4 * Real.sqrt (2 * v * ε * (c k : ℝ)) := by
-        set X := Real.sqrt (2 * v * ε / (1 - ε)) with hXdef
-        set Y := Real.sqrt ((1 - ε) * (c k : ℝ)) with hYdef
-        have hXY : X * Y = Real.sqrt (2 * v * ε * (c k : ℝ)) := by
+      have hKlam : (8 / δ) * √(2 * v * ε / (1 - ε))
+            * (δ * √((1 - ε) * (c k : ℝ)) / 2)
+          = 4 * √(2 * v * ε * (c k : ℝ)) := by
+        set X := √(2 * v * ε / (1 - ε)) with hXdef
+        set Y := √((1 - ε) * (c k : ℝ)) with hYdef
+        have hXY : X * Y = √(2 * v * ε * (c k : ℝ)) := by
           rw [hXdef, hYdef, ← Real.sqrt_mul (by positivity)]
           congr 1
           rw [div_mul_eq_mul_div, mul_comm (1 - ε) (c k : ℝ), ← mul_assoc, mul_div_assoc,
             div_self h1ε.ne', mul_one]
         rw [← hXY]; field_simp; ring
-      have hnum : 4 * Real.sqrt (v * ((2 * L k : ℕ) : ℝ))
-          ≤ 4 * Real.sqrt (2 * v * ε * (c k : ℝ)) := by
+      have hnum : 4 * √(v * ((2 * L k : ℕ) : ℝ))
+          ≤ 4 * √(2 * v * ε * (c k : ℝ)) := by
         have harg : v * ((2 * L k : ℕ) : ℝ) ≤ 2 * v * ε * (c k : ℝ) := by
           push_cast
           nlinarith [mul_le_mul_of_nonneg_left hLkεck hv0]
         exact mul_le_mul_of_nonneg_left (Real.sqrt_le_sqrt harg) (by norm_num)
-      have hdivle : 4 * Real.sqrt (v * ((2 * L k : ℕ) : ℝ))
-          / (δ * Real.sqrt ((1 - ε) * (c k : ℝ)) / 2) ≤ ρ := by
+      have hdivle : 4 * √(v * ((2 * L k : ℕ) : ℝ))
+          / (δ * √((1 - ε) * (c k : ℝ)) / 2) ≤ ρ := by
         rw [div_le_iff₀ hlam]
         exact le_trans (hnum.trans_eq hKlam.symm)
           (mul_le_mul_of_nonneg_right hKε hlam.le)
@@ -310,22 +310,22 @@ lemma tendstoInMeasure_window {S : ℕ → Ω → ℝ} {𝒢 : Filtration ℕ m�
       refine (meas_ge_le_lintegral_div (hWmeas k).ennreal_ofReal.aemeasurable
         (ENNReal.ofReal_pos.mpr hlam).ne' ENNReal.ofReal_ne_top).trans ?_
       calc (∫⁻ ω, ENNReal.ofReal (W k ω) ∂P)
-              / ENNReal.ofReal (δ * Real.sqrt ((1 - ε) * (c k : ℝ)) / 2)
-          ≤ ENNReal.ofReal (4 * Real.sqrt (v * ((2 * L k : ℕ) : ℝ)))
-              / ENNReal.ofReal (δ * Real.sqrt ((1 - ε) * (c k : ℝ)) / 2) := by
+              / ENNReal.ofReal (δ * √((1 - ε) * (c k : ℝ)) / 2)
+          ≤ ENNReal.ofReal (4 * √(v * ((2 * L k : ℕ) : ℝ)))
+              / ENNReal.ofReal (δ * √((1 - ε) * (c k : ℝ)) / 2) := by
             gcongr
             exact hmax k
-        _ = ENNReal.ofReal (4 * Real.sqrt (v * ((2 * L k : ℕ) : ℝ))
-              / (δ * Real.sqrt ((1 - ε) * (c k : ℝ)) / 2)) :=
+        _ = ENNReal.ofReal (4 * √(v * ((2 * L k : ℕ) : ℝ))
+              / (δ * √((1 - ε) * (c k : ℝ)) / 2)) :=
             (ENNReal.ofReal_div_of_pos hlam).symm
         _ ≤ ENNReal.ofReal ρ := ENNReal.ofReal_le_ofReal hdivle
-    calc P {ω | δ ≤ |(Real.sqrt (N k ω : ℝ))⁻¹ * (S (N k ω) ω - S (c k) ω)|}
-        ≤ P ((G k)ᶜ ∪ {ω | δ * Real.sqrt ((1 - ε) * (c k : ℝ)) / 2 ≤ W k ω}) :=
+    calc P {ω | δ ≤ |(√(N k ω : ℝ))⁻¹ * (S (N k ω) ω - S (c k) ω)|}
+        ≤ P ((G k)ᶜ ∪ {ω | δ * √((1 - ε) * (c k : ℝ)) / 2 ≤ W k ω}) :=
           measure_mono hincl
-      _ ≤ P (G k)ᶜ + P {ω | δ * Real.sqrt ((1 - ε) * (c k : ℝ)) / 2 ≤ W k ω} := measure_union_le _ _
+      _ ≤ P (G k)ᶜ + P {ω | δ * √((1 - ε) * (c k : ℝ)) / 2 ≤ W k ω} := measure_union_le _ _
       _ ≤ P (G k)ᶜ + ENNReal.ofReal ρ := by gcongr
   filter_upwards [hA, hB] with k hAk hBk
-  calc P {ω | δ ≤ |(Real.sqrt (N k ω : ℝ))⁻¹ * (S (N k ω) ω - S (c k) ω)|}
+  calc P {ω | δ ≤ |(√(N k ω : ℝ))⁻¹ * (S (N k ω) ω - S (c k) ω)|}
       ≤ P (G k)ᶜ + ENNReal.ofReal ρ := hBk
     _ ≤ ENNReal.ofReal ρ + ENNReal.ofReal ρ := by gcongr
     _ = ηe := hρη
@@ -334,7 +334,7 @@ lemma tendstoInMeasure_window {S : ℕ → Ω → ℝ} {𝒢 : Filtration ℕ m�
 `ω ↦ (√N ω)⁻¹ ((∑_{k<N ω} X k ω) - N ω · μ)`. -/
 lemma measurable_natTimeSelfNorm {X : ℕ → Ω → ℝ} {N : Ω → ℕ} (μ : ℝ)
     (hNmeas : Measurable N) (hSumMeas : Measurable (fun ω ↦ ∑ k ∈ Finset.range (N ω), X k ω)) :
-    Measurable (fun ω ↦ (Real.sqrt (N ω : ℝ))⁻¹ *
+    Measurable (fun ω ↦ (√(N ω : ℝ))⁻¹ *
       ((∑ k ∈ Finset.range (N ω), X k ω) - (N ω : ℝ) * μ)) := by
   have hNr : Measurable (fun ω ↦ (N ω : ℝ)) := (measurable_of_countable _).comp hNmeas
   exact (hNr.sqrt.inv).mul (hSumMeas.sub (hNr.mul measurable_const))
@@ -358,7 +358,7 @@ theorem tendsto_map_anscombe_iid {X : ℕ → Ω → ℝ} (hXmeas : ∀ i, Measu
     {c : ℕ → ℕ} (hc : Tendsto c atTop atTop)
     (hreg : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (N n ω : ℝ) / (c n : ℝ)) atTop (𝓝 1)) :
     Tendsto (β := ProbabilityMeasure ℝ)
-      (fun n ↦ (⟨P.map (fun ω ↦ (Real.sqrt (N n ω : ℝ))⁻¹ *
+      (fun n ↦ (⟨P.map (fun ω ↦ (√(N n ω : ℝ))⁻¹ *
           ((∑ k ∈ Finset.range (N n ω), X k ω) - (N n ω : ℝ) * P[X 0])),
         Measure.isProbabilityMeasure_map
           (measurable_natTimeSelfNorm P[X 0] (hNmeas n) (hSumMeas n)).aemeasurable⟩
@@ -415,7 +415,7 @@ theorem tendsto_map_anscombe_iid {X : ℕ → Ω → ℝ} (hXmeas : ∀ i, Measu
   simp only [← hμ, ← hvdef] at hbase
   -- Scaling `R_n = √c_n · (√N_n)⁻¹ → 1` in probability.
   have hcr : Tendsto (fun n ↦ (c n : ℝ)) atTop atTop := tendsto_natCast_atTop_atTop.comp hc
-  have hR1 : TendstoInMeasure P (fun n ω ↦ Real.sqrt (c n : ℝ) * (Real.sqrt (N n ω : ℝ))⁻¹)
+  have hR1 : TendstoInMeasure P (fun n ω ↦ √(c n : ℝ) * (√(N n ω : ℝ))⁻¹)
       atTop (fun _ ↦ (1 : ℝ)) := by
     refine tendstoInMeasure_of_tendsto_ae (fun n ↦ (measurable_const.mul
       (((measurable_of_countable _).comp (hNmeas n)).sqrt.inv)).aestronglyMeasurable) ?_
@@ -424,7 +424,7 @@ theorem tendsto_map_anscombe_iid {X : ℕ → Ω → ℝ} (hXmeas : ∀ i, Measu
       have hinv : Tendsto (fun n ↦ ((N n ω : ℝ) / (c n : ℝ))⁻¹) atTop (𝓝 1) := by
         simpa using hω.inv₀ one_ne_zero
       exact hinv.congr' (Filter.Eventually.of_forall fun n ↦ by rw [inv_div])
-    have h2 : Tendsto (fun n ↦ Real.sqrt ((c n : ℝ) / (N n ω : ℝ))) atTop (𝓝 1) := by
+    have h2 : Tendsto (fun n ↦ √((c n : ℝ) / (N n ω : ℝ))) atTop (𝓝 1) := by
       have := (Real.continuous_sqrt.tendsto 1).comp hcN
       rwa [Real.sqrt_one] at this
     refine h2.congr' (Filter.Eventually.of_forall fun n ↦ ?_)
@@ -432,12 +432,12 @@ theorem tendsto_map_anscombe_iid {X : ℕ → Ω → ℝ} (hXmeas : ∀ i, Measu
   -- Window remainder `E_n → 0` in probability.
   have hwindow := tendstoInMeasure_window hMart hM2 hd2 hcross hv0 hinc hNmeas hc hreg
   -- Measurability of the three assembled pieces.
-  have hA_meas : ∀ n, AEMeasurable (fun ω ↦ (Real.sqrt (c n : ℝ))⁻¹ *
+  have hA_meas : ∀ n, AEMeasurable (fun ω ↦ (√(c n : ℝ))⁻¹ *
       (∑ k ∈ Finset.range (c n), X k ω - (c n : ℝ) * μ)) P := fun n ↦
     (measurable_const.mul
       ((Finset.measurable_sum _ fun k _ ↦ hXmeas k).sub measurable_const)).aemeasurable
   have hR_meas : ∀ n, AEMeasurable
-      (fun ω ↦ Real.sqrt (c n : ℝ) * (Real.sqrt (N n ω : ℝ))⁻¹) P := fun n ↦
+      (fun ω ↦ √(c n : ℝ) * (√(N n ω : ℝ))⁻¹) P := fun n ↦
     (measurable_const.mul
       (((measurable_of_countable _).comp (hNmeas n)).sqrt.inv)).aemeasurable
   have hSNfun_meas : ∀ n, Measurable (fun ω ↦ S (N n ω) ω) := fun n ↦ by
@@ -447,7 +447,7 @@ theorem tendsto_map_anscombe_iid {X : ℕ → Ω → ℝ} (hXmeas : ∀ i, Measu
     rw [heq]
     exact (hSumMeas n).sub (((measurable_of_countable _).comp (hNmeas n)).mul measurable_const)
   have hE_meas : ∀ n, AEMeasurable
-      (fun ω ↦ (Real.sqrt (N n ω : ℝ))⁻¹ * (S (N n ω) ω - S (c n) ω)) P := fun n ↦
+      (fun ω ↦ (√(N n ω : ℝ))⁻¹ * (S (N n ω) ω - S (c n) ω)) P := fun n ↦
     ((((measurable_of_countable _).comp (hNmeas n)).sqrt.inv).mul
       ((hSNfun_meas n).sub (hSmeas (c n)))).aemeasurable
   -- Multiplicative then additive Slutsky.
@@ -460,7 +460,7 @@ theorem tendsto_map_anscombe_iid {X : ℕ → Ω → ℝ} (hXmeas : ∀ i, Measu
   apply Subtype.ext
   refine congrArg (P.map ·) ?_
   funext ω
-  have hcn0 : Real.sqrt (c n : ℝ) ≠ 0 :=
+  have hcn0 : √(c n : ℝ) ≠ 0 :=
     Real.sqrt_ne_zero'.mpr (by exact_mod_cast Nat.lt_of_lt_of_le Nat.one_pos hn)
   simp only [Pi.mul_apply]
   rw [show (∑ k ∈ Finset.range (c n), X k ω - (c n : ℝ) * μ) = S (c n) ω from (hSeq (c n) ω).symm,

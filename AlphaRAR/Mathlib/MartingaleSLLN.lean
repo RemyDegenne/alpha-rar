@@ -50,7 +50,7 @@ lemma martingale_ae_tendsto_of_integral_sq_le [IsProbabilityMeasure μ]
     {C : ℝ} (hbdd : ∀ n, ∫ ω, (S n ω) ^ 2 ∂μ ≤ C) :
     ∀ᵐ ω ∂μ, ∃ c, Tendsto (fun n ↦ S n ω) atTop (𝓝 c) := by
   have hCnn : 0 ≤ C := le_trans (integral_nonneg fun ω ↦ sq_nonneg _) (hbdd 0)
-  refine martingale_ae_tendsto_of_eLpNorm_two_le hS (C := (Real.sqrt C).toNNReal) fun n ↦ ?_
+  refine martingale_ae_tendsto_of_eLpNorm_two_le hS (C := (√C).toNNReal) fun n ↦ ?_
   have haesm : AEStronglyMeasurable (S n) μ :=
     ((hS.stronglyMeasurable n).mono (ℱ.le n)).aestronglyMeasurable
   have hmem : MemLp (S n) 2 μ := (memLp_two_iff_integrable_sq haesm).mpr (hS2 n)

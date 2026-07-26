@@ -1724,12 +1724,12 @@ variable (𝓕 : Filtration ℕ mΩ) (d : ℕ → Ω → ℝ) (a : ℕ → ℝ)
 deterministic normalizer `1/√(a n)` in row `n`. Its row sum is `M_n/√(a n)`, `M_n = ∑_{i<n} d_i`. -/
 noncomputable def ofSeq : MartDiffArray P where
   𝓕 := fun _ ↦ 𝓕
-  d n i := fun ω ↦ (Real.sqrt (a n))⁻¹ * d i ω
+  d n i := fun ω ↦ (√(a n))⁻¹ * d i ω
   k := id
   memLp n i := (hmemLp i).const_mul _
   mgdiff n i := by
-    show P[fun ω ↦ (Real.sqrt (a n))⁻¹ * d i ω | 𝓕 i] =ᵐ[P] 0
-    filter_upwards [condExp_const_mul (m := 𝓕 i) (Real.sqrt (a n))⁻¹ (d i), hmgdiff i]
+    show P[fun ω ↦ (√(a n))⁻¹ * d i ω | 𝓕 i] =ᵐ[P] 0
+    filter_upwards [condExp_const_mul (m := 𝓕 i) (√(a n))⁻¹ (d i), hmgdiff i]
       with ω h1 h2
     simp only [Pi.zero_apply] at h2 ⊢
     rw [h1, h2, mul_zero]
@@ -1738,10 +1738,10 @@ noncomputable def ofSeq : MartDiffArray P where
 /-- The row sum of `ofSeq` is `M_n/√(a n)` with `M_n = ∑_{i<n} d_i`. -/
 lemma rowSum_ofSeq (n : ℕ) :
     (ofSeq 𝓕 d a hmemLp hmgdiff hadapted).rowSum n
-      = fun ω ↦ (Real.sqrt (a n))⁻¹ * ∑ i ∈ Finset.range n, d i ω := by
+      = fun ω ↦ (√(a n))⁻¹ * ∑ i ∈ Finset.range n, d i ω := by
   funext ω
-  change ∑ i ∈ Finset.range n, (Real.sqrt (a n))⁻¹ * d i ω
-    = (Real.sqrt (a n))⁻¹ * ∑ i ∈ Finset.range n, d i ω
+  change ∑ i ∈ Finset.range n, (√(a n))⁻¹ * d i ω
+    = (√(a n))⁻¹ * ∑ i ∈ Finset.range n, d i ω
   rw [← Finset.mul_sum]
 
 /-- The predictable variation of `ofSeq` is `⟨M⟩_n / a_n = (1/a_n) ∑_{i<n} E[d_i²|𝓕 i]`. -/
@@ -1751,7 +1751,7 @@ lemma predVar_ofSeq (ha : ∀ n, 0 ≤ a n) (n : ℕ) :
   have hcv : ∀ i, (ofSeq 𝓕 d a hmemLp hmgdiff hadapted).condVar n i
       = P[fun ω ↦ (a n)⁻¹ * (d i ω) ^ 2 | 𝓕 i] := by
     intro i
-    change P[fun ω ↦ ((Real.sqrt (a n))⁻¹ * d i ω) ^ 2 | 𝓕 i]
+    change P[fun ω ↦ ((√(a n))⁻¹ * d i ω) ^ 2 | 𝓕 i]
       = P[fun ω ↦ (a n)⁻¹ * (d i ω) ^ 2 | 𝓕 i]
     congr 1
     funext ω

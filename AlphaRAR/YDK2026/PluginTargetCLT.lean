@@ -43,21 +43,21 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
 /-- The `√n`-scaled plug-in-target error vector `√n(T(θ̂_n) - T(θ)) ∈ ℝ^𝓐`. -/
 noncomputable def targetSqrtNVec (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ)
     (T : (𝓐 → ℝ) → 𝓐 → ℝ) (n : ℕ) (ω : Ω) : EuclideanSpace ℝ 𝓐 :=
-  WithLp.toLp 2 (fun k ↦ Real.sqrt n *
+  WithLp.toLp 2 (fun k ↦ √n *
     (T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω) (fun j ↦ Y j ω) (θ₀ k') n) k
       - T (fun k' ↦ (ν k')[id]) k))
 
 /-- The `√n`-scaled estimator error vector `√n(θ̂_n - θ) ∈ ℝ^𝓐` (the vector of `clt_theta`). -/
 noncomputable def estimatorSqrtNVec (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ)
     (n : ℕ) (ω : Ω) : EuclideanSpace ℝ 𝓐 :=
-  WithLp.toLp 2 (fun k ↦ Real.sqrt n *
+  WithLp.toLp 2 (fun k ↦ √n *
     (estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) (θ₀ k) n - (ν k)[id]))
 
 omit [DecidableEq 𝓐] [Fintype 𝓐] in
 lemma measurable_estimatorSqrtNVec' (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (n : ℕ) : Measurable (estimatorSqrtNVec ν A Y θ₀ n) := by
   refine (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (measurable_pi_lambda _ fun k ↦ ?_)
-  refine Measurable.const_mul ?_ (Real.sqrt n)
+  refine Measurable.const_mul ?_ (√n)
   have harm : ∀ j, Measurable (fun ω ↦ armIndicator A k j ω) := fun j ↦
     (measurable_const (a := (1 : ℝ))).indicator ((measurableSet_singleton k).preimage
       (h.measurable_action j))
@@ -84,7 +84,7 @@ lemma measurable_targetSqrtNVec [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationa
     Measurable (targetSqrtNVec ν A Y θ₀ T n) := by
   cases nonempty_fintype 𝓐
   refine (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (measurable_pi_lambda _ fun k ↦ ?_)
-  refine Measurable.const_mul ?_ (Real.sqrt n)
+  refine Measurable.const_mul ?_ (√n)
   exact ((measurable_pi_apply k).comp
     (hT.measurable.comp (measurable_estimatorVec h θ₀ n))).sub_const _
 
@@ -217,7 +217,7 @@ theorem clt_rho
       rw [dist_zero_right]; exact lt_of_le_of_lt hhle (half_lt_self hδ)
     exact hb hlt
   -- `√n(θ̂_n-θ) = √n • S`.
-  have hrel : ∀ n ω, estimatorSqrtNVec ν A Y θ₀ n ω = Real.sqrt n • S n ω := by
+  have hrel : ∀ n ω, estimatorSqrtNVec ν A Y θ₀ n ω = √n • S n ω := by
     intro n ω
     apply WithLp.ofLp_injective (p := 2)
     funext k
@@ -253,7 +253,7 @@ theorem clt_rho
   -- The remainder equals `√n • φ(S)`.
   have hpt : ∀ n ω, targetSqrtNVec ν A Y θ₀ T n ω
       - WithLp.toLp 2 (G.mulVec (WithLp.ofLp (estimatorSqrtNVec ν A Y θ₀ n ω)))
-      = Real.sqrt n • φ (S n ω) := by
+      = √n • φ (S n ω) := by
     intro n ω
     have e1 : Tv (p + S n ω) = WithLp.toLp 2 (T fun k ↦ estimator (fun j ↦ armIndicator A k j ω)
         (fun j ↦ Y j ω) (θ₀ k) n) := by
@@ -268,11 +268,11 @@ theorem clt_rho
     have e3 : L (S n ω) = WithLp.toLp 2 (G.mulVec (WithLp.ofLp (S n ω))) := by
       simp only [hLdef, hSdef, Matrix.toEuclideanCLM_toLp, WithLp.ofLp_toLp]
     have e4 : WithLp.ofLp (estimatorSqrtNVec ν A Y θ₀ n ω)
-        = Real.sqrt n • WithLp.ofLp (S n ω) := by rw [hrel n ω, WithLp.ofLp_smul]
+        = √n • WithLp.ofLp (S n ω) := by rw [hrel n ω, WithLp.ofLp_smul]
     rw [hφdef]
     change targetSqrtNVec ν A Y θ₀ T n ω
       - WithLp.toLp 2 (G.mulVec (WithLp.ofLp (estimatorSqrtNVec ν A Y θ₀ n ω)))
-      = Real.sqrt n • (Tv (p + S n ω) - Tv p - L (S n ω))
+      = √n • (Tv (p + S n ω) - Tv p - L (S n ω))
     rw [e1, e2, e3, e4, Matrix.mulVec_smul]
     apply WithLp.ofLp_injective (p := 2)
     funext k
@@ -280,13 +280,13 @@ theorem clt_rho
       Pi.smul_apply, smul_eq_mul]
     ring
   -- Assemble via the abstract remainder-in-probability lemma.
-  have key : TendstoInMeasure P (fun (n : ℕ) ω ↦ Real.sqrt n • φ (S n ω)) atTop
+  have key : TendstoInMeasure P (fun (n : ℕ) ω ↦ √n • φ (S n ω)) atTop
       (fun _ ↦ (0 : EuclideanSpace ℝ 𝓐)) :=
-    tendstoInMeasure_smul_littleO_of_tight (a := fun n ↦ Real.sqrt n) (S := S)
+    tendstoInMeasure_smul_littleO_of_tight (a := fun n ↦ √n) (S := S)
       (X := estimatorSqrtNVec ν A Y θ₀) (fun n ↦ Real.sqrt_nonneg _) hφbound hrel hS hX
   have hfun : (fun n ω ↦ targetSqrtNVec ν A Y θ₀ T n ω
         - WithLp.toLp 2 (G.mulVec (WithLp.ofLp (estimatorSqrtNVec ν A Y θ₀ n ω))))
-      = fun (n : ℕ) ω ↦ Real.sqrt n • φ (S n ω) := by funext n ω; exact hpt n ω
+      = fun (n : ℕ) ω ↦ √n • φ (S n ω) := by funext n ω; exact hpt n ω
   rw [hfun]; exact key
 
 end AlphaRAR

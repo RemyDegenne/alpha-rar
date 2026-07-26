@@ -38,7 +38,7 @@ theorem qm_increments_resp (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) :
     IsLittleOpOne P (vmaxSeq (fun k ↦ respMart ν A Y k)) ∧
       IsLittleOpOne P
-        (fun n ω ↦ wmaxSeq (fun k ↦ respMart ν A Y k) n ω / Real.sqrt n) := by
+        (fun n ω ↦ wmaxSeq (fun k ↦ respMart ν A Y k) n ω / √n) := by
   set ℱ := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with hℱdef
   have hint : ∀ n, Integrable (Y n) P := fun n ↦ (hY2 n).integrable one_le_two
   have hMfam : ∀ k, Martingale (respMart ν A Y k) ℱ P := fun k ↦ martingale_respMart h hint k

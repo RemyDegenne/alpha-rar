@@ -38,9 +38,9 @@ lemma isBigOpOne_martingale_div_sqrt [IsFiniteMeasure μ] (hM : Martingale M ℱ
     (hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
     (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ)
     (hinc : ∀ n, ∫ ω, (M (n + 1) ω - M n ω) ^ 2 ∂μ ≤ σ2) :
-    IsBigOpOne μ (fun n ω ↦ M n ω / Real.sqrt n) := by
+    IsBigOpOne μ (fun n ω ↦ M n ω / √n) := by
   have hgrow := integral_sq_le_of_increment_bound hM hM2 hM0 σ2 hd2 hprod hinc
-  set v : ℕ → ℝ := fun n ↦ Real.sqrt (max (n : ℝ) 1) with hv
+  set v : ℕ → ℝ := fun n ↦ √(max (n : ℝ) 1) with hv
   have hmax_pos : ∀ n, (0 : ℝ) < max (n : ℝ) 1 := fun n ↦
     lt_of_lt_of_le one_pos (le_max_right _ _)
   have hvpos : ∀ n, 0 < v n := fun n ↦ Real.sqrt_pos.mpr (hmax_pos n)
@@ -75,7 +75,7 @@ lemma isBigOpOne_martingale_div_sqrt [IsFiniteMeasure μ] (hM : Martingale M ℱ
     filter_upwards [hM0] with ω hω
     simp only [Pi.zero_apply] at hω
     rw [hω]; simp
-  · have hvn : v n = Real.sqrt (n : ℝ) := by
+  · have hvn : v n = √(n : ℝ) := by
       simp only [hv]
       rw [max_eq_left (by exact_mod_cast hn1 : (1 : ℝ) ≤ (n : ℝ))]
     filter_upwards with ω
@@ -92,7 +92,7 @@ by `c n`, hence square-integrable) and the increment second moment bound
 lemma isBigOpOne_of_bdd_increments [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (c : ℝ) (hc : 0 ≤ c)
     (hΔ : ∀ n, ∀ᵐ ω ∂μ, |M (n + 1) ω - M n ω| ≤ c) :
-    IsBigOpOne μ (fun n ω ↦ M n ω / Real.sqrt n) := by
+    IsBigOpOne μ (fun n ω ↦ M n ω / √n) := by
   have hmeasM : ∀ n, AEMeasurable (M n) μ := fun n ↦
     ((hM.stronglyMeasurable n).mono (ℱ.le n)).measurable.aemeasurable
   -- "bounded a.e. ⟹ integrable" on a finite measure.

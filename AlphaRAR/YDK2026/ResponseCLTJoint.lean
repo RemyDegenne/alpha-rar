@@ -239,10 +239,10 @@ omit [DecidableEq 𝓐] in
 `∑_k w_k² V_k (N_{n,k}/c_{k,n})`. -/
 lemma predVar_wArray_scaled_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (w : 𝓐 → ℝ) {c : 𝓐 → ℕ → ℝ} (hc : ∀ a n, 0 ≤ c a n) (n : ℕ) :
-    (wArray h hY2 (fun n a ↦ w a / Real.sqrt (c a n))).predVar n =ᵐ[P]
+    (wArray h hY2 (fun n a ↦ w a / √(c a n))).predVar n =ᵐ[P]
       fun ω ↦ ∑ a, w a ^ 2 * Var[id; ν a]
         * (count (fun j ↦ armIndicator A a j ω) n / c a n) := by
-  filter_upwards [predVar_wArray_ae h hY2 (fun n a ↦ w a / Real.sqrt (c a n)) n] with ω hω
+  filter_upwards [predVar_wArray_ae h hY2 (fun n a ↦ w a / √(c a n)) n] with ω hω
   rw [hω]
   refine Finset.sum_congr rfl fun a _ ↦ ?_
   rw [div_pow, Real.sq_sqrt (hc a n)]
@@ -260,7 +260,7 @@ lemma tendstoInMeasure_predVar_wArray (h : IsAlgEnvSeq A Y alg (stationaryEnv ν
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / c a n)
       atTop (𝓝 (ρ a))) :
     TendstoInMeasure P
-      (fun n ↦ (wArray h hY2 (fun n a ↦ w a / Real.sqrt (c a n))).predVar n) atTop
+      (fun n ↦ (wArray h hY2 (fun n a ↦ w a / √(c a n))).predVar n) atTop
       (fun _ ↦ ∑ a, w a ^ 2 * Var[id; ν a] * ρ a) := by
   have hmeas : ∀ n : ℕ, AEStronglyMeasurable
       (fun ω ↦ ∑ a, w a ^ 2 * Var[id; ν a]
@@ -414,10 +414,10 @@ lemma tendstoInMeasure_lindeberg_wArray (h : IsAlgEnvSeq A Y alg (stationaryEnv 
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / c a n)
       atTop (𝓝 (ρ a))) :
     ∀ ε, 0 < ε → TendstoInMeasure P
-      (fun n ↦ (wArray h hY2 (fun n a ↦ w a / Real.sqrt (c a n))).lindeberg n ε) atTop 0 := by
+      (fun n ↦ (wArray h hY2 (fun n a ↦ w a / √(c a n))).lindeberg n ε) atTop 0 := by
   intro ε hε
   obtain ⟨G, hG⟩ : ∃ G : ℕ → 𝓐 → ℝ, ∀ n a, G n a
-      = ∫ x, {x | ε < |w a / Real.sqrt (c a n)| * |x - (ν a)[id]|}.indicator
+      = ∫ x, {x | ε < |w a / √(c a n)| * |x - (ν a)[id]|}.indicator
           (fun x ↦ (x - (ν a)[id]) ^ 2) x ∂(ν a) := ⟨_, fun n a ↦ rfl⟩
   -- Each truncated moment vanishes: the truncation threshold `ε√(c_{a,n})/|w_a| → ∞`.
   have hGtail : ∀ a, Tendsto (fun n : ℕ ↦ G n a) atTop (𝓝 0) := by
@@ -425,7 +425,7 @@ lemma tendstoInMeasure_lindeberg_wArray (h : IsAlgEnvSeq A Y alg (stationaryEnv 
     rcases eq_or_ne (w a) 0 with hwa | hwa
     · have hz : ∀ n, G n a = 0 := fun n ↦ by
         rw [hG]
-        have hset : {x : ℝ | ε < |w a / Real.sqrt (c a n)| * |x - (ν a)[id]|} = ∅ := by
+        have hset : {x : ℝ | ε < |w a / √(c a n)| * |x - (ν a)[id]|} = ∅ := by
           ext x
           simp only [hwa, zero_div, abs_zero, zero_mul, Set.mem_setOf_eq,
             Set.mem_empty_iff_false, iff_false, not_lt]
@@ -439,24 +439,24 @@ lemma tendstoInMeasure_lindeberg_wArray (h : IsAlgEnvSeq A Y alg (stationaryEnv 
       have hDCTa := tendsto_integral_sq_indicator_gt (P := ν a) (Z := fun x ↦ x - (ν a)[id])
         (measurable_id.sub_const _) hcent2νa
       have hwapos : (0 : ℝ) < |w a| := abs_pos.mpr hwa
-      have hca : Tendsto (fun n : ℕ ↦ ε * Real.sqrt (c a n) / |w a|) atTop atTop :=
+      have hca : Tendsto (fun n : ℕ ↦ ε * √(c a n) / |w a|) atTop atTop :=
         Tendsto.atTop_div_const hwapos (Tendsto.const_mul_atTop hε
           (Real.tendsto_sqrt_atTop.comp (hc_atTop a)))
       refine Tendsto.congr' ?_ (by simpa only [Function.comp_def] using hDCTa.comp hca)
       filter_upwards [(hc_atTop a).eventually_gt_atTop 0] with n hn
-      have hsc : (0 : ℝ) < Real.sqrt (c a n) := Real.sqrt_pos.mpr hn
-      have hset : {x : ℝ | ε * Real.sqrt (c a n) / |w a| < |x - (ν a)[id]|}
-          = {x : ℝ | ε < |w a / Real.sqrt (c a n)| * |x - (ν a)[id]|} := by
+      have hsc : (0 : ℝ) < √(c a n) := Real.sqrt_pos.mpr hn
+      have hset : {x : ℝ | ε * √(c a n) / |w a| < |x - (ν a)[id]|}
+          = {x : ℝ | ε < |w a / √(c a n)| * |x - (ν a)[id]|} := by
         ext x
         simp only [Set.mem_setOf_eq, abs_div, abs_of_nonneg (Real.sqrt_nonneg (c a n))]
         rw [div_lt_iff₀ hwapos, div_mul_eq_mul_div, lt_div_iff₀ hsc,
           mul_comm (|w a|) (|x - (ν a)[id]|)]
       rw [hG, hset]
   -- Closed form with the scaled weights: `L_n(ε) = ∑_a w_a² G_n(a) (N_{n,a}/c_{a,n})`.
-  have hlin' : ∀ n, (wArray h hY2 (fun n a ↦ w a / Real.sqrt (c a n))).lindeberg n ε =ᵐ[P]
+  have hlin' : ∀ n, (wArray h hY2 (fun n a ↦ w a / √(c a n))).lindeberg n ε =ᵐ[P]
       fun ω ↦ ∑ a, w a ^ 2 * G n a * (count (fun j ↦ armIndicator A a j ω) n / c a n) := by
     intro n
-    filter_upwards [lindeberg_wArray_ae h hY2 (fun n a ↦ w a / Real.sqrt (c a n)) ε n] with ω hω
+    filter_upwards [lindeberg_wArray_ae h hY2 (fun n a ↦ w a / √(c a n)) ε n] with ω hω
     rw [hω]
     refine Finset.sum_congr rfl fun a _ ↦ ?_
     rw [← hG, div_pow, Real.sq_sqrt (hc a n)]
@@ -491,12 +491,12 @@ lemma wLinComb_scaled_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationaryE
       atTop (𝓝 (ρ a))) :
     Tendsto (β := ProbabilityMeasure ℝ)
       (fun n : ℕ ↦ (⟨P.map
-          (fun ω ↦ ∑ a, (w a / Real.sqrt (c a n)) * respMart ν A Y a n ω),
+          (fun ω ↦ ∑ a, (w a / √(c a n)) * respMart ν A Y a n ω),
         Measure.isProbabilityMeasure_map (Finset.measurable_sum _
           fun a _ ↦ (measurable_respMart h a n).const_mul _).aemeasurable⟩
             : ProbabilityMeasure ℝ))
       atTop (𝓝 ⟨gaussianReal 0 (∑ a, w a ^ 2 * Var[id; ν a] * ρ a).toNNReal, inferInstance⟩) := by
-  have hmart := (wArray h hY2 (fun n a ↦ w a / Real.sqrt (c a n))).mart_clt
+  have hmart := (wArray h hY2 (fun n a ↦ w a / √(c a n))).mart_clt
     (σ2 := ∑ a, w a ^ 2 * Var[id; ν a] * ρ a) hσ2
     (tendstoInMeasure_predVar_wArray h hY2 w hc hNconv)
     (tendstoInMeasure_lindeberg_wArray h hY2 w hνk hc hc_atTop hNconv)
@@ -513,7 +513,7 @@ lemma wLinComb_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) 
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a))) :
     Tendsto (β := ProbabilityMeasure ℝ)
-      (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (Real.sqrt (n : ℝ))⁻¹ * ∑ a, w a * respMart ν A Y a n ω),
+      (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (√(n : ℝ))⁻¹ * ∑ a, w a * respMart ν A Y a n ω),
         Measure.isProbabilityMeasure_map (measurable_const.mul (Finset.measurable_sum _
           fun a _ ↦ (measurable_respMart h a n).const_mul (w a))).aemeasurable⟩
             : ProbabilityMeasure ℝ))
@@ -600,7 +600,7 @@ normalization; per-arm normalizers are what the sparse joint CLT needs, since th
 genuinely different rates. -/
 noncomputable def respVec (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (c : 𝓐 → ℕ → ℝ)
     (n : ℕ) (ω : Ω) : EuclideanSpace ℝ 𝓐 :=
-  WithLp.toLp 2 (fun a ↦ (Real.sqrt (c a n))⁻¹ * respMart ν A Y a n ω)
+  WithLp.toLp 2 (fun a ↦ (√(c a n))⁻¹ * respMart ν A Y a n ω)
 
 omit [Fintype 𝓐] [DecidableEq 𝓐] in
 @[fun_prop]
@@ -615,7 +615,7 @@ omit [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] [IsMarkovKernel ν] in
 `wLinComb_scaled_tendsto_gaussianReal` handles. -/
 lemma inner_respVec (c : 𝓐 → ℕ → ℝ) (n : ℕ) (ω : Ω) (t : EuclideanSpace ℝ 𝓐) :
     (⟪respVec ν A Y c n ω, t⟫ : ℝ)
-      = ∑ a, (t.ofLp a / Real.sqrt (c a n)) * respMart ν A Y a n ω := by
+      = ∑ a, (t.ofLp a / √(c a n)) * respMart ν A Y a n ω := by
   simp only [PiLp.inner_apply, RCLike.inner_apply, conj_trivial, respVec]
   exact Finset.sum_congr rfl fun a _ ↦ by rw [div_eq_mul_inv]; ring
 
@@ -661,7 +661,7 @@ lemma respMart_joint_tendsto_multivariateGaussian
   -- P side: the `n`-th projected law is the 1-D linear-combination law.
   have hP : ∀ n, ProbabilityMeasure.map (⟨P, inferInstance⟩ : ProbabilityMeasure Ω)
         ((measurable_respVec h c n).inner_const (c := t)).aemeasurable
-      = ⟨P.map (fun ω ↦ ∑ a, (t.ofLp a / Real.sqrt (c a n)) * respMart ν A Y a n ω),
+      = ⟨P.map (fun ω ↦ ∑ a, (t.ofLp a / √(c a n)) * respMart ν A Y a n ω),
           Measure.isProbabilityMeasure_map (Finset.measurable_sum _
             fun a _ ↦ (measurable_respMart h a n).const_mul _).aemeasurable⟩ := by
     intro n
@@ -678,7 +678,7 @@ omit [Fintype 𝓐] [DecidableEq 𝓐] in
 @[fun_prop]
 lemma measurable_respSelfNormVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (n : ℕ) :
     Measurable (fun ω ↦ (WithLp.toLp 2 (fun a ↦
-      (Real.sqrt (count (fun j ↦ armIndicator A a j ω) n))⁻¹ * respMart ν A Y a n ω)
+      (√(count (fun j ↦ armIndicator A a j ω) n))⁻¹ * respMart ν A Y a n ω)
         : EuclideanSpace ℝ 𝓐)) :=
   (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp
     (measurable_pi_lambda _ fun a ↦
@@ -707,7 +707,7 @@ lemma respMart_joint_selfNorm_tendsto_multivariateGaussian
       atTop (𝓝 (v a))) :
     Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
       (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (WithLp.toLp 2 (fun a ↦
-          (Real.sqrt (count (fun j ↦ armIndicator A a j ω) n))⁻¹ * respMart ν A Y a n ω)
+          (√(count (fun j ↦ armIndicator A a j ω) n))⁻¹ * respMart ν A Y a n ω)
             : EuclideanSpace ℝ 𝓐)),
         Measure.isProbabilityMeasure_map (measurable_respSelfNormVec h n).aemeasurable⟩
           : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)))
@@ -717,9 +717,9 @@ lemma respMart_joint_selfNorm_tendsto_multivariateGaussian
   set μ' : Measure (EuclideanSpace ℝ 𝓐) :=
     multivariateGaussian 0 (Matrix.diagonal fun a ↦ v a * Var[id; ν a]) with hμ'
   -- Constant limit `cst_a = 1/√v_a`; random scaling `R_{n,a} = √(c_{a,n})·(√N_{n,a})⁻¹`.
-  let cst : EuclideanSpace ℝ 𝓐 := WithLp.toLp 2 (fun a ↦ (Real.sqrt (v a))⁻¹)
+  let cst : EuclideanSpace ℝ 𝓐 := WithLp.toLp 2 (fun a ↦ (√(v a))⁻¹)
   set Rn : ℕ → Ω → EuclideanSpace ℝ 𝓐 := fun n ω ↦ WithLp.toLp 2
-    (fun a ↦ Real.sqrt (c a n) * (Real.sqrt (count (fun j ↦ armIndicator A a j ω) n))⁻¹) with hRn
+    (fun a ↦ √(c a n) * (√(count (fun j ↦ armIndicator A a j ω) n))⁻¹) with hRn
   have hRmeas : ∀ n, AEMeasurable (Rn n) P := fun n ↦
     ((WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (measurable_pi_lambda _ fun a ↦
       ((measurable_count_armIndicator h a n).sqrt.inv).const_mul _)).aemeasurable
@@ -731,8 +731,8 @@ lemma respMart_joint_selfNorm_tendsto_multivariateGaussian
       (tendsto_pi_nhds.mpr fun a ↦ ?_)
     have hcnn : ∀ n, (0 : ℝ) ≤ count (fun j ↦ armIndicator A a j ω) n := fun n ↦
       Finset.sum_nonneg fun j _ ↦ armIndicator_nonneg A a j ω
-    have h1 : Tendsto (fun n ↦ Real.sqrt (count (fun j ↦ armIndicator A a j ω) n / c a n))
-        atTop (𝓝 (Real.sqrt (v a))) := (Real.continuous_sqrt.tendsto (v a)).comp (hconv a)
+    have h1 : Tendsto (fun n ↦ √(count (fun j ↦ armIndicator A a j ω) n / c a n))
+        atTop (𝓝 (√(v a))) := (Real.continuous_sqrt.tendsto (v a)).comp (hconv a)
     have h2 := h1.inv₀ (Real.sqrt_pos.mpr (hv a)).ne'
     refine h2.congr' ?_
     filter_upwards with n
@@ -747,12 +747,12 @@ lemma respMart_joint_selfNorm_tendsto_multivariateGaussian
     have hlim : μ'.map (fun x ↦ g (x, cst))
         = multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a]) := by
       rw [hμ', show (fun x : EuclideanSpace ℝ 𝓐 ↦ g (x, cst))
-          = fun x : EuclideanSpace ℝ 𝓐 ↦ (WithLp.toLp 2 (fun a ↦ (Real.sqrt (v a))⁻¹ * x a)
+          = fun x : EuclideanSpace ℝ 𝓐 ↦ (WithLp.toLp 2 (fun a ↦ (√(v a))⁻¹ * x a)
             : EuclideanSpace ℝ 𝓐) from rfl,
         multivariateGaussian_diagonal_smul_map (fun a ↦ v a * Var[id; ν a])
-          (fun a ↦ (Real.sqrt (v a))⁻¹) fun a ↦ mul_nonneg (hv a).le (hVnn a)]
+          (fun a ↦ (√(v a))⁻¹) fun a ↦ mul_nonneg (hv a).le (hVnn a)]
       refine congrArg (fun f ↦ multivariateGaussian 0 (Matrix.diagonal f)) (funext fun a ↦ ?_)
-      show (Real.sqrt (v a))⁻¹ ^ 2 * (v a * Var[id; ν a]) = Var[id; ν a]
+      show (√(v a))⁻¹ ^ 2 * (v a * Var[id; ν a]) = Var[id; ν a]
       rw [inv_pow, Real.sq_sqrt (hv a).le, inv_mul_cancel_left₀ (hv a).ne']
     rw [show (⟨multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a]), inferInstance⟩
           : ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
@@ -769,11 +769,11 @@ lemma respMart_joint_selfNorm_tendsto_multivariateGaussian
     simp only [hg_def]
     refine congrArg (WithLp.toLp 2) (funext fun a ↦ ?_)
     simp only [hRn, respVec, WithLp.ofLp_toLp]
-    have hsn : Real.sqrt (c a n) ≠ 0 := Real.sqrt_ne_zero'.mpr (hn a)
-    rw [show Real.sqrt (c a n) * (Real.sqrt (count (fun j ↦ armIndicator A a j ω) n))⁻¹
-        * ((Real.sqrt (c a n))⁻¹ * respMart ν A Y a n ω)
-        = (Real.sqrt (c a n) * (Real.sqrt (c a n))⁻¹)
-          * ((Real.sqrt (count (fun j ↦ armIndicator A a j ω) n))⁻¹ * respMart ν A Y a n ω)
+    have hsn : √(c a n) ≠ 0 := Real.sqrt_ne_zero'.mpr (hn a)
+    rw [show √(c a n) * (√(count (fun j ↦ armIndicator A a j ω) n))⁻¹
+        * ((√(c a n))⁻¹ * respMart ν A Y a n ω)
+        = (√(c a n) * (√(c a n))⁻¹)
+          * ((√(count (fun j ↦ armIndicator A a j ω) n))⁻¹ * respMart ν A Y a n ω)
         by ring, mul_inv_cancel₀ hsn, one_mul]
   · -- The deterministic-normalizer joint CLT, in the `⟨P.map ·, ·⟩` form.
     have hjoint := respMart_joint_tendsto_multivariateGaussian h hY2 hνk hc hc_atTop
@@ -795,7 +795,7 @@ omit [Fintype 𝓐] [DecidableEq 𝓐] in
 lemma measurable_estimatorErrorVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (n : ℕ) :
     Measurable (fun ω ↦ (WithLp.toLp 2 (fun k ↦
-      Real.sqrt (count (fun j ↦ armIndicator A k j ω) n)
+      √(count (fun j ↦ armIndicator A k j ω) n)
         * (estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) (θ₀ k) n - (ν k)[id]))
           : EuclideanSpace ℝ 𝓐)) := by
   refine (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (measurable_pi_lambda _ fun k ↦ ?_)
@@ -835,7 +835,7 @@ lemma estimatorError_joint_tendsto_multivariateGaussian
       atTop (𝓝 (v a))) :
     Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
       (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (WithLp.toLp 2 (fun k ↦
-          Real.sqrt (count (fun j ↦ armIndicator A k j ω) n)
+          √(count (fun j ↦ armIndicator A k j ω) n)
             * (estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) (θ₀ k) n - (ν k)[id]))
               : EuclideanSpace ℝ 𝓐)),
         Measure.isProbabilityMeasure_map (measurable_estimatorErrorVec h θ₀ n).aemeasurable⟩
@@ -852,7 +852,7 @@ lemma estimatorError_joint_tendsto_multivariateGaussian
   set Rn : ℕ → Ω → EuclideanSpace ℝ 𝓐 × EuclideanSpace ℝ 𝓐 := fun n ω ↦
     (WithLp.toLp 2 (fun k ↦ count (fun j ↦ armIndicator A k j ω) n
         / (count (fun j ↦ armIndicator A k j ω) n + 1)),
-     WithLp.toLp 2 (fun k ↦ (θ₀ k - (ν k)[id]) * Real.sqrt (count (fun j ↦ armIndicator A k j ω) n)
+     WithLp.toLp 2 (fun k ↦ (θ₀ k - (ν k)[id]) * √(count (fun j ↦ armIndicator A k j ω) n)
         / (count (fun j ↦ armIndicator A k j ω) n + 1))) with hRn
   clear_value g Rn c
   have hcnn : ∀ k n ω, (0 : ℝ) ≤ count (fun j ↦ armIndicator A k j ω) n := fun k n ω ↦
@@ -878,13 +878,13 @@ lemma estimatorError_joint_tendsto_multivariateGaussian
       rw [div_mul_cancel₀]; exact hn.ne'
     have hden : ∀ k, Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n + 1) atTop atTop :=
       fun k ↦ tendsto_atTop_mono (fun n ↦ le_add_of_nonneg_right zero_le_one) (hNinf k)
-    have hsqrtinf : ∀ k, Tendsto (fun n ↦ Real.sqrt (count (fun j ↦ armIndicator A k j ω) n))
+    have hsqrtinf : ∀ k, Tendsto (fun n ↦ √(count (fun j ↦ armIndicator A k j ω) n))
         atTop atTop := by
       intro k
       refine tendsto_atTop.mpr fun b ↦ ?_
       filter_upwards [(hNinf k).eventually_ge_atTop (b ^ 2)] with n hn
       calc b ≤ |b| := le_abs_self b
-        _ = Real.sqrt (b ^ 2) := (Real.sqrt_sq_eq_abs b).symm
+        _ = √(b ^ 2) := (Real.sqrt_sq_eq_abs b).symm
         _ ≤ _ := Real.sqrt_le_sqrt hn
     rw [hRn, hc]
     refine Filter.Tendsto.prodMk_nhds ?_ ?_
@@ -899,7 +899,7 @@ lemma estimatorError_joint_tendsto_multivariateGaussian
       rw [eq_div_iff hne, sub_mul, one_mul, inv_mul_cancel₀ hne]; ring
     · refine ((PiLp.continuous_toLp (p := 2) (β := fun _ : 𝓐 ↦ ℝ)).tendsto _).comp
         (tendsto_pi_nhds.mpr fun k ↦ ?_)
-      have hsq : Tendsto (fun n ↦ Real.sqrt (count (fun j ↦ armIndicator A k j ω) n)
+      have hsq : Tendsto (fun n ↦ √(count (fun j ↦ armIndicator A k j ω) n)
           / (count (fun j ↦ armIndicator A k j ω) n + 1)) atTop (𝓝 0) := by
         refine squeeze_zero_norm (fun n ↦ ?_) (tendsto_inv_atTop_zero.comp (hsqrtinf k))
         simp only [Function.comp_apply]
@@ -939,7 +939,7 @@ lemma estimatorError_joint_tendsto_multivariateGaussian
   · rw [hN0]; simp
   · have hNpos : (0 : ℝ) < count (fun j ↦ armIndicator A k j ω) n :=
       lt_of_le_of_ne (hcnn k n ω) (Ne.symm hN0)
-    set s := Real.sqrt (count (fun j ↦ armIndicator A k j ω) n)
+    set s := √(count (fun j ↦ armIndicator A k j ω) n)
     have hspos : (0 : ℝ) < s := Real.sqrt_pos.mpr hNpos
     have hNs : count (fun j ↦ armIndicator A k j ω) n = s ^ 2 := (Real.sq_sqrt hNpos.le).symm
     rw [hNs]; field_simp
@@ -961,11 +961,11 @@ omit [Fintype 𝓐] [DecidableEq 𝓐] in
 @[fun_prop]
 lemma measurable_estimatorSqrtNVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (n : ℕ) :
-    Measurable (fun ω ↦ (WithLp.toLp 2 (fun k ↦ Real.sqrt n
+    Measurable (fun ω ↦ (WithLp.toLp 2 (fun k ↦ √n
       * (estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) (θ₀ k) n - (ν k)[id]))
         : EuclideanSpace ℝ 𝓐)) := by
   refine (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (measurable_pi_lambda _ fun k ↦ ?_)
-  refine Measurable.const_mul ?_ (Real.sqrt n)
+  refine Measurable.const_mul ?_ (√n)
   have harm : ∀ j, Measurable (fun ω ↦ armIndicator A k j ω) := fun j ↦
     (measurable_const (a := (1 : ℝ))).indicator ((measurableSet_singleton k).preimage
       (h.measurable_action j))
@@ -987,7 +987,7 @@ theorem estimator_sqrtN_joint_tendsto_multivariateGaussian
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a))) :
     Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-      (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (WithLp.toLp 2 (fun k ↦ Real.sqrt n
+      (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (WithLp.toLp 2 (fun k ↦ √n
           * (estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) (θ₀ k) n - (ν k)[id]))
               : EuclideanSpace ℝ 𝓐)),
         Measure.isProbabilityMeasure_map (measurable_estimatorSqrtNVec h θ₀ n).aemeasurable⟩
@@ -998,25 +998,25 @@ theorem estimator_sqrtN_joint_tendsto_multivariateGaussian
   set μ' : Measure (EuclideanSpace ℝ 𝓐) :=
     multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a]) with hμ'
   set c : EuclideanSpace ℝ 𝓐 × EuclideanSpace ℝ 𝓐 :=
-    (WithLp.toLp 2 (fun k ↦ (Real.sqrt (v k))⁻¹), WithLp.toLp 2 (fun _ ↦ (0 : ℝ))) with hc
+    (WithLp.toLp 2 (fun k ↦ (√(v k))⁻¹), WithLp.toLp 2 (fun _ ↦ (0 : ℝ))) with hc
   set g : EuclideanSpace ℝ 𝓐 × (EuclideanSpace ℝ 𝓐 × EuclideanSpace ℝ 𝓐) → EuclideanSpace ℝ 𝓐 :=
     fun p ↦ WithLp.toLp 2 (fun k ↦ p.2.1 k * p.1 k + p.2.2 k) with hg_def
   set Rn : ℕ → Ω → EuclideanSpace ℝ 𝓐 × EuclideanSpace ℝ 𝓐 := fun n ω ↦
-    (WithLp.toLp 2 (fun k ↦ Real.sqrt n * Real.sqrt (count (fun j ↦ armIndicator A k j ω) n)
+    (WithLp.toLp 2 (fun k ↦ √n * √(count (fun j ↦ armIndicator A k j ω) n)
         / (count (fun j ↦ armIndicator A k j ω) n + 1)),
-     WithLp.toLp 2 (fun k ↦ (θ₀ k - (ν k)[id]) * Real.sqrt n
+     WithLp.toLp 2 (fun k ↦ (θ₀ k - (ν k)[id]) * √n
         / (count (fun j ↦ armIndicator A k j ω) n + 1))) with hRn
   clear_value g Rn c
   have hcnn : ∀ k n ω, (0 : ℝ) ≤ count (fun j ↦ armIndicator A k j ω) n := fun k n ω ↦
     Finset.sum_nonneg fun j _ ↦ armIndicator_nonneg A k j ω
   have hg : Continuous g := by rw [hg_def]; fun_prop
   have hsqrtT : ∀ (f : ℕ → ℝ), Tendsto f atTop atTop →
-      Tendsto (fun n ↦ Real.sqrt (f n)) atTop atTop := by
+      Tendsto (fun n ↦ √(f n)) atTop atTop := by
     intro f hf
     refine tendsto_atTop.mpr fun b ↦ ?_
     filter_upwards [hf.eventually_ge_atTop (b ^ 2)] with n hn
     calc b ≤ |b| := le_abs_self b
-      _ = Real.sqrt (b ^ 2) := (Real.sqrt_sq_eq_abs b).symm
+      _ = √(b ^ 2) := (Real.sqrt_sq_eq_abs b).symm
       _ ≤ _ := Real.sqrt_le_sqrt hn
   have hRmeas : ∀ n, AEMeasurable (Rn n) P := by
     intro n
@@ -1048,10 +1048,10 @@ theorem estimator_sqrtN_joint_tendsto_multivariateGaussian
     refine Filter.Tendsto.prodMk_nhds ?_ ?_
     · refine ((PiLp.continuous_toLp (p := 2) (β := fun _ : 𝓐 ↦ ℝ)).tendsto _).comp
         (tendsto_pi_nhds.mpr fun k ↦ ?_)
-      have hA : Tendsto (fun n ↦ Real.sqrt (count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)))
-          atTop (𝓝 (Real.sqrt (v k))) := (Real.continuous_sqrt.tendsto _).comp (hconv k)
-      have hval : Real.sqrt (v k) * (v k)⁻¹ = (Real.sqrt (v k))⁻¹ := by
-        have hvinv : (v k)⁻¹ = (Real.sqrt (v k))⁻¹ * (Real.sqrt (v k))⁻¹ := by
+      have hA : Tendsto (fun n ↦ √(count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)))
+          atTop (𝓝 (√(v k))) := (Real.continuous_sqrt.tendsto _).comp (hconv k)
+      have hval : √(v k) * (v k)⁻¹ = (√(v k))⁻¹ := by
+        have hvinv : (v k)⁻¹ = (√(v k))⁻¹ * (√(v k))⁻¹ := by
           rw [← mul_inv, Real.mul_self_sqrt (hv k).le]
         rw [hvinv, ← mul_assoc, mul_inv_cancel₀ (Real.sqrt_ne_zero'.mpr (hv k)), one_mul]
       have hlimT := hA.mul (hB k)
@@ -1060,22 +1060,22 @@ theorem estimator_sqrtN_joint_tendsto_multivariateGaussian
       filter_upwards [eventually_gt_atTop 0] with n hn
       have hnpos : (0 : ℝ) < n := by exact_mod_cast hn
       rw [Real.sqrt_div (hcnn k n ω)]
-      set sn := Real.sqrt (n : ℝ)
+      set sn := √(n : ℝ)
       have hsnpos : (0 : ℝ) < sn := Real.sqrt_pos.mpr hnpos
       have hnn : (n : ℝ) = sn ^ 2 := (Real.sq_sqrt hnpos.le).symm
       rw [hnn]; field_simp
     · refine ((PiLp.continuous_toLp (p := 2) (β := fun _ : 𝓐 ↦ ℝ)).tendsto _).comp
         (tendsto_pi_nhds.mpr fun k ↦ ?_)
-      have hU : Tendsto (fun n : ℕ ↦ Real.sqrt n / (count (fun j ↦ armIndicator A k j ω) n + 1))
+      have hU : Tendsto (fun n : ℕ ↦ √n / (count (fun j ↦ armIndicator A k j ω) n + 1))
           atTop (𝓝 0) := by
-        have hinv : Tendsto (fun n : ℕ ↦ (Real.sqrt n)⁻¹) atTop (𝓝 0) :=
+        have hinv : Tendsto (fun n : ℕ ↦ (√n)⁻¹) atTop (𝓝 0) :=
           tendsto_inv_atTop_zero.comp (hsqrtT _ tendsto_natCast_atTop_atTop)
         have hml := hinv.mul (hB k)
         rw [zero_mul] at hml
         refine hml.congr' ?_
         filter_upwards [eventually_gt_atTop 0] with n hn
         have hnpos : (0 : ℝ) < n := by exact_mod_cast hn
-        set sn := Real.sqrt (n : ℝ)
+        set sn := √(n : ℝ)
         have hsnpos : (0 : ℝ) < sn := Real.sqrt_pos.mpr hnpos
         have hnn : (n : ℝ) = sn ^ 2 := (Real.sq_sqrt hnpos.le).symm
         rw [hnn]; field_simp
@@ -1088,15 +1088,15 @@ theorem estimator_sqrtN_joint_tendsto_multivariateGaussian
   have hslut := tendsto_map_comp_of_tendstoInMeasure_const (P := P) (μ' := μ') g hg
     (fun n ↦ (measurable_respSelfNormVec h n).aemeasurable) hRmeas hX hRtendsto
   have hgc : (fun x : EuclideanSpace ℝ 𝓐 ↦ g (x, c))
-      = fun x : EuclideanSpace ℝ 𝓐 ↦ (WithLp.toLp 2 (fun k ↦ (Real.sqrt (v k))⁻¹ * x k)
+      = fun x : EuclideanSpace ℝ 𝓐 ↦ (WithLp.toLp 2 (fun k ↦ (√(v k))⁻¹ * x k)
         : EuclideanSpace ℝ 𝓐) := by
     funext x; simp only [hg_def, hc, add_zero]
   have hlim : μ'.map (fun x ↦ g (x, c))
       = multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a] / v a) := by
     rw [hgc, hμ', multivariateGaussian_diagonal_smul_map (fun a ↦ Var[id; ν a])
-      (fun k ↦ (Real.sqrt (v k))⁻¹) hVnn]
+      (fun k ↦ (√(v k))⁻¹) hVnn]
     refine congrArg (fun f ↦ multivariateGaussian 0 (Matrix.diagonal f)) (funext fun k ↦ ?_)
-    show (Real.sqrt (v k))⁻¹ ^ 2 * Var[id; ν k] = Var[id; ν k] / v k
+    show (√(v k))⁻¹ ^ 2 * Var[id; ν k] = Var[id; ν k] / v k
     rw [inv_pow, Real.sq_sqrt (hv k).le, inv_mul_eq_div]
   have heq : (⟨multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a] / v a), inferInstance⟩
         : ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
@@ -1119,7 +1119,7 @@ theorem estimator_sqrtN_joint_tendsto_multivariateGaussian
   · rw [respMart_eq_zero_of_count_zero k n ω hN0]; simp only [hN0, Real.sqrt_zero]; ring
   · have hNpos : (0 : ℝ) < count (fun j ↦ armIndicator A k j ω) n :=
       lt_of_le_of_ne (hcnn k n ω) (Ne.symm hN0)
-    set s := Real.sqrt (count (fun j ↦ armIndicator A k j ω) n)
+    set s := √(count (fun j ↦ armIndicator A k j ω) n)
     have hspos : (0 : ℝ) < s := Real.sqrt_pos.mpr hNpos
     have hNs : count (fun j ↦ armIndicator A k j ω) n = s ^ 2 := (Real.sq_sqrt hNpos.le).symm
     rw [hNs]; field_simp

@@ -457,7 +457,7 @@ variance: `∫ (ΔQ)² ≤ V_k`. Indeed the `𝒢`-conditional second moment is 
 Then `isBigOpOne_martingale_div_sqrt` (`cor:mart_Op`) applies with `σ² = V_k`. -/
 lemma isBigOpOne_respMart_div_sqrt (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (k : 𝓐) :
-    IsBigOpOne P (fun n ω ↦ respMart ν A Y k n ω / Real.sqrt n) := by
+    IsBigOpOne P (fun n ω ↦ respMart ν A Y k n ω / √n) := by
   have hint : ∀ n, Integrable (Y n) P := fun n ↦ (hY2 n).integrable one_le_two
   have hcent2 : ∀ n, Integrable (fun ω ↦ (Y n ω - (ν k)[id]) ^ 2) P :=
     fun n ↦ ((hY2 n).sub (memLp_const _)).integrable_sq

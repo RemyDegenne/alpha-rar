@@ -65,7 +65,7 @@ lemma lintegral_sup'_abs_le_two_mul_sqrt (hM : Martingale M ℱ μ)
     (hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
     (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ) (N : ℕ) :
     ∫⁻ ω, ENNReal.ofReal ((range (N + 1)).sup' nonempty_range_add_one (fun k ↦ |M k ω|)) ∂μ
-      ≤ ENNReal.ofReal (2 * Real.sqrt (∫ ω, M N ω ^ 2 ∂μ)) := by
+      ≤ ENNReal.ofReal (2 * √(∫ ω, M N ω ^ 2 ∂μ)) := by
   set Y : Ω → ℝ := fun ω ↦ (range (N + 1)).sup' nonempty_range_add_one (fun k ↦ |M k ω|) with hYdef
   set B : ℝ := ∫ ω, M N ω ^ 2 ∂μ with hBdef
   have hBnn : 0 ≤ B := integral_nonneg fun ω ↦ sq_nonneg _
@@ -129,7 +129,7 @@ lemma mart_maximal (hM : Martingale M ℱ μ)
     {C₀ : ℝ} (hinc : ∀ n, ∫ ω, (M (n + 1) ω - M n ω) ^ 2 ∂μ ≤ C₀) {L n : ℕ} (hLn : L ≤ n) :
     ∫⁻ ω, ENNReal.ofReal ((range (L + 1)).sup' nonempty_range_add_one
         (fun m ↦ |M n ω - M (n - m) ω|)) ∂μ
-      ≤ ENNReal.ofReal (4 * Real.sqrt (C₀ * L)) := by
+      ≤ ENNReal.ofReal (4 * √(C₀ * L)) := by
   set j := n - L with hjdef
   have hjL : j + L = n := by omega
   have hMmeas : ∀ k, Measurable (M k) := fun k ↦
@@ -193,27 +193,27 @@ lemma mart_maximal (hM : Martingale M ℱ μ)
         rw [← lintegral_const_mul 2 hSsupmeas.ennreal_ofReal]
         refine lintegral_congr fun ω ↦ ?_
         rw [ENNReal.ofReal_mul (by norm_num : (0 : ℝ) ≤ 2), ENNReal.ofReal_ofNat]
-    _ ≤ 2 * ENNReal.ofReal (2 * Real.sqrt (∫ ω, S L ω ^ 2 ∂μ)) := by gcongr
-    _ = ENNReal.ofReal (4 * Real.sqrt (∫ ω, S L ω ^ 2 ∂μ)) := by
+    _ ≤ 2 * ENNReal.ofReal (2 * √(∫ ω, S L ω ^ 2 ∂μ)) := by gcongr
+    _ = ENNReal.ofReal (4 * √(∫ ω, S L ω ^ 2 ∂μ)) := by
         rw [show (2 : ℝ≥0∞) = ENNReal.ofReal 2 from (ENNReal.ofReal_ofNat 2).symm,
           ← ENNReal.ofReal_mul (by norm_num : (0 : ℝ) ≤ 2)]
         congr 1; ring
-    _ ≤ ENNReal.ofReal (4 * Real.sqrt (C₀ * L)) :=
+    _ ≤ ENNReal.ofReal (4 * √(C₀ * L)) :=
         ENNReal.ofReal_le_ofReal
           (mul_le_mul_of_nonneg_left (Real.sqrt_le_sqrt hSL2) (by norm_num))
 
 
 /-- Geometric-series core: `∑_{j=jL}^{j1} (1/√2)^j ≤ 4/√L` when `L ≤ 2^jL` and `0 < L`. -/
 private lemma geom_dyadic_sum_le {L : ℕ} (hL : 0 < L) (jL j1 : ℕ) (hjL : L ≤ 2 ^ jL) :
-    ∑ j ∈ Finset.Icc jL j1, ((Real.sqrt 2)⁻¹) ^ j ≤ 4 / Real.sqrt L := by
-  set r : ℝ := (Real.sqrt 2)⁻¹ with hr
+    ∑ j ∈ Finset.Icc jL j1, ((√2)⁻¹) ^ j ≤ 4 / √L := by
+  set r : ℝ := (√2)⁻¹ with hr
   have hr0 : 0 < r := by positivity
-  have hsqrt2 : (4 : ℝ) / 3 ≤ Real.sqrt 2 := by
+  have hsqrt2 : (4 : ℝ) / 3 ≤ √2 := by
     rw [Real.le_sqrt (by norm_num) (by norm_num)]; norm_num
   have hr34 : r ≤ 3 / 4 := by
     rw [hr, inv_le_comm₀ (by positivity) (by norm_num)]; linarith
   have hr1 : r < 1 := by linarith
-  have hLr : (0:ℝ) < Real.sqrt L := Real.sqrt_pos.mpr (by exact_mod_cast hL)
+  have hLr : (0:ℝ) < √L := Real.sqrt_pos.mpr (by exact_mod_cast hL)
   have hgeom : ∀ N : ℕ, ∑ i ∈ Finset.range N, r ^ i ≤ 4 := by
     intro N
     have hstep : ∑ i ∈ Finset.range N, r ^ i ≤ (1 - r)⁻¹ := by
@@ -233,20 +233,20 @@ private lemma geom_dyadic_sum_le {L : ℕ} (hL : 0 < L) (jL j1 : ℕ) (hjL : L �
     rw [mul_comm]
     gcongr
     exact hgeom _
-  have hstepB : r ^ jL ≤ (Real.sqrt L)⁻¹ := by
-    have hinv : (r ^ jL)⁻¹ = (Real.sqrt 2) ^ jL := by rw [← inv_pow, hr, inv_inv]
+  have hstepB : r ^ jL ≤ (√L)⁻¹ := by
+    have hinv : (r ^ jL)⁻¹ = (√2) ^ jL := by rw [← inv_pow, hr, inv_inv]
     rw [le_inv_comm₀ (by positivity) hLr, hinv]
-    have hsq : ((Real.sqrt 2) ^ jL) ^ 2 = (2:ℝ) ^ jL := by
+    have hsq : ((√2) ^ jL) ^ 2 = (2:ℝ) ^ jL := by
       rw [← pow_mul, mul_comm, pow_mul, Real.sq_sqrt (by norm_num : (0:ℝ) ≤ 2)]
-    calc Real.sqrt L ≤ Real.sqrt (((Real.sqrt 2) ^ jL) ^ 2) := by
+    calc √L ≤ √(((√2) ^ jL) ^ 2) := by
           apply Real.sqrt_le_sqrt
           rw [hsq]
           have : (L:ℝ) ≤ ((2 ^ jL : ℕ) : ℝ) := by exact_mod_cast hjL
           rwa [Nat.cast_pow, Nat.cast_ofNat] at this
-      _ = (Real.sqrt 2) ^ jL := Real.sqrt_sq (by positivity)
+      _ = (√2) ^ jL := Real.sqrt_sq (by positivity)
   calc ∑ j ∈ Finset.Icc jL j1, r ^ j ≤ 4 * r ^ jL := hstepA
-    _ ≤ 4 * (Real.sqrt L)⁻¹ := by gcongr
-    _ = 4 / Real.sqrt L := by rw [div_eq_mul_inv]
+    _ ≤ 4 * (√L)⁻¹ := by gcongr
+    _ = 4 / √L := by rw [div_eq_mul_inv]
 
 /-- **Dyadic maximal bound** (blueprint `lem:mart_maximal_dyadic`, lintegral form). For a
 square-integrable martingale `M` whose increments have second moment `≤ C₀`, and `0 < L ≤ n`,
@@ -259,7 +259,7 @@ lemma mart_maximal_dyadic (hM : Martingale M ℱ μ)
     {L n : ℕ} (hL : 0 < L) (hLn : L ≤ n) :
     ∫⁻ ω, ENNReal.ofReal ((Finset.Icc L n).sup' (Finset.nonempty_Icc.mpr hLn)
         (fun m ↦ |M n ω - M (n - m) ω| / (m : ℝ))) ∂μ
-      ≤ ENNReal.ofReal (32 * Real.sqrt (C₀ / L)) := by
+      ≤ ENNReal.ofReal (32 * √(C₀ / L)) := by
   have hMmeas : ∀ k, Measurable (M k) := fun k ↦
     (hM.stronglyAdapted k).measurable.mono (ℱ.le k) le_rfl
   set jL := Nat.log 2 L + 1 with hjLdef
@@ -310,7 +310,7 @@ lemma mart_maximal_dyadic (hM : Martingale M ℱ μ)
     exact le_trans hterm (Finset.single_le_sum (fun j' _ ↦ hhnn j' ω) hjmem)
   -- Per-scale bound via mart_maximal.
   have hperscale : ∀ j, ∫⁻ ω, ENNReal.ofReal (h j ω) ∂μ
-      ≤ ENNReal.ofReal (8 * Real.sqrt C₀ * ((Real.sqrt 2)⁻¹) ^ j) := by
+      ≤ ENNReal.ofReal (8 * √C₀ * ((√2)⁻¹) ^ j) := by
     intro j
     have hstep : ∫⁻ ω, ENNReal.ofReal (h j ω) ∂μ
         = ENNReal.ofReal (2 / (2:ℝ) ^ j) * ∫⁻ ω, ENNReal.ofReal (g j ω) ∂μ := by
@@ -327,30 +327,30 @@ lemma mart_maximal_dyadic (hM : Martingale M ℱ μ)
       calc ((L' j : ℕ) : ℝ) ≤ ((2 ^ j : ℕ) : ℝ) := by exact_mod_cast hnat
         _ = (2:ℝ) ^ j := by rw [Nat.cast_pow, Nat.cast_ofNat]
     -- real inequality per scale
-    have hreal : (2 / (2:ℝ) ^ j) * (4 * Real.sqrt (C₀ * (L' j : ℝ)))
-        ≤ 8 * Real.sqrt C₀ * ((Real.sqrt 2)⁻¹) ^ j := by
-      set s : ℝ := Real.sqrt ((2:ℝ) ^ j) with hsdef
+    have hreal : (2 / (2:ℝ) ^ j) * (4 * √(C₀ * (L' j : ℝ)))
+        ≤ 8 * √C₀ * ((√2)⁻¹) ^ j := by
+      set s : ℝ := √((2:ℝ) ^ j) with hsdef
       have hs : 0 < s := Real.sqrt_pos.mpr (by positivity)
       have hs2 : s * s = (2:ℝ) ^ j := Real.mul_self_sqrt (by positivity)
-      have hsqrtpow : Real.sqrt 2 ^ j = Real.sqrt ((2:ℝ) ^ j) := by
-        rw [show ((2:ℝ) ^ j) = (Real.sqrt 2 ^ j) ^ 2 by
+      have hsqrtpow : √2 ^ j = √((2:ℝ) ^ j) := by
+        rw [show ((2:ℝ) ^ j) = (√2 ^ j) ^ 2 by
           rw [← pow_mul, mul_comm, pow_mul, Real.sq_sqrt (by norm_num : (0:ℝ) ≤ 2)],
           Real.sqrt_sq (by positivity)]
-      have hrj : ((Real.sqrt 2)⁻¹) ^ j = s⁻¹ := by rw [inv_pow, hsqrtpow, ← hsdef]
-      have hXle : Real.sqrt (C₀ * (L' j : ℝ)) ≤ Real.sqrt C₀ * s := by
+      have hrj : ((√2)⁻¹) ^ j = s⁻¹ := by rw [inv_pow, hsqrtpow, ← hsdef]
+      have hXle : √(C₀ * (L' j : ℝ)) ≤ √C₀ * s := by
         rw [Real.sqrt_mul hC₀, hsdef]
         exact mul_le_mul_of_nonneg_left (Real.sqrt_le_sqrt hL'le) (Real.sqrt_nonneg _)
       rw [hrj, ← hs2]
-      calc 2 / (s * s) * (4 * Real.sqrt (C₀ * (L' j : ℝ)))
-          = 8 * Real.sqrt (C₀ * (L' j : ℝ)) / (s * s) := by ring
-        _ ≤ 8 * (Real.sqrt C₀ * s) / (s * s) := by gcongr
-        _ = 8 * Real.sqrt C₀ * s⁻¹ := by field_simp
+      calc 2 / (s * s) * (4 * √(C₀ * (L' j : ℝ)))
+          = 8 * √(C₀ * (L' j : ℝ)) / (s * s) := by ring
+        _ ≤ 8 * (√C₀ * s) / (s * s) := by gcongr
+        _ = 8 * √C₀ * s⁻¹ := by field_simp
     calc ENNReal.ofReal (2 / (2:ℝ) ^ j) * ∫⁻ ω, ENNReal.ofReal (g j ω) ∂μ
-        ≤ ENNReal.ofReal (2 / (2:ℝ) ^ j) * ENNReal.ofReal (4 * Real.sqrt (C₀ * (L' j : ℝ))) :=
+        ≤ ENNReal.ofReal (2 / (2:ℝ) ^ j) * ENNReal.ofReal (4 * √(C₀ * (L' j : ℝ))) :=
           mul_le_mul' le_rfl hmm
-      _ = ENNReal.ofReal ((2 / (2:ℝ) ^ j) * (4 * Real.sqrt (C₀ * (L' j : ℝ)))) :=
+      _ = ENNReal.ofReal ((2 / (2:ℝ) ^ j) * (4 * √(C₀ * (L' j : ℝ)))) :=
           (ENNReal.ofReal_mul (by positivity)).symm
-      _ ≤ ENNReal.ofReal (8 * Real.sqrt C₀ * ((Real.sqrt 2)⁻¹) ^ j) :=
+      _ ≤ ENNReal.ofReal (8 * √C₀ * ((√2)⁻¹) ^ j) :=
           ENNReal.ofReal_le_ofReal hreal
   -- Assembly.
   calc ∫⁻ ω, ENNReal.ofReal ((Finset.Icc L n).sup' (Finset.nonempty_Icc.mpr hLn)
@@ -367,30 +367,30 @@ lemma mart_maximal_dyadic (hM : Martingale M ℱ μ)
           exact (((Finset.measurable_range_sup'' (fun m _ ↦
             continuous_abs.measurable.comp ((hMmeas n).sub (hMmeas (n - m))))).const_mul
             (2 / (2:ℝ) ^ j))).ennreal_ofReal)
-    _ ≤ ∑ j ∈ Finset.Icc jL j1, ENNReal.ofReal (8 * Real.sqrt C₀ * ((Real.sqrt 2)⁻¹) ^ j) :=
+    _ ≤ ∑ j ∈ Finset.Icc jL j1, ENNReal.ofReal (8 * √C₀ * ((√2)⁻¹) ^ j) :=
         Finset.sum_le_sum (fun j _ ↦ hperscale j)
-    _ = ENNReal.ofReal (∑ j ∈ Finset.Icc jL j1, 8 * Real.sqrt C₀ * ((Real.sqrt 2)⁻¹) ^ j) :=
+    _ = ENNReal.ofReal (∑ j ∈ Finset.Icc jL j1, 8 * √C₀ * ((√2)⁻¹) ^ j) :=
         (ENNReal.ofReal_sum_of_nonneg (fun j _ ↦ by positivity)).symm
-    _ ≤ ENNReal.ofReal (32 * Real.sqrt (C₀ / L)) := by
+    _ ≤ ENNReal.ofReal (32 * √(C₀ / L)) := by
         apply ENNReal.ofReal_le_ofReal
         have hjL2 : L ≤ 2 ^ jL := (Nat.lt_pow_succ_log_self (by norm_num) L).le
-        have hsum : ∑ j ∈ Finset.Icc jL j1, 8 * Real.sqrt C₀ * ((Real.sqrt 2)⁻¹) ^ j
-            = 8 * Real.sqrt C₀ * ∑ j ∈ Finset.Icc jL j1, ((Real.sqrt 2)⁻¹) ^ j :=
+        have hsum : ∑ j ∈ Finset.Icc jL j1, 8 * √C₀ * ((√2)⁻¹) ^ j
+            = 8 * √C₀ * ∑ j ∈ Finset.Icc jL j1, ((√2)⁻¹) ^ j :=
           (Finset.mul_sum _ _ _).symm
         rw [hsum]
-        calc 8 * Real.sqrt C₀ * ∑ j ∈ Finset.Icc jL j1, ((Real.sqrt 2)⁻¹) ^ j
-            ≤ 8 * Real.sqrt C₀ * (4 / Real.sqrt L) := by
+        calc 8 * √C₀ * ∑ j ∈ Finset.Icc jL j1, ((√2)⁻¹) ^ j
+            ≤ 8 * √C₀ * (4 / √L) := by
               gcongr
               exact geom_dyadic_sum_le hL jL j1 hjL2
-          _ = 32 * Real.sqrt (C₀ / L) := by
+          _ = 32 * √(C₀ / L) := by
               rw [Real.sqrt_div hC₀]; ring
 
 /-- L²–L¹ bound: `√(∑ v_k²) ≤ ∑ |v_k|`. -/
 private lemma sqrt_sum_sq_le_sum_abs {ι : Type*} [Fintype ι] (v : ι → ℝ) :
-    Real.sqrt (∑ k, (v k) ^ 2) ≤ ∑ k, |v k| := by
+    √(∑ k, (v k) ^ 2) ≤ ∑ k, |v k| := by
   rw [show (∑ k, (v k) ^ 2) = ∑ k, |v k| ^ 2 by simp_rw [sq_abs]]
-  calc Real.sqrt (∑ k, |v k| ^ 2)
-      ≤ Real.sqrt ((∑ k, |v k|) ^ 2) :=
+  calc √(∑ k, |v k| ^ 2)
+      ≤ √((∑ k, |v k|) ^ 2) :=
         Real.sqrt_le_sqrt (sum_sq_le_sq_sum_of_nonneg (fun i _ ↦ abs_nonneg _))
     _ = ∑ k, |v k| := Real.sqrt_sq (Finset.sum_nonneg (fun i _ ↦ abs_nonneg _))
 
@@ -405,8 +405,8 @@ lemma mart_maximal_pi {ι : Type*} [Fintype ι] (M : ι → ℕ → Ω → ℝ)
     (hcross : ∀ k a b, Integrable (fun ω ↦ M k a ω * M k b ω) μ)
     {C₀ : ℝ} (hinc : ∀ k n, ∫ ω, (M k (n + 1) ω - M k n ω) ^ 2 ∂μ ≤ C₀) {L n : ℕ} (hLn : L ≤ n) :
     ∫⁻ ω, ENNReal.ofReal ((Finset.range (L + 1)).sup' nonempty_range_add_one
-        (fun m ↦ Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2))) ∂μ
-      ≤ ENNReal.ofReal ((Fintype.card ι : ℝ) * (4 * Real.sqrt (C₀ * L))) := by
+        (fun m ↦ √(∑ k, (M k n ω - M k (n - m) ω) ^ 2))) ∂μ
+      ≤ ENNReal.ofReal ((Fintype.card ι : ℝ) * (4 * √(C₀ * L))) := by
   have hMmeas : ∀ k j, Measurable (M k j) := fun k j ↦
     ((hM k).stronglyAdapted j).measurable.mono (ℱ.le j) le_rfl
   set F : ι → Ω → ℝ := fun k ω ↦ (Finset.range (L + 1)).sup' nonempty_range_add_one
@@ -419,15 +419,15 @@ lemma mart_maximal_pi {ι : Type*} [Fintype ι] (M : ι → ℕ → Ω → ℝ)
       continuous_abs.measurable.comp ((hMmeas k n).sub (hMmeas k (n - m))))).ennreal_ofReal
   -- Pointwise: max of the norm ≤ sum over coordinates of the coordinate maxima.
   have hpt : ∀ ω, (Finset.range (L + 1)).sup' nonempty_range_add_one
-        (fun m ↦ Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2)) ≤ ∑ k, F k ω := by
+        (fun m ↦ √(∑ k, (M k n ω - M k (n - m) ω) ^ 2)) ≤ ∑ k, F k ω := by
     intro ω
     refine Finset.sup'_le _ _ (fun m hm ↦ ?_)
-    calc Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2)
+    calc √(∑ k, (M k n ω - M k (n - m) ω) ^ 2)
         ≤ ∑ k, |M k n ω - M k (n - m) ω| := sqrt_sum_sq_le_sum_abs _
       _ ≤ ∑ k, F k ω := Finset.sum_le_sum (fun k _ ↦
           Finset.le_sup' (f := fun m' ↦ |M k n ω - M k (n - m') ω|) hm)
   calc ∫⁻ ω, ENNReal.ofReal ((Finset.range (L + 1)).sup' nonempty_range_add_one
-          (fun m ↦ Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2))) ∂μ
+          (fun m ↦ √(∑ k, (M k n ω - M k (n - m) ω) ^ 2))) ∂μ
       ≤ ∫⁻ ω, ENNReal.ofReal (∑ k, F k ω) ∂μ :=
         lintegral_mono (fun ω ↦ ENNReal.ofReal_le_ofReal (hpt ω))
     _ = ∫⁻ ω, ∑ k, ENNReal.ofReal (F k ω) ∂μ := by
@@ -435,10 +435,10 @@ lemma mart_maximal_pi {ι : Type*} [Fintype ι] (M : ι → ℕ → Ω → ℝ)
         intro ω
         rw [ENNReal.ofReal_sum_of_nonneg (fun k _ ↦ hFnn k ω)]
     _ = ∑ k, ∫⁻ ω, ENNReal.ofReal (F k ω) ∂μ := lintegral_finsetSum _ (fun k _ ↦ hFmeas k)
-    _ ≤ ∑ _k : ι, ENNReal.ofReal (4 * Real.sqrt (C₀ * L)) :=
+    _ ≤ ∑ _k : ι, ENNReal.ofReal (4 * √(C₀ * L)) :=
         Finset.sum_le_sum (fun k _ ↦
           mart_maximal (hM k) (hM2 k) (hd2 k) (hcross k) (hinc k) hLn)
-    _ = ENNReal.ofReal ((Fintype.card ι : ℝ) * (4 * Real.sqrt (C₀ * L))) := by
+    _ = ENNReal.ofReal ((Fintype.card ι : ℝ) * (4 * √(C₀ * L))) := by
         rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, ← ENNReal.ofReal_natCast,
           ← ENNReal.ofReal_mul (Nat.cast_nonneg _)]
 
@@ -453,8 +453,8 @@ lemma mart_maximal_dyadic_pi {ι : Type*} [Fintype ι] (M : ι → ℕ → Ω �
     {C₀ : ℝ} (hC₀ : 0 ≤ C₀) (hinc : ∀ k n, ∫ ω, (M k (n + 1) ω - M k n ω) ^ 2 ∂μ ≤ C₀)
     {L n : ℕ} (hL : 0 < L) (hLn : L ≤ n) :
     ∫⁻ ω, ENNReal.ofReal ((Finset.Icc L n).sup' (Finset.nonempty_Icc.mpr hLn)
-        (fun m ↦ Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2) / (m : ℝ))) ∂μ
-      ≤ ENNReal.ofReal ((Fintype.card ι : ℝ) * (32 * Real.sqrt (C₀ / L))) := by
+        (fun m ↦ √(∑ k, (M k n ω - M k (n - m) ω) ^ 2) / (m : ℝ))) ∂μ
+      ≤ ENNReal.ofReal ((Fintype.card ι : ℝ) * (32 * √(C₀ / L))) := by
   have hMmeas : ∀ k j, Measurable (M k j) := fun k j ↦
     ((hM k).stronglyAdapted j).measurable.mono (ℱ.le j) le_rfl
   set F : ι → Ω → ℝ := fun k ω ↦ (Finset.Icc L n).sup' (Finset.nonempty_Icc.mpr hLn)
@@ -474,10 +474,10 @@ lemma mart_maximal_dyadic_pi {ι : Type*} [Fintype ι] (M : ι → ℕ → Ω �
     exact Finset.measurable_sup' _ (fun m _ ↦
       (continuous_abs.measurable.comp ((hMmeas k n).sub (hMmeas k (n - m)))).div_const _)
   have hpt : ∀ ω, (Finset.Icc L n).sup' (Finset.nonempty_Icc.mpr hLn)
-        (fun m ↦ Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2) / (m : ℝ)) ≤ ∑ k, F k ω := by
+        (fun m ↦ √(∑ k, (M k n ω - M k (n - m) ω) ^ 2) / (m : ℝ)) ≤ ∑ k, F k ω := by
     intro ω
     refine Finset.sup'_le _ _ (fun m hm ↦ ?_)
-    calc Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2) / (m : ℝ)
+    calc √(∑ k, (M k n ω - M k (n - m) ω) ^ 2) / (m : ℝ)
         ≤ (∑ k, |M k n ω - M k (n - m) ω|) / (m : ℝ) := by
           gcongr
           exact sqrt_sum_sq_le_sum_abs _
@@ -485,7 +485,7 @@ lemma mart_maximal_dyadic_pi {ι : Type*} [Fintype ι] (M : ι → ℕ → Ω �
       _ ≤ ∑ k, F k ω := Finset.sum_le_sum (fun k _ ↦
           Finset.le_sup' (f := fun m' ↦ |M k n ω - M k (n - m') ω| / (m' : ℝ)) hm)
   calc ∫⁻ ω, ENNReal.ofReal ((Finset.Icc L n).sup' (Finset.nonempty_Icc.mpr hLn)
-          (fun m ↦ Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2) / (m : ℝ))) ∂μ
+          (fun m ↦ √(∑ k, (M k n ω - M k (n - m) ω) ^ 2) / (m : ℝ))) ∂μ
       ≤ ∫⁻ ω, ENNReal.ofReal (∑ k, F k ω) ∂μ :=
         lintegral_mono (fun ω ↦ ENNReal.ofReal_le_ofReal (hpt ω))
     _ = ∫⁻ ω, ∑ k, ENNReal.ofReal (F k ω) ∂μ := by
@@ -493,10 +493,10 @@ lemma mart_maximal_dyadic_pi {ι : Type*} [Fintype ι] (M : ι → ℕ → Ω �
         intro ω
         rw [ENNReal.ofReal_sum_of_nonneg (fun k _ ↦ hFnn k ω)]
     _ = ∑ k, ∫⁻ ω, ENNReal.ofReal (F k ω) ∂μ := lintegral_finsetSum _ (fun k _ ↦ hFmeas k)
-    _ ≤ ∑ _k : ι, ENNReal.ofReal (32 * Real.sqrt (C₀ / L)) :=
+    _ ≤ ∑ _k : ι, ENNReal.ofReal (32 * √(C₀ / L)) :=
         Finset.sum_le_sum (fun k _ ↦
           mart_maximal_dyadic (hM k) (hM2 k) (hd2 k) (hcross k) hC₀ (hinc k) hL hLn)
-    _ = ENNReal.ofReal ((Fintype.card ι : ℝ) * (32 * Real.sqrt (C₀ / L))) := by
+    _ = ENNReal.ofReal ((Fintype.card ι : ℝ) * (32 * √(C₀ / L))) := by
         rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, ← ENNReal.ofReal_natCast,
           ← ENNReal.ofReal_mul (Nat.cast_nonneg _)]
 

@@ -35,7 +35,7 @@ inequality. -/
 theorem lintegral_le_two_mul_sqrt_of_meas_ge_le {Y : Ω → ℝ} (hYnn : 0 ≤ᵐ[μ] Y)
     (hYmeas : AEMeasurable Y μ) {B : ℝ} (hB : 0 ≤ B)
     (htail : ∀ t : ℝ, 0 < t → μ {ω | t ≤ Y ω} ≤ ENNReal.ofReal (B / t ^ 2)) :
-    ∫⁻ ω, ENNReal.ofReal (Y ω) ∂μ ≤ ENNReal.ofReal (2 * Real.sqrt B) := by
+    ∫⁻ ω, ENNReal.ofReal (Y ω) ∂μ ≤ ENNReal.ofReal (2 * √B) := by
   have hpow : ∀ t : ℝ, 0 < t → B * t ^ (-2 : ℝ) = B / t ^ 2 := by
     intro t ht
     rw [show (-2 : ℝ) = -((2 : ℕ) : ℝ) by norm_num, Real.rpow_neg ht.le, Real.rpow_natCast,
@@ -50,9 +50,9 @@ theorem lintegral_le_two_mul_sqrt_of_meas_ge_le {Y : Ω → ℝ} (hYnn : 0 ≤�
     calc ∫⁻ t in Ioi 0, μ {ω | t ≤ Y ω}
         ≤ ∫⁻ _t in Ioi (0 : ℝ), 0 := lintegral_mono_ae hzero
       _ = 0 := lintegral_zero
-      _ ≤ ENNReal.ofReal (2 * Real.sqrt B) := by positivity
+      _ ≤ ENNReal.ofReal (2 * √B) := by positivity
   · -- `B > 0`: split `Ioi 0 = Ioc 0 A ∪ Ioi A` at `A = √B`.
-    set A : ℝ := Real.sqrt B with hAdef
+    set A : ℝ := √B with hAdef
     have hApos : 0 < A := Real.sqrt_pos.mpr hBpos
     have hunion : Ioi (0 : ℝ) = Ioc 0 A ∪ Ioi A := (Ioc_union_Ioi_eq_Ioi hApos.le).symm
     have hdisj : Disjoint (Ioc (0 : ℝ) A) (Ioi A) := by
@@ -93,7 +93,7 @@ theorem lintegral_le_two_mul_sqrt_of_meas_ge_le {Y : Ω → ℝ} (hYnn : 0 ≤�
       rw [hAdef, div_eq_iff (ne_of_gt hApos), Real.mul_self_sqrt hB]
     calc (∫⁻ t in Ioc 0 A, μ {ω | t ≤ Y ω}) + ∫⁻ t in Ioi A, μ {ω | t ≤ Y ω}
         ≤ ENNReal.ofReal A + ENNReal.ofReal (B / A) := add_le_add hpart1 hpart2
-      _ = ENNReal.ofReal (2 * Real.sqrt B) := by
+      _ = ENNReal.ofReal (2 * √B) := by
           rw [← ENNReal.ofReal_add hApos.le (div_nonneg hB hApos.le), hBA]
           congr 1; ring
 

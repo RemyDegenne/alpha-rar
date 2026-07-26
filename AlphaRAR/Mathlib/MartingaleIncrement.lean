@@ -89,7 +89,7 @@ lemma tendsto_natCast_sqrt_div_atTop :
 
 /-- The Euclidean norm of `toLp v` is `√(∑ v_k²)`. -/
 lemma norm_toLp_eq_sqrt {ι : Type*} [Fintype ι] (v : ι → ℝ) :
-    ‖(WithLp.toLp 2 v : EuclideanSpace ℝ ι)‖ = Real.sqrt (∑ k, (v k) ^ 2) := by
+    ‖(WithLp.toLp 2 v : EuclideanSpace ℝ ι)‖ = √(∑ k, (v k) ^ 2) := by
   rw [EuclideanSpace.norm_eq]
   refine congrArg Real.sqrt (Finset.sum_congr rfl (fun k _ ↦ ?_))
   rw [PiLp.toLp_apply, Real.norm_eq_abs, sq_abs]
@@ -103,22 +103,22 @@ variable [IsProbabilityMeasure μ] {ℱ : Filtration ℕ mΩ} {ι : Type*} [Fint
 window `L = ⌊√n⌋`. This is the `o_p(1)` factor in the increment control. -/
 noncomputable def vmaxSeq (M : ι → ℕ → Ω → ℝ) (n : ℕ) (ω : Ω) : ℝ :=
   (Finset.Icc (Nat.sqrt n) n).sup' (Finset.nonempty_Icc.mpr (Nat.sqrt_le_self n))
-    (fun m ↦ Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2) / (m : ℝ))
+    (fun m ↦ √(∑ k, (M k n ω - M k (n - m) ω) ^ 2) / (m : ℝ))
 
 /-- The unnormalized backward-increment maximum over the "short" range `m ≤ ⌊√n⌋`. This is the
 `o_p(√n)` term in the increment control. -/
 noncomputable def wmaxSeq (M : ι → ℕ → Ω → ℝ) (n : ℕ) (ω : Ω) : ℝ :=
   (Finset.range (Nat.sqrt n + 1)).sup' nonempty_range_add_one
-    (fun m ↦ Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2))
+    (fun m ↦ √(∑ k, (M k n ω - M k (n - m) ω) ^ 2))
 
 /-- **Pathwise increment control.** For `2 ≤ n` and `ℓ ≤ n`, the Euclidean norm of the increment
 `Q_n - Q_ℓ` (with `Q_j = (M_{k,j})_k`) is bounded by `(n-ℓ)·vmaxSeq + wmaxSeq`. Instantiation of
 `norm_sub_le_increment_control` at `E = EuclideanSpace ℝ ι` with window `L = ⌊√n⌋`. -/
 lemma norm_increment_le_vmaxSeq_wmaxSeq (n : ℕ) (hn : 2 ≤ n) {ℓ : ℕ} (hℓ : ℓ ≤ n) (ω : Ω) :
-    Real.sqrt (∑ k, (M k n ω - M k ℓ ω) ^ 2)
+    √(∑ k, (M k n ω - M k ℓ ω) ^ 2)
       ≤ ((n - ℓ : ℕ) : ℝ) * vmaxSeq M n ω + wmaxSeq M n ω := by
   set Q : ℕ → EuclideanSpace ℝ ι := fun j ↦ WithLp.toLp 2 (fun k ↦ M k j ω) with hQdef
-  have hbridge : ∀ a b, ‖Q a - Q b‖ = Real.sqrt (∑ k, (M k a ω - M k b ω) ^ 2) := by
+  have hbridge : ∀ a b, ‖Q a - Q b‖ = √(∑ k, (M k a ω - M k b ω) ^ 2) := by
     intro a b
     rw [hQdef, ← WithLp.toLp_sub, norm_toLp_eq_sqrt]
     exact congrArg Real.sqrt (Finset.sum_congr rfl (fun k _ ↦ by rw [Pi.sub_apply]))
@@ -135,12 +135,12 @@ lemma norm_increment_le_vmaxSeq_wmaxSeq (n : ℕ) (hn : 2 ≤ n) {ℓ : ℕ} (h�
   · -- range-sup' ≤ wmaxSeq
     calc (Finset.range (Nat.sqrt n)).sup' _ (fun m ↦ ‖Q n - Q (n - m)‖)
         = (Finset.range (Nat.sqrt n)).sup' _
-            (fun m ↦ Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2)) :=
+            (fun m ↦ √(∑ k, (M k n ω - M k (n - m) ω) ^ 2)) :=
           Finset.sup'_congr _ rfl (fun m _ ↦ hbridge n (n - m))
       _ ≤ wmaxSeq M n ω := by
           refine Finset.sup'_le _ _ (fun m hm ↦ ?_)
           unfold wmaxSeq
-          exact Finset.le_sup' (f := fun m ↦ Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2))
+          exact Finset.le_sup' (f := fun m ↦ √(∑ k, (M k n ω - M k (n - m) ω) ^ 2))
             (Finset.mem_range.mpr (Nat.lt_succ_of_lt (Finset.mem_range.mp hm)))
 
 variable (hM : ∀ k, Martingale (M k) ℱ μ)
@@ -154,23 +154,23 @@ include hM hC₀ hinc hM2 hd2 hcross in
 lemma isLittleOpOne_vmaxSeq : IsLittleOpOne μ (vmaxSeq M) := by
   have hMmeas : ∀ k j, Measurable (M k j) := fun k j ↦
     ((hM k).stronglyAdapted j).measurable.mono (ℱ.le j) le_rfl
-  have hgmeas : ∀ n m, Measurable (fun ω ↦ Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2)) :=
+  have hgmeas : ∀ n m, Measurable (fun ω ↦ √(∑ k, (M k n ω - M k (n - m) ω) ^ 2)) :=
     fun n m ↦ Real.continuous_sqrt.measurable.comp (Finset.measurable_sum Finset.univ
       (fun k _ ↦ ((hMmeas k n).sub (hMmeas k (n - m))).pow_const 2))
   set b : ℕ → ℝ :=
-    fun n ↦ (Fintype.card ι : ℝ) * (32 * Real.sqrt (C₀ / (Nat.sqrt n : ℝ))) with hbdef
+    fun n ↦ (Fintype.card ι : ℝ) * (32 * √(C₀ / (Nat.sqrt n : ℝ))) with hbdef
   refine isLittleOpOne_of_lintegral_le_tendsto (b := b) (fun n ↦ ?_) (fun n ↦ ?_) ?_ ?_
   · -- 0 ≤ vmaxSeq
     exact ae_of_all _ (fun ω ↦ le_trans (by positivity)
-      (Finset.le_sup' (f := fun m ↦ Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2) / (m : ℝ))
+      (Finset.le_sup' (f := fun m ↦ √(∑ k, (M k n ω - M k (n - m) ω) ^ 2) / (m : ℝ))
         (Finset.mem_Icc.mpr ⟨le_rfl, Nat.sqrt_le_self n⟩)))
   · -- measurable vmaxSeq n
     unfold vmaxSeq
     rw [show (fun ω ↦ (Finset.Icc (Nat.sqrt n) n).sup'
             (Finset.nonempty_Icc.mpr (Nat.sqrt_le_self n))
-          (fun m ↦ Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2) / (m : ℝ)))
+          (fun m ↦ √(∑ k, (M k n ω - M k (n - m) ω) ^ 2) / (m : ℝ)))
         = (Finset.Icc (Nat.sqrt n) n).sup' (Finset.nonempty_Icc.mpr (Nat.sqrt_le_self n))
-          (fun m ω ↦ Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2) / (m : ℝ)) from by
+          (fun m ω ↦ √(∑ k, (M k n ω - M k (n - m) ω) ^ 2) / (m : ℝ)) from by
         ext ω; rw [Finset.sup'_apply]]
     exact (Finset.measurable_sup' _ (fun m _ ↦ (hgmeas n m).div_const _)).aemeasurable
   · -- eventual lintegral bound
@@ -182,7 +182,7 @@ lemma isLittleOpOne_vmaxSeq : IsLittleOpOne μ (vmaxSeq M) := by
     have hdiv : Tendsto (fun n ↦ C₀ / (Nat.sqrt n : ℝ)) atTop (𝓝 0) := by
       simpa [div_eq_mul_inv] using
         (tendsto_natCast_sqrt_atTop.inv_tendsto_atTop).const_mul C₀
-    have hsqrt : Tendsto (fun n ↦ Real.sqrt (C₀ / (Nat.sqrt n : ℝ))) atTop (𝓝 0) := by
+    have hsqrt : Tendsto (fun n ↦ √(C₀ / (Nat.sqrt n : ℝ))) atTop (𝓝 0) := by
       have := (Real.continuous_sqrt.tendsto 0).comp hdiv
       rwa [Real.sqrt_zero] at this
     have h1 := (hsqrt.const_mul (32 : ℝ)).const_mul (Fintype.card ι : ℝ)
@@ -191,10 +191,10 @@ lemma isLittleOpOne_vmaxSeq : IsLittleOpOne μ (vmaxSeq M) := by
 include hM hC₀ hinc hM2 hd2 hcross in
 /-- **The short-range increment maximum is `o_p(√n)`.** -/
 lemma isLittleOpOne_wmaxSeq_div_sqrt :
-    IsLittleOpOne μ (fun n ω ↦ wmaxSeq M n ω / Real.sqrt n) := by
+    IsLittleOpOne μ (fun n ω ↦ wmaxSeq M n ω / √n) := by
   have hMmeas : ∀ k j, Measurable (M k j) := fun k j ↦
     ((hM k).stronglyAdapted j).measurable.mono (ℱ.le j) le_rfl
-  have hgmeas : ∀ n m, Measurable (fun ω ↦ Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2)) :=
+  have hgmeas : ∀ n m, Measurable (fun ω ↦ √(∑ k, (M k n ω - M k (n - m) ω) ^ 2)) :=
     fun n m ↦ Real.continuous_sqrt.measurable.comp (Finset.measurable_sum Finset.univ
       (fun k _ ↦ ((hMmeas k n).sub (hMmeas k (n - m))).pow_const 2))
   have hwmeasReal : ∀ n, Measurable (fun ω ↦ wmaxSeq M n ω) := fun n ↦ by
@@ -203,28 +203,28 @@ lemma isLittleOpOne_wmaxSeq_div_sqrt :
   have hwmeas : ∀ n, Measurable (fun ω ↦ ENNReal.ofReal (wmaxSeq M n ω)) := fun n ↦
     (hwmeasReal n).ennreal_ofReal
   set b : ℕ → ℝ :=
-    fun n ↦ (1 / Real.sqrt n) * ((Fintype.card ι : ℝ) * (4 * Real.sqrt (C₀ * (Nat.sqrt n : ℝ))))
+    fun n ↦ (1 / √n) * ((Fintype.card ι : ℝ) * (4 * √(C₀ * (Nat.sqrt n : ℝ))))
     with hbdef
   refine isLittleOpOne_of_lintegral_le_tendsto (b := b) (fun n ↦ ?_) (fun n ↦ ?_) ?_ ?_
   · -- 0 ≤ wmaxSeq / √n
     refine ae_of_all _ (fun ω ↦ div_nonneg ?_ (Real.sqrt_nonneg _))
     exact le_trans (Real.sqrt_nonneg _)
-      (Finset.le_sup' (f := fun m ↦ Real.sqrt (∑ k, (M k n ω - M k (n - m) ω) ^ 2))
+      (Finset.le_sup' (f := fun m ↦ √(∑ k, (M k n ω - M k (n - m) ω) ^ 2))
         (Finset.mem_range.mpr (Nat.succ_pos _)))
   · -- measurable
     exact ((hwmeasReal n).div_const _).aemeasurable
   · -- eventual bound
     filter_upwards [eventually_gt_atTop 0] with n hn
-    have hsn : (0 : ℝ) < Real.sqrt n := Real.sqrt_pos.mpr (by exact_mod_cast hn)
+    have hsn : (0 : ℝ) < √n := Real.sqrt_pos.mpr (by exact_mod_cast hn)
     have hmp := mart_maximal_pi M hM hM2 hd2 hcross hinc (L := Nat.sqrt n) (n := n)
       (Nat.sqrt_le_self n)
-    calc ∫⁻ ω, ENNReal.ofReal (wmaxSeq M n ω / Real.sqrt n) ∂μ
-        = ENNReal.ofReal (1 / Real.sqrt n) * ∫⁻ ω, ENNReal.ofReal (wmaxSeq M n ω) ∂μ := by
+    calc ∫⁻ ω, ENNReal.ofReal (wmaxSeq M n ω / √n) ∂μ
+        = ENNReal.ofReal (1 / √n) * ∫⁻ ω, ENNReal.ofReal (wmaxSeq M n ω) ∂μ := by
           rw [← lintegral_const_mul _ (hwmeas n)]
           refine lintegral_congr (fun ω ↦ ?_)
           rw [← ENNReal.ofReal_mul (by positivity), one_div_mul_eq_div]
-      _ ≤ ENNReal.ofReal (1 / Real.sqrt n)
-            * ENNReal.ofReal ((Fintype.card ι : ℝ) * (4 * Real.sqrt (C₀ * (Nat.sqrt n : ℝ)))) := by
+      _ ≤ ENNReal.ofReal (1 / √n)
+            * ENNReal.ofReal ((Fintype.card ι : ℝ) * (4 * √(C₀ * (Nat.sqrt n : ℝ)))) := by
           gcongr
           exact hmp
       _ = ENNReal.ofReal (b n) := by rw [hbdef, ← ENNReal.ofReal_mul (by positivity)]
@@ -233,11 +233,11 @@ lemma isLittleOpOne_wmaxSeq_div_sqrt :
       tendsto_natCast_sqrt_div_atTop
     have hin : Tendsto (fun n : ℕ ↦ C₀ * ((Nat.sqrt n : ℝ) / n)) atTop (𝓝 0) := by
       simpa using haux.const_mul C₀
-    have hsq : Tendsto (fun n : ℕ ↦ Real.sqrt (C₀ * ((Nat.sqrt n : ℝ) / n))) atTop (𝓝 0) := by
+    have hsq : Tendsto (fun n : ℕ ↦ √(C₀ * ((Nat.sqrt n : ℝ) / n))) atTop (𝓝 0) := by
       have := (Real.continuous_sqrt.tendsto 0).comp hin
       rwa [Real.sqrt_zero] at this
     have hgoal : Tendsto
-        (fun n : ℕ ↦ (Fintype.card ι : ℝ) * (4 * Real.sqrt (C₀ * ((Nat.sqrt n : ℝ) / n))))
+        (fun n : ℕ ↦ (Fintype.card ι : ℝ) * (4 * √(C₀ * ((Nat.sqrt n : ℝ) / n))))
         atTop (𝓝 0) := by simpa using (hsq.const_mul (4 : ℝ)).const_mul (Fintype.card ι : ℝ)
     refine hgoal.congr' ?_
     filter_upwards with n
@@ -261,7 +261,7 @@ lemma isBigOpOne_sup'_abs_div_sqrt (hN : Martingale N ℱ μ)
     (hprod : ∀ n, Integrable (N n * (N (n + 1) - N n)) μ)
     (hinc : ∀ n, ∫ ω, (N (n + 1) ω - N n ω) ^ 2 ∂μ ≤ σ2) :
     IsBigOpOne μ (fun n ω ↦ (Finset.range (n + 1)).sup' nonempty_range_add_one
-      (fun m ↦ |N m ω|) / Real.sqrt n) := by
+      (fun m ↦ |N m ω|) / √n) := by
   have hgrow := integral_sq_le_of_increment_bound hN hN2 hN0 σ2 hd2 hprod hinc
   have hNmeas : ∀ k, Measurable (N k) := fun k ↦
     (hN.stronglyAdapted k).measurable.mono (ℱ.le k) le_rfl
@@ -273,26 +273,26 @@ lemma isBigOpOne_sup'_abs_div_sqrt (hN : Martingale N ℱ μ)
       (Finset.le_sup' (fun m ↦ |N m ω|) (Finset.mem_range.mpr (Nat.succ_pos n)))
   have hSmeas : ∀ n, Measurable (S n) := fun n ↦
     Finset.measurable_range_sup'' (fun m _ ↦ continuous_abs.measurable.comp (hNmeas m))
-  set v : ℕ → ℝ := fun n ↦ Real.sqrt (max (n : ℝ) 1) with hv
+  set v : ℕ → ℝ := fun n ↦ √(max (n : ℝ) 1) with hv
   have hvpos : ∀ n, 0 < v n := fun n ↦
     Real.sqrt_pos.mpr (lt_of_lt_of_le one_pos (le_max_right _ _))
   have hbound : ∀ n, ∫⁻ ω, ENNReal.ofReal |S n ω| ∂μ
-      ≤ ENNReal.ofReal (2 * Real.sqrt σ2 * v n) := by
+      ≤ ENNReal.ofReal (2 * √σ2 * v n) := by
     intro n
     have hle := lintegral_sup'_abs_le_two_mul_sqrt hN hN2 hd2 hprod n
     rw [show (fun ω ↦ ENNReal.ofReal |S n ω|) = fun ω ↦ ENNReal.ofReal (S n ω) from by
       funext ω; rw [abs_of_nonneg (hSnn n ω)]]
     refine hle.trans (ENNReal.ofReal_le_ofReal ?_)
-    have h1 : Real.sqrt (∫ ω, N n ω ^ 2 ∂μ) ≤ Real.sqrt (σ2 * n) := Real.sqrt_le_sqrt (hgrow n)
-    have h2 : Real.sqrt (σ2 * n) ≤ Real.sqrt σ2 * v n := by
+    have h1 : √(∫ ω, N n ω ^ 2 ∂μ) ≤ √(σ2 * n) := Real.sqrt_le_sqrt (hgrow n)
+    have h2 : √(σ2 * n) ≤ √σ2 * v n := by
       rw [Real.sqrt_mul hσ2]
       exact mul_le_mul_of_nonneg_left
         (by rw [hv]; exact Real.sqrt_le_sqrt (le_max_left _ _)) (Real.sqrt_nonneg _)
-    calc 2 * Real.sqrt (∫ ω, N n ω ^ 2 ∂μ)
-        ≤ 2 * (Real.sqrt σ2 * v n) := by gcongr; exact h1.trans h2
-      _ = 2 * Real.sqrt σ2 * v n := by ring
+    calc 2 * √(∫ ω, N n ω ^ 2 ∂μ)
+        ≤ 2 * (√σ2 * v n) := by gcongr; exact h1.trans h2
+      _ = 2 * √σ2 * v n := by ring
   have hOp : IsBigOpOne μ (fun n ω ↦ S n ω / v n) :=
-    isBigOpOne_of_lintegral_le S v (2 * Real.sqrt σ2) hvpos (by positivity)
+    isBigOpOne_of_lintegral_le S v (2 * √σ2) hvpos (by positivity)
       (fun n ↦ (hSmeas n).aemeasurable) hbound
   refine IsBigOpOne.congr (fun n ↦ ?_) hOp
   rcases Nat.eq_zero_or_pos n with hn0 | hn1
@@ -304,8 +304,8 @@ lemma isBigOpOne_sup'_abs_div_sqrt (hN : Martingale N ℱ μ)
         simp only [hSdef, zero_add, Finset.range_one, Finset.sup'_singleton]
       rw [he, hω, abs_zero]
     rw [hS0]; simp
-  · have hvn : v n = Real.sqrt n := by
-      change Real.sqrt (max (n : ℝ) 1) = Real.sqrt n
+  · have hvn : v n = √n := by
+      change √(max (n : ℝ) 1) = √n
       rw [max_eq_left (by exact_mod_cast hn1 : (1 : ℝ) ≤ n)]
     filter_upwards with ω; rw [hvn]
 
@@ -316,7 +316,7 @@ family `fun _ : Unit ↦ N` are `o_p(1)` and `o_p(√n)`. Provides the `M`-side 
 lemma qm_increments_of_bdd (hN : Martingale N ℱ μ) (hN0 : N 0 =ᵐ[μ] 0) {c : ℝ} (hc : 0 ≤ c)
     (hΔ : ∀ n, ∀ᵐ ω ∂μ, |N (n + 1) ω - N n ω| ≤ c) :
     IsLittleOpOne μ (vmaxSeq (fun _ : Unit ↦ N)) ∧
-      IsLittleOpOne μ (fun n ω ↦ wmaxSeq (fun _ : Unit ↦ N) n ω / Real.sqrt n) := by
+      IsLittleOpOne μ (fun n ω ↦ wmaxSeq (fun _ : Unit ↦ N) n ω / √n) := by
   have hmeasN : ∀ n, AEMeasurable (N n) μ := fun n ↦
     ((hN.stronglyMeasurable n).mono (ℱ.le n)).measurable.aemeasurable
   have bdd_int : ∀ (f : Ω → ℝ) (B : ℝ), AEStronglyMeasurable f μ →

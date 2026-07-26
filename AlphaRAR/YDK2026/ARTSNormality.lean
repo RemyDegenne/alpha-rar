@@ -68,8 +68,8 @@ lemma tendstoInMeasure_toLp_of_forall_isLittleOpOne {ι : Type*} [Fintype ι]
   refine IsLittleOpOne.of_abs_le (fun n ω ↦ ?_) hsum
   rw [abs_of_nonneg (norm_nonneg _), abs_of_nonneg (Finset.sum_nonneg fun k _ ↦ abs_nonneg _),
     norm_toLp_eq_sqrt, show (∑ k, (D k n ω) ^ 2) = ∑ k, |D k n ω| ^ 2 by simp_rw [sq_abs]]
-  calc Real.sqrt (∑ k, |D k n ω| ^ 2)
-      ≤ Real.sqrt ((∑ k, |D k n ω|) ^ 2) :=
+  calc √(∑ k, |D k n ω| ^ 2)
+      ≤ √((∑ k, |D k n ω|) ^ 2) :=
         Real.sqrt_le_sqrt (Finset.sum_sq_le_sq_sum_of_nonneg (fun i _ ↦ abs_nonneg _))
     _ = ∑ k, |D k n ω| := Real.sqrt_sq (Finset.sum_nonneg (fun i _ ↦ abs_nonneg _))
 

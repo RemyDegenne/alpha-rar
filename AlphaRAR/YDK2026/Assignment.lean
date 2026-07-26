@@ -3,6 +3,7 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
+import AlphaRAR.Mathlib.Filtration
 import AlphaRAR.YDK2026.Deterministic
 import Mathlib.Order.CompletePartialOrder
 import Mathlib.Probability.Martingale.Centering
@@ -41,22 +42,6 @@ namespace AlphaRAR
 
 variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
   {ℱ : Filtration ℕ m0} {X : ℕ → Ω → ℝ}
-
-/-- **Previous-index filtration**: `(ℱ.shiftDown) n = ℱ (n-1)`, with `(ℱ.shiftDown) 0 = ⊥`
-(the trivial σ-algebra). Applied to the history filtration it is the "history strictly before
-patient `n`", the filtration for which the assignment increment is fresh. -/
-def _root_.MeasureTheory.Filtration.shiftDown (ℱ : Filtration ℕ m0) : Filtration ℕ m0 where
-  seq n := match n with
-    | 0 => ⊥
-    | m + 1 => ℱ m
-  mono' := monotone_nat_of_le_succ fun n ↦ by
-    cases n with
-    | zero => exact bot_le
-    | succ m => exact ℱ.mono (Nat.le_succ m)
-  le' n := by
-    cases n with
-    | zero => exact bot_le
-    | succ m => exact ℱ.le m
 
 /-- The assignment martingale, i.e. the martingale part of the count process `N` in its Doob
 decomposition with respect to the previous-history filtration `ℱ.shiftDown` (blueprint `def:M`).

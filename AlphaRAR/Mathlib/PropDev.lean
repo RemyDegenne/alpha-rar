@@ -46,9 +46,9 @@ lemma ell_rho_control {ι : Type*} [Fintype ι] {rhoterm d : ℕ → Ω → ℝ}
     (hg : ∀ k, IsLittleOpOne μ (g k)) (hhnn : ∀ k n ω, 0 ≤ h k n ω)
     (hh : ∀ k, IsBigOpOne μ (h k))
     (hQinc : ∀ᶠ n in atTop, ∀ k ω, Qinc k n ω ≤ Qvinc n ω * d n ω + Qwinc n ω)
-    (hQv : IsLittleOpOne μ Qvinc) (hQw : IsLittleOpOne μ (fun n ω ↦ Qwinc n ω / Real.sqrt n)) :
+    (hQv : IsLittleOpOne μ Qvinc) (hQw : IsLittleOpOne μ (fun n ω ↦ Qwinc n ω / √n)) :
     ∃ Vρ Wρ : ℕ → Ω → ℝ, (∀ᶠ n in atTop, ∀ ω, rhoterm n ω ≤ Vρ n ω * d n ω + Wρ n ω)
-      ∧ IsLittleOpOne μ Vρ ∧ IsLittleOpOne μ (fun n ω ↦ Wρ n ω / Real.sqrt n) := by
+      ∧ IsLittleOpOne μ Vρ ∧ IsLittleOpOne μ (fun n ω ↦ Wρ n ω / √n) := by
   refine ⟨fun n ω ↦ L * (∑ k, g k n ω) + L * (∑ k, h k n ω * Qvinc n ω),
     fun n ω ↦ L * (∑ k, h k n ω * Qwinc n ω), ?_, ?_, ?_⟩
   · filter_upwards [hQinc] with n hQincn
@@ -72,8 +72,8 @@ lemma ell_rho_control {ι : Type*} [Fintype ι] {rhoterm d : ℕ → Ω → ℝ}
     have h2 : IsLittleOpOne μ (fun n ω ↦ ∑ k, h k n ω * Qvinc n ω) :=
       isLittleOpOne_finset_sum fun k _ ↦ (hh k).mul_littleOp hQv
     exact (IsLittleOpOne.const_mul L h1).add (IsLittleOpOne.const_mul L h2)
-  · have heq : (fun n ω ↦ (L * (∑ k, h k n ω * Qwinc n ω)) / Real.sqrt n)
-        = fun n ω ↦ L * ∑ k, h k n ω * (Qwinc n ω / Real.sqrt n) := by
+  · have heq : (fun n ω ↦ (L * (∑ k, h k n ω * Qwinc n ω)) / √n)
+        = fun n ω ↦ L * ∑ k, h k n ω * (Qwinc n ω / √n) := by
       funext n ω
       rw [mul_div_assoc, Finset.sum_div]
       exact congrArg (L * ·) (Finset.sum_congr rfl fun k _ ↦ by rw [mul_div_assoc])
@@ -91,18 +91,18 @@ theorem prop_dev {ι : Type*} [Fintype ι]
     {VM WM Vρ Wρ : ι → ℕ → Ω → ℝ}
     (hsum : ∀ n ω, ∑ k, Dev k n ω = 0)
     (hle : ∀ k n, ∀ᵐ ω ∂μ, Dev k n ω ≤ small k n ω + Uincr k n ω)
-    (hsmall : ∀ k, IsLittleOpOne μ (fun n ω ↦ max (small k n ω / Real.sqrt n) 0))
+    (hsmall : ∀ k, IsLittleOpOne μ (fun n ω ↦ max (small k n ω / √n) 0))
     (hc : ∀ k, 0 < c k) (hd : ∀ k n ω, 0 ≤ d k n ω)
     (hdecomp : ∀ k n ω,
       Uincr k n ω ≤ -c k * d k n ω + Mincr k n ω + rhoterm k n ω + pert k n ω * d k n ω)
     (hpert : ∀ k, IsLittleOpOne μ (pert k))
     (hMbound : ∀ k, ∀ᶠ n in atTop, ∀ᵐ ω ∂μ, Mincr k n ω ≤ VM k n ω * d k n ω + WM k n ω)
     (hVM : ∀ k, IsLittleOpOne μ (VM k))
-    (hWM : ∀ k, IsLittleOpOne μ (fun n ω ↦ WM k n ω / Real.sqrt n))
+    (hWM : ∀ k, IsLittleOpOne μ (fun n ω ↦ WM k n ω / √n))
     (hρbound : ∀ k, ∀ᶠ n in atTop, ∀ᵐ ω ∂μ, rhoterm k n ω ≤ Vρ k n ω * d k n ω + Wρ k n ω)
     (hVρ : ∀ k, IsLittleOpOne μ (Vρ k))
-    (hWρ : ∀ k, IsLittleOpOne μ (fun n ω ↦ Wρ k n ω / Real.sqrt n)) (k : ι) :
-    IsLittleOpOne μ (fun n ω ↦ Dev k n ω / Real.sqrt n) := by
+    (hWρ : ∀ k, IsLittleOpOne μ (fun n ω ↦ Wρ k n ω / √n)) (k : ι) :
+    IsLittleOpOne μ (fun n ω ↦ Dev k n ω / √n) := by
   refine isLittleOpOne_dev_of_sum_zero hsum (fun j ↦ isLittleOpOne_maxDev_of_le (hle j)
     (hsmall j) ?_) k
   exact isLittleOpOne_max_of_decomp (hc j) (hd j) (hdecomp j) (hpert j) (hMbound j) (hVM j) (hWM j)

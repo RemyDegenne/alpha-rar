@@ -40,7 +40,7 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
 
 /-- The `√n`-scaled proportion-deviation vector `√n(N_{n,k}/n - v_k) ∈ ℝ^𝓐`. -/
 noncomputable def propSqrtNVec (A : ℕ → Ω → 𝓐) (v : 𝓐 → ℝ) (n : ℕ) (ω : Ω) : EuclideanSpace ℝ 𝓐 :=
-  WithLp.toLp 2 (fun k ↦ Real.sqrt n * (count (fun j ↦ armIndicator A k j ω) n / (n : ℝ) - v k))
+  WithLp.toLp 2 (fun k ↦ √n * (count (fun j ↦ armIndicator A k j ω) n / (n : ℝ) - v k))
 
 /-- The `√n`-scaled joint vector `(√n(N_n/n - v), √n(ρ̂_n - v)) ∈ ℝ^(𝓐 ⊕ 𝓐)`. -/
 noncomputable def jointSqrtNVec (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ)

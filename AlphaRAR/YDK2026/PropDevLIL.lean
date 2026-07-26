@@ -35,11 +35,11 @@ open scoped Topology ENNReal NNReal
 namespace AlphaRAR
 
 /-- The loglog-LIL rate `√(n · log log n)`. -/
-noncomputable def logLogRate (n : ℕ) : ℝ := Real.sqrt ((n : ℝ) * Real.log (Real.log n))
+noncomputable def logLogRate (n : ℕ) : ℝ := √((n : ℝ) * Real.log (Real.log n))
 
 lemma logLogRate_nonneg (n : ℕ) : 0 ≤ logLogRate n := Real.sqrt_nonneg _
 
-lemma logLogRate_eq (n : ℕ) : logLogRate n = Real.sqrt ((n : ℝ) * Real.log (Real.log n)) := rfl
+lemma logLogRate_eq (n : ℕ) : logLogRate n = √((n : ℝ) * Real.log (Real.log n)) := rfl
 
 /-- The rate diverges: `√(n log log n) → ∞`. -/
 lemma tendsto_logLogRate_atTop : Tendsto logLogRate atTop atTop := by
@@ -262,8 +262,8 @@ lemma dev_upper_of_hitting
       abs_of_nonneg hnR.le] at hn
     rw [logLogRate_eq]
     have hmul := mul_le_mul_of_nonneg_left hn hnR.le
-    rw [show (n : ℝ) * (C * (Real.sqrt ((n : ℝ) * Real.log (Real.log n)) / n))
-      = C * Real.sqrt ((n : ℝ) * Real.log (Real.log n)) by field_simp] at hmul
+    rw [show (n : ℝ) * (C * (√((n : ℝ) * Real.log (Real.log n)) / n))
+      = C * √((n : ℝ) * Real.log (Real.log n)) by field_simp] at hmul
     exact hmul
   -- The seam `assignMG (…, aRTSSelProb) = assignMart`.
   filter_upwards [hρconv, hthrottle k', hp1, hMLIL, hρratebd, hsmall_upper]

@@ -87,7 +87,7 @@ noncomputable def respArray (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
 @[simp] lemma respArray_d (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (k : 𝓐) (vk : ℝ) (n i : ℕ) :
     (respArray h hY2 k vk).d n i
-      = fun ω ↦ (Real.sqrt (Var[id; ν k] * vk * n))⁻¹ * respIncr ν A Y k i ω := rfl
+      = fun ω ↦ (√(Var[id; ν k] * vk * n))⁻¹ * respIncr ν A Y k i ω := rfl
 
 @[simp] lemma respArray_filt (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (k : 𝓐) (vk : ℝ) :
@@ -102,7 +102,7 @@ noncomputable def respArray (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
 lemma rowSum_respArray (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (k : 𝓐) (vk : ℝ) (n : ℕ) :
     (respArray h hY2 k vk).rowSum n
-      = fun ω ↦ (Real.sqrt (Var[id; ν k] * vk * n))⁻¹ * respMart ν A Y k n ω := by
+      = fun ω ↦ (√(Var[id; ν k] * vk * n))⁻¹ * respMart ν A Y k n ω := by
   rw [respArray, MartDiffArray.rowSum_ofSeq]
   funext ω
   rw [← sum_respIncr k n]
@@ -185,7 +185,7 @@ lemma lindeberg_respArray_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (ε : ℝ) (hε : 0 < ε) (n : ℕ) :
     (respArray h hY2 k vk).lindeberg n ε =ᵐ[P]
       fun ω ↦ (Var[id; ν k] * vk * n)⁻¹
-        * (∫ x, {x | ε * Real.sqrt (Var[id; ν k] * vk * n) < |x - (ν k)[id]|}.indicator
+        * (∫ x, {x | ε * √(Var[id; ν k] * vk * n) < |x - (ν k)[id]|}.indicator
             (fun x ↦ (x - (ν k)[id]) ^ 2) x ∂(ν k))
         * count (fun j ↦ armIndicator A k j ω) n := by
   rcases Nat.eq_zero_or_pos n with hn0 | hn0
@@ -194,11 +194,11 @@ lemma lindeberg_respArray_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     simp [MartDiffArray.lindeberg, respArray_k, count]
   · have han : 0 < Var[id; ν k] * vk * (n : ℝ) :=
       mul_pos (mul_pos hVk hvk) (by exact_mod_cast hn0)
-    have hspos : 0 < Real.sqrt (Var[id; ν k] * vk * (n : ℝ)) := Real.sqrt_pos.mpr han
-    have hs2 : Real.sqrt (Var[id; ν k] * vk * (n : ℝ)) ^ 2 = Var[id; ν k] * vk * (n : ℝ) :=
+    have hspos : 0 < √(Var[id; ν k] * vk * (n : ℝ)) := Real.sqrt_pos.mpr han
+    have hs2 : √(Var[id; ν k] * vk * (n : ℝ)) ^ 2 = Var[id; ν k] * vk * (n : ℝ) :=
       Real.sq_sqrt han.le
     set θ := (ν k)[id] with hθ
-    set s := Real.sqrt (Var[id; ν k] * vk * (n : ℝ)) with hs
+    set s := √(Var[id; ν k] * vk * (n : ℝ)) with hs
     set φ : ℝ → ℝ := {x | ε * s < |x - θ|}.indicator (fun x ↦ (x - θ) ^ 2) with hφ
     have hφsm : StronglyMeasurable φ :=
       (((continuous_id.sub continuous_const).pow 2).stronglyMeasurable).indicator
@@ -284,7 +284,7 @@ lemma tendstoInMeasure_lindeberg_respArray (h : IsAlgEnvSeq A Y alg (stationaryE
     mul_nonneg (mul_nonneg hVk.le hvk.le) (Nat.cast_nonneg n)
   have hcent2ν : Integrable (fun x ↦ (x - (ν k)[id]) ^ 2) (ν k) :=
     (hνk.sub (memLp_const _)).integrable_sq
-  have hc : Tendsto (fun n : ℕ ↦ ε * Real.sqrt (Var[id; ν k] * vk * (n : ℝ))) atTop atTop :=
+  have hc : Tendsto (fun n : ℕ ↦ ε * √(Var[id; ν k] * vk * (n : ℝ))) atTop atTop :=
     Tendsto.const_mul_atTop hε
       (Real.tendsto_sqrt_atTop.comp (Tendsto.const_mul_atTop (mul_pos hVk hvk)
         tendsto_natCast_atTop_atTop))
@@ -292,13 +292,13 @@ lemma tendstoInMeasure_lindeberg_respArray (h : IsAlgEnvSeq A Y alg (stationaryE
   -- avoid comparing the (beta-unreduced) `∫` produced by `hDCT.comp` against the reduced form,
   -- which would loop the defeq checker on the Bochner integral `(ν k)[id]`.
   obtain ⟨T, hT⟩ : ∃ T : ℕ → ℝ, ∀ n, T n = ∫ x,
-      {x | ε * Real.sqrt (Var[id; ν k] * vk * (n : ℝ)) < |x - (ν k)[id]|}.indicator
+      {x | ε * √(Var[id; ν k] * vk * (n : ℝ)) < |x - (ν k)[id]|}.indicator
         (fun x ↦ (x - (ν k)[id]) ^ 2) x ∂(ν k) := ⟨_, fun n ↦ rfl⟩
   have htail : Tendsto T atTop (𝓝 0) := by
     have hDCT := tendsto_integral_sq_indicator_gt (P := ν k) (Z := fun x ↦ x - (ν k)[id])
       (measurable_id.sub_const _) hcent2ν
     have h0 : Tendsto (fun n : ℕ ↦ ∫ x,
-      {x | ε * Real.sqrt (Var[id; ν k] * vk * (n : ℝ)) < |x - (ν k)[id]|}.indicator
+      {x | ε * √(Var[id; ν k] * vk * (n : ℝ)) < |x - (ν k)[id]|}.indicator
         (fun x ↦ (x - (ν k)[id]) ^ 2) x ∂(ν k)) atTop (𝓝 0) := by
       simpa only [Function.comp_def] using hDCT.comp hc
     exact Tendsto.congr (fun n ↦ (hT n).symm) h0
@@ -406,7 +406,7 @@ lemma respMart_div_sqrt_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationar
       Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 vk)) :
     Tendsto (β := ProbabilityMeasure ℝ)
       (fun n : ℕ ↦ (⟨P.map (fun ω ↦
-          (Real.sqrt (Var[id; ν k] * vk * (n : ℝ)))⁻¹ * respMart ν A Y k n ω),
+          (√(Var[id; ν k] * vk * (n : ℝ)))⁻¹ * respMart ν A Y k n ω),
         Measure.isProbabilityMeasure_map
           (measurable_const.mul (measurable_respMart h k n)).aemeasurable⟩ : ProbabilityMeasure ℝ))
       atTop (𝓝 ⟨gaussianReal 0 1, inferInstance⟩) := by
@@ -430,30 +430,30 @@ lemma respMart_selfNorm_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationar
       Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 vk)) :
     Tendsto (β := ProbabilityMeasure ℝ)
       (fun n : ℕ ↦ (⟨P.map (fun ω ↦
-          (Real.sqrt (Var[id; ν k] * count (fun j ↦ armIndicator A k j ω) n))⁻¹
+          (√(Var[id; ν k] * count (fun j ↦ armIndicator A k j ω) n))⁻¹
             * respMart ν A Y k n ω),
         Measure.isProbabilityMeasure_map
           ((((measurable_const.mul (measurable_count_armIndicator h k n)).sqrt).inv).mul
             (measurable_respMart h k n)).aemeasurable⟩ : ProbabilityMeasure ℝ))
       atTop (𝓝 ⟨gaussianReal 0 1, inferInstance⟩) := by
-  have hRmeas : ∀ n : ℕ, AEMeasurable (fun ω ↦ Real.sqrt (Var[id; ν k] * vk * (n : ℝ))
-      * (Real.sqrt (Var[id; ν k] * count (fun j ↦ armIndicator A k j ω) n))⁻¹) P :=
+  have hRmeas : ∀ n : ℕ, AEMeasurable (fun ω ↦ √(Var[id; ν k] * vk * (n : ℝ))
+      * (√(Var[id; ν k] * count (fun j ↦ armIndicator A k j ω) n))⁻¹) P :=
     fun n ↦ (measurable_const.mul
       (((measurable_const.mul (measurable_count_armIndicator h k n)).sqrt).inv)).aemeasurable
   -- The self-normalizing ratio `√(V_k v_k n)/√(V_k N_{n,k}) → 1` in probability.
-  have hRtendsto : TendstoInMeasure P (fun (n : ℕ) ω ↦ Real.sqrt (Var[id; ν k] * vk * (n : ℝ))
-      * (Real.sqrt (Var[id; ν k] * count (fun j ↦ armIndicator A k j ω) n))⁻¹) atTop
+  have hRtendsto : TendstoInMeasure P (fun (n : ℕ) ω ↦ √(Var[id; ν k] * vk * (n : ℝ))
+      * (√(Var[id; ν k] * count (fun j ↦ armIndicator A k j ω) n))⁻¹) atTop
       (fun _ ↦ (1 : ℝ)) := by
     refine tendstoInMeasure_of_tendsto_ae (fun n ↦ (hRmeas n).aestronglyMeasurable) ?_
     filter_upwards [hNconv] with ω hconv
-    have hsqvk : (0 : ℝ) < Real.sqrt vk := Real.sqrt_pos.mpr hvk
+    have hsqvk : (0 : ℝ) < √vk := Real.sqrt_pos.mpr hvk
     have hcnn : ∀ n, (0 : ℝ) ≤ count (fun j ↦ armIndicator A k j ω) n := fun n ↦
       Finset.sum_nonneg fun j _ ↦ armIndicator_nonneg A k j ω
-    have hr : Tendsto (fun n ↦ Real.sqrt vk
-        * (Real.sqrt (count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)))⁻¹) atTop (𝓝 1) := by
-      have h1 : Tendsto (fun n ↦ Real.sqrt (count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)))
-          atTop (𝓝 (Real.sqrt vk)) := (Real.continuous_sqrt.tendsto vk).comp hconv
-      have h2 := (h1.inv₀ hsqvk.ne').const_mul (Real.sqrt vk)
+    have hr : Tendsto (fun n ↦ √vk
+        * (√(count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)))⁻¹) atTop (𝓝 1) := by
+      have h1 : Tendsto (fun n ↦ √(count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)))
+          atTop (𝓝 (√vk)) := (Real.continuous_sqrt.tendsto vk).comp hconv
+      have h2 := (h1.inv₀ hsqvk.ne').const_mul (√vk)
       rwa [mul_inv_cancel₀ hsqvk.ne'] at h2
     refine hr.congr' ?_
     filter_upwards [eventually_ge_atTop 1] with n hn
@@ -462,9 +462,9 @@ lemma respMart_selfNorm_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationar
     · simp [hN0]
     · have hNpos : (0 : ℝ) < count (fun j ↦ armIndicator A k j ω) n :=
         lt_of_le_of_ne (hcnn n) (Ne.symm hN0)
-      have hsV : Real.sqrt (Var[id; ν k]) ≠ 0 := Real.sqrt_ne_zero'.mpr hVk
-      have hsn : Real.sqrt (n : ℝ) ≠ 0 := Real.sqrt_ne_zero'.mpr hnpos
-      have hsN : Real.sqrt (count (fun j ↦ armIndicator A k j ω) n) ≠ 0 :=
+      have hsV : √(Var[id; ν k]) ≠ 0 := Real.sqrt_ne_zero'.mpr hVk
+      have hsn : √(n : ℝ) ≠ 0 := Real.sqrt_ne_zero'.mpr hnpos
+      have hsN : √(count (fun j ↦ armIndicator A k j ω) n) ≠ 0 :=
         Real.sqrt_ne_zero'.mpr hNpos
       rw [Real.sqrt_div (hcnn n), Real.sqrt_mul (mul_nonneg hVk.le hvk.le),
         Real.sqrt_mul hVk.le, Real.sqrt_mul hVk.le]
@@ -473,22 +473,22 @@ lemma respMart_selfNorm_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationar
     (fun n ↦ (measurable_const.mul (measurable_respMart h k n)).aemeasurable) hRmeas
     (respMart_div_sqrt_tendsto_gaussianReal h hY2 k vk hvk hVk hνk hNconv) hRtendsto
   -- Identify `X_n · R_n` with the self-normalized statistic.
-  have hXR : ∀ n : ℕ, (fun ω ↦ (Real.sqrt (Var[id; ν k] * vk * (n : ℝ)))⁻¹ * respMart ν A Y k n ω
-        * (Real.sqrt (Var[id; ν k] * vk * (n : ℝ))
-          * (Real.sqrt (Var[id; ν k] * count (fun j ↦ armIndicator A k j ω) n))⁻¹))
-      = fun ω ↦ (Real.sqrt (Var[id; ν k] * count (fun j ↦ armIndicator A k j ω) n))⁻¹
+  have hXR : ∀ n : ℕ, (fun ω ↦ (√(Var[id; ν k] * vk * (n : ℝ)))⁻¹ * respMart ν A Y k n ω
+        * (√(Var[id; ν k] * vk * (n : ℝ))
+          * (√(Var[id; ν k] * count (fun j ↦ armIndicator A k j ω) n))⁻¹))
+      = fun ω ↦ (√(Var[id; ν k] * count (fun j ↦ armIndicator A k j ω) n))⁻¹
           * respMart ν A Y k n ω := by
     intro n
     funext ω
     rcases Nat.eq_zero_or_pos n with h0 | h0
     · subst h0; simp [respMart]
-    · have hne : Real.sqrt (Var[id; ν k] * vk * (n : ℝ)) ≠ 0 :=
+    · have hne : √(Var[id; ν k] * vk * (n : ℝ)) ≠ 0 :=
         Real.sqrt_ne_zero'.mpr (mul_pos (mul_pos hVk hvk) (by exact_mod_cast h0))
-      have hrw : (Real.sqrt (Var[id; ν k] * vk * (n : ℝ)))⁻¹ * respMart ν A Y k n ω
-          * (Real.sqrt (Var[id; ν k] * vk * (n : ℝ))
-            * (Real.sqrt (Var[id; ν k] * count (fun j ↦ armIndicator A k j ω) n))⁻¹)
-          = ((Real.sqrt (Var[id; ν k] * vk * (n : ℝ)))⁻¹ * Real.sqrt (Var[id; ν k] * vk * (n : ℝ)))
-            * ((Real.sqrt (Var[id; ν k] * count (fun j ↦ armIndicator A k j ω) n))⁻¹
+      have hrw : (√(Var[id; ν k] * vk * (n : ℝ)))⁻¹ * respMart ν A Y k n ω
+          * (√(Var[id; ν k] * vk * (n : ℝ))
+            * (√(Var[id; ν k] * count (fun j ↦ armIndicator A k j ω) n))⁻¹)
+          = ((√(Var[id; ν k] * vk * (n : ℝ)))⁻¹ * √(Var[id; ν k] * vk * (n : ℝ)))
+            * ((√(Var[id; ν k] * count (fun j ↦ armIndicator A k j ω) n))⁻¹
               * respMart ν A Y k n ω) := by ring
       rw [hrw, inv_mul_cancel₀ hne, one_mul]
   refine Tendsto.congr (fun n ↦ ?_) hslut

@@ -53,24 +53,24 @@ lemma ae_eventually_abs_le_of_tsum_ne_top {ξ : ℕ → Ω → ℝ} {b : ℕ →
 /-- `exp(-a √k)` is summable in `k` for `a > 0`. Since `log = o(√·)`, eventually
 `2 log k ≤ a √k`, i.e. `exp(-a√k) ≤ 1/k²`, which is summable. -/
 lemma summable_exp_neg_mul_sqrt {a : ℝ} (ha : 0 < a) :
-    Summable (fun k : ℕ ↦ Real.exp (-a * Real.sqrt k)) := by
+    Summable (fun k : ℕ ↦ Real.exp (-a * √k)) := by
   have hcomp : Summable (fun k : ℕ ↦ 1 / (k : ℝ) ^ 2) :=
     Real.summable_one_div_nat_pow.mpr (by norm_num)
   -- eventually `log x ≤ (a/2) √x` on `ℝ`, from `log = o(x ^ (1/2))`.
-  have hlogR : ∀ᶠ x : ℝ in atTop, Real.log x ≤ (a / 2) * Real.sqrt x := by
+  have hlogR : ∀ᶠ x : ℝ in atTop, Real.log x ≤ (a / 2) * √x := by
     have hlit := (isLittleO_log_rpow_atTop (show (0 : ℝ) < 1 / 2 by norm_num)).def
       (show (0 : ℝ) < a / 2 by positivity)
     filter_upwards [hlit, eventually_ge_atTop (1 : ℝ)] with x hx hx1
     rwa [Real.norm_eq_abs, Real.norm_eq_abs, abs_of_nonneg (Real.log_nonneg hx1),
       abs_of_nonneg (Real.rpow_nonneg (by linarith) _), ← Real.sqrt_eq_rpow] at hx
   -- transfer to `ℕ` and compare with `1/k²`.
-  have hev : ∀ᶠ k : ℕ in atTop, Real.exp (-a * Real.sqrt k) ≤ 1 / (k : ℝ) ^ 2 := by
+  have hev : ∀ᶠ k : ℕ in atTop, Real.exp (-a * √k) ≤ 1 / (k : ℝ) ^ 2 := by
     filter_upwards [tendsto_natCast_atTop_atTop.eventually hlogR, eventually_ge_atTop 1]
       with k hk hk1
     have hkpos : (0 : ℝ) < (k : ℝ) := by exact_mod_cast hk1
-    have h2 : 2 * Real.log k ≤ a * Real.sqrt k := by
+    have h2 : 2 * Real.log k ≤ a * √k := by
       have := mul_le_mul_of_nonneg_left hk (by norm_num : (0 : ℝ) ≤ 2)
-      rwa [show (2 : ℝ) * (a / 2 * Real.sqrt k) = a * Real.sqrt k from by ring] at this
+      rwa [show (2 : ℝ) * (a / 2 * √k) = a * √k from by ring] at this
     have hlk : Real.exp (2 * Real.log (k : ℝ)) = (k : ℝ) ^ 2 := by
       rw [two_mul, Real.exp_add, Real.exp_log hkpos, pow_two]
     have hrw : (1 : ℝ) / (k : ℝ) ^ 2 = Real.exp (-(2 * Real.log k)) := by
@@ -126,15 +126,15 @@ lemma abs_integral_truncation_le [IsFiniteMeasure μ] {X : Ω → ℝ} (hint : I
 bound `lem:trunc_drift`: since `|m_i| ≤ σ²/√i`, the drift `∑ m_i D_i` is `O(√n)` (and `O(√N)`
 after restricting to the sampled indices). The key step is `1/√(x+1) ≤ 2(√(x+1) - √x)`. -/
 lemma sum_one_div_sqrt_le (n : ℕ) :
-    ∑ i ∈ Finset.range n, 1 / Real.sqrt i ≤ 2 * Real.sqrt n := by
-  have hkey : ∀ x : ℝ, 0 ≤ x → 1 / Real.sqrt (x + 1) ≤ 2 * (Real.sqrt (x + 1) - Real.sqrt x) := by
+    ∑ i ∈ Finset.range n, 1 / √i ≤ 2 * √n := by
+  have hkey : ∀ x : ℝ, 0 ≤ x → 1 / √(x + 1) ≤ 2 * (√(x + 1) - √x) := by
     intro x hx
-    have hsq1 : Real.sqrt (x + 1) ^ 2 = x + 1 := Real.sq_sqrt (by linarith)
-    have hsq2 : Real.sqrt x ^ 2 = x := Real.sq_sqrt hx
-    have hsp : 0 < Real.sqrt (x + 1) := Real.sqrt_pos.mpr (by linarith)
+    have hsq1 : √(x + 1) ^ 2 = x + 1 := Real.sq_sqrt (by linarith)
+    have hsq2 : √x ^ 2 = x := Real.sq_sqrt hx
+    have hsp : 0 < √(x + 1) := Real.sqrt_pos.mpr (by linarith)
     rw [div_le_iff₀ hsp]
-    nlinarith [sq_nonneg (Real.sqrt (x + 1) - Real.sqrt x), hsq1, hsq2, Real.sqrt_nonneg x]
-  have haux : ∀ m : ℕ, ∑ i ∈ Finset.range (m + 1), 1 / Real.sqrt i ≤ 2 * Real.sqrt m := by
+    nlinarith [sq_nonneg (√(x + 1) - √x), hsq1, hsq2, Real.sqrt_nonneg x]
+  have haux : ∀ m : ℕ, ∑ i ∈ Finset.range (m + 1), 1 / √i ≤ 2 * √m := by
     intro m
     induction m with
     | zero => simp
@@ -146,7 +146,7 @@ lemma sum_one_div_sqrt_le (n : ℕ) :
   | zero => simp
   | succ m =>
     refine le_trans (haux m) ?_
-    have : Real.sqrt (m : ℝ) ≤ Real.sqrt ((m + 1 : ℕ) : ℝ) :=
+    have : √(m : ℝ) ≤ √((m + 1 : ℕ) : ℝ) :=
       Real.sqrt_le_sqrt (by exact_mod_cast Nat.le_succ m)
     push_cast at this ⊢
     linarith
@@ -155,7 +155,7 @@ lemma sum_one_div_sqrt_le (n : ℕ) :
 For `C > 0`, `∑_k exp(-(C/2)√k + σ²/4) < ∞`; this is what makes Borel–Cantelli applicable in the
 core step `lem:trunc_block` of the finite-variance LIL. -/
 lemma summable_block_bound {C σ : ℝ} (hC : 0 < C) :
-    Summable (fun k : ℕ ↦ Real.exp (-(C / 2) * Real.sqrt k + σ ^ 2 / 4)) :=
+    Summable (fun k : ℕ ↦ Real.exp (-(C / 2) * √k + σ ^ 2 / 4)) :=
   ((summable_exp_neg_mul_sqrt (a := C / 2) (by positivity)).mul_right
     (Real.exp (σ ^ 2 / 4))).congr fun k ↦ (Real.exp_add _ _).symm
 

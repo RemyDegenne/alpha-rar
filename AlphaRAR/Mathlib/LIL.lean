@@ -529,34 +529,34 @@ theorem ae_eventually_forall_lt_dyadic [IsProbabilityMeasure μ] (hM : Martingal
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c K : ℝ} (hc : 0 ≤ c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) (hK : 0 < K) (hKc : K * c ≤ 2) :
     ∀ᵐ ω ∂μ, ∀ᶠ (k : ℕ) in atTop, ∀ n, predQuadVar M ℱ μ n ω ≤ (2 : ℝ) ^ k →
-      M n ω < K * Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1)) := by
+      M n ω < K * √((2 : ℝ) ^ k * ((k : ℝ) + 1)) := by
   have hv : ∀ k : ℕ, (0 : ℝ) < (2 : ℝ) ^ k := fun k ↦ by positivity
   have hkle : ∀ k : ℕ, (k : ℝ) + 1 ≤ (2 : ℝ) ^ k := fun k ↦ by
     have h : k + 1 ≤ 2 ^ k := k.lt_two_pow_self
     calc (k : ℝ) + 1 = ((k + 1 : ℕ) : ℝ) := by push_cast; ring
       _ ≤ ((2 ^ k : ℕ) : ℝ) := by exact_mod_cast h
       _ = (2 : ℝ) ^ k := by push_cast; ring
-  have hlam : ∀ k : ℕ, 0 < K * Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1)) := fun k ↦
+  have hlam : ∀ k : ℕ, 0 < K * √((2 : ℝ) ^ k * ((k : ℝ) + 1)) := fun k ↦
     mul_pos hK (Real.sqrt_pos.mpr (by positivity))
-  have hadm : ∀ k : ℕ, K * Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1)) * c ≤ 2 * (2 : ℝ) ^ k :=
+  have hadm : ∀ k : ℕ, K * √((2 : ℝ) ^ k * ((k : ℝ) + 1)) * c ≤ 2 * (2 : ℝ) ^ k :=
     fun k ↦ by
-      have hsqrt_le : Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1)) ≤ (2 : ℝ) ^ k := by
-        calc Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1))
-            ≤ Real.sqrt ((2 : ℝ) ^ k * (2 : ℝ) ^ k) :=
+      have hsqrt_le : √((2 : ℝ) ^ k * ((k : ℝ) + 1)) ≤ (2 : ℝ) ^ k := by
+        calc √((2 : ℝ) ^ k * ((k : ℝ) + 1))
+            ≤ √((2 : ℝ) ^ k * (2 : ℝ) ^ k) :=
               Real.sqrt_le_sqrt (mul_le_mul_of_nonneg_left (hkle k) (hv k).le)
           _ = (2 : ℝ) ^ k := Real.sqrt_mul_self (hv k).le
-      calc K * Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1)) * c
+      calc K * √((2 : ℝ) ^ k * ((k : ℝ) + 1)) * c
           ≤ K * (2 : ℝ) ^ k * c :=
             mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hsqrt_le hK.le) hc
         _ = K * c * (2 : ℝ) ^ k := by ring
         _ ≤ 2 * (2 : ℝ) ^ k := mul_le_mul_of_nonneg_right hKc (hv k).le
   have hsum : Summable fun k : ℕ ↦
-      Real.exp (-(K * Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1))) ^ 2 / (4 * (2 : ℝ) ^ k)) := by
+      Real.exp (-(K * √((2 : ℝ) ^ k * ((k : ℝ) + 1))) ^ 2 / (4 * (2 : ℝ) ^ k)) := by
     have hkey : ∀ k : ℕ,
-        Real.exp (-(K * Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1))) ^ 2 / (4 * (2 : ℝ) ^ k))
+        Real.exp (-(K * √((2 : ℝ) ^ k * ((k : ℝ) + 1))) ^ 2 / (4 * (2 : ℝ) ^ k))
           = Real.exp (-(K ^ 2 / 4)) ^ (k + 1) := by
       intro k
-      have hsq : (K * Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1))) ^ 2
+      have hsq : (K * √((2 : ℝ) ^ k * ((k : ℝ) + 1))) ^ 2
           = K ^ 2 * ((2 : ℝ) ^ k * ((k : ℝ) + 1)) := by
         rw [mul_pow, Real.sq_sqrt (by positivity)]
       rw [hsq, ← Real.exp_nat_mul]
@@ -591,7 +591,7 @@ lemma ae_eventually_le_sqrt_predQuadVar_mul_log [IsProbabilityMeasure μ] (hM : 
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
     ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop,
-      M n ω ≤ C * Real.sqrt (predQuadVar M ℱ μ n ω * Real.log (predQuadVar M ℱ μ n ω)) := by
+      M n ω ≤ C * √(predQuadVar M ℱ μ n ω * Real.log (predQuadVar M ℱ μ n ω)) := by
   classical
   set K : ℝ := 2 / c with hKdef
   have hK : 0 < K := by rw [hKdef]; positivity
@@ -601,7 +601,7 @@ lemma ae_eventually_le_sqrt_predQuadVar_mul_log [IsProbabilityMeasure μ] (hM : 
     with ω hgood hVω
   rw [eventually_atTop] at hgood
   obtain ⟨k₀, hk₀⟩ := hgood
-  refine ⟨K * Real.sqrt (2 * (1 / Real.log 2 + 2)), ?_⟩
+  refine ⟨K * √(2 * (1 / Real.log 2 + 2)), ?_⟩
   filter_upwards [hVω.eventually_ge_atTop ((2 : ℝ) ^ k₀), hVω.eventually_ge_atTop (Real.exp 1)]
     with n hn0 hne
   let V := predQuadVar M ℱ μ n ω
@@ -631,7 +631,7 @@ lemma ae_eventually_le_sqrt_predQuadVar_mul_log [IsProbabilityMeasure μ] (hM : 
       have : (m : ℝ) < Real.log V / Real.log 2 := by rw [lt_div_iff₀ hlog2]; linarith
       push_cast; linarith
   -- Assemble the normalized bound.
-  have hMn : M n ω < K * Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1)) := hk₀ k hkk0 n hVle
+  have hMn : M n ω < K * √((2 : ℝ) ^ k * ((k : ℝ) + 1)) := hk₀ k hkk0 n hVle
   have hb2 : Real.log V / Real.log 2 + 2 ≤ (1 / Real.log 2 + 2) * Real.log V := by
     have h : (1 / Real.log 2 + 2) * Real.log V
         = Real.log V / Real.log 2 + 2 * Real.log V := by
@@ -648,13 +648,13 @@ lemma ae_eventually_le_sqrt_predQuadVar_mul_log [IsProbabilityMeasure μ] (hM : 
         _ = 2 * (1 / Real.log 2 + 2) * (V * Real.log V) := by ring
     linarith
   have hDnn : (0 : ℝ) ≤ 2 * (1 / Real.log 2 + 2) := by positivity
-  have hsqrt_le : Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1))
-      ≤ Real.sqrt (2 * (1 / Real.log 2 + 2)) * Real.sqrt (V * Real.log V) := by
+  have hsqrt_le : √((2 : ℝ) ^ k * ((k : ℝ) + 1))
+      ≤ √(2 * (1 / Real.log 2 + 2)) * √(V * Real.log V) := by
     rw [← Real.sqrt_mul hDnn]; exact Real.sqrt_le_sqrt hprod_le
-  calc M n ω ≤ K * Real.sqrt ((2 : ℝ) ^ k * ((k : ℝ) + 1)) := hMn.le
-    _ ≤ K * (Real.sqrt (2 * (1 / Real.log 2 + 2)) * Real.sqrt (V * Real.log V)) :=
+  calc M n ω ≤ K * √((2 : ℝ) ^ k * ((k : ℝ) + 1)) := hMn.le
+    _ ≤ K * (√(2 * (1 / Real.log 2 + 2)) * √(V * Real.log V)) :=
         mul_le_mul_of_nonneg_left hsqrt_le hK.le
-    _ = K * Real.sqrt (2 * (1 / Real.log 2 + 2)) * Real.sqrt (V * Real.log V) := by ring
+    _ = K * √(2 * (1 / Real.log 2 + 2)) * √(V * Real.log V) := by ring
 
 /-- **One-sided LIL upper bound at scale `√(n log n)`** for a bounded-increment martingale.
 If `M` is a square-integrable martingale with `M 0 = 0`, `|ΔM_i| ≤ c`, and `⟨M⟩_n → ∞` a.s., then
@@ -667,7 +667,7 @@ lemma ae_eventually_le_sqrt_nat_mul_log [IsProbabilityMeasure μ] (hM : Martinga
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ} (hc : 0 < c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
-    ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop, M n ω ≤ C * Real.sqrt (n * Real.log n) := by
+    ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop, M n ω ≤ C * √(n * Real.log n) := by
   have : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
   have haesm_d : ∀ i, AEStronglyMeasurable (fun ω ↦ M (i + 1) ω - M i ω) μ := fun i ↦
     (((hM.stronglyMeasurable (i + 1)).mono (ℱ.le _)).sub
@@ -684,7 +684,7 @@ lemma ae_eventually_le_sqrt_nat_mul_log [IsProbabilityMeasure μ] (hM : Martinga
   filter_upwards [ae_eventually_le_sqrt_predQuadVar_mul_log hM hM0 hM2 hc hb hV,
     predQuadVar_le_of_bound hM hd2 hprod hb, hV] with ω hCex hle hVω
   obtain ⟨C, hC⟩ := hCex
-  refine ⟨|C| * Real.sqrt (2 * c ^ 2), ?_⟩
+  refine ⟨|C| * √(2 * c ^ 2), ?_⟩
   filter_upwards [hC, hVω.eventually_ge_atTop 1,
     (tendsto_natCast_atTop_atTop.eventually_ge_atTop (c ^ 2)), eventually_ge_atTop 2]
     with n hCn hV1 hnc hn2
@@ -700,14 +700,14 @@ lemma ae_eventually_le_sqrt_nat_mul_log [IsProbabilityMeasure μ] (hM : Martinga
     linarith
   have hprodle : V * Real.log V ≤ 2 * c ^ 2 * ((n : ℝ) * Real.log n) := by
     nlinarith [mul_le_mul (hle n) hlogV2 hlogVnn (by positivity : (0 : ℝ) ≤ c ^ 2 * n)]
-  have hsqrt : Real.sqrt (V * Real.log V)
-      ≤ Real.sqrt (2 * c ^ 2) * Real.sqrt ((n : ℝ) * Real.log n) := by
+  have hsqrt : √(V * Real.log V)
+      ≤ √(2 * c ^ 2) * √((n : ℝ) * Real.log n) := by
     rw [← Real.sqrt_mul (by positivity)]; exact Real.sqrt_le_sqrt hprodle
-  calc M n ω ≤ C * Real.sqrt (V * Real.log V) := hCn
-    _ ≤ |C| * Real.sqrt (V * Real.log V) :=
+  calc M n ω ≤ C * √(V * Real.log V) := hCn
+    _ ≤ |C| * √(V * Real.log V) :=
         mul_le_mul_of_nonneg_right (le_abs_self C) (Real.sqrt_nonneg _)
-    _ ≤ |C| * (Real.sqrt (2 * c ^ 2) * Real.sqrt ((n : ℝ) * Real.log n)) :=
+    _ ≤ |C| * (√(2 * c ^ 2) * √((n : ℝ) * Real.log n)) :=
         mul_le_mul_of_nonneg_left hsqrt (abs_nonneg C)
-    _ = |C| * Real.sqrt (2 * c ^ 2) * Real.sqrt ((n : ℝ) * Real.log n) := by ring
+    _ = |C| * √(2 * c ^ 2) * √((n : ℝ) * Real.log n) := by ring
 
 end AlphaRAR

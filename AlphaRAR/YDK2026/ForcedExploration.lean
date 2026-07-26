@@ -76,16 +76,16 @@ structure IsExplorationSchedule (hsched : ℕ → ℝ) : Prop where
 required only by the `√n`-scaled normality results, and is incompatible with the sparse regime: see
 `IsExplorationSchedule`. -/
 def IsSqrtSmall (hsched : ℕ → ℝ) : Prop :=
-  Tendsto (fun m ↦ hsched m / Real.sqrt m) atTop (𝓝 0)
+  Tendsto (fun m ↦ hsched m / √m) atTop (𝓝 0)
 
 /-- `h(m) = o(√m)` implies `h(m)/m → 0`, so the paper's condition is stronger than the one
 retained in `IsExplorationSchedule`. -/
 lemma IsSqrtSmall.div_tendsto_zero {hsched : ℕ → ℝ} (hlo : IsSqrtSmall hsched) :
     Tendsto (fun m ↦ hsched m / (m : ℝ)) atTop (𝓝 0) := by
-  have h2 : Tendsto (fun m : ℕ ↦ 1 / Real.sqrt m) atTop (𝓝 0) :=
+  have h2 : Tendsto (fun m : ℕ ↦ 1 / √m) atTop (𝓝 0) :=
     tendsto_const_nhds.div_atTop
       (Real.tendsto_sqrt_atTop.comp tendsto_natCast_atTop_atTop)
-  have hprod : Tendsto (fun m : ℕ ↦ (hsched m / Real.sqrt m) * (1 / Real.sqrt m))
+  have hprod : Tendsto (fun m : ℕ ↦ (hsched m / √m) * (1 / √m))
       atTop (𝓝 0) := by simpa using hlo.mul h2
   refine hprod.congr' ?_
   filter_upwards [eventually_gt_atTop 0] with m hm
@@ -837,12 +837,6 @@ lemma not_aRTSFEUnder_of_sched_lt [DecidableEq 𝓐] (ω : Ω) {hsched g : ℕ �
     _ = hsched m := by field_simp
     _ < _ := hnot
 
-/-- The previous-history filtration sits below the current one: `ℱ_{i-1} ≤ ℱ_i`. -/
-lemma shiftDown_le_self (𝔾 : Filtration ℕ mΩ) (i : ℕ) : 𝔾.shiftDown i ≤ 𝔾 i := by
-  cases i with
-  | zero => exact bot_le
-  | succ p => exact 𝔾.mono (Nat.le_succ p)
-
 /-- The count `N_{m,k}` is a **previous-history** statistic: it reads only `A_0,…,A_{m-1}`. -/
 lemma measurable_shiftDown_count
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (m : ℕ) :
@@ -1113,7 +1107,7 @@ lemma aRTSTarget_le_loglog_of_quadratic [Fintype 𝓐] (ω : Ω)
           - (ν j)[id]) ^ 2)
     (hrate : ∀ j, ∀ᶠ m in atTop,
       |estimator (fun i ↦ armIndicator A j i ω) (fun i ↦ Y i ω) (θ₀ j) m - (ν j)[id]|
-        ≤ C * Real.sqrt (Real.log (Real.log m) / L m)) :
+        ≤ C * √(Real.log (Real.log m) / L m)) :
     ∀ᶠ m in atTop, aRTSTarget A Y θ₀ T m ω k
       ≤ (Cq * Fintype.card 𝓐 * C ^ 2) * (Real.log (Real.log m) / L m) := by
   filter_upwards [hquad, eventually_all.mpr hrate, hLnn] with m hq hr hLm
@@ -1191,11 +1185,11 @@ lemma exists_aRTSTarget_le_loglog_of_contDiffAt [Fintype 𝓐] (ω : Ω)
     (hL0 : Tendsto (fun m : ℕ ↦ Real.log (Real.log m) / L m) atTop (𝓝 0))
     (hrate : ∀ j, ∀ᶠ m in atTop,
       |estimator (fun i ↦ armIndicator A j i ω) (fun i ↦ Y i ω) (θ₀ j) m - (ν j)[id]|
-        ≤ C * Real.sqrt (Real.log (Real.log m) / L m)) :
+        ≤ C * √(Real.log (Real.log m) / L m)) :
     ∃ Cq : ℝ, 0 ≤ Cq ∧ ∀ᶠ m in atTop, aRTSTarget A Y θ₀ T m ω k
       ≤ Cq * (Real.log (Real.log m) / L m) := by
-  have hsqrt : Tendsto (fun m : ℕ ↦ C * Real.sqrt (Real.log (Real.log m) / L m)) atTop (𝓝 0) := by
-    have h1 : Tendsto (fun m : ℕ ↦ Real.sqrt (Real.log (Real.log m) / L m)) atTop (𝓝 0) := by
+  have hsqrt : Tendsto (fun m : ℕ ↦ C * √(Real.log (Real.log m) / L m)) atTop (𝓝 0) := by
+    have h1 : Tendsto (fun m : ℕ ↦ √(Real.log (Real.log m) / L m)) atTop (𝓝 0) := by
       simpa [Function.comp_def] using (Real.continuous_sqrt.tendsto 0).comp hL0
     simpa using h1.const_mul C
   have hcons : ∀ j, Tendsto
@@ -1258,7 +1252,7 @@ lemma exists_decay_of_contDiffAt [Fintype 𝓐] (ω : Ω)
       atTop (𝓝 0))
     (hrate : ∀ j, ∀ᶠ m in atTop,
       |estimator (fun i ↦ armIndicator A j i ω) (fun i ↦ Y i ω) (θ₀ j) m - (ν j)[id]|
-        ≤ C * Real.sqrt (Real.log (Real.log m) / L m)) :
+        ≤ C * √(Real.log (Real.log m) / L m)) :
     ∃ g : ℕ → ℝ, (∀ᶠ m in atTop, aRTSTarget A Y θ₀ T m ω k ≤ g m) ∧
       (∀ᶠ m in atTop, g m < hsched m / (m : ℝ)) := by
   obtain ⟨Cq, _, hCq⟩ :=
@@ -1285,11 +1279,11 @@ lemma exists_rate_loglog_of_pullCount_ge [Finite 𝓐] [DecidableEq 𝓐] (ω : 
     (hLle : ∀ j, ∀ᶠ m in atTop, L m ≤ (pullCount A j m ω : ℝ))
     (hC : ∀ j, ∃ C' : ℝ, ∀ᶠ m in atTop,
       |estimator (fun i ↦ armIndicator A j i ω) (fun i ↦ Y i ω) (θ₀ j) m - (ν j)[id]|
-        ≤ C' * Real.sqrt (Real.log (Real.log (pullCount A j m ω : ℝ))
+        ≤ C' * √(Real.log (Real.log (pullCount A j m ω : ℝ))
             / (pullCount A j m ω : ℝ))) :
     ∃ C : ℝ, ∀ j, ∀ᶠ m in atTop,
       |estimator (fun i ↦ armIndicator A j i ω) (fun i ↦ Y i ω) (θ₀ j) m - (ν j)[id]|
-        ≤ C * Real.sqrt (Real.log (Real.log m) / L m) := by
+        ≤ C * √(Real.log (Real.log m) / L m) := by
   classical
   letI := Fintype.ofFinite 𝓐
   choose C' hC' using hC
@@ -1317,11 +1311,11 @@ lemma exists_rate_loglog_of_pullCount_ge [Finite 𝓐] [DecidableEq 𝓐] (ω : 
           gcongr
           linarith
   calc |estimator (fun i ↦ armIndicator A j i ω) (fun i ↦ Y i ω) (θ₀ j) m - (ν j)[id]|
-      ≤ C' j * Real.sqrt (Real.log (Real.log (pullCount A j m ω : ℝ))
+      ≤ C' j * √(Real.log (Real.log (pullCount A j m ω : ℝ))
           / (pullCount A j m ω : ℝ)) := hm
-    _ ≤ (∑ i, |C' i|) * Real.sqrt (Real.log (Real.log (pullCount A j m ω : ℝ))
+    _ ≤ (∑ i, |C' i|) * √(Real.log (Real.log (pullCount A j m ω : ℝ))
           / (pullCount A j m ω : ℝ)) := by gcongr
-    _ ≤ (∑ i, |C' i|) * Real.sqrt (Real.log (Real.log m) / L m) := by gcongr
+    _ ≤ (∑ i, |C' i|) * √(Real.log (Real.log m) / L m) := by gcongr
 
 /-- The indicator of a **throttled pull** of arm `k`: arm `k` is selected at round `i` while it is
 neither under-sampled nor under-explored — so neither the targeting rule nor forced exploration
@@ -1364,7 +1358,7 @@ theorem throttled_count_div_sched_tendsto_zero [Finite 𝓐]
     (hsum : ∀ᵐ ω ∂P, Tendsto
       (fun n ↦ (∑ i ∈ Finset.range n, α * aRTSTarget A Y θ₀ T i ω k) / hsched n) atTop (𝓝 0))
     (hsqrt : ∀ C : ℝ,
-      Tendsto (fun n : ℕ ↦ C * Real.sqrt ((n : ℝ) * Real.log (Real.log n)) / hsched n)
+      Tendsto (fun n : ℕ ↦ C * √((n : ℝ) * Real.log (Real.log n)) / hsched n)
         atTop (𝓝 0)) :
     ∀ᵐ ω ∂P, Tendsto
       (fun n ↦ count (fun i ↦ throttledIndicator A Y θ₀ T hsched k i ω) n / hsched n)
@@ -1391,7 +1385,7 @@ theorem throttled_count_div_sched_tendsto_zero [Finite 𝓐]
       (((measurable_const (a := (1 : ℝ))).indicator ((measurableSet_singleton k).preimage
         (IsAlgEnvSeq.measurable_action_filtration h.measurable_action h.measurable_feedback
           (le_refl i)))).stronglyMeasurable)
-      (shiftDown_le_self 𝔽 i _ (hSm i))
+      (Filtration.shiftDown_le_self 𝔽 i _ (hSm i))
   -- (a) The martingale part is `O(√(n log log n))`.
   have hLIL := ae_eventually_abs_assignMart_le_sqrt_nat_mul_loglog (ℱ := 𝔽) hXadapt hXint
     (fun n ↦ ae_of_all _ fun ω ↦ hX0 n ω) (fun n ↦ ae_of_all _ fun ω ↦ hX1 n ω)
@@ -1425,7 +1419,7 @@ theorem throttled_count_div_sched_tendsto_zero [Finite 𝓐]
   have hpos : ∀ᶠ n in atTop, (0 : ℝ) < hsched n := hsched_atTop.eventually_gt_atTop 0
   filter_upwards [hLIL, hpp, hsum] with ω hlilω hppω hsumω
   obtain ⟨C, hC⟩ := hlilω
-  have hmaj : Tendsto (fun n : ℕ ↦ C * Real.sqrt ((n : ℝ) * Real.log (Real.log n)) / hsched n
+  have hmaj : Tendsto (fun n : ℕ ↦ C * √((n : ℝ) * Real.log (Real.log n)) / hsched n
       + (∑ i ∈ Finset.range n, α * aRTSTarget A Y θ₀ T i ω k) / hsched n) atTop (𝓝 0) := by
     have := (hsqrt C).add hsumω
     simpa using this
@@ -1482,7 +1476,7 @@ theorem aRTSFE_sparse_clt [Fintype 𝓐] [DecidableEq 𝓐]
       Tendsto (fun n ↦ (pullCount A a n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v a))) :
     Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
       (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (WithLp.toLp 2 (fun k ↦
-          Real.sqrt (count (fun j ↦ armIndicator A k j ω) n)
+          √(count (fun j ↦ armIndicator A k j ω) n)
             * (estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) (θ₀ k) n - (ν k)[id]))
               : EuclideanSpace ℝ 𝓐)),
         Measure.isProbabilityMeasure_map (measurable_estimatorErrorVec h θ₀ n).aemeasurable⟩
@@ -1697,7 +1691,7 @@ lemma isExplorationSchedule_sched23 : IsExplorationSchedule sched23 where
 /-- **`n^{2/3}` is not `o(√n)`** — it is excluded by the paper's condition (ii), and that is exactly
 what puts a sparse arm in the forced-exploration-dominated regime. -/
 lemma not_isSqrtSmall_sched23 : ¬ IsSqrtSmall sched23 := by
-  have hgrow : Tendsto (fun n : ℕ ↦ sched23 n / Real.sqrt n) atTop atTop := by
+  have hgrow : Tendsto (fun n : ℕ ↦ sched23 n / √n) atTop atTop := by
     have hsixth : Tendsto (fun n : ℕ ↦ (n : ℝ) ^ ((1 : ℝ) / 6)) atTop atTop :=
       (tendsto_rpow_atTop (by norm_num)).comp tendsto_natCast_atTop_atTop
     refine hsixth.congr' ?_
@@ -1787,7 +1781,7 @@ lemma tendsto_loglog_div_rpow {p : ℝ} (hp : 0 < p) :
 `throttled_count_div_sched_tendsto_zero`. It reduces to `log log n = o(n^{1/3})`, since
 `√(n log log n)/n^{2/3} = √(log log n / n^{1/3})`. -/
 lemma sched23_sqrt (C : ℝ) :
-    Tendsto (fun n : ℕ ↦ C * Real.sqrt ((n : ℝ) * Real.log (Real.log n)) / sched23 n)
+    Tendsto (fun n : ℕ ↦ C * √((n : ℝ) * Real.log (Real.log n)) / sched23 n)
       atTop (𝓝 0) := by
   have hlogtop : Tendsto (fun n : ℕ ↦ Real.log n) atTop atTop :=
     Real.tendsto_log_atTop.comp tendsto_natCast_atTop_atTop
@@ -1795,10 +1789,10 @@ lemma sched23_sqrt (C : ℝ) :
   have hLL : Tendsto (fun n : ℕ ↦ Real.log (Real.log n) / (n : ℝ) ^ ((1 : ℝ) / 3))
       atTop (𝓝 0) := tendsto_loglog_div_rpow (by norm_num)
   have hsq : Tendsto (fun n : ℕ ↦
-      Real.sqrt (Real.log (Real.log n) / (n : ℝ) ^ ((1 : ℝ) / 3))) atTop (𝓝 0) := by
+      √(Real.log (Real.log n) / (n : ℝ) ^ ((1 : ℝ) / 3))) atTop (𝓝 0) := by
     have := (Real.continuous_sqrt.tendsto 0).comp hLL
     simpa [Function.comp_def] using this
-  have hmain : Tendsto (fun n : ℕ ↦ Real.sqrt ((n : ℝ) * Real.log (Real.log n)) / sched23 n)
+  have hmain : Tendsto (fun n : ℕ ↦ √((n : ℝ) * Real.log (Real.log n)) / sched23 n)
       atTop (𝓝 0) := by
     refine hsq.congr' ?_
     filter_upwards [hev, eventually_gt_atTop 0] with n hn hn0
@@ -1807,7 +1801,7 @@ lemma sched23_sqrt (C : ℝ) :
     have hnL : (0 : ℝ) ≤ (n : ℝ) * Real.log (Real.log n) := by positivity
     have h43 : (n : ℝ) ^ ((4 : ℝ) / 3) = (n : ℝ) * (n : ℝ) ^ ((1 : ℝ) / 3) := by
       rw [show (4 : ℝ) / 3 = 1 + 1 / 3 by norm_num, Real.rpow_add hnR, Real.rpow_one]
-    have hs43 : Real.sqrt ((n : ℝ) ^ ((4 : ℝ) / 3)) = (n : ℝ) ^ ((2 : ℝ) / 3) := by
+    have hs43 : √((n : ℝ) ^ ((4 : ℝ) / 3)) = (n : ℝ) ^ ((2 : ℝ) / 3) := by
       rw [Real.sqrt_eq_rpow, ← Real.rpow_mul hnR.le]; norm_num
     simp only [sched23]
     rw [← hs43, ← Real.sqrt_div hnL]
@@ -1852,14 +1846,14 @@ lemma tendsto_const_mul_sqrt_loglog_div_sched {hsched : ℕ → ℝ}
     (hspos : ∀ᶠ n : ℕ in atTop, 0 < hsched n)
     (hstar : Tendsto (fun m : ℕ ↦ (m : ℝ) * Real.log (Real.log m) / (hsched m * hsched m))
       atTop (𝓝 0)) (C : ℝ) :
-    Tendsto (fun n : ℕ ↦ C * Real.sqrt ((n : ℝ) * Real.log (Real.log n)) / hsched n)
+    Tendsto (fun n : ℕ ↦ C * √((n : ℝ) * Real.log (Real.log n)) / hsched n)
       atTop (𝓝 0) := by
   have hlog1 : ∀ᶠ n : ℕ in atTop, (1 : ℝ) ≤ Real.log n :=
     (Real.tendsto_log_atTop.comp tendsto_natCast_atTop_atTop).eventually_ge_atTop 1
-  have hbase : Tendsto (fun n : ℕ ↦ Real.sqrt ((n : ℝ) * Real.log (Real.log n)) / hsched n)
+  have hbase : Tendsto (fun n : ℕ ↦ √((n : ℝ) * Real.log (Real.log n)) / hsched n)
       atTop (𝓝 0) := by
     have hs : Tendsto (fun n : ℕ ↦
-        Real.sqrt ((n : ℝ) * Real.log (Real.log n) / (hsched n * hsched n))) atTop (𝓝 0) := by
+        √((n : ℝ) * Real.log (Real.log n) / (hsched n * hsched n))) atTop (𝓝 0) := by
       simpa [Function.comp_def] using (Real.continuous_sqrt.tendsto 0).comp hstar
     refine hs.congr' ?_
     filter_upwards [hspos, hlog1, eventually_gt_atTop 0] with n hn hll hn0
@@ -1903,35 +1897,35 @@ lemma tendsto_sum_div_sched_of_loglog_decay {f : ℕ → ℝ} {hsched : ℕ → 
     (hdecay.and (hloglog1.and (hlog1.and (hstar1.and (hspos.and (eventually_gt_atTop 0))))))
   -- Pointwise: the loglog majorant is at most `|c|·√(log log i)/√i`.
   have hpt : ∀ i, i₀ ≤ i →
-      f i ≤ (|c| * Real.sqrt (Real.log (Real.log i))) * (1 / Real.sqrt i) := by
+      f i ≤ (|c| * √(Real.log (Real.log i))) * (1 / √i) := by
     intro i hi
     obtain ⟨hdec, hll, -, hst, hs, hi0⟩ := hi₀ i hi
     have hiR : (0 : ℝ) < i := by exact_mod_cast hi0
     have hll0 : (0 : ℝ) < Real.log (Real.log i) := lt_of_lt_of_le one_pos hll
-    have hspos' : (0 : ℝ) < Real.sqrt ((i : ℝ) * Real.log (Real.log i)) :=
+    have hspos' : (0 : ℝ) < √((i : ℝ) * Real.log (Real.log i)) :=
       Real.sqrt_pos.mpr (by positivity)
-    have hsq : Real.sqrt ((i : ℝ) * Real.log (Real.log i)) < hsched i := by
+    have hsq : √((i : ℝ) * Real.log (Real.log i)) < hsched i := by
       have hlt := Real.sqrt_lt_sqrt (by positivity) hst
       rwa [Real.sqrt_mul_self hs.le] at hlt
-    have heq : Real.log (Real.log i) / Real.sqrt ((i : ℝ) * Real.log (Real.log i))
-        = Real.sqrt (Real.log (Real.log i)) * (1 / Real.sqrt i) := by
+    have heq : Real.log (Real.log i) / √((i : ℝ) * Real.log (Real.log i))
+        = √(Real.log (Real.log i)) * (1 / √i) := by
       rw [Real.sqrt_mul hiR.le,
-        mul_comm (Real.sqrt (i : ℝ)) (Real.sqrt (Real.log (Real.log i))),
+        mul_comm (√(i : ℝ)) (√(Real.log (Real.log i))),
         ← div_div, Real.div_sqrt, mul_one_div]
     have hkey : Real.log (Real.log i) / hsched i
-        ≤ Real.sqrt (Real.log (Real.log i)) * (1 / Real.sqrt i) := by
+        ≤ √(Real.log (Real.log i)) * (1 / √i) := by
       rw [← heq]
       gcongr
     calc f i ≤ c * (Real.log (Real.log i) / hsched i) := hdec
       _ ≤ |c| * (Real.log (Real.log i) / hsched i) :=
           mul_le_mul_of_nonneg_right (le_abs_self c) (div_nonneg hll0.le hs.le)
-      _ ≤ |c| * (Real.sqrt (Real.log (Real.log i)) * (1 / Real.sqrt i)) :=
+      _ ≤ |c| * (√(Real.log (Real.log i)) * (1 / √i)) :=
           mul_le_mul_of_nonneg_left hkey (abs_nonneg c)
-      _ = (|c| * Real.sqrt (Real.log (Real.log i))) * (1 / Real.sqrt i) := by ring
+      _ = (|c| * √(Real.log (Real.log i))) * (1 / √i) := by ring
   -- Sum the majorant.
   have hbound : ∀ n, i₀ ≤ n → ∑ i ∈ Finset.range n, f i
       ≤ (∑ i ∈ Finset.range i₀, f i)
-        + |c| * 2 * Real.sqrt ((n : ℝ) * Real.log (Real.log n)) := by
+        + |c| * 2 * √((n : ℝ) * Real.log (Real.log n)) := by
     intro n hn
     have hsplit : ∑ i ∈ Finset.range n, f i
         = (∑ i ∈ Finset.range i₀, f i) + ∑ i ∈ Finset.Ico i₀ n, f i := by
@@ -1940,7 +1934,7 @@ lemma tendsto_sum_div_sched_of_loglog_decay {f : ℕ → ℝ} {hsched : ℕ → 
     rw [hsplit]
     gcongr
     have htail : ∑ i ∈ Finset.Ico i₀ n, f i
-        ≤ ∑ i ∈ Finset.range n, (|c| * Real.sqrt (Real.log (Real.log n))) * (1 / Real.sqrt i) := by
+        ≤ ∑ i ∈ Finset.range n, (|c| * √(Real.log (Real.log n))) * (1 / √i) := by
       refine (Finset.sum_le_sum (fun i hi ↦ ?_)).trans
         (Finset.sum_le_sum_of_subset_of_nonneg
           (fun x hx ↦ Finset.mem_range.mpr (Finset.mem_Ico.mp hx).2)
@@ -1952,15 +1946,15 @@ lemma tendsto_sum_div_sched_of_loglog_decay {f : ℕ → ℝ} {hsched : ℕ → 
       gcongr
     refine htail.trans ?_
     rw [← Finset.mul_sum]
-    calc (|c| * Real.sqrt (Real.log (Real.log n))) * ∑ i ∈ Finset.range n, 1 / Real.sqrt i
-        ≤ (|c| * Real.sqrt (Real.log (Real.log n))) * (2 * Real.sqrt n) := by
+    calc (|c| * √(Real.log (Real.log n))) * ∑ i ∈ Finset.range n, 1 / √i
+        ≤ (|c| * √(Real.log (Real.log n))) * (2 * √n) := by
           gcongr
           exact sum_one_div_sqrt_le n
-      _ = |c| * 2 * Real.sqrt ((n : ℝ) * Real.log (Real.log n)) := by
+      _ = |c| * 2 * √((n : ℝ) * Real.log (Real.log n)) := by
           rw [Real.sqrt_mul (Nat.cast_nonneg n)]; ring
   -- Squeeze.
   refine squeeze_zero' ?_ ?_ (?_ : Tendsto (fun n ↦ (∑ i ∈ Finset.range i₀, f i) / hsched n
-    + |c| * 2 * Real.sqrt ((n : ℝ) * Real.log (Real.log n)) / hsched n) atTop (𝓝 0))
+    + |c| * 2 * √((n : ℝ) * Real.log (Real.log n)) / hsched n) atTop (𝓝 0))
   · filter_upwards [hspos] with n hn
     exact div_nonneg (Finset.sum_nonneg fun i _ ↦ hf0 i) hn.le
   · filter_upwards [eventually_ge_atTop i₀, hspos] with n hn hs
@@ -1997,7 +1991,7 @@ lemma fEfed_of_decay [Finite 𝓐] [DecidableEq 𝓐]
     (hsum : ∀ᵐ ω ∂P, Tendsto
       (fun n ↦ (∑ i ∈ Finset.range n, α * aRTSTarget A Y θ₀ T i ω k) / hsched n) atTop (𝓝 0))
     (hsqrt : ∀ C : ℝ,
-      Tendsto (fun n : ℕ ↦ C * Real.sqrt ((n : ℝ) * Real.log (Real.log n)) / hsched n)
+      Tendsto (fun n : ℕ ↦ C * √((n : ℝ) * Real.log (Real.log n)) / hsched n)
         atTop (𝓝 0))
     (hdecay : ∀ᵐ ω ∂P, ∃ g : ℕ → ℝ,
       (∀ᶠ m in atTop, aRTSTarget A Y θ₀ T m ω k ≤ g m) ∧
@@ -2075,7 +2069,7 @@ theorem aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [Stand
         atTop (𝓝 (T (fun k' ↦ (ν k')[id]) a)) ∧
       ∃ C' : ℝ, ∀ᶠ n in atTop,
         |estimator (fun j ↦ armIndicator A a j ω) (fun j ↦ Y j ω) (θ₀ a) n - (ν a)[id]|
-          ≤ C' * Real.sqrt (Real.log (Real.log (pullCount A a n ω : ℝ))
+          ≤ C' * √(Real.log (Real.log (pullCount A a n ω : ℝ))
               / (pullCount A a n ω : ℝ)) :=
     ae_all_iff.mpr fun a ↦ aRTSFE_sparse_rate h hY2 θ₀ T hT hTnn hTsum α hα hint_id hint_sq
       hh hthrottle hfe a
@@ -2130,12 +2124,12 @@ theorem aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [Stand
     exact div_nonneg (Real.log_nonneg hm) hLm.1.le
   -- `(⋆)` also gives the martingale-part majorant `√(n log log n) = o(h(n))`.
   have hsqrt : ∀ C : ℝ, Tendsto
-      (fun n : ℕ ↦ C * Real.sqrt ((n : ℝ) * Real.log (Real.log n)) / hsched n) atTop (𝓝 0) :=
+      (fun n : ℕ ↦ C * √((n : ℝ) * Real.log (Real.log n)) / hsched n) atTop (𝓝 0) :=
     tendsto_const_mul_sqrt_loglog_div_sched hspos hstar
   -- The LIL rate re-expressed against the deterministic floor.
   have hrate_ae : ∀ᵐ ω ∂P, ∃ C : ℝ, ∀ j, ∀ᶠ m in atTop,
       |estimator (fun i ↦ armIndicator A j i ω) (fun i ↦ Y i ω) (θ₀ j) m - (ν j)[id]|
-        ≤ C * Real.sqrt (Real.log (Real.log m) / L m) := by
+        ≤ C * √(Real.log (Real.log m) / L m) := by
     filter_upwards [hfe, hsr] with ω hfeω hsrω
     exact exists_rate_loglog_of_pullCount_ge ω hLtop
       (fun j ↦ eventually_schedShift_le_pullCount ω hh hfeω j) (fun a ↦ (hsrω a).2.2)

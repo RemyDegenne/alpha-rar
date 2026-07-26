@@ -43,7 +43,7 @@ lemma measurable_pullCount (hA : ∀ s, Measurable (A s)) (k : 𝓐) (n : ℕ) :
 
 /-- The self-normalized response martingale `ω ↦ (√N_{n,k})⁻¹ Q_{n,k}` is measurable. -/
 lemma measurable_respSelfNorm (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
-    Measurable (fun ω ↦ (Real.sqrt (pullCount A k n ω : ℝ))⁻¹ * respMart ν A Y k n ω) :=
+    Measurable (fun ω ↦ (√(pullCount A k n ω : ℝ))⁻¹ * respMart ν A Y k n ω) :=
   (((measurable_of_countable _).comp (measurable_pullCount h.measurable_action k n)).sqrt.inv).mul
     (measurable_respMart h k n)
 
@@ -61,7 +61,7 @@ theorem respMart_selfNorm_anscombe_tendsto
     {c : ℕ → ℕ} (hc : Tendsto c atTop atTop)
     (hreg : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (c n : ℝ)) atTop (𝓝 1)) :
     Tendsto (β := ProbabilityMeasure ℝ)
-      (fun n ↦ (⟨P.map (fun ω ↦ (Real.sqrt (pullCount A k n ω : ℝ))⁻¹ * respMart ν A Y k n ω),
+      (fun n ↦ (⟨P.map (fun ω ↦ (√(pullCount A k n ω : ℝ))⁻¹ * respMart ν A Y k n ω),
         Measure.isProbabilityMeasure_map
           (measurable_respSelfNorm h k n).aemeasurable⟩ : ProbabilityMeasure ℝ)) atTop
       (𝓝 (⟨gaussianReal 0 (Var[id; ν k]).toNNReal, inferInstance⟩ : ProbabilityMeasure ℝ)) := by
@@ -156,7 +156,7 @@ lemma measurable_estimator_arm (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k
 /-- The self-normalized estimator error `ω ↦ √N_{n,k}(θ̂_{n,k} - θ_k)` is measurable. -/
 lemma measurable_estimatorSqrtN (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
     (n : ℕ) :
-    Measurable (fun ω ↦ Real.sqrt (pullCount A k n ω : ℝ)
+    Measurable (fun ω ↦ √(pullCount A k n ω : ℝ)
       * (estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) θ₀ n - (ν k)[id])) :=
   (((measurable_of_countable _).comp (measurable_pullCount h.measurable_action k n)).sqrt).mul
     ((measurable_estimator_arm h k θ₀ n).sub_const _)
@@ -177,7 +177,7 @@ theorem estimator_sqrtN_anscombe_tendsto
     {c : ℕ → ℕ} (hc : Tendsto c atTop atTop)
     (hreg : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (c n : ℝ)) atTop (𝓝 1)) :
     Tendsto (β := ProbabilityMeasure ℝ)
-      (fun n ↦ (⟨P.map (fun ω ↦ Real.sqrt (pullCount A k n ω : ℝ)
+      (fun n ↦ (⟨P.map (fun ω ↦ √(pullCount A k n ω : ℝ)
           * (estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) θ₀ n - (ν k)[id])),
         Measure.isProbabilityMeasure_map
           (measurable_estimatorSqrtN h k θ₀ n).aemeasurable⟩ : ProbabilityMeasure ℝ))
@@ -196,7 +196,7 @@ theorem estimator_sqrtN_anscombe_tendsto
   -- abbreviations for the Slutsky factors
   set R : ℕ → Ω → ℝ := fun n ω ↦ (pullCount A k n ω : ℝ) / ((pullCount A k n ω : ℝ) + 1) with hRdef
   set E : ℕ → Ω → ℝ := fun n ω ↦
-    (θ₀ - θ) * (Real.sqrt (pullCount A k n ω : ℝ) / ((pullCount A k n ω : ℝ) + 1)) with hEdef
+    (θ₀ - θ) * (√(pullCount A k n ω : ℝ) / ((pullCount A k n ω : ℝ) + 1)) with hEdef
   have hRmeas : ∀ n, AEMeasurable (R n) P := fun n ↦ by
     have hm : Measurable (fun ω ↦ (pullCount A k n ω : ℝ)) :=
       (measurable_of_countable _).comp (measurable_pullCount h.measurable_action k n)
@@ -218,13 +218,13 @@ theorem estimator_sqrtN_anscombe_tendsto
   have hE0 : TendstoInMeasure P E atTop (fun _ ↦ (0 : ℝ)) := by
     refine tendstoInMeasure_of_tendsto_ae (fun n ↦ (hEmeas n).aestronglyMeasurable) ?_
     filter_upwards [hpcinf] with ω hω
-    have hg0 : Tendsto (fun n ↦ (Real.sqrt (pullCount A k n ω : ℝ))⁻¹) atTop (𝓝 0) :=
+    have hg0 : Tendsto (fun n ↦ (√(pullCount A k n ω : ℝ))⁻¹) atTop (𝓝 0) :=
       tendsto_inv_atTop_zero.comp (Real.tendsto_sqrt_atTop.comp hω)
     have hsqrt0 : Tendsto
-        (fun n ↦ Real.sqrt (pullCount A k n ω : ℝ) / ((pullCount A k n ω : ℝ) + 1)) atTop
+        (fun n ↦ √(pullCount A k n ω : ℝ) / ((pullCount A k n ω : ℝ) + 1)) atTop
         (𝓝 0) := by
       refine squeeze_zero (fun n ↦ by positivity) (fun n ↦ ?_) hg0
-      rcases eq_or_ne (Real.sqrt (pullCount A k n ω : ℝ)) 0 with hs | hs
+      rcases eq_or_ne (√(pullCount A k n ω : ℝ)) 0 with hs | hs
       · simp [hs]
       · rw [div_le_iff₀ (by positivity : (0 : ℝ) < (pullCount A k n ω : ℝ) + 1), inv_mul_eq_div,
           le_div_iff₀ (lt_of_le_of_ne (Real.sqrt_nonneg _) (Ne.symm hs)),
@@ -245,17 +245,17 @@ theorem estimator_sqrtN_anscombe_tendsto
     rw [count_indicator_eq_pullCount]; positivity
   rw [estimator_sub_eq (X := fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) θ θ₀ n hne,
     respMG_indicator_eq_respMart, count_indicator_eq_pullCount]
-  rcases eq_or_ne (Real.sqrt (pullCount A k n ω : ℝ)) 0 with hs | hs
+  rcases eq_or_ne (√(pullCount A k n ω : ℝ)) 0 with hs | hs
   · simp [hs]
   · have hNpos : (0 : ℝ) < (pullCount A k n ω : ℝ) :=
       Real.sqrt_pos.mp (lt_of_le_of_ne (Real.sqrt_nonneg _) (Ne.symm hs))
-    have key1 : (Real.sqrt (pullCount A k n ω : ℝ))⁻¹ * (pullCount A k n ω : ℝ)
-        = Real.sqrt (pullCount A k n ω : ℝ) := by
+    have key1 : (√(pullCount A k n ω : ℝ))⁻¹ * (pullCount A k n ω : ℝ)
+        = √(pullCount A k n ω : ℝ) := by
       rw [inv_mul_eq_div, div_eq_iff hs]; exact (Real.mul_self_sqrt hNpos.le).symm
-    rw [show (Real.sqrt (pullCount A k n ω : ℝ))⁻¹ * respMart ν A Y k n ω
+    rw [show (√(pullCount A k n ω : ℝ))⁻¹ * respMart ν A Y k n ω
             * ((pullCount A k n ω : ℝ) / ((pullCount A k n ω : ℝ) + 1))
           = respMart ν A Y k n ω
-            * ((Real.sqrt (pullCount A k n ω : ℝ))⁻¹ * (pullCount A k n ω : ℝ))
+            * ((√(pullCount A k n ω : ℝ))⁻¹ * (pullCount A k n ω : ℝ))
             / ((pullCount A k n ω : ℝ) + 1) by ring, key1]
     field_simp
 

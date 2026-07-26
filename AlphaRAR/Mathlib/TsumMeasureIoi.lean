@@ -71,8 +71,8 @@ For a finite measure `ρ` on `ℝ` with finite second central moment `∫ (x-θ)
 `θ = θ_k`) this bounds `∑_i ν_k(|· - θ_k| > √i)`. -/
 lemma tsum_measure_abs_sub_gt_sqrt_ne_top {ρ : Measure ℝ} [IsFiniteMeasure ρ] (θ : ℝ)
     (hρ2 : Integrable (fun x ↦ (x - θ) ^ 2) ρ) :
-    (∑' i : ℕ, ρ {x | Real.sqrt i < |x - θ|}) ≠ ∞ := by
-  have hset : ∀ i : ℕ, {x | Real.sqrt i < |x - θ|} = {x | (i : ℝ) < (x - θ) ^ 2} := by
+    (∑' i : ℕ, ρ {x | √i < |x - θ|}) ≠ ∞ := by
+  have hset : ∀ i : ℕ, {x | √i < |x - θ|} = {x | (i : ℝ) < (x - θ) ^ 2} := by
     intro i
     ext x
     simp only [Set.mem_setOf_eq]
@@ -82,7 +82,7 @@ lemma tsum_measure_abs_sub_gt_sqrt_ne_top {ρ : Measure ℝ} [IsFiniteMeasure ρ
       rw [Real.mul_self_sqrt (Nat.cast_nonneg i), abs_mul_abs_self, ← pow_two] at this
       exact this
     · intro h
-      have h2 : Real.sqrt i < Real.sqrt ((x - θ) ^ 2) := Real.sqrt_lt_sqrt (Nat.cast_nonneg i) h
+      have h2 : √i < √((x - θ) ^ 2) := Real.sqrt_lt_sqrt (Nat.cast_nonneg i) h
       rwa [Real.sqrt_sq_eq_abs] at h2
   simp_rw [hset]
   exact tsum_measure_Ioi_ne_top (by fun_prop) hρ2 fun x ↦ sq_nonneg _
@@ -95,9 +95,9 @@ window. Derived from the strict version by shifting the index: for `i ≥ 1`,
 `√i ≤ |x-θ| ⟹ √(i-1) < |x-θ|`, and the `i = 0` term is `ρ` of a set, hence finite. -/
 lemma tsum_measure_abs_sub_ge_sqrt_ne_top {ρ : Measure ℝ} [IsFiniteMeasure ρ] (θ : ℝ)
     (hρ2 : Integrable (fun x ↦ (x - θ) ^ 2) ρ) :
-    (∑' i : ℕ, ρ {x | Real.sqrt i ≤ |x - θ|}) ≠ ∞ := by
+    (∑' i : ℕ, ρ {x | √i ≤ |x - θ|}) ≠ ∞ := by
   have hbound : ∀ i : ℕ,
-      ρ {x | Real.sqrt (↑(i + 1)) ≤ |x - θ|} ≤ ρ {x | Real.sqrt i < |x - θ|} := by
+      ρ {x | √(↑(i + 1)) ≤ |x - θ|} ≤ ρ {x | √i < |x - θ|} := by
     intro i
     refine measure_mono fun x hx ↦ ?_
     simp only [Set.mem_setOf_eq] at hx ⊢

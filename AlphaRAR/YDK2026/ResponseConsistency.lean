@@ -452,11 +452,11 @@ lemma abs_estimator_sub_le_rate_ae (k : 𝓐) (θ₀ : ℝ) {v : Ω → ℝ}
     (hv : ∀ᵐ ω ∂P, 0 < v ω)
     (hN : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω)))
     (hQ : ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      |respMart ν A Y k n ω| ≤ C * Real.sqrt ((n : ℝ) * Real.log n)) :
+      |respMart ν A Y k n ω| ≤ C * √((n : ℝ) * Real.log n)) :
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
       |estimator (fun j ↦ armIndicator A k j ω)
           (fun j ↦ Y j ω) θ₀ n - (ν k)[id]|
-        ≤ C' * (Real.sqrt ((n : ℝ) * Real.log n) / (n : ℝ)) := by
+        ≤ C' * (√((n : ℝ) * Real.log n) / (n : ℝ)) := by
   filter_upwards [hv, hN, hQ] with ω hvω hNω hQω
   obtain ⟨C, hCbound⟩ := hQω
   have hN' : Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ))
@@ -464,7 +464,7 @@ lemma abs_estimator_sub_le_rate_ae (k : 𝓐) (θ₀ : ℝ) {v : Ω → ℝ}
     hNω.congr fun n ↦ by rw [count_indicator_eq_pullCount]
   have hQ' : ∀ᶠ n in atTop, |respMG (fun j ↦ armIndicator A k j ω)
       (fun j ↦ Y j ω) ((ν k)[id]) n|
-      ≤ max C 0 * Real.sqrt ((n : ℝ) * Real.log n) := by
+      ≤ max C 0 * √((n : ℝ) * Real.log n) := by
     filter_upwards [hCbound] with n hn
     rw [respMG_indicator_eq_respMart]
     exact hn.trans (mul_le_mul_of_nonneg_right (le_max_left C 0) (Real.sqrt_nonneg _))
@@ -486,10 +486,10 @@ lemma ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog (k : 𝓐) {v : Ω → �
     (hv : ∀ᵐ ω ∂P, 0 < v ω)
     (hN : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω)))
     (hQ : ∀ᵐ ω ∂P, ∀ β : ℝ, 1 < β → ∀ᶠ n in atTop,
-      |respMart ν A Y k n ω| ≤ β * Real.sqrt (2 * Var[id; ν k] * (pullCount A k n ω : ℝ)
+      |respMart ν A Y k n ω| ≤ β * √(2 * Var[id; ν k] * (pullCount A k n ω : ℝ)
         * Real.log (Real.log (pullCount A k n ω : ℝ)))) :
     ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      |respMart ν A Y k n ω| ≤ C * Real.sqrt ((n : ℝ) * Real.log (Real.log (n : ℝ))) := by
+      |respMart ν A Y k n ω| ≤ C * √((n : ℝ) * Real.log (Real.log (n : ℝ))) := by
   have hV : (0 : ℝ) ≤ Var[id; ν k] := variance_nonneg _ _
   filter_upwards [hv, hN, hQ] with ω hvω hNω hQω
   have h2 := hQω 2 one_lt_two
@@ -538,7 +538,7 @@ lemma ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog (k : 𝓐) {v : Ω → �
       Real.log_mul two_ne_zero (ne_of_gt hlognpos)
     rw [e5] at e4; linarith
   -- Combine: convert the `N`-scale bound into an `n`-scale bound.
-  refine ⟨2 * Real.sqrt (8 * Var[id; ν k] * v ω), ?_⟩
+  refine ⟨2 * √(8 * Var[id; ν k] * v ω), ?_⟩
   filter_upwards [h2, hNle, hloglog, hNinf.eventually_ge_atTop 3, eventually_ge_atTop 3]
     with n hb hle hll h3 hn3
   have hn3R : (3 : ℝ) ≤ n := by exact_mod_cast hn3
@@ -560,15 +560,15 @@ lemma ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog (k : 𝓐) {v : Ω → �
       _ ≤ 2 * Var[id; ν k] * ((2 * v ω * (n : ℝ)) * (2 * Real.log (Real.log (n : ℝ)))) :=
           mul_le_mul_of_nonneg_left hprod h2V
       _ = 8 * Var[id; ν k] * v ω * ((n : ℝ) * Real.log (Real.log (n : ℝ))) := by ring
-  have hsplit : Real.sqrt (8 * Var[id; ν k] * v ω * ((n : ℝ) * Real.log (Real.log (n : ℝ))))
-      = Real.sqrt (8 * Var[id; ν k] * v ω) * Real.sqrt ((n : ℝ) * Real.log (Real.log (n : ℝ))) :=
+  have hsplit : √(8 * Var[id; ν k] * v ω * ((n : ℝ) * Real.log (Real.log (n : ℝ))))
+      = √(8 * Var[id; ν k] * v ω) * √((n : ℝ) * Real.log (Real.log (n : ℝ))) :=
     Real.sqrt_mul (mul_nonneg (mul_nonneg (by norm_num) hV) hvω.le) _
   calc |respMart ν A Y k n ω|
-      ≤ 2 * Real.sqrt (2 * Var[id; ν k] * Nn * Real.log (Real.log Nn)) := hb
-    _ ≤ 2 * Real.sqrt (8 * Var[id; ν k] * v ω * ((n : ℝ) * Real.log (Real.log (n : ℝ)))) :=
+      ≤ 2 * √(2 * Var[id; ν k] * Nn * Real.log (Real.log Nn)) := hb
+    _ ≤ 2 * √(8 * Var[id; ν k] * v ω * ((n : ℝ) * Real.log (Real.log (n : ℝ)))) :=
         mul_le_mul_of_nonneg_left (Real.sqrt_le_sqrt hkey) (by norm_num)
-    _ = 2 * Real.sqrt (8 * Var[id; ν k] * v ω)
-          * Real.sqrt ((n : ℝ) * Real.log (Real.log (n : ℝ))) := by
+    _ = 2 * √(8 * Var[id; ν k] * v ω)
+          * √((n : ℝ) * Real.log (Real.log (n : ℝ))) := by
         rw [hsplit]; ring
 
 omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] [IsProbabilityMeasure P] in
@@ -584,12 +584,12 @@ lemma abs_estimator_sub_le_rate_loglog_ae (k : 𝓐) (θ₀ : ℝ) {v : Ω → �
     (hv : ∀ᵐ ω ∂P, 0 < v ω)
     (hN : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω)))
     (hQ : ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      |respMart ν A Y k n ω| ≤ C * Real.sqrt ((n : ℝ) * Real.log (Real.log (n : ℝ)))) :
+      |respMart ν A Y k n ω| ≤ C * √((n : ℝ) * Real.log (Real.log (n : ℝ)))) :
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
       |estimator (fun j ↦ armIndicator A k j ω)
           (fun j ↦ Y j ω) θ₀ n - (ν k)[id]|
-        ≤ C' * (Real.sqrt ((n : ℝ) * Real.log (Real.log (n : ℝ))) / (n : ℝ)) := by
-  have hr : ∀ᶠ (n : ℕ) in atTop, (1 : ℝ) ≤ Real.sqrt ((n : ℝ) * Real.log (Real.log (n : ℝ))) := by
+        ≤ C' * (√((n : ℝ) * Real.log (Real.log (n : ℝ))) / (n : ℝ)) := by
+  have hr : ∀ᶠ (n : ℕ) in atTop, (1 : ℝ) ≤ √((n : ℝ) * Real.log (Real.log (n : ℝ))) := by
     have hloglogtop : Tendsto (fun n : ℕ ↦ Real.log (Real.log (n : ℝ))) atTop atTop :=
       Real.tendsto_log_atTop.comp (Real.tendsto_log_atTop.comp tendsto_natCast_atTop_atTop)
     filter_upwards [hloglogtop.eventually_ge_atTop 1, eventually_ge_atTop 1] with n hll hn1
@@ -602,7 +602,7 @@ lemma abs_estimator_sub_le_rate_loglog_ae (k : 𝓐) (θ₀ : ℝ) {v : Ω → �
     hNω.congr fun n ↦ by rw [count_indicator_eq_pullCount]
   have hQ' : ∀ᶠ n in atTop, |respMG (fun j ↦ armIndicator A k j ω)
       (fun j ↦ Y j ω) ((ν k)[id]) n|
-      ≤ max C 0 * Real.sqrt ((n : ℝ) * Real.log (Real.log (n : ℝ))) := by
+      ≤ max C 0 * √((n : ℝ) * Real.log (Real.log (n : ℝ))) := by
     filter_upwards [hCbound] with n hn
     rw [respMG_indicator_eq_respMart]
     exact hn.trans (mul_le_mul_of_nonneg_right (le_max_left C 0) (Real.sqrt_nonneg _))

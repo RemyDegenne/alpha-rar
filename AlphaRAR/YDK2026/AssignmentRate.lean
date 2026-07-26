@@ -33,7 +33,7 @@ martingale `M` satisfies `M n / √n = O_p(1)`. -/
 lemma isBigOpOne_assignMart_div_sqrt [IsFiniteMeasure μ]
     (hX : StronglyAdapted ℱ X) (hX_int : ∀ n, Integrable (X n) μ)
     (h0X : ∀ n, 0 ≤ᵐ[μ] X n) (h1X : ∀ n, X n ≤ᵐ[μ] fun _ ↦ (1 : ℝ)) :
-    IsBigOpOne μ (fun n ω ↦ assignMart X ℱ μ n ω / Real.sqrt n) := by
+    IsBigOpOne μ (fun n ω ↦ assignMart X ℱ μ n ω / √n) := by
   have h0 : assignMart X ℱ μ 0 = 0 := by rw [assignMart, martingalePart_zero, count_zero]
   have hM0 : assignMart X ℱ μ 0 =ᵐ[μ] 0 := by filter_upwards with ω; rw [h0]
   have hΔ : ∀ n, ∀ᵐ ω ∂μ,
@@ -71,7 +71,7 @@ lemma ae_eventually_abs_assignMart_le_sqrt_nat_mul_loglog [IsProbabilityMeasure 
     (hX : StronglyAdapted ℱ X) (hX_int : ∀ n, Integrable (X n) μ)
     (h0X : ∀ n, 0 ≤ᵐ[μ] X n) (h1X : ∀ n, X n ≤ᵐ[μ] fun _ ↦ (1 : ℝ)) :
     ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop,
-      |assignMart X ℱ μ n ω| ≤ C * Real.sqrt ((n : ℝ) * Real.log (Real.log n)) := by
+      |assignMart X ℱ μ n ω| ≤ C * √((n : ℝ) * Real.log (Real.log n)) := by
   have h0 : assignMart X ℱ μ 0 = 0 := by rw [assignMart, martingalePart_zero, count_zero]
   have hM0 : assignMart X ℱ μ 0 =ᵐ[μ] 0 := by filter_upwards with ω; rw [h0]
   have hΔ : ∀ n, ∀ᵐ ω ∂μ,

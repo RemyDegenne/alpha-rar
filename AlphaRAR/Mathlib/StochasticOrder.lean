@@ -267,16 +267,16 @@ lemma IsBigOpOne.of_sq {Z : ℕ → Ω → ℝ} (h : IsBigOpOne μ (fun n ω ↦
     IsBigOpOne μ Z := by
   intro ε hε
   obtain ⟨M', hM'⟩ := h ε hε
-  refine ⟨Real.sqrt (max M' 0), fun n ↦ ?_⟩
+  refine ⟨√(max M' 0), fun n ↦ ?_⟩
   refine le_trans (measure_mono ?_) (hM' n)
   intro ω hω
   simp only [Set.mem_setOf_eq] at hω ⊢
-  have hs : (0 : ℝ) ≤ Real.sqrt (max M' 0) := Real.sqrt_nonneg _
-  have hlt : Real.sqrt (max M' 0) < |Z n ω| := hω
+  have hs : (0 : ℝ) ≤ √(max M' 0) := Real.sqrt_nonneg _
+  have hlt : √(max M' 0) < |Z n ω| := hω
   have hz : |(Z n ω) ^ 2| = (Z n ω) ^ 2 := abs_of_nonneg (sq_nonneg _)
   rw [hz]
   have hkey : max M' 0 < |Z n ω| ^ 2 := by
-    have h1 : Real.sqrt (max M' 0) ^ 2 = max M' 0 := Real.sq_sqrt (le_max_right _ _)
+    have h1 : √(max M' 0) ^ 2 = max M' 0 := Real.sq_sqrt (le_max_right _ _)
     nlinarith [hlt, hs, h1]
   calc M' ≤ max M' 0 := le_max_left _ _
     _ < |Z n ω| ^ 2 := hkey
