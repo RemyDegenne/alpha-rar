@@ -392,7 +392,7 @@ The abstract-hitting-time generalisation of `aRTS_prop_dev_ae`: from the per-arm
 `isBigO_of_forall_upper_of_sum_zero`, whose `∑_k Dev_k = 0` input is `sum_count_sub_smul_eq_zero`.
 The design enters only through `hθconv`, the throttle `hthrottle`, the per-arm loglog rate `hρrate`,
 and the per-arm smallness `hsmall_upper`. -/
-theorem prop_dev_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
+lemma prop_dev_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -436,7 +436,7 @@ The `aRTS` instantiation of `prop_dev_ae_of_hitting`: the estimator consistency,
 rate are the `aRTS_LLN` bundle, and the smallness is automatic (`N_ℓ - ℓ ρ̂_ℓ ≤ 0`,
 `preliminary_small`). The extra Condition **A** integrability `hint_id`, `hint_sq` and
 Condition **B** differentiability `hT_diff` feed the loglog rate `aRTS_rho_rate`. -/
-theorem aRTS_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+lemma aRTS_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -464,7 +464,7 @@ time** (blueprint `lem:prop_dev`, `thm:normality` part (i), last line, generic f
 `N_{n,k} - n v_k = (N_{n,k} - n ρ̂_{n,k}) + n(ρ̂_{n,k} - v_k)`, the first term is
 `prop_dev_ae_of_hitting` and the second is `n · O(√(n log log n)/n) = O(√(n log log n))` by the
 loglog rate `hρrate` and `isBigO_natMul_logLogRate`. -/
-theorem count_sub_smul_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
+lemma count_sub_smul_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -497,7 +497,7 @@ theorem count_sub_smul_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
 (blueprint `lem:prop_dev`, `thm:normality` part (i), last line). For every arm `k`, almost surely
 `N_{n,k} - n v_k = O(√(n log log n))`, where `v_k = T((ν_k)[id])_k` is the limiting proportion.
 The `aRTS` instantiation of `count_sub_smul_ae_of_hitting`. -/
-theorem aRTS_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+lemma aRTS_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)

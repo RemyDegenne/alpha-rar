@@ -208,7 +208,7 @@ the aRTS consistency limit `N_{n,k}/n → u_k` (`aRTS_consistency_of_isARTS`) wi
 loglog estimator rate `abs_estimator_sub_le_rate_loglog_of_proportion` (blueprint `lem:theta_LIL`);
 the only piece still needed to pin the limiting proportion `v_k := u_k` is its strict positivity
 `u_k > 0` (the non-sparsity of Condition **B**, deferred). -/
-theorem aRTS_pullCount_div_ae_tendsto [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+lemma aRTS_pullCount_div_ae_tendsto [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -228,7 +228,7 @@ supplies the joint limit `N_{n,k}/n → u_k` together with `ρ̂_{n,k} → u_k` 
 `u` positive — so every arm is sampled infinitely often — and identifies each estimator limit as its
 arm mean. This is `lem:theta_consistent` with Condition **B**'s non-sparsity as the only extra
 hypothesis. -/
-theorem aRTS_theta_consistent [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+lemma aRTS_theta_consistent [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -246,7 +246,7 @@ an aRTS design, under Condition **B** the allocation proportion converges a.s. t
 *deterministic* target `N_{n,k}/n → v_k = T(θ)_k`. Combining `aRTS_theta_consistent` (`θ̂_n → θ`, so
 `ρ̂_{n,k} = T(θ̂_n)_k → T(θ)_k` by continuity) with the joint aRTS consistency (`N_{n,k}/n` and
 `ρ̂_{n,k}` share the limit `u_k`) identifies `u_k = T(θ)_k = v_k`. -/
-theorem aRTS_proportion_tendsto [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+lemma aRTS_proportion_tendsto [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)

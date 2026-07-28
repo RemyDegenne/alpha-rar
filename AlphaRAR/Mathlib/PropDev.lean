@@ -86,7 +86,7 @@ Assembling all generic pieces: for a finite family with `∑_k Dev_k = 0`, the g
 bound `Dev_k ≤ small_k + Uincr_k` with `small = o_p(√n)`, and the `U`-increment decomposition
 (drift `-c_k`, an `M`-term and a `ρ`-term each increment-controlled, and an `o_p(1)` perturbation),
 we get `Dev_k = o_p(√n)` for every arm `k`. -/
-theorem prop_dev {ι : Type*} [Fintype ι]
+lemma prop_dev {ι : Type*} [Fintype ι]
     {Dev small Uincr Mincr rhoterm pert : ι → ℕ → Ω → ℝ} {d : ι → ℕ → Ω → ℝ} {c : ι → ℝ}
     {VM WM Vρ Wρ : ι → ℕ → Ω → ℝ}
     (hsum : ∀ n ω, ∑ k, Dev k n ω = 0)

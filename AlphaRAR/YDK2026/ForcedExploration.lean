@@ -453,7 +453,7 @@ then for `n` large enough that `h(n) ≥ B` the arm `k` is under-explored, so `A
 among the under-explored arms and has count `≤ N_{n,k} ≤ B`; the potential
 `D(n) = ∑_j (B + 1 - N_{n,j})^+` then drops by exactly `1` at every such step, forcing it negative —
 impossible for a sum of naturals. -/
-theorem no_starvation_pathwise [Finite 𝓐] [DecidableEq 𝓐] (ω : Ω) {hsched : ℕ → ℝ}
+lemma no_starvation_pathwise [Finite 𝓐] [DecidableEq 𝓐] (ω : Ω) {hsched : ℕ → ℝ}
     (hh : Tendsto hsched atTop atTop)
     (hfe : ∀ m, (∃ j, (pullCount A j m ω : ℝ) ≤ hsched m) →
       (pullCount A (A m ω) m ω : ℝ) ≤ hsched m ∧
@@ -504,7 +504,7 @@ is under-explored, the next action `A_m` is a least-sampled arm among the under-
 a diverging schedule (`hsched → ∞`), every arm is sampled infinitely often, `N_{n,k} → ∞` a.s., with
 *no assumption on the target*. This is the key ingredient enabling sparse targets (`v_k = 0`); it is
 the a.s. wrapper of `no_starvation_pathwise`. -/
-theorem aRTSFE_no_starvation [Finite 𝓐] [DecidableEq 𝓐] {hsched : ℕ → ℝ}
+lemma aRTSFE_no_starvation [Finite 𝓐] [DecidableEq 𝓐] {hsched : ℕ → ℝ}
     (hh : Tendsto hsched atTop atTop)
     (hfe : ∀ᵐ ω ∂P, ∀ m, (∃ j, (pullCount A j m ω : ℝ) ≤ hsched m) →
       (pullCount A (A m ω) m ω : ℝ) ≤ hsched m ∧
@@ -762,7 +762,7 @@ schedule `h` as the normalizer `c_{k,n}` — so for such arms forced exploration
 `E` counts the pulls of arm `k` that forced exploration did *not* cause, and is required only to be
 `o(h)`: for the `α = 0` throttle there are none (take `E ≡ 0`), and for `α > 0` the throttle makes
 them sporadic enough. -/
-theorem pullCount_div_sched_tendsto_one [Fintype 𝓐] [DecidableEq 𝓐] (ω : Ω) {hsched : ℕ → ℝ}
+lemma pullCount_div_sched_tendsto_one [Fintype 𝓐] [DecidableEq 𝓐] (ω : Ω) {hsched : ℕ → ℝ}
     (hh : IsExplorationSchedule hsched)
     (hfe : ∀ m, (∃ j, (pullCount A j m ω : ℝ) ≤ hsched m) →
       (pullCount A (A m ω) m ω : ℝ) ≤ hsched m ∧
@@ -1367,7 +1367,7 @@ is not under-explored *is* a throttled pull. -/
 @[specifies throttledIndicator "what the indicator is built to count, and that the count is \
 negligible: pulls the design was free *not* to make are `o(h(n))`, so forced exploration alone \
 fixes a sparse arm's sample size to first order"]
-theorem throttled_count_div_sched_tendsto_zero [Finite 𝓐]
+lemma throttled_count_div_sched_tendsto_zero [Finite 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) {hsched : ℕ → ℝ} {θ₀ : 𝓐 → ℝ}
     {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (hTnn : ∀ z k, 0 ≤ T z k) {k : 𝓐} {α : ℝ}
     (hα : 0 ≤ α)
@@ -1477,7 +1477,7 @@ Both arms are then covered by the *same* per-arm normalizer
 
 The split is unavoidable: not every arm can be FE-fed, since `∑_a N_{n,a} = n` while
 `card 𝓐 · h(n) = o(n)`. -/
-theorem aRTSFE_sparse_clt [Fintype 𝓐] [DecidableEq 𝓐]
+lemma aRTSFE_sparse_clt [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a))
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched)
@@ -2059,7 +2059,7 @@ eventually fed only by forced exploration; here that assumption is *proved*, fro
   (`sched23_star`, `not_isSqrtSmall_sched23`);
 * `hT2` — the target is `C²` at `Θ` on the sparse arms.
 . -/
-theorem aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
+lemma aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
     [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a))

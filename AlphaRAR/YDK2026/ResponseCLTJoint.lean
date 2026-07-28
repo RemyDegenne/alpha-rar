@@ -998,7 +998,7 @@ open scoped RealInnerProductSpace in
 `k` is `(Q_{n,k}/√N_{n,k})·√(n N_{n,k})/(N_{n,k}+1) + (θ_{0,k}-θ_k)√n/(N_{n,k}+1)`, whose scaling
 factors tend to `1/√v_k` and `0`, so the diagonal Gaussian rescaling
 (`multivariateGaussian_diagonal_smul_map`) sends `diag(V_k)` to `diag(V_k/v_k)`. -/
-theorem estimator_sqrtN_joint_tendsto_multivariateGaussian
+lemma estimator_sqrtN_joint_tendsto_multivariateGaussian
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))

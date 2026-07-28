@@ -41,7 +41,7 @@ throttle `hthrottle` and smallness `hgs`, together with Condition **B**'s non-sp
 allocation proportion `N_{n,k}/n` converges a.s. to a *positive* limit `v_k = T(θ)_k`. The target
 `θ` is attainable (a.s. limit of the estimator, `theta_consistent_of_hitting`), so `hTpos` makes
 `T(θ)` positive; `consistency_of_hitting` identifies the proportion limit with `T(θ)`. -/
-theorem count_proportion_pos_of_hitting
+lemma count_proportion_pos_of_hitting
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -71,7 +71,7 @@ theorem count_proportion_pos_of_hitting
 
 /-- **Positive allocation proportion for an aRTS design** (count form, per-arm). The `aRTS`
 instantiation of `count_proportion_pos_of_hitting` at the last under-sampling time. -/
-theorem aRTS_count_proportion_pos
+lemma aRTS_count_proportion_pos
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -92,7 +92,7 @@ omit [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐] in
 the estimator consistency `theta_consistent_of_hitting` and the per-arm loglog estimator rate
 (via the positive proportion `count_proportion_pos_of_hitting`) through the delta-method rate
 `rho_rate`. -/
-theorem rho_rate_of_hitting
+lemma rho_rate_of_hitting
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -127,7 +127,7 @@ theorem rho_rate_of_hitting
 /-- **Loglog rate of the plug-in target for an aRTS design** (blueprint `lem:rho_rate`, `thm:LLN`
 third conclusion). The `aRTS` instantiation of `rho_rate_of_hitting`:
 `ρ̂_{n,k} - v_k = O(√(log log n / n))` a.s. -/
-theorem aRTS_rho_rate
+lemma aRTS_rho_rate
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)

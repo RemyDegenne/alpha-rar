@@ -53,7 +53,7 @@ infinitely often, whose pull count obeys the regularity `N_{n,k}/c_n → 1` a.s.
 deterministic `c_n → ∞`, the response martingale normalized by its own random count converges,
 `Q_{n,k}/√N_{n,k} ⇒ 𝒩(0, V_k)`, where `V_k = Var[id; ν k]`. No positivity of the limiting proportion
 is required, so this holds for sparse targets `v_k = 0`. -/
-theorem respMart_selfNorm_anscombe_tendsto
+lemma respMart_selfNorm_anscombe_tendsto
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hk_inf : ∀ᵐ ω ∂P, {j | A j ω = k}.Infinite)
     (hint_id : Integrable (fun x : ℝ ↦ x) (ν k))
@@ -169,7 +169,7 @@ scaled by its own random count converges,
 proportion is required, so this is the componentwise ingredient of the sparse CLT. Obtained from
 `respMart_selfNorm_anscombe_tendsto` via the exact Bahadur identity `estimator_sub_eq` and two
 Slutsky steps (the scaling factors `N/(N+1) → 1` and `√N/(N+1) → 0` in probability). -/
-theorem estimator_sqrtN_anscombe_tendsto
+lemma estimator_sqrtN_anscombe_tendsto
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hk_inf : ∀ᵐ ω ∂P, {j | A j ω = k}.Infinite)
     (hint_id : Integrable (fun x : ℝ ↦ x) (ν k))

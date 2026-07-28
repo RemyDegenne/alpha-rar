@@ -94,7 +94,7 @@ a.s. and its reward law `ν k` has an integrable mean and second moment, then
 almost surely, for every `β > 1`, eventually
 `|Q_k n| ≤ β √(2 · Var[id; ν k] · N_{n,k} · log log N_{n,k})`, where `N_{n,k}` is the number of
 pulls of arm `k` before `n`. In particular `Q_k n = O(√(N_{n,k} log log N_{n,k}))`. -/
-theorem abs_respMart_le_sqrt_nat_mul_loglog
+lemma abs_respMart_le_sqrt_nat_mul_loglog
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hk_inf : ∀ᵐ ω ∂P, {j | A j ω = k}.Infinite)
     (hint_id : Integrable (fun x : ℝ ↦ x) (ν k))

@@ -74,7 +74,7 @@ matches definitionally. -/
 `θ_k = (ν k)[id]` are exactly what makes this vector converge to a nondegenerate Gaussian, with \
 the arm-`k` variance inflated by `1/v_k` because arm `k` is only pulled a fraction `v_k` of the \
 time"]
-theorem estimatorSqrtNVec_joint_tendsto_multivariateGaussian
+lemma estimatorSqrtNVec_joint_tendsto_multivariateGaussian
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
@@ -118,7 +118,7 @@ first-order remainder `√n(T(θ̂_n)-T(θ)) - G·√n(θ̂_n-θ)` tends to `0` 
 plug-in target satisfies `√n(T(θ̂_n) - T(θ)) ⇒ 𝒩(0, G · diag(V_k/v_k) · Gᵀ)`. The limiting law is
 the linear pushforward of the estimator's Gaussian (`multivariateGaussian_map_matrix`), obtained via
 the product-space Slutsky lemma with `g(x, r) = G·x + r`. -/
-theorem clt_rho_of_tendstoInMeasure
+lemma clt_rho_of_tendstoInMeasure
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
@@ -199,7 +199,7 @@ and whose `Sₙ → 0` input is the a.s. consistency. -/
 @[specifies targetSqrtNVec "certifies the two choices in the definition: the same `√n` scale as \
 the estimator error (no extra rate is introduced by `T`) and the centring at `T(θ)` rather than at \
 any running quantity, which is what makes the limit the delta-method Gaussian `G Σ Gᵀ`"]
-theorem clt_rho
+lemma clt_rho
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))

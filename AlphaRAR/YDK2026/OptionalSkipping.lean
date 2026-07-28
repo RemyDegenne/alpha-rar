@@ -563,7 +563,7 @@ lemma hfact_stationaryEnv {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (sta
 environment with per-arm reward kernel `ν`, if arm `k` is pulled infinitely often almost surely,
 then the responses observed at the pulls of arm `k`, `sampledSeq Y (armIndicator A k)`, are
 independent. (Blueprint `lem:opt_skip`.) -/
-theorem iIndepFun_sampledResponse {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) μ)
+lemma iIndepFun_sampledResponse {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) μ)
     (k : 𝓐) (hk_inf : ∀ᵐ ω ∂μ, {j | A j ω = k}.Infinite) :
     iIndepFun (sampledSeq Y (armIndicator A k)) μ := by
   set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with h𝒢
@@ -585,7 +585,7 @@ theorem iIndepFun_sampledResponse {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y 
 /-- **Doob optional skipping (identical distribution).** Each response sampled at a pull of arm `k`
 has law `ν k`. Together with `iIndepFun_sampledResponse` this says the sampled responses are i.i.d.
 with the arm's reward law. (Blueprint `lem:opt_skip`.) -/
-theorem map_sampledResponse_eq {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) μ)
+lemma map_sampledResponse_eq {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) μ)
     (k : 𝓐) (hk_inf : ∀ᵐ ω ∂μ, {j | A j ω = k}.Infinite) (m : ℕ) :
     μ.map (sampledSeq Y (armIndicator A k) m) = ν k := by
   set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with h𝒢

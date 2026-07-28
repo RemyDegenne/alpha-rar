@@ -278,7 +278,7 @@ the key inequality `generic_ineq_of_hitting`, the `diff_U_decomp` perturbation, 
 martingale `M`-increment, and the `ell_rho_control` `g`/`h`-coefficients (`g_littleOp_of_hitting`,
 `h_bigOp_of_hitting`) — depends only on `hitting (Q k ·) n ≤ n`, so it is discharged uniformly. The
 `aRTS`/`aRTSFE` designs then instantiate it with their respective predicates. -/
-theorem prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
+lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -661,7 +661,7 @@ discharged from the same
 smallness is automatic: at the last under-sampling time `N_ℓ - ℓ ρ̂_ℓ ≤ 0` (`preliminary_small`), so
 `(1 + N_ℓ - ℓ ρ̂_ℓ)^+/√n ≤ 1/√n = o_p(1)`. The a.s. `O(√(n log log n))` bounds are a separate
 statement. -/
-theorem aRTS_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+lemma aRTS_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)

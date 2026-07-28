@@ -87,7 +87,7 @@ and both are taken as hypotheses. The `aRTS` and `aRTSFE` designs then instantia
 respective predicates (last under-sampling time, resp. forced-exploration hitting time). Everything
 else — the vanishing normalised martingale, the plug-in-target convergence, and the generic key
 inequality (`generic_ineq_of_hitting`, valid for *any* predicate) — is discharged uniformly. -/
-theorem consistency_of_hitting [Fintype 𝓐]
+lemma consistency_of_hitting [Fintype 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -189,7 +189,7 @@ consistency `consistency_of_hitting` (whose throttle `hthrottle` and smallness `
 design-specific inputs) and Condition **B**'s non-sparsity `hTpos`, the sequential estimator
 converges a.s. to the true parameter `θ̂_n → θ = ((ν k)[id])_k`, via the design-independent
 `theta_consistent_pi_of_condB`. -/
-theorem theta_consistent_of_hitting [Fintype 𝓐]
+lemma theta_consistent_of_hitting [Fintype 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -216,7 +216,7 @@ theorem theta_consistent_of_hitting [Fintype 𝓐]
 (`N_{n,k}/n` and `ρ̂_{n,k}` share the random limit `u_k`) with the estimator consistency
 `theta_consistent_of_hitting` (so `ρ̂_{n,k} → T(θ)_k` by continuity) identifies the limit as the
 deterministic `v_k = T(θ)_k`: `N_{n,k}/n → v_k` a.s. -/
-theorem proportion_tendsto_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
+lemma proportion_tendsto_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -247,7 +247,7 @@ The `aRTS` instantiation of `consistency_of_hitting` at the last under-sampling 
 `hitting (aRTSUnder …)`: whenever arm `k` is over-sampled its selection probability is throttled
 (`hthrottle`), so the smallness `N_{ℓ} - ℓ ρ̂_{ℓ} ≤ 0` is automatic (`generic_small_of_hitting`).
 Almost surely there is a common limit `u` with `N_{n,k}/n → u_k`, `ρ̂_{n,k} → u_k` for every `k`. -/
-theorem aRTS_consistency [Fintype 𝓐]
+lemma aRTS_consistency [Fintype 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)

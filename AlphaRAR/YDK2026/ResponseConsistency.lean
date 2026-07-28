@@ -282,7 +282,7 @@ positivity `u_k > 0` is the non-sparsity of Condition **B**, blueprint `lem:rho_
 arm `k` is sampled infinitely often (`all_arms_infinite`), so the dichotomy's first branch
 (`estimator_ae_tendsto_of_pullCount_atTop`) identifies the estimator limit as the true arm mean:
 `θ̂_{n,k} → θ_k = (ν k)[id]` a.s. -/
-theorem theta_consistent (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma theta_consistent (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ) {u : Ω → 𝓐 → ℝ}
     (hmatch : ∀ k, ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (u ω k)))
     (hpos : ∀ k, ∀ᵐ ω ∂P, 0 < u ω k) (k : 𝓐) :
@@ -300,7 +300,7 @@ positive allocation-proportion limit for every arm, the estimator vector converg
 parameter: `θ̂_n → θ = ((ν k)[id])_k`. Bundles `theta_consistent` over the finitely many arms via
 `ae_all_iff` and `tendsto_pi_nhds`. This is the a.s. consistency the delta-method rate `rho_rate`
 consumes. -/
-theorem theta_consistent_pi [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma theta_consistent_pi [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ) {u : Ω → 𝓐 → ℝ}
     (hmatch : ∀ k, ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (u ω k)))
     (hpos : ∀ k, ∀ᵐ ω ∂P, 0 < u ω k) :
@@ -323,7 +323,7 @@ estimator values, hence in the closure of their range. -/
 @[specifies attainableSet "the only property Condition **B** needs, and the reason the definition \
 takes a *closure* of the range rather than the range itself: limits of estimator values must \
 belong to it, and they need not be attained at any finite time"]
-theorem estimator_limit_mem_attainableSet (k : 𝓐) (θ₀ : ℝ) {ω : Ω} {L : ℝ}
+lemma estimator_limit_mem_attainableSet (k : 𝓐) (θ₀ : ℝ) {ω : Ω} {L : ℝ}
     (hL : Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
       (fun j ↦ Y j ω) θ₀ n) atTop (𝓝 L)) :
     L ∈ attainableSet A Y θ₀ k :=
@@ -339,7 +339,7 @@ limit is
 lie in the attainable sets (`estimator_limit_mem_attainableSet`); `hTpos` makes `u` positive and
 continuity of `T` transports the convergence. This is the non-sparse refinement supplying the
 positivity `u_k > 0` identifying the estimator limit as the true parameter (`theta_consistent`). -/
-theorem rho_converges_pos [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma rho_converges_pos [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, (∀ k, 0 < u k) ∧ ∀ k, Tendsto (fun n ↦ T (fun k' ↦ estimator
@@ -358,7 +358,7 @@ consistency `hjoint` — for a.e. `ω` a common limit `u` with `N_{n,k}/n → u_
 sets), the shared limit `u` is positive: `u_k = T(z)_k > 0` where `z` is the estimator-vector limit.
 This turns the joint consistency into the *positive* proportion limit that identifies the estimator
 limit as the true parameter. -/
-theorem proportion_pos_of_condB [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma proportion_pos_of_condB [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hjoint : ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
@@ -385,7 +385,7 @@ theorem proportion_pos_of_condB [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stati
 existential form). Same as `theta_consistent` but taking the positive proportion limit as a per-`ω`
 existential `∃ u_k > 0, N_{n,k}/n → u_k`, which is the shape `proportion_pos_of_condB` produces —
 avoiding a global choice of the (random) limit. -/
-theorem theta_consistent_of_pos (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma theta_consistent_of_pos (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : ℝ) (k : 𝓐)
     (hpp : ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧
       Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 uk)) :
@@ -403,7 +403,7 @@ discharged). From the joint consistency `hjoint` and Condition **B**, the estima
 a.s. to the true parameter `θ̂_n → θ = ((ν k)[id])_k`: `proportion_pos_of_condB` makes the shared
 proportion limit positive, then `theta_consistent_of_pos` identifies each arm's limit as its
 mean. -/
-theorem theta_consistent_pi_of_condB [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma theta_consistent_pi_of_condB [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hjoint : ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,

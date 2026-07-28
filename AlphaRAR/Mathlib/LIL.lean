@@ -533,7 +533,7 @@ tail bounds telescope to a geometric series,
 time `n`, `⟨M⟩_n ≤ 2^k ⇒ M_n < K √(2^k (k+1))`. Since on the block `⟨M⟩_n ∈ (2^{k-1}, 2^k]` one has
 `√(2^k(k+1)) ≍ √(⟨M⟩_n log ⟨M⟩_n)`, this is the `O(√(⟨M⟩_n log ⟨M⟩_n))` upper bound — a `log`
 (not `log log`) rate, which suffices for the `o(⟨M⟩_n)` uses downstream. -/
-theorem ae_eventually_forall_lt_dyadic [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma ae_eventually_forall_lt_dyadic [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c K : ℝ} (hc : 0 ≤ c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) (hK : 0 < K) (hKc : K * c ≤ 2) :
     ∀ᵐ ω ∂μ, ∀ᶠ (k : ℕ) in atTop, ∀ n, predQuadVar M ℱ μ n ω ≤ (2 : ℝ) ^ k →

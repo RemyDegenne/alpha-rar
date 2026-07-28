@@ -126,7 +126,7 @@ large `k` and every `n`, `⟨M⟩_n ≤ 2^k ⇒ M_n < κ √(2^k · log(k+2))`. 
 `λ_k = κ √(2^k log(k+2))`, whose tail bound `exp(-λ_k²/(4 v_k)) = exp(-(κ²/4) log(k+2))` is the
 `p`-series (`summable_exp_neg_mul_log_add`), and whose admissibility `λ_k c ≤ 2 v_k` holds
 eventually (`eventually_mul_add_two_le_two_pow`), so the eventual-admissibility step applies. -/
-theorem ae_eventually_forall_lt_dyadic_loglog [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma ae_eventually_forall_lt_dyadic_loglog [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c κ : ℝ} (hc : 0 < c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) (hκ : 2 < κ) :
     ∀ᵐ ω ∂μ, ∀ᶠ (k : ℕ) in atTop, ∀ n, predQuadVar M ℱ μ n ω ≤ (2 : ℝ) ^ k →

@@ -49,7 +49,7 @@ variable {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
 a convex set `s` with derivative `f'`, and `f'` is `K`-Lipschitz relative to `θ` on `s`
 (`‖f' z - f' θ‖ ≤ K‖z - θ‖`), then for `x ∈ s`,
 `‖f x - f θ - f' θ (x - θ)‖ ≤ K‖x - θ‖²`. -/
-theorem norm_sub_fderiv_le_mul_sq {f : E → F} {f' : E → E →L[ℝ] F} {s : Set E} {θ x : E} {K : ℝ}
+lemma norm_sub_fderiv_le_mul_sq {f : E → F} {f' : E → E →L[ℝ] F} {s : Set E} {θ x : E} {K : ℝ}
     (hK : 0 ≤ K) (hs : Convex ℝ s) (hf : ∀ z ∈ s, HasFDerivAt f (f' z) z)
     (hlip : ∀ z ∈ s, ‖f' z - f' θ‖ ≤ K * ‖z - θ‖) (hθ : θ ∈ s) (hx : x ∈ s) :
     ‖f x - f θ - f' θ (x - θ)‖ ≤ K * ‖x - θ‖ ^ 2 := by
@@ -78,7 +78,7 @@ differentiable at `θ` has a first-order Taylor remainder that is `O(‖x - θ�
 No Hessian appears: being `C²` makes `fderiv ℝ f` a `C¹` map, hence Lipschitz on a neighbourhood of
 `θ` (`ContDiffAt.exists_lipschitzOnWith`), which is exactly the input `norm_sub_fderiv_le_mul_sq`
 consumes. -/
-theorem exists_eventually_norm_sub_fderiv_le_mul_sq {f : E → F} {θ : E}
+lemma exists_eventually_norm_sub_fderiv_le_mul_sq {f : E → F} {θ : E}
     (hf : ContDiffAt ℝ 2 f θ) :
     ∃ K : ℝ, 0 ≤ K ∧
       ∀ᶠ x in 𝓝 θ, ‖f x - f θ - fderiv ℝ f θ (x - θ)‖ ≤ K * ‖x - θ‖ ^ 2 := by
@@ -99,7 +99,7 @@ theorem exists_eventually_norm_sub_fderiv_le_mul_sq {f : E → F} {θ : E}
 By Fermat's theorem the linear term of the Taylor expansion vanishes at `θ`, so the whole increment
 is the quadratic remainder of `exists_eventually_norm_sub_fderiv_le_mul_sq`. This is the standard
 "second-order expansion at a minimum" without ever naming the Hessian. -/
-theorem exists_eventually_sub_le_mul_sq_of_isLocalMin {f : E → ℝ} {θ : E} (hmin : IsLocalMin f θ)
+lemma exists_eventually_sub_le_mul_sq_of_isLocalMin {f : E → ℝ} {θ : E} (hmin : IsLocalMin f θ)
     (hf : ContDiffAt ℝ 2 f θ) :
     ∃ K : ℝ, 0 ≤ K ∧ ∀ᶠ x in 𝓝 θ, f x - f θ ≤ K * ‖x - θ‖ ^ 2 := by
   obtain ⟨K, hK, hbd⟩ := exists_eventually_norm_sub_fderiv_le_mul_sq hf
@@ -112,7 +112,7 @@ theorem exists_eventually_sub_le_mul_sq_of_isLocalMin {f : E → ℝ} {θ : E} (
 /-- On a finite product carrying the sup norm, the squared norm is at most the sum of the squared
 coordinates. This converts the quadratic bounds above into the coordinatewise form in which
 per-coordinate rates plug in. -/
-theorem sq_norm_le_sum_sq {ι : Type*} [Fintype ι] (x : ι → ℝ) : ‖x‖ ^ 2 ≤ ∑ j, x j ^ 2 := by
+lemma sq_norm_le_sum_sq {ι : Type*} [Fintype ι] (x : ι → ℝ) : ‖x‖ ^ 2 ≤ ∑ j, x j ^ 2 := by
   rcases isEmpty_or_nonempty ι with hι | hι
   · have hx : x = 0 := funext fun j ↦ hι.elim j
     simp [hx]

@@ -134,7 +134,7 @@ almost everywhere. `martingale_weightedSeries` (general weight) gives the martin
 (`kronecker_general` with `b = a`, since `a (k+1)·(ΔM_k/a (k+1)) = ΔM_k`) telescopes to `M n / a n`.
 This is the `a n = n` case (`martingale_div_atTop_ae_tendsto_zero`) with a general normalizer, used
 for the loglog-scale weight `a n = √(2 n log log n)` of the Hartman–Wintner medium part. -/
-theorem martingale_div_weight_ae_tendsto_zero [IsProbabilityMeasure μ]
+lemma martingale_div_weight_ae_tendsto_zero [IsProbabilityMeasure μ]
     (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) {a : ℕ → ℝ}
     (ha_pos : ∀ n, 0 < a n) (ha_mono : Monotone a) (ha_top : Tendsto a atTop atTop)
     (hS2 : ∀ n, Integrable (fun ω ↦ (∑ k ∈ range n, (M (k + 1) ω - M k ω) / a (k + 1)) ^ 2) μ)

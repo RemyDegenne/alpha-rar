@@ -32,7 +32,7 @@ variable {Ω : Type*} {mΩ : MeasurableSpace Ω} {μ : Measure Ω} [IsProbabilit
 /-- **`L¹` bound from an inverse-square tail bound.** If `Y ≥ 0` satisfies `μ {Y ≥ t} ≤ B / t²`
 for all `t > 0` (with `B ≥ 0`), then `∫⁻ Y ≤ 2√B`. The analytic core of Doob's `L²` maximal
 inequality. -/
-theorem lintegral_le_two_mul_sqrt_of_meas_ge_le {Y : Ω → ℝ} (hYnn : 0 ≤ᵐ[μ] Y)
+lemma lintegral_le_two_mul_sqrt_of_meas_ge_le {Y : Ω → ℝ} (hYnn : 0 ≤ᵐ[μ] Y)
     (hYmeas : AEMeasurable Y μ) {B : ℝ} (hB : 0 ≤ B)
     (htail : ∀ t : ℝ, 0 < t → μ {ω | t ≤ Y ω} ≤ ENNReal.ofReal (B / t ^ 2)) :
     ∫⁻ ω, ENNReal.ofReal (Y ω) ∂μ ≤ ENNReal.ofReal (2 * √B) := by

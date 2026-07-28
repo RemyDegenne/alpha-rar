@@ -453,7 +453,7 @@ almost surely for all large `k` and every `n`, `⟨M⟩_n ≤ ρ^k ⇒ M_n < √
 refined Freedman tail is `exp(-((1+ε)/(1+δ)) log(k+2))`, a `p`-series with `p = (1+ε)/(1+δ) > 1`
 (`summable_exp_neg_mul_log_add`); admissibility `λ_k c ≤ (1+δ)ρ^k η_δ` holds eventually since
 `log(k+2)/ρ^k → 0`. -/
-theorem ae_eventually_forall_lt_pow_loglog_sharp [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma ae_eventually_forall_lt_pow_loglog_sharp [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ} (hc : 0 < c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {ρ ε δ : ℝ} (hρ : 1 < ρ) (hδ : 0 < δ)
     (hεδ : δ < ε) :

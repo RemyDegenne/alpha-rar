@@ -50,7 +50,7 @@ The proof is the classical `ε`–`δ` split: on `{‖Sₙ‖ ≤ δ} ∩ {‖X�
 `‖aₙ • φ(Sₙ)‖ ≤ (ε/M)‖Xₙ‖ < ε`, so the "bad" event is contained in `{δ ≤ ‖Sₙ‖} ∪ {M ≤ ‖Xₙ‖}`,
 whose probability is small by `hS` and tightness. The tightness hypothesis is only needed
 *eventually*, which is exactly what a portmanteau/weak-convergence argument supplies. -/
-theorem tendstoInMeasure_smul_littleO_of_tight
+lemma tendstoInMeasure_smul_littleO_of_tight
     {a : ℕ → ℝ} (ha : ∀ n, 0 ≤ a n) {φ : E → F}
     (hφ : ∀ ε : ℝ, 0 < ε → ∃ δ : ℝ, 0 < δ ∧ ∀ h : E, ‖h‖ ≤ δ → ‖φ h‖ ≤ ε * ‖h‖)
     {S X : ℕ → Ω → E} (hrel : ∀ n ω, X n ω = a n • S n ω)
@@ -98,7 +98,7 @@ normed space, then `Xₙ` is tight: for every `η > 0` there is a radius `M > 0`
 The proof combines the portmanteau theorem (weak convergence controls the `limsup` of the closed
 tail `{M ≤ ‖·‖}`) with the continuity from above of the finite measure `ν` over the shrinking
 family `{j ≤ ‖·‖} ↓ ∅`, which produces a radius with small `ν`-mass. -/
-theorem tight_of_tendsto_probabilityMeasure {mE : MeasurableSpace E} [OpensMeasurableSpace E]
+lemma tight_of_tendsto_probabilityMeasure {mE : MeasurableSpace E} [OpensMeasurableSpace E]
     [HasOuterApproxClosed E] {X : ℕ → Ω → E} (hXmeas : ∀ n, Measurable (X n))
     {μs : ℕ → ProbabilityMeasure E} (hμs : ∀ n, (μs n : Measure E) = μ.map (X n))
     {ν : ProbabilityMeasure E} (hconv : Tendsto μs atTop (𝓝 ν)) (η : ℝ≥0∞) (hη : 0 < η) :

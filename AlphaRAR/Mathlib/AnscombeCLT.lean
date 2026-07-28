@@ -350,7 +350,7 @@ The regularity hypothesis is essential: for a general adaptive `N_n → ∞` the
 (`tendsto_map_clt_comp`), the negligibility of the window remainder (`tendstoInMeasure_window`), and
 two Slutsky steps (`tendsto_map_mul_of_tendstoInMeasure_one`,
 `tendsto_map_add_of_tendstoInMeasure_zero`). -/
-theorem tendsto_map_anscombe_iid {X : ℕ → Ω → ℝ} (hXmeas : ∀ i, Measurable (X i))
+lemma tendsto_map_anscombe_iid {X : ℕ → Ω → ℝ} (hXmeas : ∀ i, Measurable (X i))
     (hX2 : MemLp (X 0) 2 P) (hindep : iIndepFun X P)
     (hident : ∀ i, IdentDistrib (X i) (X 0) P P)
     {N : ℕ → Ω → ℕ} (hNmeas : ∀ n, Measurable (N n))

@@ -36,7 +36,7 @@ namespace AlphaRAR
 /-- **Delta-method estimate.** A map `f` differentiable at `x₀` preserves big-`O` rates through a
 sequence converging to `x₀`: if `g n → x₀` then `f (g n) - f x₀ = O(g n - x₀)`. This is
 `HasFDerivAt.isBigO_sub` (the difference is `O` of the increment) composed with `g → x₀`. -/
-theorem isBigO_sub_comp_of_differentiableAt {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
+lemma isBigO_sub_comp_of_differentiableAt {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
     [NormedAddCommGroup F] [NormedSpace ℝ F] {f : E → F} {x₀ : E} (hf : DifferentiableAt ℝ f x₀)
     {ι : Type*} {l : Filter ι} {g : ι → E} (hg : Tendsto g l (𝓝 x₀)) :
     (fun n ↦ f (g n) - f x₀) =O[l] (fun n ↦ g n - x₀) :=
@@ -46,7 +46,7 @@ theorem isBigO_sub_comp_of_differentiableAt {E F : Type*} [NormedAddCommGroup E]
 coordinate `O(r n)` and `f` is differentiable at `x₀`, then every coordinate of `f (g n) - f x₀` is
 `O(r n)`. This is the delta method that turns the estimator's loglog rate into the plug-in target's
 loglog rate. -/
-theorem isBigO_target_sub_of_tendsto {ι : Type*} [Finite ι] {κ : Type*} [Finite κ]
+lemma isBigO_target_sub_of_tendsto {ι : Type*} [Finite ι] {κ : Type*} [Finite κ]
     {T : (ι → ℝ) → κ → ℝ} {θ : ι → ℝ} (hT : DifferentiableAt ℝ T θ)
     {g : ℕ → ι → ℝ} (hg : Tendsto g atTop (𝓝 θ))
     {r : ℕ → ℝ} (hrate : ∀ i, (fun n ↦ g n i - θ i) =O[atTop] r) (k : κ) :
@@ -77,7 +77,7 @@ estimator vector `θ̂_n → θ` a.s. (blueprint `lem:theta_consistent`), each c
 `θ̂_{n,k} - θ_k = O(r_n)` a.s. (blueprint `lem:theta_LIL`), and the target map `T` differentiable at
 `θ` (Condition **B**), the plug-in target `ρ̂_{n,k} = T(θ̂_n)_k` converges to `v_k = T(θ)_k` at the
 same rate: `ρ̂_{n,k} - v_k = O(r_n)` a.s. for every arm `k`. -/
-theorem rho_rate {θ : 𝓐 → ℝ} {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : DifferentiableAt ℝ T θ)
+lemma rho_rate {θ : 𝓐 → ℝ} {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : DifferentiableAt ℝ T θ)
     {r : ℕ → ℝ}
     (hconsist : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
       (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 θ))
