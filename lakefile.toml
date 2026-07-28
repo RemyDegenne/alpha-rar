@@ -17,5 +17,15 @@ rev = "main"
 name = "checkdecls"
 git = "https://github.com/PatrickMassot/checkdecls.git"
 
+# The `@[specifies]` attribute, for marking the theorems that make up a definition's specification.
+# Dependency-free (Lean core only) and separate from the exposition tool that reads the annotations.
+# NOTE: a local path while `LeanSpec` is unpublished; switch to
+#   git = "https://github.com/LeanMachineLearning/exposition"
+#   subDir = "LeanSpec"
+# once it is pushed, or CI will not resolve it.
+[[require]]
+name = "LeanSpec"
+path = "../exposition/LeanSpec"
+
 [[lean_lib]]
 name = "AlphaRAR"

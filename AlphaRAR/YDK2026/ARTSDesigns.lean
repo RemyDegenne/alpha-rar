@@ -5,6 +5,7 @@ Authors: Rémy Degenne
 -/
 import AlphaRAR.YDK2026.ARTSAlgorithm
 import LeanMachineLearning.ForMathlib.MeasureTheory.Order.MeasurableArg
+import LeanSpec
 
 /-!
 # Example designs in the aRTS family
@@ -55,6 +56,8 @@ lemma probVecKernel_apply (p : X → 𝓐 → ℝ) (hp : ∀ a, Measurable fun x
     probVecKernel p hp x = ∑ a, ENNReal.ofReal (p x a) • Measure.dirac a := rfl
 
 /-- The mass the kernel puts on a single arm `k` is `p x k` (for `p x k ≥ 0`). -/
+@[specifies probVecKernel "the kernel really samples from `p`: the mass it assigns to each arm is \
+that arm's coordinate, with the `ℝ≥0∞` round-trip doing nothing on nonnegative inputs"]
 lemma probVecKernel_apply_singleton (p : X → 𝓐 → ℝ) (hp : ∀ a, Measurable fun x ↦ p x a) (x : X)
     (k : 𝓐) (hnn : 0 ≤ p x k) : (probVecKernel p hp x {k}).toReal = p x k := by
   rw [probVecKernel_apply, Measure.finsetSum_apply]
@@ -70,6 +73,9 @@ lemma probVecKernel_apply_singleton (p : X → 𝓐 → ℝ) (hp : ∀ a, Measur
 
 omit [MeasurableSingletonClass 𝓐] in
 /-- When `p x` is a probability vector, `probVecKernel p hp` is a Markov kernel. -/
+@[specifies probVecKernel "the construction is total — it accepts any measurable `p` — but is a \
+*Markov* kernel exactly under the simplex conditions, which is why every design below has to prove \
+its `_nonneg` and `_sum` lemmas"]
 lemma probVecKernel.isMarkovKernel (p : X → 𝓐 → ℝ) (hp : ∀ a, Measurable fun x ↦ p x a)
     (hnn : ∀ x a, 0 ≤ p x a) (hsum : ∀ x, ∑ a, p x a = 1) :
     IsMarkovKernel (probVecKernel p hp) := by
@@ -137,6 +143,9 @@ throttles every over-sampled arm --- `(n+1)ρ̂_k < N_k ⟹ p_k ≤ α ρ̂_k` -
 builds belongs to the aRTS family (`IsARTS`). This reduces verifying `IsARTS` for a concrete design
 to the pure arithmetic of its throttle inequality (`probVecKernel_apply_singleton` identifies the
 policy mass on arm `k` with `p n h k`). -/
+@[specifies aRTSAlgorithmOfProb "the packaging is faithful: the algorithm's policy assigns arm `k` \
+exactly the mass `p n h k`, so a throttle proved for the probability vector holds verbatim for the \
+algorithm. This is what makes the burn-in `p0` irrelevant to membership in the family"]
 lemma aRTSAlgorithmOfProb_isARTS (p : (n : ℕ) → (Iic n → 𝓐 × ℝ) → 𝓐 → ℝ)
     (hp : ∀ n a, Measurable fun h ↦ p n h a) (hnn : ∀ n h a, 0 ≤ p n h a)
     (hsum : ∀ n h, ∑ a, p n h a = 1) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (α : ℝ)
@@ -155,6 +164,9 @@ noncomputable def histProp (n : ℕ) (h : Iic n → 𝓐 × ℝ) (k : 𝓐) : �
 
 omit [MeasurableSpace 𝓐] [MeasurableSingletonClass 𝓐] [Nonempty 𝓐] in
 /-- The allocation proportions sum to `1`. -/
+@[specifies histProp "the denominator `n+1` is the right one: it is exactly the number of patients \
+seen in a history indexed by `Iic n`, so the proportions form a probability vector and are \
+directly comparable with the simplex-valued target `histTarget`"]
 lemma sum_histProp (n : ℕ) (h : Iic n → 𝓐 × ℝ) : ∑ k, histProp n h k = 1 := by
   simp only [histProp, ← Finset.sum_div]
   rw [show (∑ k, (pullCount' n h k : ℝ)) = ((n : ℝ) + 1) by
@@ -198,6 +210,9 @@ lemma distanceProb_nonneg (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 �
 
 omit [MeasurableSpace 𝓐] [MeasurableSingletonClass 𝓐] [Nonempty 𝓐] in
 /-- **Distance-based is a valid probability vector** (blueprint `lem:distance_simplex`). -/
+@[specifies distanceProb "with `distanceProb_nonneg`, the design is a genuine randomization rule; \
+in particular the degenerate branch `∑ δ = 0` was given the right fallback value `ρ̂_k`, which is \
+the one choice that keeps the total mass at `1`"]
 lemma distanceProb_sum (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (n : ℕ) (h : Iic n → 𝓐 × ℝ) : ∑ k, distanceProb θ₀ T α n h k = 1 := by
   simp only [distanceProb]
@@ -228,6 +243,9 @@ omit [MeasurableSpace 𝓐] [MeasurableSingletonClass 𝓐] [Nonempty 𝓐] in
 /-- **Distance-based is aRTS** (blueprint `lem:distance_isARTS`): when arm `k` is over-sampled its
 deficit vanishes, forcing `p_k = α ρ̂_k`; the mixing normaliser is positive because some *other* arm
 is then under-sampled (the deficits sum to `0` and are nonnegative after the `max`). -/
+@[specifies distanceProb "the design's membership in the aRTS family: the `max 0 (·)` deficit is \
+what makes an over-sampled arm receive none of the exploration mass, so its probability collapses \
+to the throttled `α ρ̂_k`"]
 lemma distanceProb_throttle (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (n : ℕ) (h : Iic n → 𝓐 × ℝ) (k : 𝓐)
     (hover : ((n : ℝ) + 1) * histTarget θ₀ T k n h < (pullCount' n h k : ℝ)) :
@@ -260,6 +278,8 @@ noncomputable def distanceAlgorithm (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) �
     (fun n h a ↦ distanceProb_nonneg θ₀ hTnn hα n h a) (fun n h ↦ distanceProb_sum θ₀ hTsum α n h)
 
 /-- **The distance-based design belongs to the aRTS family** (blueprint `lem:distance_isARTS`). -/
+@[specifies distanceAlgorithm "the only thing the packaged algorithm has to be: a member of the \
+aRTS family, so that every result of the chapter applies to it"]
 lemma distance_isARTS (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1) {α : ℝ}
     (hα : α ∈ Set.Icc (0 : ℝ) 1) :
@@ -299,6 +319,9 @@ lemma eradeProb_nonneg (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → �
 
 omit [MeasurableSpace 𝓐] [MeasurableSingletonClass 𝓐] [Nonempty 𝓐] in
 /-- **ERADE 2025 is a valid probability vector** (blueprint `lem:erade2025_simplex`). -/
+@[specifies eradeProb "the redistribution is exactly mass-preserving: the `(1-α)` taken from the \
+over-sampled arms is precisely what the equal shares hand to the under-sampled ones, and the arms \
+sitting at their target are left alone"]
 lemma eradeProb_sum (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (n : ℕ) (h : Iic n → 𝓐 × ℝ) : ∑ k, eradeProb θ₀ T α n h k = 1 := by
   classical
@@ -378,6 +401,8 @@ lemma measurable_eradeProb (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 �
 omit [MeasurableSpace 𝓐] [MeasurableSingletonClass 𝓐] [Nonempty 𝓐] in
 /-- **ERADE 2025 is aRTS** (blueprint `lem:erade2025_isARTS`): an over-sampled arm gets exactly
 `p_k = α ρ̂_k`. -/
+@[specifies eradeProb "the design's membership in the aRTS family, and it confirms the branch \
+condition `ρ̂_k < N_k/(n+1)` is the same over-sampling test `IsARTS` uses"]
 lemma eradeProb_throttle (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (α : ℝ) (n : ℕ) (h : Iic n → 𝓐 × ℝ)
     (k : 𝓐) (hover : ((n : ℝ) + 1) * histTarget θ₀ T k n h < (pullCount' n h k : ℝ)) :
     eradeProb θ₀ T α n h k ≤ α * histTarget θ₀ T k n h := by
@@ -395,6 +420,8 @@ noncomputable def eradeAlgorithm (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 
     (fun n h a ↦ eradeProb_nonneg θ₀ hTnn hα n h a) (fun n h ↦ eradeProb_sum θ₀ hTsum α n h)
 
 /-- **The ERADE 2025 design belongs to the aRTS family** (blueprint `lem:erade2025_isARTS`). -/
+@[specifies eradeAlgorithm "the only thing the packaged algorithm has to be: a member of the aRTS \
+family, so that every result of the chapter applies to it"]
 lemma erade_isARTS (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1) {α : ℝ}
     (hα : α ∈ Set.Icc (0 : ℝ) 1) :
@@ -409,6 +436,19 @@ amount by which it is under-allocated. The most under-sampled arm (largest defic
 noncomputable def dtDeficit (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (n : ℕ) (h : Iic n → 𝓐 × ℝ)
     (a : 𝓐) : ℝ :=
   ((n : ℝ) + 1) * histTarget θ₀ T a n h - (pullCount' n h a : ℝ)
+
+omit [MeasurableSpace 𝓐] [MeasurableSingletonClass 𝓐] [Nonempty 𝓐] in
+/-- **The deficits sum to zero**: the targets form a probability vector and the counts sum to
+`n+1`, so over-allocation on some arms is exactly balanced by under-allocation on others. -/
+@[specifies dtDeficit "fixes the sign convention and the normalisation together: a *positive* \
+deficit means under-allocated, and since the total is `0` there is always an arm with deficit \
+`≥ 0` — which is why the arm of maximal deficit is never an over-sampled one"]
+lemma sum_dtDeficit (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hTsum : ∀ z, ∑ k, T z k = 1)
+    (n : ℕ) (h : Iic n → 𝓐 × ℝ) : ∑ a, dtDeficit θ₀ T n h a = 0 := by
+  simp only [dtDeficit, Finset.sum_sub_distrib, ← Finset.mul_sum, sum_histTarget θ₀ hTsum]
+  rw [show (∑ a, (pullCount' n h a : ℝ)) = ((n : ℝ) + 1) by
+    rw [← Nat.cast_sum, sum_pullCount']; push_cast; ring]
+  ring
 
 /-- The **Interpolated D-Tracking** design's probability vector: `p_k = α ρ̂_k + (1-α) 𝟙{k = k⋆}`,
 where `k⋆` is the arm of maximal deficit `m ρ̂_{m,a} - N_{m,a}` (the most under-sampled arm). -/
@@ -428,6 +468,8 @@ lemma dTrackingProb_nonneg (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 �
 
 omit [MeasurableSpace 𝓐] [MeasurableSingletonClass 𝓐] in
 /-- **D-Tracking is a valid probability vector** (blueprint `lem:d_tracking_simplex`). -/
+@[specifies dTrackingProb "the `(1-α)` mass is put on *exactly one* arm, so the interpolation \
+between the target `ρ̂` and the deterministic tracking choice is mass-preserving"]
 lemma dTrackingProb_sum (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (n : ℕ) (h : Iic n → 𝓐 × ℝ) : ∑ k, dTrackingProb θ₀ T α n h k = 1 := by
   simp only [dTrackingProb, Finset.sum_add_distrib, ← Finset.mul_sum,
@@ -440,6 +482,8 @@ omit [MeasurableSpace 𝓐] [MeasurableSingletonClass 𝓐] in
 /-- **Interpolated D-Tracking is aRTS** (blueprint `lem:d_tracking_isARTS`): an over-sampled arm has
 negative deficit, while the maximal deficit is `≥ 0` (deficits sum to `0`), so an over-sampled arm
 is never the favoured `k⋆` and receives exactly `p_k = α ρ̂_k`. -/
+@[specifies dTrackingProb "the design's membership in the aRTS family; it also shows the `argmax` \
+tie-breaking is irrelevant, since *no* over-sampled arm can be selected however ties are resolved"]
 lemma dTrackingProb_throttle (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (n : ℕ) (h : Iic n → 𝓐 × ℝ) (k : 𝓐)
     (hover : ((n : ℝ) + 1) * histTarget θ₀ T k n h < (pullCount' n h k : ℝ)) :
@@ -447,11 +491,7 @@ lemma dTrackingProb_throttle (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐
   set d := fun a ↦ dtDeficit θ₀ T n h a with hddef
   have hk_neg : d k < 0 := by simp only [hddef, dtDeficit]; linarith
   -- The deficits sum to `0`, so the maximal deficit is `≥ 0`.
-  have hdsum : ∑ a, d a = 0 := by
-    simp only [hddef, dtDeficit, Finset.sum_sub_distrib, ← Finset.mul_sum, sum_histTarget θ₀ hTsum]
-    rw [show (∑ a, (pullCount' n h a : ℝ)) = ((n : ℝ) + 1) by
-      rw [← Nat.cast_sum, sum_pullCount']; push_cast; ring]
-    ring
+  have hdsum : ∑ a, d a = 0 := by rw [hddef]; exact sum_dtDeficit θ₀ hTsum n h
   have hMnn : 0 ≤ d (_root_.argmax d) := by
     obtain ⟨j, hj⟩ : ∃ j, 0 ≤ d j := by
       by_contra hcon
@@ -488,6 +528,8 @@ noncomputable def dTrackingAlgorithm (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) 
 
 /-- **The Interpolated D-Tracking design belongs to the aRTS family**
 (blueprint `lem:d_tracking_isARTS`). -/
+@[specifies dTrackingAlgorithm "the only thing the packaged algorithm has to be: a member of the \
+aRTS family, so that every result of the chapter applies to it"]
 lemma dTracking_isARTS (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1) {α : ℝ}
     (hα : α ∈ Set.Icc (0 : ℝ) 1) :

@@ -6,6 +6,7 @@ Authors: Rémy Degenne
 import AlphaRAR.Mathlib.TaylorRemainder
 import AlphaRAR.YDK2026.ARTSNormality
 import AlphaRAR.YDK2026.PropDevLIL
+import LeanSpec
 
 /-!
 # Forced exploration and sparse targets
@@ -80,6 +81,8 @@ def IsSqrtSmall (hsched : ℕ → ℝ) : Prop :=
 
 /-- `h(m) = o(√m)` implies `h(m)/m → 0`, so the paper's condition is stronger than the one
 retained in `IsExplorationSchedule`. -/
+@[specifies IsSqrtSmall "places the paper's condition strictly above the one this development \
+keeps: `o(√m)` implies `o(m)`, so `IsSqrtSmall` is an extra demand and never a weakening"]
 lemma IsSqrtSmall.div_tendsto_zero {hsched : ℕ → ℝ} (hlo : IsSqrtSmall hsched) :
     Tendsto (fun m ↦ hsched m / (m : ℝ)) atTop (𝓝 0) := by
   have h2 : Tendsto (fun m : ℕ ↦ 1 / √m) atTop (𝓝 0) :=
@@ -288,6 +291,9 @@ This is a *direct reuse* of `consistency_of_hitting`: the forced-exploration hit
 `hitting (aRTSFEUnder …)` and the throttle discharge the generic key inequality exactly as for
 `aRTS`, and the only design-specific ingredient — the smallness `N_ℓ - ℓ ρ̂_ℓ ≤ (h(ℓ))^+ = o(n)` —
 is `aRTSFE_smallness`. -/
+@[specifies IsExplorationSchedule "the three retained fields are enough for the design's \
+consistency — no `o(√m)` condition is needed, which is precisely the point of weakening the \
+paper's definition"]
 theorem aRTSFE_proportion_tendsto [Fintype 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
@@ -945,6 +951,11 @@ lemma ae_action_ne_of_selProb_nonpos
 `IsARTS`. At `m = 0` the antecedent is vacuous (`N_0 = 0 ≤ 0 · ρ̂`); at `m = n+1` it is
 `IsARTSFE.throttle` transported through `aRTSSelProb_succ_ae`, `histTarget_eq` and `histCount_eq`.
 The two premises of the field are the two disjuncts of `¬ aRTSFEUnder`. -/
+@[specifies IsARTSFE "the `throttle` field, stated on arbitrary histories, really is the \
+process-level throttle — the same bridge `IsARTS` enjoys",
+  specifies aRTSFEUnder "fixes the disjunction: an arm is exempt from the throttle when it is \
+under-sampled *or* under-explored, so its negation carries both premises the `throttle` field \
+needs. Using a conjunction here would silently strengthen the design's obligation"]
 lemma throttle_of_isARTSFE [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} {hsched : ℕ → ℝ} {α : ℝ}
@@ -977,6 +988,9 @@ def feForbidden [DecidableEq 𝓐] (A : ℕ → Ω → 𝓐) (hsched : ℕ → �
         (pullCount A j m ω : ℝ) < (pullCount A k m ω : ℝ))}
 
 /-- `feForbidden` is a **previous-history** event: it is built from counts alone. -/
+@[specifies feForbidden "the reason the event is phrased through counts rather than through the \
+action: it is measurable for the *previous*-history σ-algebra, which is what lets a selection \
+probability of `0` on it be turned into \"arm `k` is a.s. not drawn\""]
 lemma measurableSet_shiftDown_feForbidden [Finite 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hsched : ℕ → ℝ) (k : 𝓐) (m : ℕ) :
     MeasurableSet[(IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback).shiftDown m]
@@ -1017,6 +1031,9 @@ that into `p_{m,k} = 0`, and `ae_action_ne_of_selProb_nonpos` — whose hypothes
 `feForbidden` is a previous-history event — turns it into "`k` is a.s. not drawn". Ranging over the
 (countably many) arms and instantiating at `k = A_m ω` gives the claim. At `m = 0` all counts are
 zero, so `feForbidden` is empty and there is nothing to prove. -/
+@[specifies IsARTSFE "the `forced` field, a statement about policy *mass*, delivers the \
+action-level rule the asymptotic theorems consume: whenever some arm is under-explored, the arm \
+actually drawn is a least-sampled under-explored one"]
 lemma fe_of_isARTSFE [Finite 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} {hsched : ℕ → ℝ} {α : ℝ}
@@ -1347,6 +1364,9 @@ Step 3 (`not_aRTSFEUnder_of_sched_lt`) is what relates this count to the one
 `pullCount_le_sched_of_fe_except` consumes: pathwise, and eventually, a pull at a round where arm
 `k`
 is not under-explored *is* a throttled pull. -/
+@[specifies throttledIndicator "what the indicator is built to count, and that the count is \
+negligible: pulls the design was free *not* to make are `o(h(n))`, so forced exploration alone \
+fixes a sparse arm's sample size to first order"]
 theorem throttled_count_div_sched_tendsto_zero [Finite 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) {hsched : ℕ → ℝ} {θ₀ : 𝓐 → ℝ}
     {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (hTnn : ∀ z k, 0 ≤ T z k) {k : 𝓐} {α : ℝ}
@@ -1673,6 +1693,7 @@ lemma sched23_nonneg (n : ℕ) : 0 ≤ sched23 n := Real.rpow_nonneg (Nat.cast_n
 
 /-- `n^{2/3}` is a legitimate exploration schedule in the weakened sense: nondecreasing, divergent,
 and `o(n)`. -/
+@[specifies IsExplorationSchedule "the predicate is non-vacuous: a concrete schedule satisfies it"]
 lemma isExplorationSchedule_sched23 : IsExplorationSchedule sched23 where
   mono := fun a b hab ↦
     Real.rpow_le_rpow (Nat.cast_nonneg a) (by exact_mod_cast hab) (by norm_num)
@@ -1831,6 +1852,10 @@ lemma sched23_star :
 /-- **The schedule hypotheses of `aRTSFE_sparse_clt_of_contDiffAt` are jointly satisfiable** — and
 satisfiable only outside the paper's `def:exploration_schedule` (ii). `h(n) = n^{2/3}` supplies all
 three (`hh`, `hshift`, `hstar`) while failing `IsSqrtSmall`, so the capstone is not vacuous. -/
+@[specifies sched23 "the exponent `2/3` is chosen to sit strictly between the two constraints: \
+large enough that `√(m log log m) ≪ h(m)` (condition `(⋆)`), small enough that `h(m) = o(m)`. \
+That it fails `IsSqrtSmall` is the point, not a defect — it witnesses that the sparse regime lies \
+outside the paper's schedule condition"]
 lemma sched23_satisfies_schedule_hypotheses :
     IsExplorationSchedule sched23 ∧
     (∀ K : ℕ, Tendsto (fun n ↦ sched23 (n - (K * ⌈sched23 n⌉₊ + 1)) / sched23 n) atTop (𝓝 1)) ∧

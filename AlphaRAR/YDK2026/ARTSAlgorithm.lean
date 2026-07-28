@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
 import AlphaRAR.YDK2026.ARTSConsistency
+import LeanSpec
 
 /-!
 # The aRTS design family as a property of an `Algorithm`
@@ -82,6 +83,10 @@ lemma estimator_eq (θ₀ : 𝓐 → ℝ) (k : 𝓐) (t : ℕ) (ω : Ω) :
 
 /-- The process plug-in target `ρ̂_{n+1,k}` equals the history-level target evaluated on the
 history of the process up to time `n`. -/
+@[specifies histTarget "the history-level target is the process target, read on the process's own \
+history — including the index shift: the history up to `n` determines `ρ̂` at time `n+1`",
+  specifies aRTSTarget "the process target is a function of the observed history alone, so it is \
+implementable: `ρ̂_{n+1,k}` is computable from the first `n+1` observations and nothing else"]
 lemma histTarget_eq (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (k : 𝓐) (n : ℕ) (ω : Ω) :
     histTarget θ₀ T k n (history A Y n ω) = aRTSTarget A Y θ₀ T (n + 1) ω k := by
   rw [aRTSTarget, histTarget]
@@ -108,6 +113,9 @@ For `m = n+1`, the aRTS selection probability `p_{n+1,k} = P[𝟙{A_{n+1}=k} | �
 surely, the probability the policy assigns to arm `k` given the history:
 `(alg.policy n (history A Y n ω) {k}).toReal`. Proved from the algorithm's `hasCondDistrib_action`
 via `HasCondDistrib.condExp_comp_eq` applied to the indicator `g = 𝟙_{· = k}`. -/
+@[specifies aRTSSelProb "identifies the conditional expectation with the quantity a designer \
+controls — the mass the policy puts on arm `k` given the history. Without this the definition \
+would be a probabilistic object with no operational meaning"]
 lemma aRTSSelProb_succ_ae [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
     aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P (n + 1)
@@ -145,6 +153,10 @@ design (`IsARTS`), then for every arm the process selection probabilities satisf
 whenever arm `k` is over-sampled at time `m`, `p_{m,k} ≤ α ρ̂_{m,k}`. At `m = 0` the condition is
 vacuous (`N_0 = 0`); at `m = n+1` it is `IsARTS.throttle` transported through `aRTSSelProb_succ_ae`,
 `histTarget_eq` and `histCount_eq`. -/
+@[specifies IsARTS "the history-level condition really is the process-level throttle: stating it \
+on arbitrary histories, rather than on the realised process, costs nothing",
+  specifies aRTSUnder "fixes the sense of the inequality: `aRTSUnder` is the *under*-sampled event \
+`N ≤ m ρ̂`, so it is its complement that triggers the throttle"]
 lemma throttle_of_isARTS [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} {α : ℝ} (hARTS : IsARTS alg θ₀ T α) (k : 𝓐) :
@@ -176,6 +188,8 @@ stationary environment with `Y_n ∈ L²` (Condition **A**) and continuous simpl
 `T`, then almost surely the allocation proportions and plug-in targets converge to a common limit:
 `N_{n,k}/n → u_k` and `ρ̂_{n,k} → u_k` for every arm `k`. This is `aRTS_consistency` with its
 throttle hypothesis discharged by `throttle_of_isARTS`. -/
+@[specifies IsARTS "the membership condition is strong enough to be worth having: it alone (plus \
+Condition **A** and a simplex-valued continuous `T`) forces the allocation proportions to converge"]
 lemma aRTS_consistency_of_isARTS [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)

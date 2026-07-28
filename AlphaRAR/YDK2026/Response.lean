@@ -11,6 +11,7 @@ import AlphaRAR.Mathlib.MartingaleRate
 import LeanMachineLearning.SequentialLearning.FiniteActions
 import LeanMachineLearning.SequentialLearning.StationaryEnv
 import Mathlib.Topology.Separation.CompletelyRegular
+import LeanSpec
 
 /-!
 # The response martingale, via the algorithm–environment framework
@@ -228,6 +229,9 @@ with the current assignment. The increment `𝟙{A i = k}(Y i - (ν k)[id])` has
 expectation given `𝒢 i` because the response `Y i` is fresh given the current arm
 (`condExp_respMart_increment`); this is the filtration for which the paper's response martingale
 is a genuine martingale difference (the assignment is known, the response is not). -/
+@[specifies respMart "names the filtration that makes `Q` a martingale: the *action-augmented* \
+`filtrationAction n = ℱ_{n-1} ⊔ σ(A n)`, where the assignment is already known and only the \
+response is fresh. Centring at the arm mean `(ν k)[id]` is exactly what this filtration requires"]
 lemma martingale_respMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) :
     Martingale (respMart ν A Y k)
@@ -303,6 +307,9 @@ assignment count of arm `k`: `⟨Q k⟩_n = V_k N_{n,k}` a.e. The compensator in
 `V_k N` because the indicator is retained. The only hypothesis is Condition **A**: the responses
 are square-integrable (`hY2 : MemLp (Y n) 2 P`); the integrability of `Q`, its increments, and its
 increment products (feeding the discrete Doob decomposition) are all derived from it. -/
+@[specifies respMart "the sharpest check on the construction: `Q k` accumulates variance at rate \
+`V_k` per *pull of arm `k`*, so `⟨Q k⟩_n = V_k N_{n,k}` exactly — not `V_k n`. This is what \
+makes the clock of `Q k` the arm's own count and drives every rate downstream"]
 lemma predQuadVar_respMart_eq [DecidableEq 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (k : 𝓐) (hY2 : ∀ n, MemLp (Y n) 2 P) (n : ℕ) :
     predQuadVar (respMart ν A Y k)

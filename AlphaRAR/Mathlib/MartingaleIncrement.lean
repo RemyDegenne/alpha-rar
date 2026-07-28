@@ -6,6 +6,7 @@ Authors: Rémy Degenne
 import AlphaRAR.Mathlib.StochasticOrder
 import AlphaRAR.Mathlib.MartingaleMaximal
 import AlphaRAR.Mathlib.IncrementControl
+import LeanSpec
 
 /-!
 # `o_p` increment bounds for a martingale family
@@ -114,6 +115,11 @@ noncomputable def wmaxSeq (M : ι → ℕ → Ω → ℝ) (n : ℕ) (ω : Ω) : 
 /-- **Pathwise increment control.** For `2 ≤ n` and `ℓ ≤ n`, the Euclidean norm of the increment
 `Q_n - Q_ℓ` (with `Q_j = (M_{k,j})_k`) is bounded by `(n-ℓ)·vmaxSeq + wmaxSeq`. Instantiation of
 `norm_sub_le_increment_control` at `E = EuclideanSpace ℝ ι` with window `L = ⌊√n⌋`. -/
+@[specifies vmaxSeq "what the two maxima are *for*: every increment over a window `ℓ ≤ n` is \
+dominated by `(n-ℓ)·vmaxSeq + wmaxSeq`, which is the only property of them the rest of the \
+development uses", specifies wmaxSeq "what the two maxima are *for*: every increment over a \
+window `ℓ ≤ n` is dominated by `(n-ℓ)·vmaxSeq + wmaxSeq`, which is the only property of them the \
+rest of the development uses"]
 lemma norm_increment_le_vmaxSeq_wmaxSeq (n : ℕ) (hn : 2 ≤ n) {ℓ : ℕ} (hℓ : ℓ ≤ n) (ω : Ω) :
     √(∑ k, (M k n ω - M k ℓ ω) ^ 2)
       ≤ ((n - ℓ : ℕ) : ℝ) * vmaxSeq M n ω + wmaxSeq M n ω := by
@@ -151,6 +157,8 @@ variable (hM : ∀ k, Martingale (M k) ℱ μ)
 
 include hM hC₀ hinc hM2 hd2 hcross in
 /-- **The long-range normalized increment maximum is `o_p(1)`.** -/
+@[specifies vmaxSeq "the scale claimed by the name: the `√n`-to-`n` window and the `1/m` \
+normalization are chosen exactly so that this maximum is `o_p(1)`"]
 lemma isLittleOpOne_vmaxSeq : IsLittleOpOne μ (vmaxSeq M) := by
   have hMmeas : ∀ k j, Measurable (M k j) := fun k j ↦
     ((hM k).stronglyAdapted j).measurable.mono (ℱ.le j) le_rfl
@@ -190,6 +198,8 @@ lemma isLittleOpOne_vmaxSeq : IsLittleOpOne μ (vmaxSeq M) := by
 
 include hM hC₀ hinc hM2 hd2 hcross in
 /-- **The short-range increment maximum is `o_p(√n)`.** -/
+@[specifies wmaxSeq "the scale claimed by the name: the short range `m ≤ ⌊√n⌋` is chosen exactly \
+so that this unnormalized maximum is `o_p(√n)`"]
 lemma isLittleOpOne_wmaxSeq_div_sqrt :
     IsLittleOpOne μ (fun n ω ↦ wmaxSeq M n ω / √n) := by
   have hMmeas : ∀ k j, Measurable (M k j) := fun k j ↦

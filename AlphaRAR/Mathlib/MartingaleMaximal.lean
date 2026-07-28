@@ -6,6 +6,7 @@ Authors: Rémy Degenne
 import AlphaRAR.Mathlib.QuadraticVariation
 import AlphaRAR.Mathlib.TailBoundLIntegral
 import Mathlib.Probability.Martingale.OptionalStopping
+import LeanSpec
 
 /-!
 # Doob's `L²` maximal inequality (`L¹` form)
@@ -37,6 +38,12 @@ def shiftFiltration (ℱ : Filtration ℕ m0) (j : ℕ) : Filtration ℕ m0 wher
   seq k := ℱ (j + k)
   mono' _ _ hab := ℱ.mono (Nat.add_le_add_left hab j)
   le' k := ℱ.le (j + k)
+
+/-- The shifted filtration reads the original one `j` steps later. -/
+@[specifies shiftFiltration "the whole content of the definition: which σ-algebra sits at each \
+index, in particular that the shift is *forwards* (`ℱ (j + k)`, not `ℱ (k - j)`)"]
+lemma shiftFiltration_apply (ℱ : Filtration ℕ m0) (j k : ℕ) :
+    shiftFiltration ℱ j k = ℱ (j + k) := rfl
 
 /-- **Shifted martingale.** For a martingale `M`, the shifted, recentred process
 `S k = M (j + k) - M j` is a martingale for the shifted filtration `shiftFiltration ℱ j`, and

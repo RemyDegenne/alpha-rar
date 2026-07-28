@@ -6,6 +6,7 @@ Authors: Rémy Degenne
 import AlphaRAR.YDK2026.PropDevARTS
 import AlphaRAR.YDK2026.AssignmentRate
 import AlphaRAR.YDK2026.ARTSRates
+import LeanSpec
 
 /-!
 # The a.s. `O(√(n log log n))` proportion-deviation bound for the aRTS design
@@ -37,11 +38,17 @@ namespace AlphaRAR
 /-- The loglog-LIL rate `√(n · log log n)`. -/
 noncomputable def logLogRate (n : ℕ) : ℝ := √((n : ℝ) * Real.log (Real.log n))
 
+@[specifies logLogRate "nonnegative, so it can be used as a bound on an absolute value without a \
+side condition"]
 lemma logLogRate_nonneg (n : ℕ) : 0 ≤ logLogRate n := Real.sqrt_nonneg _
 
+@[specifies logLogRate "the defining formula, stated so that a reader never has to unfold the \
+definition to know what the rate is"]
 lemma logLogRate_eq (n : ℕ) : logLogRate n = √((n : ℝ) * Real.log (Real.log n)) := rfl
 
 /-- The rate diverges: `√(n log log n) → ∞`. -/
+@[specifies logLogRate "the rate genuinely grows, so an `O(logLogRate)` bound is a statement about \
+a diverging scale rather than a disguised constant"]
 lemma tendsto_logLogRate_atTop : Tendsto logLogRate atTop atTop := by
   have hll : Tendsto (fun n : ℕ ↦ Real.log (Real.log n)) atTop atTop :=
     Real.tendsto_log_atTop.comp (Real.tendsto_log_atTop.comp tendsto_natCast_atTop_atTop)
@@ -55,6 +62,8 @@ lemma eventually_one_le_logLogRate : ∀ᶠ n in atTop, 1 ≤ logLogRate n :=
 
 /-- `√(n log log n)` is nondecreasing once `3 ≤ n`: on `[3, ∞)` the argument `n log log n` is
 nondecreasing (`log log` is nonnegative and nondecreasing there). -/
+@[specifies logLogRate "monotone from 3 on, which is what lets the rate at a random time `ℓ ≤ n` \
+be replaced by the rate at `n`"]
 lemma logLogRate_le_of_le {m n : ℕ} (hm : 3 ≤ m) (hmn : m ≤ n) : logLogRate m ≤ logLogRate n := by
   have hmR : (3 : ℝ) ≤ m := by exact_mod_cast hm
   have hnR : (3 : ℝ) ≤ n := le_trans hmR (by exact_mod_cast hmn)

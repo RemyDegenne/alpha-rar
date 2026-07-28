@@ -7,6 +7,7 @@ import AlphaRAR.Mathlib.Filtration
 import AlphaRAR.YDK2026.Deterministic
 import Mathlib.Order.CompletePartialOrder
 import Mathlib.Probability.Martingale.Centering
+import LeanSpec
 
 /-!
 # The assignment martingale
@@ -66,6 +67,9 @@ lemma integrable_count (hX : ∀ n, Integrable (X n) μ) (n : ℕ) :
 /-- **The assignment process is a martingale** (blueprint `lem:M_martingale`).
 For an adapted, integrable assignment indicator `X`, the martingale part `M` of the count process
 is a martingale for the previous-history filtration `ℱ.shiftDown`. -/
+@[specifies assignMart "names the filtration the martingale property actually holds for: \
+`ℱ.shiftDown`, not `ℱ`. Against `ℱ` itself the compensated count is *not* a martingale, so this \
+is the fact that justifies the whole `shiftDown` detour"]
 lemma martingale_assignMart [IsFiniteMeasure μ]
     (hX : StronglyAdapted ℱ X) (hX_int : ∀ n, Integrable (X n) μ) :
     Martingale (assignMart X ℱ μ) ℱ.shiftDown μ :=
@@ -73,6 +77,9 @@ lemma martingale_assignMart [IsFiniteMeasure μ]
 
 /-- The increment of the assignment martingale is `X n - μ[X n | ℱ (n-1)]`,
 matching the blueprint's `ΔM = X - p` with `p_n = μ[X n | ℱ (n-1)]`. -/
+@[specifies assignMart "identifies the compensator as the blueprint's selection probability \
+`p_n = μ[X n | ℱ_{n-1}]` — conditioning on the history *strictly before* patient `n`, which is \
+what makes `p_n` the probability of assigning arm `k` to that patient"]
 lemma assignMart_succ_sub (n : ℕ) :
     assignMart X ℱ μ (n + 1) - assignMart X ℱ μ n = X n - μ[X n | ℱ.shiftDown n] := by
   have hg : count X (n + 1) - count X n = X n := by rw [count_succ]; abel

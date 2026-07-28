@@ -7,6 +7,7 @@ import AlphaRAR.Mathlib.Kronecker
 import AlphaRAR.Mathlib.QuadraticVariation
 import Mathlib.Analysis.PSeries
 import Mathlib.Probability.Martingale.Convergence
+import LeanSpec
 
 /-!
 # Strong law of large numbers for martingales
@@ -250,6 +251,9 @@ noncomputable def bracketSeries (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m
 `lem:slln_bracket_weighted`). Each increment `ΔT_n = ΔM_n/(1+⟨M⟩_{n+1})` is a predictably-weighted
 martingale difference: the weight `1/(1+⟨M⟩_{n+1})` is `ℱ_n`-measurable, so
 `𝔼[ΔT_n ∣ ℱ_n] = (1+⟨M⟩_{n+1})⁻¹ 𝔼[ΔM_n ∣ ℱ_n] = 0`. -/
+@[specifies bracketSeries "the first of the two things the weight `1/(1+⟨M⟩_{k+1})` is chosen for: \
+indexing the bracket at `k+1` keeps the weight predictable, so the weighted sum is still a \
+martingale — an off-by-one to `⟨M⟩_k` would break this"]
 lemma martingale_bracketSeries [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM2 : ∀ n, MemLp (M n) 2 μ) :
     Martingale (bracketSeries M ℱ μ) ℱ μ := by
@@ -356,6 +360,9 @@ lemma memLp_bracketSeries [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
 `lem:slln_bracket_weighted`). Each increment of `⟨T⟩` is `𝔼[(ΔT_k)² ∣ ℱ_k] = w_k²·Δ⟨M⟩_k`
 (with `w_k = 1/(1+⟨M⟩_{k+1})`), bounded by the telescoping quantity
 `1/(1+⟨M⟩_k) − 1/(1+⟨M⟩_{k+1})`; summing gives `⟨T⟩_n ≤ 1/(1+⟨M⟩_0) − 1/(1+⟨M⟩_n) ≤ 1`. -/
+@[specifies bracketSeries "the second thing the weight is chosen for, and the one that makes the \
+construction worth having: the weighting is strong enough to bound `⟨T⟩` by an absolute constant, \
+uniformly in `n` and in the martingale"]
 lemma predQuadVar_bracketSeries_le_one [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM2 : ∀ n, MemLp (M n) 2 μ) (n : ℕ) :
     predQuadVar (bracketSeries M ℱ μ) ℱ μ n ≤ᵐ[μ] 1 := by

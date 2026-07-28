@@ -8,6 +8,7 @@ import AlphaRAR.Mathlib.MultivariateGaussianMap
 import AlphaRAR.YDK2026.ResponseCLT
 import AlphaRAR.Mathlib.Tactic.Tendsto
 import Mathlib.Probability.Distributions.Gaussian.Multivariate
+import LeanSpec
 
 /-!
 # The joint componentwise central limit theorem
@@ -150,6 +151,9 @@ omit [DecidableEq 𝓐] in
 
 omit [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] [IsMarkovKernel ν] [IsProbabilityMeasure P] in
 /-- On `{A i = a}`, only arm `a` contributes: `∑_k w_k Δ_k = w_a (Y i - θ_a)`. -/
+@[specifies wIncr "the sum over arms is a bookkeeping device, not a genuine sum: at each round \
+exactly one term survives, so the increment is the single weighted centred response of the arm \
+actually pulled. This disjointness is what makes the array's variance diagonal"]
 lemma wIncr_eq_single {a : 𝓐} {i : ℕ} {ω : Ω} (ha : A i ω = a) (w : 𝓐 → ℝ) :
     wIncr ν A Y w i ω = w a * (Y i ω - (ν a)[id]) := by
   rw [wIncr, Finset.sum_eq_single a]
@@ -166,6 +170,9 @@ lemma wIncr_eq_single {a : 𝓐} {i : ℕ} {ω : Ω} (ha : A i ω = a) (w : 𝓐
 omit [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] [IsMarkovKernel ν] [IsProbabilityMeasure P] in
 /-- Partial sums of the weighted increments are the linear combination of the per-arm
 martingales. -/
+@[specifies wIncr "summing the increments recovers the linear combination `∑_k w_k Q_{n,k}` of the \
+per-arm martingales — the statistic Cramér–Wold needs, and the reason the weights sit inside the \
+increment rather than outside the sum"]
 lemma sum_wIncr (w : 𝓐 → ℝ) (n : ℕ) (ω : Ω) :
     ∑ i ∈ Finset.range n, wIncr ν A Y w i ω = ∑ a, w a * respMart ν A Y a n ω := by
   simp only [wIncr]
@@ -175,6 +182,9 @@ lemma sum_wIncr (w : 𝓐 → ℝ) (n : ℕ) (ω : Ω) :
 
 omit [DecidableEq 𝓐] in
 /-- The row sum of `wArray` is the weighted combination `∑_k (wn n)_k Q_{n,k}`. -/
+@[specifies wArray "row `n` really carries row `n`'s weights: its row sum is \
+`∑_k (wn n)_k Q_{n,k}`, so a row-dependent weight family gives a *different* statistic per row — \
+which is what per-arm normalizers require"]
 lemma rowSum_wArray (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (wn : ℕ → 𝓐 → ℝ) (n : ℕ) :
     (wArray h hY2 wn).rowSum n = fun ω ↦ ∑ a, wn n a * respMart ν A Y a n ω := by
@@ -217,6 +227,9 @@ lemma condExp_sq_wIncr (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀
 
 omit [DecidableEq 𝓐] in
 /-- **The predictable variation of `wArray` is `∑_k (wn n)_k² V_k N_{n,k}`** (a.e.). -/
+@[specifies wArray "the variance is purely diagonal — no cross terms `w_a w_b` survive — and each \
+arm accumulates on its own count `N_{n,k}`. This is the limit computation the joint CLT turns into \
+a diagonal covariance matrix"]
 lemma predVar_wArray_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (wn : ℕ → 𝓐 → ℝ) (n : ℕ) :
     (wArray h hY2 wn).predVar n =ᵐ[P]
@@ -313,6 +326,9 @@ lemma integrable_lindTrunc_comp (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
 
 omit [MeasurableSingletonClass 𝓐] [Fintype 𝓐] [DecidableEq 𝓐] [IsMarkovKernel ν] in
 /-- The integral of the cell contribution factors out the deterministic constant. -/
+@[specifies lindTrunc "reads off both halves of the cell contribution: the deterministic weight \
+`(wn n)_a²` factors out, leaving the arm-`a` Lindeberg mass `∫ (x-θ_a)² 𝟙{|w||x-θ_a|>ε} dν_a` — \
+note the threshold is tested on the *weighted* deviation, which is what makes it shrink with `w`"]
 lemma integral_lindTrunc (wn : ℕ → 𝓐 → ℝ) (ε : ℝ) (n : ℕ) (a : 𝓐) :
     ∫ y, lindTrunc ν wn ε n a y ∂(ν a)
       = wn n a ^ 2 * ∫ x, {x | ε < |wn n a| * |x - (ν a)[id]|}.indicator
@@ -613,6 +629,9 @@ open scoped RealInnerProductSpace in
 omit [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] [IsMarkovKernel ν] in
 /-- `⟪respVec, t⟫ = ∑_a (t_a/√(c_{a,n})) Q_{n,a}` — the linear combination that
 `wLinComb_scaled_tendsto_gaussianReal` handles. -/
+@[specifies respVec "determines the vector completely (a Euclidean vector is its inner products) \
+and shows the normalizer is applied *per arm*: projecting on `t` gives `∑_a (t_a/√(c_{a,n})) \
+Q_{n,a}`, the exact family Cramér–Wold reduces the joint limit to"]
 lemma inner_respVec (c : 𝓐 → ℕ → ℝ) (n : ℕ) (ω : Ω) (t : EuclideanSpace ℝ 𝓐) :
     (⟪respVec ν A Y c n ω, t⟫ : ℝ)
       = ∑ a, (t.ofLp a / √(c a n)) * respMart ν A Y a n ω := by

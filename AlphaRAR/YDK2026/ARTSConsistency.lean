@@ -5,6 +5,7 @@ Authors: Rémy Degenne
 -/
 import AlphaRAR.YDK2026.ConsistencyMatching
 import AlphaRAR.YDK2026.ResponseConsistency
+import LeanSpec
 
 /-!
 # Consistency of the aRTS design family

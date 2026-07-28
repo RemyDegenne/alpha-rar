@@ -6,6 +6,7 @@ Authors: Rémy Degenne
 import AlphaRAR.Mathlib.TsumMeasureIoi
 import AlphaRAR.Mathlib.LILTruncation
 import AlphaRAR.YDK2026.Response
+import LeanSpec
 
 /-!
 # The truncated response martingale
@@ -145,6 +146,9 @@ lemma stronglyAdapted_genRespMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
 /-- **The general functional response martingale is a martingale** for `filtrationAction`.
 For any increment functions `g` (with `g n` measurable and `g n (Y n)` integrable), by
 `condExp_genRespMart_increment`. -/
+@[specifies genRespMart "the martingale property holds for *arbitrary* increment functions `g`, \
+with no hypothesis beyond measurability and integrability — so subtracting the kernel mean \
+`(ν k)[g m]` is the right centring for every instance, `g = id` and `g = truncation` alike"]
 lemma martingale_genRespMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     {g : ℕ → ℝ → ℝ} (hg : ∀ n, StronglyMeasurable (g n))
     (hint : ∀ n, Integrable (fun ω ↦ g n (Y n ω)) P) (k : 𝓐) :
@@ -256,6 +260,9 @@ lemma memLp_genRespMart (hA : ∀ n, Measurable (A n)) {g : ℕ → ℝ → ℝ}
 sum `⟨M⟩_n = ∑_{i<n} variance (g i) (ν k) · 𝟙{A i = k}`. For `respMart` (`g = id`, constant variance
 `Var[id; ν k]`) this collapses to `V_k · N`; for the truncated martingale the varying variances
 `v_i = variance (g i) (ν k)` are retained (blueprint `lem:trunc_qv`). -/
+@[specifies genRespMart "the clock is again the arm's own indicator: variance accrues only at \
+rounds where arm `k` is pulled, at the step-`i` rate `variance (g i) (ν k)`. Specializing `g = id` \
+recovers `⟨respMart⟩ = V_k N`, which is how the general form is checked against the concrete one"]
 lemma predQuadVar_genRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     {g : ℕ → ℝ → ℝ} (hg : ∀ n, StronglyMeasurable (g n))
     (hg2 : ∀ n, MemLp (fun ω ↦ g n (Y n ω)) 2 P) (n : ℕ) :
@@ -362,6 +369,8 @@ omit [MeasurableSingletonClass 𝓐] in
 /-- **The truncated variance is at most the arm variance**: `v_i ≤ V_k`. Truncation reduces
 absolute value (`|truncation ξ A| ≤ |ξ|`), so the second moment drops, and variance is at most the
 second moment. Gives the upper bound `⟨M̃⟩ ≤ V_k N` needed for the LIL block argument. -/
+@[specifies truncVar "places the per-step truncated variance below the untruncated arm variance \
+`V_k`, uniformly in `i` — the fact that lets every `truncVar` be replaced by `V_k` in a bound"]
 lemma truncVar_le_variance (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) (i : ℕ) :
     truncVar ν k i ≤ Var[id; ν k] := by
   have : IsProbabilityMeasure (ν k) := inferInstance
@@ -398,6 +407,8 @@ lemma predQuadVar_truncRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P
 /-- **The truncated quadratic variation is bounded by `V_k N`**: `⟨M̃⟩_n ≤ V_k · N_{n,k}` a.e.,
 since each `v_i ≤ V_k` (`truncVar_le_variance`). This is the `⟨M̃⟩ ≲ σ² N` bound the LIL block
 argument needs (the upper half of blueprint `lem:trunc_var_conv`). -/
+@[specifies truncRespMart "truncation buys the increment bound without paying in variance: `⟨M̃⟩` \
+is still dominated by the untruncated `V_k N_{n,k}`"]
 lemma predQuadVar_truncRespMart_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) (n : ℕ) :
     predQuadVar (truncRespMart ν A Y k)
@@ -419,6 +430,9 @@ omit [MeasurableSingletonClass 𝓐] in
 /-- **Bound on the truncated mean** in the LML framework: `|m_i| ≤ V_k/√i`. Instance of the
 abstract `abs_integral_truncation_le` applied to the centred reward `x - θ_k` under `ν_k`
 (centred since `θ_k = (ν k)[id]`, with `∫ (x-θ_k)² ∂ν_k = V_k = Var[id; ν k]`). -/
+@[specifies truncMean "the bias truncation introduces is `O(1/√i)`, not `O(1)`: truncating an \
+already-centred variable leaves a mean that decays. This is the estimate that makes the \
+accumulated drift negligible"]
 lemma abs_truncMean_le (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) (i : ℕ) :
     |truncMean ν k i| ≤ Var[id; ν k] / √i := by
   rcases Nat.eq_zero_or_pos i with hi | hi
@@ -442,6 +456,8 @@ noncomputable def truncDrift (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (k
 omit [MeasurableSingletonClass 𝓐] in
 /-- **The drift is `O(√n)`** (blueprint `lem:trunc_drift`): `|Dr_n| ≤ 2 V_k √n`, from
 `|m_i| ≤ V_k/√i` (`abs_truncMean_le`) and `∑_{i<n} 1/√i ≤ 2√n` (`sum_one_div_sqrt_le`). -/
+@[specifies truncDrift "what the accumulated bias costs: `O(√n)`, hence negligible against the \
+`√(n log log n)` scale the LIL works at — the reason the drift can be discarded"]
 lemma abs_truncDrift_le (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) (n : ℕ) (ω : Ω) :
     |truncDrift ν A k n ω| ≤ 2 * Var[id; ν k] * √n := by
   have harm : 0 ≤ Var[id; ν k] := variance_nonneg _ _
@@ -502,6 +518,9 @@ omit [MeasurableSingletonClass 𝓐] in
 are bounded by `√i` (`abs_truncation_le_bound`, `abs_truncMean_le_sqrt`). The bound *grows* with
 `i`, which is why the block LIL must stop the martingale at each dyadic horizon rather than use a
 single increment bound. -/
+@[specifies truncRespMart "reads off the truncation level: increments are bounded by `2√i`, which \
+is the only reason to truncate at all, and shows the level *grows* with `i` rather than being \
+uniform"]
 lemma abs_truncRespMart_increment_le (k : 𝓐) (i : ℕ) (ω : Ω) :
     |truncRespMart ν A Y k (i + 1) ω - truncRespMart ν A Y k i ω| ≤ 2 * √i := by
   have hsucc := congrFun (genRespMart_succ (ν := ν) (A := A) (Y := Y) k
@@ -693,6 +712,8 @@ lemma truncRespMart_succ_sub (k : 𝓐) (n : ℕ) (ω : Ω) :
 
 omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] in
 /-- Successor increment of the truncated drift: `Dr_{n+1} - Dr_n = m_n 𝟙{A n = k}`. -/
+@[specifies truncDrift "the drift accrues on the arm's own clock: the step-`n` bias `m_n` is \
+charged only when arm `k` is actually pulled, matching the centring `truncRespMart` removed"]
 lemma truncDrift_succ_sub (k : 𝓐) (n : ℕ) (ω : Ω) :
     truncDrift ν A k (n + 1) ω - truncDrift ν A k n ω
       = truncMean ν k n * armIndicator A k n ω := by
@@ -715,6 +736,9 @@ noncomputable def tailRespPart (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) 
 omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] in
 /-- **The tail-remainder increment is the discarded tail** `𝟙{A n = k}((Y n - θ_k) -
 truncation(Y n - θ_k, √n))`: the truncated mean `m_n` cancels between `M̃` and `Dr`. -/
+@[specifies tailRespPart "certifies the three-way split `Q = M̃ + Dr + R` is exact: the remainder \
+carries precisely what truncation discarded, with the centring `m_n` cancelling between the \
+martingale and the drift and leaving no extra term"]
 lemma tailRespPart_succ_sub (k : 𝓐) (n : ℕ) (ω : Ω) :
     tailRespPart ν A Y k (n + 1) ω - tailRespPart ν A Y k n ω
       = armIndicator A k n ω

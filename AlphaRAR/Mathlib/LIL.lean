@@ -6,6 +6,7 @@ Authors: Rémy Degenne
 import AlphaRAR.Mathlib.QuadraticVariation
 import Mathlib.Order.CompletePartialOrder
 import Mathlib.Probability.Martingale.OptionalStopping
+import LeanSpec
 
 /-!
 # Exponential supermartingale for the law of the iterated logarithm
@@ -148,6 +149,9 @@ For a martingale `M` with `M 0 = 0`, square-integrable, with increments bounded 
 `|θ| c ≤ 1`, the process `Z_n(θ) = exp(θ M_n - θ² ⟨M⟩_n)` is a supermartingale.
 The one-step bound is `μ[Z_{i+1} | ℱ_i] = Z_i e^{-θ² Δ⟨M⟩_i} μ[e^{θ ΔM_i} | ℱ_i]
 ≤ Z_i e^{-θ² Δ⟨M⟩_i}(1 + θ² Δ⟨M⟩_i) ≤ Z_i`, using `condExp_exp_increment_le` and `1 + y ≤ eʸ`. -/
+@[specifies expProcess "the only reason to form this combination: the compensator `θ²⟨M⟩` is \
+exactly large enough to make the exponential a supermartingale in the bounded-increment regime \
+`|θ|c ≤ 1`"]
 lemma supermartingale_expProcess [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
     {c θ : ℝ} (hθ : |θ| * c ≤ 1)
@@ -392,11 +396,15 @@ lets the Freedman bound accommodate a martingale whose increments are bounded on
 horizon (the truncated-response martingale, whose truncation level `√i` grows). -/
 noncomputable def stopMart (M : ℕ → Ω → ℝ) (N : ℕ) : ℕ → Ω → ℝ := fun m ↦ M (min m N)
 
+@[specifies stopMart "the defining formula, stated so a reader never has to unfold: the process is \
+frozen at `M N` from time `N` on and agrees with `M` before it"]
 lemma stopMart_apply (M : ℕ → Ω → ℝ) (N m : ℕ) : stopMart M N m = M (min m N) := rfl
 
 /-- **The stopped process is a martingale.** For `i < N` the increment equals `M (i+1) - M i`
 (a martingale increment); for `i ≥ N` the process is frozen at `M N`, whose conditional expectation
 given `ℱ i ⊇ ℱ N` is itself. -/
+@[specifies stopMart "freezing at a deterministic horizon costs nothing: the result is still a \
+martingale for the *same* filtration, which is what makes it a legitimate substitute for `M`"]
 lemma martingale_stopMart [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (N : ℕ) :
     Martingale (stopMart M N) ℱ μ := by
   refine martingale_nat (fun i ↦ (hM.stronglyMeasurable (min i N)).mono (ℱ.mono (min_le_left i N)))

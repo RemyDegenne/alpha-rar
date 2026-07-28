@@ -5,6 +5,7 @@ Authors: Rémy Degenne
 -/
 import AlphaRAR.Mathlib.TendstoInMeasure
 import AlphaRAR.YDK2026.ResponseCLTJoint
+import LeanSpec
 
 /-!
 # The delta-method central limit theorem for the plug-in target
@@ -64,6 +65,27 @@ lemma measurable_estimatorSqrtNVec' (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) 
   simp only [estimator]
   refine (Measurable.div ?_ ((measurable_count_armIndicator h k n).add_const 1)).sub_const _
   exact (Finset.measurable_sum _ fun j _ ↦ (harm j).mul (h.measurable_feedback j)).add_const (θ₀ k)
+
+/-- **The estimator CLT in this file's vector notation** (blueprint `lem:clt_theta`):
+`√n(θ̂_n - θ) ⇒ 𝒩(0, diag(V_k/v_k))`. This is
+`estimator_sqrtN_joint_tendsto_multivariateGaussian` read through `estimatorSqrtNVec`, which it
+matches definitionally. -/
+@[specifies estimatorSqrtNVec "the `√n` scaling and the centring at the true means \
+`θ_k = (ν k)[id]` are exactly what makes this vector converge to a nondegenerate Gaussian, with \
+the arm-`k` variance inflated by `1/v_k` because arm `k` is only pulled a fraction `v_k` of the \
+time"]
+theorem estimatorSqrtNVec_joint_tendsto_multivariateGaussian
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
+    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
+    (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
+      atTop (𝓝 (v a))) :
+    Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
+      (fun n : ℕ ↦ (⟨P.map (estimatorSqrtNVec ν A Y θ₀ n),
+        Measure.isProbabilityMeasure_map (measurable_estimatorSqrtNVec' h θ₀ n).aemeasurable⟩
+          : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)))
+      atTop
+      (𝓝 ⟨multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a] / v a), inferInstance⟩) :=
+  estimator_sqrtN_joint_tendsto_multivariateGaussian h hY2 θ₀ hνk hv hNconv
 
 omit [DecidableEq 𝓐] [Fintype 𝓐] in
 /-- Measurability of the estimator vector `ω ↦ (θ̂_{n,k}(ω))_k : 𝓐 → ℝ`. -/
@@ -174,6 +196,9 @@ remainder `√n(T(θ̂_n)-T(θ)) - G·√n(θ̂_n-θ) = √n · φ(θ̂_n-θ)` (
 the differentiable map) tends to `0` in probability by `tendstoInMeasure_smul_littleO_of_tight`,
 whose tightness input is supplied from the estimator CLT via `tight_of_tendsto_probabilityMeasure`
 and whose `Sₙ → 0` input is the a.s. consistency. -/
+@[specifies targetSqrtNVec "certifies the two choices in the definition: the same `√n` scale as \
+the estimator error (no extra rate is introduced by `T`) and the centring at `T(θ)` rather than at \
+any running quantity, which is what makes the limit the delta-method Gaussian `G Σ Gᵀ`"]
 theorem clt_rho
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)

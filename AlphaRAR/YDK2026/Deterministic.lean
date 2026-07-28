@@ -8,6 +8,7 @@ import Mathlib.Algebra.BigOperators.Field
 import Mathlib.Algebra.Order.Star.Real
 import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
 import Mathlib.Analysis.Complex.ExponentialBounds
+import LeanSpec
 
 /-!
 # Deterministic core of the auxiliary processes
@@ -47,7 +48,9 @@ general `AddCommMonoid` so it serves both the deterministic per-path counts (`X 
 process-level count (`X : ℕ → Ω → ℝ`, the assignment count process of `Assignment.lean`). -/
 def count {M : Type*} [AddCommMonoid M] (X : ℕ → M) (n : ℕ) : M := ∑ j ∈ range n, X j
 
-@[simp] lemma count_zero {M : Type*} [AddCommMonoid M] (X : ℕ → M) : count X 0 = 0 := by
+@[simp, specifies count "fixes the base of the count; with `count_succ` it determines every value, \
+and it records the 0-indexing convention: nothing has been counted before patient `0`"]
+lemma count_zero {M : Type*} [AddCommMonoid M] (X : ℕ → M) : count X 0 = 0 := by
   simp [count]
 
 /-- Assignment martingale of a fixed arm, `M n = ∑_{j<n} (X j - p j)`
@@ -56,17 +59,24 @@ def assignMG (n : ℕ) : ℝ := ∑ j ∈ range n, (X j - p j)
 
 /-- **Count decomposition** (blueprint `lem:count_decomp`).
 `N n = ∑_{m<n} p m + M n`. -/
+@[specifies assignMG "pins `M` exactly (no free additive constant): it is the count minus its \
+compensator `∑ p`, which is what makes it the assignment *martingale* rather than any centring \
+of the count"]
 lemma count_eq (n : ℕ) : count X n = (∑ m ∈ range n, p m) + assignMG X p n := by
   simp only [count, assignMG, Finset.sum_sub_distrib]
   grind
 
 /-- Increment of the count: `N (n+1) = N n + X n`. -/
+@[specifies count "the step `n → n+1` adds patient `n`, so `count X n` covers patients \
+`0, …, n-1` — the half-open convention every index computation in the development relies on"]
 lemma count_succ {M : Type*} [AddCommMonoid M] (X : ℕ → M) (n : ℕ) :
     count X (n + 1) = count X n + X n := by
   unfold count
   rw [Finset.sum_range_succ]
 
 /-- Increment of the assignment martingale: `M (n+1) = M n + (X n - p n)`. -/
+@[specifies assignMG "the increment pairs the indicator `X n` with the selection probability `p n` \
+at the *same* index — the alignment that makes each increment a martingale difference"]
 lemma assignMG_succ (n : ℕ) :
     assignMG X p (n + 1) = assignMG X p n + (X n - p n) := by
   unfold assignMG
@@ -82,6 +92,9 @@ Writing `D n := N n - n ρ n`, `U (n+1) - U n = α ρ_n - p n + (D (n+1) - D n)`
 `α ρ_n` pairs the selection probability `p_n` with the plug-in target `ρ_n` at the same index, so
 the throttle discharged downstream is `p_n ≤ α ρ_n` (patient `n` uses the target of patients
 `0, …, n-1`). Valid for all `n` (the `α ρ`-sum grows at every step). -/
+@[specifies auxU "the reason `U` is assembled this way: its increment is the throttle slack \
+`α ρ_n - p_n` plus the increment of the gap `D = N - n ρ`, with `p_n` and `ρ_n` at the same index. \
+Any other pairing of the two indices would not produce a sign-definite slack term"]
 lemma auxU_succ_sub (n : ℕ) :
     auxU X p ρ α (n + 1) - auxU X p ρ α n
       = α * ρ n - p n
@@ -116,6 +129,8 @@ For `ℓ ≤ n`, writing `D m := N m - m ρ m`,
 `U n - U ℓ = ∑_{m=ℓ}^{n-1} (α ρ_m - p m) + (D n - D ℓ)`.
 Rearranged, this is the blueprint's identity expressing `D n` in terms of `D ℓ`,
 the summed throttling terms, and the increment of `U`. -/
+@[specifies auxU "what `U` is for: over any window it converts the accumulated throttle slack into \
+a bound on the gap `D`, which is the only way `U` is ever used"]
 lemma auxU_telescope (n ℓ : ℕ) (hℓn : ℓ ≤ n) :
     auxU X p ρ α n - auxU X p ρ α ℓ
       = (∑ m ∈ Ico ℓ n, (α * ρ m - p m))
@@ -292,6 +307,8 @@ def hitting (P : ℕ → Prop) [DecidablePred P] (n : ℕ) : ℕ := Nat.findGrea
 
 /-- **Basic properties of the hitting time** (blueprint `lem:hitting_basic`):
 `n ↦ hitting P n` is non-decreasing and bounded above by `n`. -/
+@[specifies hitting "the two facts that make it usable as a random time: it never looks past the \
+horizon `n`, and enlarging the horizon can only move it forward"]
 lemma hitting_basic (P : ℕ → Prop) [DecidablePred P] :
     Monotone (hitting P) ∧ ∀ n, hitting P n ≤ n := by
   refine ⟨fun a b hab ↦ Nat.findGreatest_mono_right P hab, fun n ↦ Nat.findGreatest_le n⟩
@@ -299,6 +316,8 @@ lemma hitting_basic (P : ℕ → Prop) [DecidablePred P] :
 /-- **Sign at the hitting time** (blueprint `lem:hitting_sign`, maximality part).
 Strictly after the last under-sampling time (and up to `n`), the arm is no longer
 under-sampled: `¬ P m` for `hitting P n < m ≤ n`. -/
+@[specifies hitting "the maximality that makes it the *last* such time rather than merely some \
+such time: nothing in `(hitting P n, n]` satisfies `P`"]
 lemma hitting_sign (P : ℕ → Prop) [DecidablePred P] {n m : ℕ}
     (hlt : hitting P n < m) (hle : m ≤ n) : ¬ P m :=
   Nat.findGreatest_is_greatest hlt hle
@@ -417,6 +436,8 @@ lemma generic_small_of_hitting (P : ℕ → Prop) [DecidablePred P]
 def respMG (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) : ℝ := ∑ j ∈ range n, X j * (ξ j - θ)
 
 /-- `Q n = ∑ X ξ - θ N n`: the response martingale rewritten via the count. -/
+@[specifies respMG "the centring is applied once per *pull*, not once per patient: `Q` subtracts \
+`θ` times the count `N n`, not `θ n`"]
 lemma respMG_eq (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) :
     respMG X ξ θ n = (∑ j ∈ range n, X j * ξ j) - θ * count X n := by
   unfold respMG count
@@ -429,6 +450,8 @@ lemma respMG_eq (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) :
 
 On `{N n ≠ 0}`, the leading term of the estimator error equals `Q n / N n`:
 `(∑ X ξ) / N n - θ = Q n / N n`. -/
+@[specifies respMG "what `Q` is for: divided by the count it is exactly the sample-mean error, so \
+every rate proved for `Q` is a rate for the estimator"]
 lemma theta_error_Q (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) (hN : count X n ≠ 0) :
     (∑ j ∈ range n, X j * ξ j) / count X n - θ = respMG X ξ θ n / count X n := by
   rw [respMG_eq, sub_div, mul_div_assoc, div_self hN, mul_one]
@@ -446,6 +469,9 @@ The regularized estimator has the *exact* error decomposition
 `{0,1}`-valued assignment indicators). Since `Q n = O(√(n \log n))` and the numerator offset
 `θ₀ - θ` is constant, this is the Bahadur representation
 `θ̂ n = \tfrac1{N n}∑ X ξ + o(N n^{-1/2})` in sharp, remainder-free form. -/
+@[specifies estimator "accounts exactly for the `+θ₀` / `+1` regularization: it contributes the \
+single constant `θ₀ - θ` to the numerator and nothing else, so the regularized estimator has the \
+same error expansion as the plain sample mean with no remainder term"]
 lemma estimator_sub_eq (ξ : ℕ → ℝ) (θ θ₀ : ℝ) (n : ℕ) (hN : count X n + 1 ≠ 0) :
     estimator X ξ θ₀ n - θ = (respMG X ξ θ n + (θ₀ - θ)) / (count X n + 1) := by
   rw [estimator, respMG_eq]

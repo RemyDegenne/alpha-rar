@@ -8,6 +8,7 @@ import Mathlib.Algebra.Order.Star.Real
 import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 import Mathlib.MeasureTheory.Order.Group.Lattice
 import Mathlib.Order.CompletePartialOrder
+import LeanSpec
 
 /-!
 # Stochastic Landau orders `o_p` and `O_p`
@@ -81,6 +82,9 @@ lemma exists_meas_lt [IsFiniteMeasure μ] {f : Ω → ℝ} (hf : Measurable f)
   exact ⟨(M : ℝ), hM.le⟩
 
 /-- The `|·|`-form of `o_p(1)`: `μ {ε ≤ |Y n|} → 0` for every real `ε > 0`. -/
+@[specifies IsLittleOpOne "unwinds the `TendstoInMeasure`/`edist` packaging into the textbook \
+`ℙ(|Y n| ≥ ε) → 0`, so a referee can read the definition off without chasing `ℝ≥0∞` coercions; \
+`isLittleOpOne_of_tendsto_abs` is the converse"]
 lemma IsLittleOpOne.tendsto_abs {Y : ℕ → Ω → ℝ} (hY : IsLittleOpOne μ Y) {ε : ℝ}
     (hε : 0 < ε) : Tendsto (fun n ↦ μ {ω | ε ≤ |Y n ω|}) atTop (𝓝 0) := by
   refine Tendsto.congr (fun n ↦ ?_) (hY (ENNReal.ofReal ε) (ENNReal.ofReal_pos.mpr hε))
@@ -91,6 +95,9 @@ lemma IsLittleOpOne.tendsto_abs {Y : ℕ → Ω → ℝ} (hY : IsLittleOpOne μ 
 
 /-- Build `o_p(1)` from the `|·|`-form: if `μ {ε ≤ |Y n|} → 0` for all real `ε > 0`,
 then `Y = o_p(1)`. -/
+@[specifies IsLittleOpOne "the converse of `IsLittleOpOne.tendsto_abs`; together the two make the \
+textbook `ℙ(|Y n| ≥ ε) → 0` an equivalent form, so the definition is neither stronger nor weaker \
+than convergence in probability"]
 lemma isLittleOpOne_of_tendsto_abs {Y : ℕ → Ω → ℝ}
     (h : ∀ ε : ℝ, 0 < ε → Tendsto (fun n ↦ μ {ω | ε ≤ |Y n ω|}) atTop (𝓝 0)) :
     IsLittleOpOne μ Y := by
@@ -172,6 +179,9 @@ lemma IsBigOpOne.add {X Y : ℕ → Ω → ℝ} (hX : IsBigOpOne μ X) (hY : IsB
 
 /-- **`o_p(1) ⟹ O_p(1)`**: convergence in probability implies boundedness in
 probability (blueprint `lem:op_arith`, used for (ii)). -/
+@[specifies IsBigOpOne "places `O_p` correctly relative to `o_p`: the tightness condition is weak \
+enough to be implied by convergence in probability, which rules out an accidentally too-strong \
+definition"]
 lemma IsLittleOpOne.isBigOpOne [IsFiniteMeasure μ] {Y : ℕ → Ω → ℝ}
     (hmeas : ∀ n, Measurable (Y n)) (hY : IsLittleOpOne μ Y) : IsBigOpOne μ Y := by
   intro ε hε
@@ -208,6 +218,9 @@ lemma IsBigOpOne.add_littleOp [IsFiniteMeasure μ] {X Y : ℕ → Ω → ℝ}
 /-- **`O_p(1) · o_p(1) = o_p(1)`** (blueprint `lem:op_arith` (iii)).
 The product of a bounded-in-probability sequence and a sequence converging to `0`
 in probability converges to `0` in probability. -/
+@[specifies IsBigOpOne "the absorption law that makes `O_p` usable, and the direction that rules \
+out a too-weak definition: a merely a.e.-finite sequence would not multiply an `o_p` back into an \
+`o_p`"]
 lemma IsBigOpOne.mul_littleOp {X Y : ℕ → Ω → ℝ} (hX : IsBigOpOne μ X)
     (hY : IsLittleOpOne μ Y) : IsLittleOpOne μ (fun n ω ↦ X n ω * Y n ω) := by
   apply isLittleOpOne_of_tendsto_abs

@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
 import AlphaRAR.Mathlib.LILLogLog
+import LeanSpec
 
 /-!
 # The sharp-constant martingale law of the iterated logarithm
@@ -190,6 +191,9 @@ noncomputable def expProcessRefined (M : ℕ → Ω → ℝ) (ℱ : Filtration �
 Same proof as `supermartingale_expProcess`, with the refined MGF bound
 `condExp_exp_increment_le_refined` (variance proxy `1+δ`) in place of the crude one, so the exponent
 carries `½(1+δ)θ²⟨M⟩` instead of `θ²⟨M⟩`. -/
+@[specifies expProcessRefined "the reason for the refined `½(1+δ)` coefficient: it is the smallest \
+compensator that still yields a supermartingale under the sharpened MGF bound, and shrinking it \
+towards the Gaussian `½` is exactly what buys the sharp LIL constant"]
 lemma supermartingale_expProcessRefined [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
     {c θ δ η : ℝ} (hδ : 0 ≤ δ)

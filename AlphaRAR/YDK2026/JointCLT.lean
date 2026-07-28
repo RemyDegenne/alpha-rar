@@ -5,6 +5,7 @@ Authors: Rémy Degenne
 -/
 import AlphaRAR.YDK2026.PluginTargetCLT
 import Mathlib.Data.Matrix.ColumnRowPartitioned
+import LeanSpec
 
 /-!
 # The joint central limit theorem for proportions and plug-in targets
@@ -93,6 +94,13 @@ map `x ↦ (x, x)` (the stacked matrix `[I; I]`), and the remainder `(√n(N_n/n
 in probability by `hprop`. The limit law is the linear pushforward
 `multivariateGaussian_map_matrix`, whose covariance `[I;I] (GVGᵀ) [I;I]ᵀ` equals the block matrix
 `Ω` (`fromCols_fromRows_eq_fromBlocks`). -/
+@[specifies jointSqrtNVec "the stacking convention is `(proportions, target)` in that order, and \
+the limit's all-blocks-equal covariance is the check that the two halves are asymptotically the \
+*same* Gaussian — which is the content of stacking them at all",
+  specifies propSqrtNVec "puts the proportion deviation on the same `√n` scale and comparable \
+centring as `targetSqrtNVec`, so that their difference vanishing in probability is exactly \
+blueprint `lem:prop_dev`, and the first diagonal block of the limit is the proportion's own \
+Gaussian"]
 theorem clt_joint
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)

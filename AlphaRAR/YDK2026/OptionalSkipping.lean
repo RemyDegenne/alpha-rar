@@ -6,6 +6,7 @@ Authors: Rémy Degenne
 import AlphaRAR.YDK2026.Response
 import Mathlib.Data.Nat.Nth
 import Mathlib.Probability.Independence.Basic
+import LeanSpec
 
 /-!
 # Doob optional skipping
@@ -81,12 +82,16 @@ def hitEvent (D : ℕ → Ω → ℝ) (j m : ℕ) : Set Ω := {ω | D j ω = 1 �
     ω ∈ hitEvent D j m ↔ D j ω = 1 ∧ hitCount D j ω = m := Iff.rfl
 
 /-- `hitCount` written as a finite sum of indicators, the form making its measurability manifest. -/
+@[specifies hitCount "fixes the half-open convention: the count at `j` covers `i < j` and excludes \
+`j` itself, which is what makes `hitCount D j` known at time `j` and the ranks 0-indexed"]
 lemma hitCount_eq_sum (D : ℕ → Ω → ℝ) (j : ℕ) (ω : Ω) :
     hitCount D j ω = ∑ i ∈ Finset.range j, if D i ω = 1 then 1 else 0 := by
   rw [hitCount, Nat.count_eq_card_filter_range, Finset.card_filter]
 
 /-- **Characterization of the hit time.** When there are infinitely many hits, `τ_m ω = j` iff `j`
 is a hit (`D j ω = 1`) preceded by exactly `m` earlier hits (`hitCount D j ω = m`). -/
+@[specifies sampleTime "characterises the enumeration without reference to `Nat.nth`, and pins the \
+0-indexing: `τ_0` is the *first* hit, having no earlier hits before it"]
 lemma sampleTime_eq_iff {D : ℕ → Ω → ℝ} {ω : Ω}
     (hinf : {j | D j ω = 1}.Infinite) {m j : ℕ} :
     sampleTime D m ω = j ↔ D j ω = 1 ∧ hitCount D j ω = m := by
@@ -164,6 +169,8 @@ lemma measurable_hitCount (hD : ∀ i, Measurable[𝒢 i] (D i)) (j : ℕ) :
   exact Measurable.ite hset measurable_const measurable_const
 
 /-- The hit event `hitEvent D j m` is `𝒢 j`-measurable. -/
+@[specifies hitEvent "the entire reason the definition exists: unlike `{τ_m = j}` it is visibly \
+`𝒢 j`-measurable, because both conjuncts only look at times `≤ j`"]
 lemma measurableSet_filt_hitEvent (hD : ∀ i, Measurable[𝒢 i] (D i)) (j m : ℕ) :
     MeasurableSet[𝒢 j] (hitEvent D j m) := by
   have h1 : MeasurableSet[𝒢 j] {ω | D j ω = 1} := (hD j) (measurableSet_singleton 1)
@@ -178,6 +185,8 @@ lemma measurableSet_hitEvent (hD : ∀ i, Measurable[𝒢 i] (D i)) (j m : ℕ) 
   (𝒢.le j) _ (measurableSet_filt_hitEvent hD j m)
 
 /-- Up to a null set, `{τ_m = j}` is the adapted hit event `hitEvent D j m`. -/
+@[specifies hitEvent "the stand-in is faithful: it differs from `{τ_m = j}` only on the null set \
+where hits run out, so nothing is lost by replacing one with the other"]
 lemma sampleTime_eq_ae (hDinf : ∀ᵐ ω ∂μ, {j | D j ω = 1}.Infinite) (m j : ℕ) :
     {ω | sampleTime D m ω = j} =ᵐ[μ] hitEvent D j m := by
   rw [Filter.eventuallyEq_set]
@@ -213,6 +222,9 @@ lemma measurableSet_cleanPre (hYmeas : ∀ k, Measurable (Y k))
 
 /-- `cleanBdd` is `𝒢 j`-measurable: each `Y k ⁻¹' E` with `k < j` is `𝒢 j`-measurable (adaptedness
 of `Y`) and each hit event is `𝒢 k ≤ 𝒢 j`-measurable. -/
+@[specifies cleanBdd "the reason for truncating at `j`: the infinite union of `cleanPre` is only \
+ambiently measurable, whereas cutting it at `j` makes it `𝒢 j`-measurable and usable as a \
+conditioning set"]
 lemma measurableSet_filt_cleanBdd (hYlt : ∀ a b, a < b → Measurable[𝒢 b] (Y a))
     (hD : ∀ i, Measurable[𝒢 i] (D i)) (hE : MeasurableSet E) (i j : ℕ) :
     MeasurableSet[𝒢 j] (cleanBdd Y D E i j) := by
@@ -225,6 +237,8 @@ lemma measurableSet_filt_cleanBdd (hYlt : ∀ a b, a < b → Measurable[𝒢 b] 
 
 /-- **The sampled preimage equals `cleanPre` a.e.** On the full-measure set where hits are infinite,
 `Y (τ_i ω) ω ∈ E` iff some time `k` is the `i`-th hit with `Y k ω ∈ E` (namely `k = τ_i ω`). -/
+@[specifies cleanPre "the stand-in is faithful: the union over *all* candidate hit times has \
+exactly one live term a.e., so it agrees with the random-index preimage it replaces"]
 lemma sampledSeq_preimage_ae_cleanPre
     (hDinf : ∀ᵐ ω ∂μ, {j | D j ω = 1}.Infinite) (i : ℕ) :
     (sampledSeq Y D i) ⁻¹' E =ᵐ[μ] cleanPre Y D E i := by
@@ -442,6 +456,8 @@ lemma measurable_sampledClean (hYmeas : ∀ k, Measurable (Y k))
   Measurable.tsum (fun k ↦ (hYmeas k).indicator (measurableSet_hitEvent hD k m))
 
 omit [IsProbabilityMeasure μ] in
+@[specifies sampledClean "the representative is faithful: the disjointness of the hit events \
+leaves exactly one surviving term a.e., so the tsum evaluates to `Y_{τ_m}`"]
 lemma sampledSeq_ae_eq_sampledClean
     (hDinf : ∀ᵐ ω ∂μ, {j | D j ω = 1}.Infinite) (m : ℕ) :
     sampledSeq Y D m =ᵐ[μ] sampledClean Y D m := by
@@ -462,6 +478,8 @@ lemma aemeasurable_sampledSeq (hYmeas : ∀ k, Measurable (Y k)) (hD : ∀ i, Me
     (sampledSeq_ae_eq_sampledClean hDinf m).symm
 
 /-- **The law of each sample is `ρ`.** -/
+@[specifies sampledSeq "half of optional skipping: sampling at the hit times does not bias the \
+law — every `Z m` still has the common law `ρ`, even though `τ_m` is random and data-dependent"]
 lemma map_sampledSeq_eq
     (hYmeas : ∀ k, Measurable (Y k)) (hYlt : ∀ a b, a < b → Measurable[𝒢 b] (Y a))
     (hD : ∀ i, Measurable[𝒢 i] (D i)) (ρ : Measure ℝ) [IsProbabilityMeasure ρ]
@@ -474,6 +492,9 @@ lemma map_sampledSeq_eq
   exact measure_sampledSeq_preimage hYmeas hYlt hD ρ hfact hDinf m hF
 
 /-- **The sampled sequence is independent.** -/
+@[specifies sampledSeq "the other half of optional skipping, and the substantive one: selecting a \
+sub-sequence by an adapted rule preserves independence. Together with `map_sampledSeq_eq` this is \
+the whole content of the construction"]
 lemma iIndepFun_sampledSeq
     (hYmeas : ∀ k, Measurable (Y k)) (hYlt : ∀ a b, a < b → Measurable[𝒢 b] (Y a))
     (hD : ∀ i, Measurable[𝒢 i] (D i)) (ρ : Measure ℝ) [IsProbabilityMeasure ρ]

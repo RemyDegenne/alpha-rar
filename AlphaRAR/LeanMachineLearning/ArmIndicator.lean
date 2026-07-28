@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
 import AlphaRAR.LeanMachineLearning.Filtration
+import LeanSpec
 
 /-!
 # The arm indicator
@@ -42,6 +43,8 @@ noncomputable def armIndicator (A : ℕ → Ω → 𝓐) (k : 𝓐) (n : ℕ) (�
   Set.indicator {ω | A n ω = k} (fun _ ↦ (1 : ℝ)) ω
 
 /-- `armIndicator A k n ω = 1` exactly when arm `k` is pulled at time `n`. -/
+@[specifies armIndicator "the event the indicator marks, so that a reader never has to unfold the \
+`Set.indicator` to know which rounds it counts"]
 lemma armIndicator_eq_one_iff {k : 𝓐} {n : ℕ} {ω : Ω} :
     armIndicator A k n ω = 1 ↔ A n ω = k := by
   rw [armIndicator]
@@ -68,6 +71,9 @@ lemma sum_armIndicator [Fintype 𝓐] (A : ℕ → Ω → 𝓐) (j : ℕ) (ω : 
     Finset.mem_univ, if_true]
 
 /-- **The partial sums of the arm indicator are the pull counts.** -/
+@[specifies armIndicator "pins every value of the indicator against the already-trusted \
+`pullCount`: the increments of the pull count are exactly the indicator, so this settles both the \
+`1` and the `0` case at once"]
 lemma sum_range_armIndicator_eq_pullCount [DecidableEq 𝓐] (A : ℕ → Ω → 𝓐) (k : 𝓐) (n : ℕ)
     (ω : Ω) :
     ∑ j ∈ Finset.range n, armIndicator A k j ω = (pullCount A k n ω : ℝ) := by

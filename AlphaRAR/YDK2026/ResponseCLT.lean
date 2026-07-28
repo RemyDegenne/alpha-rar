@@ -6,6 +6,7 @@ Authors: Rémy Degenne
 import AlphaRAR.Mathlib.MartingaleCLT
 import AlphaRAR.YDK2026.ARTSConsistency
 import AlphaRAR.Mathlib.Tactic.Tendsto
+import LeanSpec
 
 /-!
 # The self-normalized central limit theorem for the response martingale
@@ -54,6 +55,8 @@ noncomputable def respIncr (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y :
 omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] [IsProbabilityMeasure P] in
 /-- The partial sums of the increments are the response martingale:
 `∑_{i<n} respIncr ν A Y k i = Q_{k} n`. -/
+@[specifies respIncr "identifies the increment with `ΔQ_k` exactly — same indicator, same \
+centring, same index — so the array built from `respIncr` has `respMart` for its partial sums"]
 lemma sum_respIncr (k : 𝓐) (n : ℕ) :
     ∑ i ∈ Finset.range n, respIncr ν A Y k i = respMart ν A Y k n := by
   funext ω
@@ -110,6 +113,8 @@ noncomputable def respArray (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (respArray h hY2 k vk).k = id := rfl
 
 /-- The row sum of the array is `Q_{n,k}/√(V_k v_k n)`. -/
+@[specifies respArray "the array is assembled so that its row sum is the self-normalized statistic \
+`Q_{n,k}/√(V_k v_k n)` — the quantity the CLT is about"]
 lemma rowSum_respArray (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (k : 𝓐) (vk : ℝ) (n : ℕ) :
     (respArray h hY2 k vk).rowSum n
@@ -122,6 +127,9 @@ lemma rowSum_respArray (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
 /-- **The predictable variation of the array is `N_{n,k}/(v_k n)` (a.e.).** From `predVar_ofSeq`
 (`= (a_n)⁻¹ ∑_{i<n} E[d_i²|𝒢 i]`) and the conditional second moment `E[d_i²|𝒢 i] = 𝟙{A i = k}·V_k`
 (`condExp_respMart_increment_sq`), which sums to `V_k N_{n,k}`. -/
+@[specifies respArray "explains the choice of normalizer `a_n = V_k v_k n`: it cancels the arm \
+variance and leaves the predictable variation equal to `N_{n,k}/(v_k n)`, so the CLT hypothesis \
+`predVar → 1` becomes exactly the allocation statement `N_{n,k}/n → v_k`"]
 lemma predVar_respArray_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hY2 : ∀ n, MemLp (Y n) 2 P) (k : 𝓐) (vk : ℝ) (hvk0 : 0 ≤ vk)
     (hVk0 : 0 ≤ Var[id; ν k]) (n : ℕ) :

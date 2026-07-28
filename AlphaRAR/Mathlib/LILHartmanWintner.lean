@@ -11,6 +11,7 @@ import AlphaRAR.Mathlib.TsumMeasureIoi
 import Mathlib.Probability.ConditionalExpectation
 import Mathlib.Analysis.SumIntegralComparisons
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
+import LeanSpec
 
 /-!
 # The i.i.d. Hartman–Wintner law of the iterated logarithm
@@ -183,6 +184,8 @@ noncomputable def natFiltLT {Ω : Type*} {m0 : MeasurableSpace Ω} (Y : ℕ → 
 
 /-- `Y i` is measurable with respect to `natFiltLT Y hY n` whenever `i < n` (`Y i` enters the
 filtration strictly before `n`). -/
+@[specifies natFiltLT "one half of \"σ(Y_0,…,Y_{n-1})\": the filtration is large enough to see \
+every strictly earlier variable, which is what makes partial sums adapted"]
 lemma stronglyMeasurable_natFiltLT {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i))
     {i n : ℕ} (hin : i < n) :
     StronglyMeasurable[(natFiltLT Y hY : Filtration ℕ m0) n] (Y i) :=
@@ -191,6 +194,9 @@ lemma stronglyMeasurable_natFiltLT {Y : ℕ → Ω → ℝ} (hY : ∀ i, Strongl
 
 /-- The σ-algebra `σ(Y_n)` is independent of the past `𝒢_n = σ(Y_0,…,Y_{n-1})`, from the
 independence of `Y`. This is the disjoint-index instance of `indep_iSup_of_disjoint`. -/
+@[specifies natFiltLT "the other half, and the one that distinguishes this from \
+`Filtration.natural`: `Y n` is *not* seen at level `n`, so the increment is still fresh — an \
+off-by-one here would force `S 0 = Y 0 ≠ 0` and destroy the martingale property"]
 lemma indep_comap_natFiltLT {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i))
     (hindep : iIndepFun Y μ) (n : ℕ) :
     Indep (MeasurableSpace.comap (Y n) (inferInstance : MeasurableSpace ℝ))
@@ -1013,6 +1019,9 @@ lemma measurable_mediumTrunc (j : ℕ) : Measurable (mediumTrunc j) :=
       (measurableSet_le continuous_abs.measurable measurable_const))
 
 /-- `mediumTrunc j ∘ X = X · 𝟙{√(j/log(j+2)) < |X| ≤ √j}` as an indicator over `Ω`. -/
+@[specifies mediumTrunc "the band the truncation keeps, in the composed form the proofs actually \
+use: strictly above the low cutoff `b_j` and at most the high cutoff `√j`, and `0` elsewhere. The \
+strict/non-strict split at the two ends is what makes low, medium and high parts tile `ℝ`"]
 lemma mediumTrunc_comp_eq {X : Ω → ℝ} (j : ℕ) :
     (fun ω ↦ mediumTrunc j (X ω))
       = Set.indicator {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)} X := by
@@ -1039,6 +1048,8 @@ lemma medium_variance_summable_seq [IsProbabilityMeasure μ] {Y : ℕ → Ω →
   · rfl
 
 /-- The medium truncation is bounded by the high cutoff `√j`. -/
+@[specifies mediumTrunc "what makes it a *truncation* rather than a restriction: the result is \
+bounded by `√j` uniformly in the argument, which is the hypothesis every increment bound needs"]
 lemma abs_mediumTrunc_le (j : ℕ) (x : ℝ) : |mediumTrunc j x| ≤ √(j : ℝ) := by
   rw [mediumTrunc]
   by_cases h : x ∈ {x : ℝ | √((j : ℝ) / log ((j : ℝ) + 2)) < |x| ∧ |x| ≤ √(j : ℝ)}
@@ -1260,6 +1271,9 @@ lemma strictMono_nat_div_log_add_two :
   exact h
 
 /-- The log-level cutoff `b_j = √(j/log(j+2))` is strictly monotone. -/
+@[specifies hwCutoff "the levels grow strictly, so the low truncations `(-b_j, b_j]` are nested \
+and the boundary atoms `{-b_j}` are pairwise distinct — the fact the layered decomposition rests \
+on"]
 lemma strictMono_cutoff : StrictMono hwCutoff := by
   intro i j hij
   simp only [hwCutoff]
@@ -1463,6 +1477,8 @@ lemma cutoff_condH :
     exact loglog_le_loglog hn3 (by linarith)
 
 /-- `b_j ≤ √j`: the low cutoff is below the high cutoff. -/
+@[specifies hwCutoff "the ordering that makes `b_j` the *low* cutoff: it never overtakes the high \
+cutoff `√j`, so the medium band `(b_j, √j]` is non-degenerate"]
 lemma cutoff_le_sqrt (j : ℕ) : hwCutoff j ≤ √(j : ℝ) := by
   rw [hwCutoff]
   refine Real.sqrt_le_sqrt ?_

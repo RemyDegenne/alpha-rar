@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
 import Mathlib.Probability.Martingale.Centering
+import LeanSpec
 
 /-!
 # Predictable quadratic variation
@@ -32,7 +33,9 @@ predictable part of `M²` in its Doob decomposition (blueprint `def:pred_qv`). -
 noncomputable def predQuadVar (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) : ℕ → Ω → ℝ :=
   predictablePart (fun n ↦ M n ^ 2) ℱ μ
 
-@[simp] lemma predQuadVar_zero : predQuadVar M ℱ μ 0 = 0 := predictablePart_zero
+@[simp, specifies predQuadVar "fixes the additive constant, which the increment formula \
+`predQuadVar_succ_sub_eq` alone leaves free; the two together give `⟨M⟩ₙ = ∑_{i<n} μ[(ΔMᵢ)²|ℱᵢ]`"]
+lemma predQuadVar_zero : predQuadVar M ℱ μ 0 = 0 := predictablePart_zero
 
 /-- The predictable quadratic variation is invariant under negation: `⟨-M⟩ = ⟨M⟩`, since
 `(-M)² = M²` pointwise. -/
@@ -56,6 +59,9 @@ lemma predQuadVar_succ_sub (n : ℕ) :
 For a martingale `M`, the increment of `⟨M⟩` is the conditional second moment of
 the increment of `M`: `⟨M⟩ (n+1) - ⟨M⟩ n = μ[(M (n+1) - M n)² | ℱ n]` a.e.
 (the cross term `2 Mₙ ΔMₙ` vanishes by the martingale property). -/
+@[specifies predQuadVar "the textbook increment formula `Δ⟨M⟩ₙ = μ[(ΔMₙ)²|ℱₙ]`, which is what \
+\"predictable quadratic variation\" means; the definition itself is the Doob predictable part of \
+`M²`, and this is the identification a referee needs"]
 lemma predQuadVar_succ_sub_eq [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (n : ℕ)
     (hd2 : Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
     (hprod : Integrable (M n * (M (n + 1) - M n)) μ) :
@@ -177,6 +183,8 @@ lemma martingale_integral_eq [IsFiniteMeasure μ] {N : ℕ → Ω → ℝ}
 /-- **`M² - ⟨M⟩` is a martingale** (blueprint `lem:qv_mart`).
 For an adapted process `M` with square-integrable values, `M² - ⟨M⟩` is a
 martingale, being the martingale part of `M²` in its Doob decomposition. -/
+@[specifies predQuadVar "the compensator property: `⟨M⟩` is exactly the increasing process that \
+turns `M²` into a martingale, which with `predQuadVar_zero` determines it uniquely"]
 lemma martingale_sq_sub_predQuadVar [IsFiniteMeasure μ]
     (hM : StronglyAdapted ℱ M) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) :
     Martingale (fun n ↦ (fun ω ↦ M n ω ^ 2) - predQuadVar M ℱ μ n) ℱ μ := by

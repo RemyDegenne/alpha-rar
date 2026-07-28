@@ -7,6 +7,7 @@ import AlphaRAR.YDK2026.Deterministic
 import AlphaRAR.Mathlib.MartingaleSLLN
 import AlphaRAR.YDK2026.Response
 import Mathlib.Algebra.Ring.IsFormallyReal
+import LeanSpec
 
 /-!
 # Consistency of the sequential estimator on `{N → ∞}`
@@ -319,6 +320,9 @@ def attainableSet (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : �
 omit [DecidableEq 𝓐] in
 /-- Any pointwise limit of the sequential estimator lies in the attainable set: it is a limit of
 estimator values, hence in the closure of their range. -/
+@[specifies attainableSet "the only property Condition **B** needs, and the reason the definition \
+takes a *closure* of the range rather than the range itself: limits of estimator values must \
+belong to it, and they need not be attained at any finite time"]
 theorem estimator_limit_mem_attainableSet (k : 𝓐) (θ₀ : ℝ) {ω : Ω} {L : ℝ}
     (hL : Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
       (fun j ↦ Y j ω) θ₀ n) atTop (𝓝 L)) :
