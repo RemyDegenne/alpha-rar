@@ -18,6 +18,7 @@ permissions:
   id-token: write         # Write access to ID tokens
   issues: write           # Write access to issues
   pull-requests: write    # Write access to pull requests
+  actions: read           # Read the previous run's artifact, for the referee revision diff
 
 env:
   REFEREE_REPO: LeanMachineLearning/exposition
@@ -116,6 +117,10 @@ jobs:
           lake env "$REFEREE_BIN" collect --root AlphaRAR --data referee-data.json
           lake env "$REFEREE_BIN" extract --data referee-data.json --output ./referee-site
           lake env "$REFEREE_BIN" highlight --data referee-data.json --output ./referee-site
+          # `--trust` is an editorial claim, not a derived fact: it says whoever publishes this site
+          # vouches for Mathlib and everything under it, which leaves the intermediate packages as
+          # the ones the trust page reports as unaudited. Drop it and every upstream package counts
+          # as unaudited; name more packages to vouch for more.
           "$REFEREE_BIN" build-site \
             --data referee-data.json \
             --output ./referee-site \

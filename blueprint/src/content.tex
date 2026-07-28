@@ -45,7 +45,19 @@ formalization needs that are \emph{not yet in Mathlib}, decomposed into small
 lemmas with proof sketches, so that they can be contributed to Mathlib
 independently.
 
-\textbf{Status} The formalization has not started.
+\textbf{Status} The two main theorems, Theorem~\ref{thm:LLN} (strong consistency and rates) and
+Theorem~\ref{thm:normality} (asymptotic normality), are formalized for the $\aRTS$ family, as are
+the three example designs of Chapter~\ref{chap:design} and the whole forced-exploration chapter
+(Chapter~\ref{chap:forced}), up to and including the sparse componentwise CLT. The Lean development
+is free of \texttt{sorry}. Two statements of the paper needed to be modified along the way; both are
+recorded in Chapter~\ref{chap:forced} and in \texttt{formalization.yaml} at the root of the
+repository, which also reports the scope, the axioms used and the provenance of the formalization.
+
+What remains: the hypothesis-testing application (Chapter~\ref{chap:testing}) beyond
+Lemma~\ref{lem:projection}, the $\chi^2$/Cochran prerequisites (Chapter~\ref{chap:pre_cochran}) it
+needs, and the exponential-family identity of Proposition~\ref{prop:exp_fam} used in the efficiency
+remark. Each item below carries a \texttt{\textbackslash lean} tag naming its Lean declaration when
+it has been formalized.
 
 \textbf{Blueprint author} Rémy Degenne. Anyone is welcome to contribute!
 
@@ -67,10 +79,11 @@ independently.
 The proofs in Part~I rely on several standard results of probability theory that
 are not yet available in Mathlib. This part develops them at the level of a
 blueprint: statements decomposed into small lemmas, with proof sketches and, for
-each, a note on the Mathlib building blocks already available. Nothing here is
-formalized yet, and the results are stated for their own sake (independently of
-the $\aRTS$ application), so that each can become a self-contained Mathlib
-contribution.
+each, a note on the Mathlib building blocks already available. The results are
+stated for their own sake (independently of the $\aRTS$ application), so that
+each can become a self-contained Mathlib contribution. Everything in this part
+except Chapter~\ref{chap:pre_cochran} is now formalized, in the
+\texttt{AlphaRAR/Mathlib/} directory, and is written to be contributed upstream.
 
 Ordered by how much of Part~I depends on them:
 \begin{itemize}
