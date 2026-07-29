@@ -27,9 +27,9 @@ sources:
     prior_work: ""            # no earlier formalization of this paper
     note: >-
       The LaTeX source of the paper is vendored in this repository under `arxiv/`, and the
-      formalization is driven by a blueprint (`blueprint/src/`) written by Rémy Degenne that
-      decomposes the paper's proofs into small lemmas. The blueprint is a derived artifact of
-      this project, not an independent source.
+      formalization is driven by a blueprint (`blueprint/src/`) written by Claude Opus
+      (4.8 first, then 5) alongside the formalization that decomposes the paper's proofs into
+      small lemmas. The blueprint is a derived artifact of this project, not an independent source.
 
 status:
   scope: >-
@@ -132,7 +132,7 @@ status:
 automation:
   methods:
     - method: "agent"
-      models: ["claude-opus-5"]
+      models: ["claude-opus-4-8", "claude-opus-5"]   # 4.8 first, then 5 once it released
       framework: "Claude Code"
       tool_setup: >-
         Claude Code in a local checkout, driving `lake build` and the blueprint toolchain
@@ -145,18 +145,28 @@ automation:
         spend_usd: "subscription-based usage"
         hardware: "API-only (developer laptop)"
       prompting_notes: >-
-        Blueprint-driven. The blueprint was written first, by hand, decomposing the paper into
-        small lemmas; the agent was then pointed at individual blueprint items (by label, e.g.
-        `lem:prop_dev`) and asked to formalize them, keeping the `\lean{}`/`\leanok` tags in the
-        LaTeX in sync with the Lean source. Work was scoped to one coherent mathematical area
-        at a time rather than to scattered individual lemmas. Every mathematical divergence from
-        the paper was written up as a standalone note (`maths/`, `notes/`) and reviewed before
-        the corresponding Lean was accepted.
+        Blueprint-driven. The blueprint itself was written by the agent, not by hand: for each
+        area of the paper the agent first produced the LaTeX decomposition into small lemmas,
+        which the human author reviewed, and was then pointed at individual blueprint items (by
+        label, e.g. `lem:prop_dev`) and asked to formalize them, keeping the `\lean{}`/`\leanok`
+        tags in the LaTeX in sync with the Lean source. Blueprint and Lean therefore grew
+        together, and the decomposition was revised as formalization exposed problems with it.
+        Work was scoped to one coherent mathematical area at a time rather than to scattered
+        individual lemmas. Every mathematical divergence from the paper was written up as a
+        standalone note (`maths/`, `notes/`) and reviewed before the corresponding Lean was
+        accepted.
   spend_usd: "subscription-based usage"
   notes: >-
-    All Lean in this repository was produced with Claude Code under human direction and review;
-    the blueprint LaTeX, the choice of decomposition and all mathematical decisions (in
-    particular the two divergences below) are the human authors'.
+    All Lean in this repository was produced with Claude Code under human direction and review,
+    as were the blueprint LaTeX and the choice of decomposition into small lemmas. The two
+    divergences below came out of that collaboration. The agent found the gap in the paper's
+    `lem:componentwise` (divergence 1), explored fixes, and reported that recovering the sparse
+    corollary was blocked by the paper's schedule condition h(n) = o(√n). The human author —
+    the paper's co-authors having already suspected that condition was unnecessarily
+    restrictive — directed it to relax the condition by strengthening the proofs rather than
+    working around it; the agent then found the relaxation to h(n) = o(n) and the proof under
+    (⋆) √(n log log n) ≪ h(n) = o(n) (divergence 2). Every such decision was reviewed and
+    accepted by the human author.
 
 fidelity:
   divergences: >-
