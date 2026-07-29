@@ -40,8 +40,8 @@ def shiftFiltration (ℱ : Filtration ℕ m0) (j : ℕ) : Filtration ℕ m0 wher
   le' k := ℱ.le (j + k)
 
 /-- The shifted filtration reads the original one `j` steps later. -/
-@[specifies shiftFiltration "the whole content of the definition: which σ-algebra sits at each \
-index, in particular that the shift is *forwards* (`ℱ (j + k)`, not `ℱ (k - j)`)"]
+@[simp, specifies shiftFiltration "the whole content of the definition: which σ-algebra sits at \
+each index, in particular that the shift is *forwards* (`ℱ (j + k)`, not `ℱ (k - j)`)"]
 lemma shiftFiltration_apply (ℱ : Filtration ℕ m0) (j k : ℕ) :
     shiftFiltration ℱ j k = ℱ (j + k) := rfl
 

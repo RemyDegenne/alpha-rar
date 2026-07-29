@@ -33,6 +33,11 @@ asymptotic analysis: `o_p(1)` (convergence to `0` in probability) and `O_p(1)`
   `AlphaRAR.IsLittleOpOne.isBigOpOne` for the implication `o_p(1) ⟹ O_p(1)`.
 * `AlphaRAR.isBigOpOne_of_lintegral_le` and `AlphaRAR.isBigOpOne_of_lintegral_sq_le`: a bounded
   first or second moment gives `O_p` (blueprint `lem:expectation_to_O`, `lem:sq_expectation_to_O`).
+* Closure properties: `AlphaRAR.IsLittleOpOne.of_eventually_abs_le` (domination, with the
+  pointwise and a.e. specializations `of_abs_le` / `of_abs_le_ae`), `AlphaRAR.IsLittleOpOne.abs`,
+  `AlphaRAR.IsLittleOpOne.const_mul`, `AlphaRAR.isLittleOpOne_finset_sum`, and the basic instances
+  `AlphaRAR.isLittleOpOne_zero`, `AlphaRAR.isLittleOpOne_const_div_sqrt`,
+  `AlphaRAR.isBigOpOne_of_ae_bounded`.
 
 ## Implementation notes
 
@@ -318,10 +323,114 @@ lemma IsBigOpOne.sq {Z : ℕ → Ω → ℝ} (h : IsBigOpOne μ Z) :
     IsBigOpOne μ (fun n ω ↦ (Z n ω) ^ 2) := by
   simpa [pow_two] using h.mul h
 
-/-- A sequence is `O_p(1)` if and only if its square is. -/
-lemma isBigOpOne_sq_iff {Z : ℕ → Ω → ℝ} :
-    IsBigOpOne μ (fun n ω ↦ (Z n ω) ^ 2) ↔ IsBigOpOne μ Z :=
-  ⟨IsBigOpOne.of_sq, IsBigOpOne.sq⟩
+/-- **Eventual a.e. domination for `o_p(1)`.** If `|Z n| ≤ |Y n|` almost surely for all large `n`
+and `Y = o_p(1)`, then `Z = o_p(1)` (`o_p` depends only on the tail). -/
+lemma IsLittleOpOne.of_eventually_abs_le {Y Z : ℕ → Ω → ℝ}
+    (hZY : ∀ᶠ n in atTop, ∀ᵐ ω ∂μ, |Z n ω| ≤ |Y n ω|) (hY : IsLittleOpOne μ Y) :
+    IsLittleOpOne μ Z := by
+  apply isLittleOpOne_of_tendsto_abs
+  intro ε hε
+  have hbound : ∀ᶠ n in atTop, μ {ω | ε ≤ |Z n ω|} ≤ μ {ω | ε ≤ |Y n ω|} := by
+    filter_upwards [hZY] with n hn
+    refine measure_mono_ae ?_
+    filter_upwards [hn] with ω hω hεZ
+    exact le_trans hεZ hω
+  exact tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds (hY.tendsto_abs hε)
+    (Eventually.of_forall fun n ↦ zero_le) hbound
+
+/-- **a.e. domination for `o_p(1)`.** If `|Z n| ≤ |Y n|` almost surely for each `n` and
+`Y = o_p(1)`, then `Z = o_p(1)`. -/
+lemma IsLittleOpOne.of_abs_le_ae {Y Z : ℕ → Ω → ℝ} (hZY : ∀ n, ∀ᵐ ω ∂μ, |Z n ω| ≤ |Y n ω|)
+    (hY : IsLittleOpOne μ Y) : IsLittleOpOne μ Z :=
+  hY.of_eventually_abs_le (Eventually.of_forall hZY)
+
+/-- **Domination for `o_p(1)`.** If `|Z n| ≤ |Y n|` pointwise and `Y = o_p(1)`, then
+`Z = o_p(1)`. -/
+lemma IsLittleOpOne.of_abs_le {Y Z : ℕ → Ω → ℝ} (hZY : ∀ n ω, |Z n ω| ≤ |Y n ω|)
+    (hY : IsLittleOpOne μ Y) : IsLittleOpOne μ Z :=
+  hY.of_abs_le_ae fun n ↦ Eventually.of_forall (hZY n)
+
+/-- `o_p(1)` is preserved by taking absolute values. -/
+lemma IsLittleOpOne.abs {X : ℕ → Ω → ℝ} (hX : IsLittleOpOne μ X) :
+    IsLittleOpOne μ (fun n ω ↦ |X n ω|) :=
+  IsLittleOpOne.of_abs_le (fun _ _ ↦ le_of_eq (abs_abs _)) hX
+
+/-- `o_p(1)` is preserved by multiplication by a constant: the constant sequence is `O_p(1)`,
+and `O_p(1) · o_p(1) = o_p(1)`. -/
+lemma IsLittleOpOne.const_mul {X : ℕ → Ω → ℝ} (c : ℝ) (hX : IsLittleOpOne μ X) :
+    IsLittleOpOne μ (fun n ω ↦ c * X n ω) :=
+  (isBigOpOne_const (c := fun _ ↦ c) (B := |c|) fun _ ↦ le_rfl).mul_littleOp hX
+
+/-- If `|X| = o_p(1)` then `X = o_p(1)`. -/
+lemma isLittleOpOne_of_abs {X : ℕ → Ω → ℝ} (hX : IsLittleOpOne μ (fun n ω ↦ |X n ω|)) :
+    IsLittleOpOne μ X :=
+  IsLittleOpOne.of_abs_le (fun _ _ ↦ le_of_eq (abs_abs _).symm) hX
+
+/-- The zero sequence is `o_p(1)`. -/
+lemma isLittleOpOne_zero : IsLittleOpOne μ (fun _ _ ↦ (0 : ℝ)) := by
+  apply isLittleOpOne_of_tendsto_abs
+  intro ε hε
+  have hz : (fun n : ℕ ↦ μ {ω : Ω | ε ≤ |(fun _ _ ↦ (0 : ℝ)) n ω|}) = fun _ ↦ 0 := by
+    funext n
+    convert measure_empty (μ := μ)
+    ext ω
+    simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_le, abs_zero]
+    exact hε
+  rw [hz]
+  exact tendsto_const_nhds
+
+/-- A constant over `√n` is `o_p(1)`. -/
+lemma isLittleOpOne_const_div_sqrt [IsFiniteMeasure μ] (C : ℝ) :
+    IsLittleOpOne μ (fun n (_ : Ω) ↦ C / √n) := by
+  refine isLittleOpOne_of_tendsto_ae (fun n ↦ measurable_const.aestronglyMeasurable)
+    (ae_of_all _ fun ω ↦ ?_)
+  have hsqrt : Tendsto (fun n : ℕ ↦ √n) atTop atTop :=
+    Real.tendsto_sqrt_atTop.comp tendsto_natCast_atTop_atTop
+  simpa using tendsto_const_nhds.div_atTop hsqrt
+
+/-- **`O_p(1)` from an a.s. bound.** If, almost surely, the sequence `X_· ω` is bounded (by a
+random constant), then `X = O_p(1)`. -/
+lemma isBigOpOne_of_ae_bounded [IsFiniteMeasure μ] {X : ℕ → Ω → ℝ}
+    (hmeas : ∀ n, Measurable (X n))
+    (hbdd : ∀ᵐ ω ∂μ, ∃ B, ∀ n, |X n ω| ≤ B) : IsBigOpOne μ X := by
+  intro ε hε
+  set s : ℕ → Set Ω := fun M ↦ {ω | ∃ n, (M : ℝ) < |X n ω|} with hs
+  have hsmeas : ∀ M, NullMeasurableSet (s M) μ := fun M ↦ by
+    change NullMeasurableSet {ω | ∃ n, (M : ℝ) < |X n ω|} μ
+    rw [Set.ofPred_exists]
+    exact (MeasurableSet.iUnion fun n ↦
+      measurableSet_lt measurable_const (hmeas n).abs).nullMeasurableSet
+  have hsanti : Antitone s := by
+    intro a b hab ω hω
+    obtain ⟨n, hn⟩ := hω
+    exact ⟨n, lt_of_le_of_lt (by exact_mod_cast hab) hn⟩
+  have hinter0 : μ (⋂ M, s M) = 0 := by
+    refine le_antisymm (le_trans (measure_mono ?_) (le_of_eq (ae_iff.mp hbdd))) (zero_le)
+    intro ω hω
+    simp only [Set.mem_iInter] at hω
+    rintro ⟨B, hB⟩
+    obtain ⟨M, hM⟩ := exists_nat_ge B
+    obtain ⟨n, hn⟩ := hω M
+    exact absurd (le_trans (hB n) hM) (not_le.mpr hn)
+  have htend := tendsto_measure_iInter_atTop hsmeas hsanti ⟨0, measure_ne_top μ _⟩
+  rw [hinter0] at htend
+  obtain ⟨M, hM⟩ := (htend.eventually (Iio_mem_nhds hε)).exists
+  refine ⟨(M : ℝ), fun n ↦ le_trans (measure_mono ?_) hM.le⟩
+  intro ω hω
+  change ∃ n', (M : ℝ) < |X n' ω|
+  exact ⟨n, hω⟩
+
+/-- `o_p(1)` is closed under finite sums. -/
+lemma isLittleOpOne_finset_sum {ι : Type*} {s : Finset ι} {f : ι → ℕ → Ω → ℝ}
+    (hf : ∀ j ∈ s, IsLittleOpOne μ (f j)) :
+    IsLittleOpOne μ (fun n ω ↦ ∑ j ∈ s, f j n ω) := by
+  classical
+  induction s using Finset.induction with
+  | empty => simpa using isLittleOpOne_zero
+  | insert a s has ih =>
+    simp only [Finset.sum_insert has]
+    exact (hf a (Finset.mem_insert_self a s)).add
+      (ih fun j hj ↦ hf j (Finset.mem_insert_of_mem hj))
 
 /-- **`O_p(1)` is tightness of the family of laws.** The uniform tail bound defining
 `IsBigOpOne` is exactly `MeasureTheory.IsTightMeasureSet` for the pushforward measures

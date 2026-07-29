@@ -693,12 +693,4 @@ lemma div_log_add_two_le {x : ℝ} (hx : 0 ≤ x) : x / log (x + 2) ≤ (x + 1) 
     have := mul_le_mul_of_nonneg_left hkey hx; rwa [mul_one_div] at this
   nlinarith [hm, hfrac]
 
-/-- `i ↦ i/log(i+2)` is nondecreasing on `ℕ` (integer form of `div_log_add_two_le`). -/
-lemma monotone_nat_div_log_add_two : Monotone (fun i : ℕ ↦ (i : ℝ) / log ((i : ℝ) + 2)) := by
-  refine monotone_nat_of_le_succ (fun i ↦ ?_)
-  have h := div_log_add_two_le (show (0 : ℝ) ≤ (i : ℝ) from Nat.cast_nonneg i)
-  simp only [Nat.cast_add, Nat.cast_one]
-  rw [show (i : ℝ) + 1 + 2 = (i : ℝ) + 3 by ring]
-  exact h
-
 end AlphaRAR

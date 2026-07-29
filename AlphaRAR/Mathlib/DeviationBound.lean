@@ -14,9 +14,16 @@ o_p(1)`, `B_n = o_p(1)` and `n - ℓ_n ≥ 0`, then the positive part `(X_n/√n
 `X_n ≤ o_p(√n)` one-sidedly. The negative drift `-c` eventually dominates the `o_p(1)` perturbation
 (in probability), forcing the `(n-ℓ_n)`-term nonpositive.
 
-## Main result
+The generic `o_p`/`O_p` closure properties this uses (domination, absolute values, constant
+multiples, finite sums) live with the definitions in `StochasticOrder.lean`; what is specific to
+this file is the drift-sign argument and its assembly into a per-arm deviation bound.
 
-* `AlphaRAR.isLittleOpOne_max_div_sqrt_of_drift`.
+## Main results
+
+* `AlphaRAR.isLittleOpOne_max_div_sqrt_of_drift`: the drift-sign lemma.
+* `AlphaRAR.isLittleOpOne_max_of_decomp`: the same for the full `U`-increment decomposition.
+* `AlphaRAR.isLittleOpOne_maxDev_of_le` and `AlphaRAR.isLittleOpOne_dev_of_sum_zero`: transfer to
+  the deviations, and the simplex reverse step turning one-sided bounds into two-sided ones.
 -/
 
 open MeasureTheory Filter
@@ -25,142 +32,6 @@ open scoped ENNReal Topology
 namespace AlphaRAR
 
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω} {μ : Measure Ω}
-
-/-- **Domination for `o_p(1)`.** If `|Z n| ≤ |Y n|` pointwise and `Y = o_p(1)`, then
-`Z = o_p(1)`. -/
-lemma IsLittleOpOne.of_abs_le {Y Z : ℕ → Ω → ℝ} (hZY : ∀ n ω, |Z n ω| ≤ |Y n ω|)
-    (hY : IsLittleOpOne μ Y) : IsLittleOpOne μ Z := by
-  apply isLittleOpOne_of_tendsto_abs
-  intro ε hε
-  have hsub : ∀ n, μ {ω | ε ≤ |Z n ω|} ≤ μ {ω | ε ≤ |Y n ω|} := fun n ↦
-    measure_mono fun ω hω ↦ le_trans hω (hZY n ω)
-  exact tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds (hY.tendsto_abs hε)
-    (Eventually.of_forall fun n ↦ zero_le) (Eventually.of_forall hsub)
-
-/-- **a.e. domination for `o_p(1)`.** If `|Z n| ≤ |Y n|` almost surely for each `n` and
-`Y = o_p(1)`, then `Z = o_p(1)`. -/
-lemma IsLittleOpOne.of_abs_le_ae {Y Z : ℕ → Ω → ℝ} (hZY : ∀ n, ∀ᵐ ω ∂μ, |Z n ω| ≤ |Y n ω|)
-    (hY : IsLittleOpOne μ Y) : IsLittleOpOne μ Z := by
-  apply isLittleOpOne_of_tendsto_abs
-  intro ε hε
-  have hsub : ∀ n, μ {ω | ε ≤ |Z n ω|} ≤ μ {ω | ε ≤ |Y n ω|} := fun n ↦ by
-    refine measure_mono_ae ?_
-    filter_upwards [hZY n] with ω hω hεZ
-    exact le_trans hεZ hω
-  exact tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds (hY.tendsto_abs hε)
-    (Eventually.of_forall fun n ↦ zero_le) (Eventually.of_forall hsub)
-
-/-- **Eventual a.e. domination for `o_p(1)`.** If `|Z n| ≤ |Y n|` almost surely for all large `n`
-and `Y = o_p(1)`, then `Z = o_p(1)` (`o_p` depends only on the tail). -/
-lemma IsLittleOpOne.of_eventually_abs_le {Y Z : ℕ → Ω → ℝ}
-    (hZY : ∀ᶠ n in atTop, ∀ᵐ ω ∂μ, |Z n ω| ≤ |Y n ω|) (hY : IsLittleOpOne μ Y) :
-    IsLittleOpOne μ Z := by
-  apply isLittleOpOne_of_tendsto_abs
-  intro ε hε
-  have hbound : ∀ᶠ n in atTop, μ {ω | ε ≤ |Z n ω|} ≤ μ {ω | ε ≤ |Y n ω|} := by
-    filter_upwards [hZY] with n hn
-    refine measure_mono_ae ?_
-    filter_upwards [hn] with ω hω hεZ
-    exact le_trans hεZ hω
-  exact tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds (hY.tendsto_abs hε)
-    (Eventually.of_forall fun n ↦ zero_le) hbound
-
-/-- `o_p(1)` is preserved by taking absolute values. -/
-lemma IsLittleOpOne.abs {X : ℕ → Ω → ℝ} (hX : IsLittleOpOne μ X) :
-    IsLittleOpOne μ (fun n ω ↦ |X n ω|) :=
-  IsLittleOpOne.of_abs_le (fun _ _ ↦ le_of_eq (abs_abs _)) hX
-
-/-- `o_p(1)` is preserved by multiplication by a constant. -/
-lemma IsLittleOpOne.const_mul {X : ℕ → Ω → ℝ} (c : ℝ) (hX : IsLittleOpOne μ X) :
-    IsLittleOpOne μ (fun n ω ↦ c * X n ω) := by
-  apply isLittleOpOne_of_tendsto_abs
-  intro ε hε
-  rcases eq_or_ne c 0 with hc | hc
-  · subst hc
-    have hz : (fun n : ℕ ↦ μ {ω : Ω | ε ≤ |(0 : ℝ) * X n ω|}) = fun _ ↦ 0 := by
-      funext n
-      convert measure_empty (μ := μ)
-      ext ω
-      simp only [zero_mul, abs_zero, Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_le]
-      exact hε
-    rw [hz]; exact tendsto_const_nhds
-  · have hcpos : 0 < |c| := abs_pos.mpr hc
-    refine (hX.tendsto_abs (div_pos hε hcpos)).congr fun n ↦ ?_
-    congr 1
-    ext ω
-    simp only [Set.mem_ofPred_eq, abs_mul]
-    rw [div_le_iff₀ hcpos, mul_comm]
-
-/-- If `|X| = o_p(1)` then `X = o_p(1)`. -/
-lemma isLittleOpOne_of_abs {X : ℕ → Ω → ℝ} (hX : IsLittleOpOne μ (fun n ω ↦ |X n ω|)) :
-    IsLittleOpOne μ X :=
-  IsLittleOpOne.of_abs_le (fun _ _ ↦ le_of_eq (abs_abs _).symm) hX
-
-/-- The zero sequence is `o_p(1)`. -/
-lemma isLittleOpOne_zero : IsLittleOpOne μ (fun _ _ ↦ (0 : ℝ)) := by
-  apply isLittleOpOne_of_tendsto_abs
-  intro ε hε
-  have hz : (fun n : ℕ ↦ μ {ω : Ω | ε ≤ |(fun _ _ ↦ (0 : ℝ)) n ω|}) = fun _ ↦ 0 := by
-    funext n
-    convert measure_empty (μ := μ)
-    ext ω
-    simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_le, abs_zero]
-    exact hε
-  rw [hz]
-  exact tendsto_const_nhds
-
-/-- A constant over `√n` is `o_p(1)`. -/
-lemma isLittleOpOne_const_div_sqrt [IsFiniteMeasure μ] (C : ℝ) :
-    IsLittleOpOne μ (fun n (_ : Ω) ↦ C / √n) := by
-  refine isLittleOpOne_of_tendsto_ae (fun n ↦ measurable_const.aestronglyMeasurable)
-    (ae_of_all _ fun ω ↦ ?_)
-  have hsqrt : Tendsto (fun n : ℕ ↦ √n) atTop atTop :=
-    Real.tendsto_sqrt_atTop.comp tendsto_natCast_atTop_atTop
-  simpa using tendsto_const_nhds.div_atTop hsqrt
-
-/-- **`O_p(1)` from an a.s. bound.** If, almost surely, the sequence `X_· ω` is bounded (by a
-random constant), then `X = O_p(1)`. -/
-lemma isBigOpOne_of_ae_bounded [IsFiniteMeasure μ] {X : ℕ → Ω → ℝ}
-    (hmeas : ∀ n, Measurable (X n))
-    (hbdd : ∀ᵐ ω ∂μ, ∃ B, ∀ n, |X n ω| ≤ B) : IsBigOpOne μ X := by
-  intro ε hε
-  set s : ℕ → Set Ω := fun M ↦ {ω | ∃ n, (M : ℝ) < |X n ω|} with hs
-  have hsmeas : ∀ M, NullMeasurableSet (s M) μ := fun M ↦ by
-    change NullMeasurableSet {ω | ∃ n, (M : ℝ) < |X n ω|} μ
-    rw [Set.ofPred_exists]
-    exact (MeasurableSet.iUnion fun n ↦
-      measurableSet_lt measurable_const (hmeas n).abs).nullMeasurableSet
-  have hsanti : Antitone s := by
-    intro a b hab ω hω
-    obtain ⟨n, hn⟩ := hω
-    exact ⟨n, lt_of_le_of_lt (by exact_mod_cast hab) hn⟩
-  have hinter0 : μ (⋂ M, s M) = 0 := by
-    refine le_antisymm (le_trans (measure_mono ?_) (le_of_eq (ae_iff.mp hbdd))) (zero_le)
-    intro ω hω
-    simp only [Set.mem_iInter] at hω
-    rintro ⟨B, hB⟩
-    obtain ⟨M, hM⟩ := exists_nat_ge B
-    obtain ⟨n, hn⟩ := hω M
-    exact absurd (le_trans (hB n) hM) (not_le.mpr hn)
-  have htend := tendsto_measure_iInter_atTop hsmeas hsanti ⟨0, measure_ne_top μ _⟩
-  rw [hinter0] at htend
-  obtain ⟨M, hM⟩ := (htend.eventually (Iio_mem_nhds hε)).exists
-  refine ⟨(M : ℝ), fun n ↦ le_trans (measure_mono ?_) hM.le⟩
-  intro ω hω
-  change ∃ n', (M : ℝ) < |X n' ω|
-  exact ⟨n, hω⟩
-
-/-- `o_p(1)` is closed under finite sums. -/
-lemma isLittleOpOne_finset_sum {ι : Type*} {s : Finset ι} {f : ι → ℕ → Ω → ℝ}
-    (hf : ∀ j ∈ s, IsLittleOpOne μ (f j)) :
-    IsLittleOpOne μ (fun n ω ↦ ∑ j ∈ s, f j n ω) := by
-  classical
-  induction s using Finset.induction with
-  | empty => simpa using isLittleOpOne_zero
-  | insert a s has ih =>
-    simp only [Finset.sum_insert has]
-    exact (hf a (Finset.mem_insert_self a s)).add
-      (ih fun j hj ↦ hf j (Finset.mem_insert_of_mem hj))
 
 /-- **Drift-sign one-sided `o_p(√n)`.** If eventually `X_n ≤ d_n(-c + A_n) + B_n √n` with `c > 0`,
 `d_n ≥ 0`, and `A_n, B_n = o_p(1)`, then `(X_n/√n)^+ = o_p(1)`. The window `d_n = n - ℓ_n` need not

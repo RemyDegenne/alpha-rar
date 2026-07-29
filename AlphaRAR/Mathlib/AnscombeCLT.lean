@@ -35,6 +35,20 @@ Decompose `S_{N_n}/√(N_n) = (S_{c_n}/√(c_n)) · √(c_n/N_n) + (S_{N_n} - S_
 * the window remainder `(S_{N_n} - S_{c_n})/√(N_n) → 0` in probability, controlled by the Doob
   maximal inequality for the partial-sum martingale (`mart_maximal`) over the window
   `|m - c_n| ≤ ε c_n`.
+
+## Main results
+
+* `AlphaRAR.tendsto_map_anscombe_iid` : **Anscombe's theorem** for an i.i.d. sequence
+  (blueprint `lem:anscombe_clt`). Under the regularity `N_n/c_n → 1` in probability with
+  `c_n → ∞`, the randomly indexed self-normalized sum `S_{N_n}/√(N_n)` converges in
+  distribution to `𝒩(0, Var[X 0])`.
+* `AlphaRAR.tendstoInMeasure_window` : the window estimate that drives the proof — the maximal
+  fluctuation of a martingale over `|m - c_n| ≤ ε c_n`, normalized by `√(c_n)`, is small in
+  probability for small `ε`.
+* `AlphaRAR.tendsto_map_clt_comp` : the deterministic-index CLT precomposed with a subsequence
+  `c_n → ∞`, the base term of the decomposition.
+* `AlphaRAR.tendsto_map_add_of_tendstoInMeasure_zero` : the Slutsky step absorbing the window
+  remainder.
 -/
 
 open MeasureTheory ProbabilityTheory Filter Finset

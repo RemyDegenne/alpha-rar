@@ -37,13 +37,13 @@ def shiftDown (ℱ : Filtration ℕ m0) : Filtration ℕ m0 where
     | succ m => exact ℱ.le m
 
 /-- At time `0` there is no previous index, so the previous-index filtration is trivial. -/
-@[specifies shiftDown "fixes the base case, the one place where \"shift by one\" has to make a \
-choice: step `0` sees no history at all rather than the history at step `0`"]
+@[simp, specifies shiftDown "fixes the base case, the one place where \"shift by one\" has to \
+make a choice: step `0` sees no history at all rather than the history at step `0`"]
 lemma shiftDown_zero (ℱ : Filtration ℕ m0) : ℱ.shiftDown 0 = ⊥ := rfl
 
 /-- Away from `0` the previous-index filtration is the shift: `(ℱ.shiftDown) (n+1) = ℱ n`. -/
-@[specifies shiftDown "the shift itself, which together with `shiftDown_zero` determines every \
-value of the filtration"]
+@[simp, specifies shiftDown "the shift itself, which together with `shiftDown_zero` determines \
+every value of the filtration"]
 lemma shiftDown_succ (ℱ : Filtration ℕ m0) (n : ℕ) : ℱ.shiftDown (n + 1) = ℱ n := rfl
 
 /-- The previous-index filtration sits below the current one: `ℱ_{n-1} ≤ ℱ_n`. -/

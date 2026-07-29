@@ -6,6 +6,7 @@ Authors: Rémy Degenne
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.PullOut
 import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
 import Mathlib.MeasureTheory.Measure.LevyConvergence
+import Mathlib.Probability.CondVar
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Process.Filtration
 import LeanSpec
@@ -28,10 +29,29 @@ This file is Mathlib-bound staging (cf. the `AlphaRAR/Mathlib/` directory).
   (blueprint `lem:clt_exp_bound`).
 * `AlphaRAR.abs_exp_mul_one_sub_le` : `|eʸ(1-y) - 1| ≤ y²` on `[0,1]`
   (blueprint `lem:clt_real_exp_bound`).
+
+## Main results
+
+* `AlphaRAR.MartDiffArray` : a triangular array of martingale differences, carrying its row
+  filtrations, square-integrability, the martingale-difference property and adaptedness.
+* `AlphaRAR.MartDiffArray.mart_clt` : **the martingale CLT in Lindeberg form**. If the predictable
+  variation `V_n` converges in probability to `σ²` and the conditional Lindeberg quantities
+  `L_n(ε)` converge in probability to `0` for every `ε > 0`, then the row sums converge in
+  distribution to `𝒩(0, σ²)`.
+* `AlphaRAR.MartDiffArray.clt_charFun` : the characteristic-function form behind `mart_clt`,
+  `𝔼[e^{it S_n}] → e^{-t²σ²/2}`, obtained from the bounded-increment case
+  `mart_clt_bounded` by truncation.
+* `AlphaRAR.MartDiffArray.ofSeq` : the array built from a single adapted sequence, with
+  `rowSum_ofSeq` and `predVar_ofSeq` identifying its row sums and predictable variation.
+* `AlphaRAR.tendsto_map_mul_of_tendstoInMeasure_one` and
+  `AlphaRAR.tendsto_map_comp_of_tendstoInMeasure_const` : the Slutsky steps used to transfer the
+  limit through a multiplicative factor tending to `1` in probability.
+* `AlphaRAR.MartDiffArray.condVar_ae_eq_condVar` : the array's conditional variance agrees a.e.
+  with Mathlib's `ProbabilityTheory.condVar`.
 -/
 
 open Complex intervalIntegral MeasureTheory
-open scoped Real Topology
+open scoped ProbabilityTheory Real Topology
 
 namespace AlphaRAR
 
@@ -660,6 +680,18 @@ lemma condVar_le_lindeberg [IsProbabilityMeasure P] (n i : ℕ) (hi : i < A.k n)
 lemma condVar_nonneg (n i : ℕ) : (0 : Ω → ℝ) ≤ᵐ[P] A.condVar n i :=
   condExp_nonneg (ae_of_all _ fun _ ↦ sq_nonneg _)
 
+/-- **The array's conditional variance is Mathlib's conditional variance.** The
+martingale-difference property `P[d n i | 𝓕 n i] = 0` makes the centring in
+`ProbabilityTheory.condVar` vacuous, so the uncentred conditional second moment used here agrees
+a.e. with `Var[d n i; P | 𝓕 n i]`. -/
+lemma condVar_ae_eq_condVar (n i : ℕ) :
+    A.condVar n i =ᵐ[P] Var[A.d n i; P | A.𝓕 n i] := by
+  rw [ProbabilityTheory.condVar]
+  refine condExp_congr_ae ?_
+  filter_upwards [A.mgdiff n i] with ω hω
+  simp only [Pi.sub_apply, Pi.pow_apply, Pi.zero_apply] at hω ⊢
+  rw [hω, sub_zero]
+
 /-- **Sum of squared conditional variances** (blueprint `lem:clt_sum_var_sq`):
 `∑_i v_{n,i}² ≤ (ε² + L_n(ε)) · V_n` a.e., for every `ε`. -/
 lemma sum_condVar_sq_le [IsProbabilityMeasure P] (n : ℕ) (ε : ℝ) :
@@ -875,16 +907,6 @@ lemma predVar_trunc_le [IsProbabilityMeasure P] {B : ℝ} (hB : 0 ≤ B) (n : �
     rfl
   rw [show (A.trunc B).k n = A.k n from rfl, Finset.sum_congr rfl hkey]
   exact sum_indicator_le hnnω hB (A.k n)
-
-/-- Truncation only shrinks the conditional variances: `v̄_{n,i} ≤ v_{n,i}` a.e. -/
-lemma condVar_trunc_le [IsFiniteMeasure P] (B : ℝ) (n i : ℕ) :
-    (A.trunc B).condVar n i ≤ᵐ[P] A.condVar n i := by
-  filter_upwards [A.condVar_trunc B n i, A.condVar_nonneg n i] with ω h1 h2
-  simp only [Pi.zero_apply] at h2
-  rw [h1, Set.indicator_apply]
-  split
-  · exact le_refl _
-  · exact h2
 
 /-- The partial predictable variation is nondecreasing in the number of steps. -/
 lemma partialVar_mono (n : ℕ) {a b : ℕ} (hab : a ≤ b) :

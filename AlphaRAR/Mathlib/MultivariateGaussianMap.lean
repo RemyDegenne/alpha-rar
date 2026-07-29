@@ -28,6 +28,13 @@ namespace AlphaRAR
 
 variable {m n : Type*} [Fintype m] [Fintype n] [DecidableEq m] [DecidableEq n]
 
+/-- Over `ℝ` the `EuclideanSpace` inner product is the plain dot product of the underlying
+functions: `EuclideanSpace.inner_eq_star_dotProduct` with `star` trivial. -/
+private lemma real_inner_eq_dotProduct {ι : Type*} [Fintype ι] (u v : EuclideanSpace ℝ ι) :
+    (⟪u, v⟫ : ℝ) = WithLp.ofLp u ⬝ᵥ WithLp.ofLp v := by
+  rw [EuclideanSpace.inner_eq_star_dotProduct]
+  simp [dotProduct_comm]
+
 /-- **Rectangular linear pushforward of a centered Gaussian.** For a matrix `G : m × n`, the image
 of `𝒩(0, S)` on `ℝ^n` under `x ↦ G x` is the centered Gaussian `𝒩(0, G S Gᵀ)` on `ℝ^m`.
 
@@ -43,14 +50,6 @@ lemma multivariateGaussian_map_matrix (S : Matrix n n ℝ) (G : Matrix m n ℝ) 
   have hpsd' : (G * S * Gᵀ).PosSemidef := by
     have hh := hS.mul_mul_conjTranspose_same G
     rwa [Matrix.conjTranspose_eq_transpose_of_trivial] at hh
-  have hIPm : ∀ (u v : EuclideanSpace ℝ m), (⟪u, v⟫ : ℝ) = (WithLp.ofLp u) ⬝ᵥ (WithLp.ofLp v) := by
-    intro u v
-    simp only [PiLp.inner_apply, RCLike.inner_apply, conj_trivial, dotProduct]
-    exact Finset.sum_congr rfl fun i _ ↦ mul_comm _ _
-  have hIPn : ∀ (u v : EuclideanSpace ℝ n), (⟪u, v⟫ : ℝ) = (WithLp.ofLp u) ⬝ᵥ (WithLp.ofLp v) := by
-    intro u v
-    simp only [PiLp.inner_apply, RCLike.inner_apply, conj_trivial, dotProduct]
-    exact Finset.sum_congr rfl fun i _ ↦ mul_comm _ _
   set L : EuclideanSpace ℝ n → EuclideanSpace ℝ m :=
     fun x ↦ WithLp.toLp 2 (G.mulVec (WithLp.ofLp x)) with hLdef
   set L' : EuclideanSpace ℝ m → EuclideanSpace ℝ n :=
@@ -65,8 +64,9 @@ lemma multivariateGaussian_map_matrix (S : Matrix n n ℝ) (G : Matrix m n ℝ) 
   refine Measure.ext_of_charFun (funext fun t ↦ ?_)
   have hinner : ∀ x : EuclideanSpace ℝ n, (⟪L x, t⟫ : ℝ) = ⟪x, L' t⟫ := by
     intro x
-    rw [hIPm (L x) t, hIPn x (L' t), hLdef, hL'def, WithLp.ofLp_toLp, WithLp.ofLp_toLp,
-      dotProduct_comm (G.mulVec _), Matrix.dotProduct_mulVec, ← Matrix.mulVec_transpose]
+    rw [real_inner_eq_dotProduct (L x) t, real_inner_eq_dotProduct x (L' t), hLdef, hL'def,
+      WithLp.ofLp_toLp, WithLp.ofLp_toLp, dotProduct_comm (G.mulVec _), Matrix.dotProduct_mulVec,
+      ← Matrix.mulVec_transpose]
     exact dotProduct_comm _ _
   have hcont : Continuous (fun x : EuclideanSpace ℝ m ↦ Complex.exp ((⟪x, t⟫ : ℝ) * Complex.I)) :=
     Complex.continuous_exp.comp

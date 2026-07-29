@@ -15,14 +15,15 @@ conditional expectation of a (measurable) function `g` of `Y` given `σ(X)` is t
 
 This packages the two ingredients `condExp_ae_eq_integral_condDistrib` (conditional expectation
 as a `condDistrib` integral) and `HasCondDistrib.condDistrib_eq` (`condDistrib` equals `κ`) into a
-single reusable statement, and specializes it to the mean of `Y` (`g = id`).
+single reusable statement.
 
 These belong in Mathlib next to `HasCondDistrib`.
 
 ## Main results
 
 * `ProbabilityTheory.HasCondDistrib.condExp_comp_eq`: conditional expectation of `g ∘ Y`.
-* `ProbabilityTheory.HasCondDistrib.condExp_eq`: conditional expectation of `Y` (the kernel mean).
+* `ProbabilityTheory.memLp_two_of_hasCondDistrib`: membership in `L²` from uniformly bounded
+  conditional second moments.
 -/
 
 open MeasureTheory
@@ -47,16 +48,6 @@ lemma HasCondDistrib.condExp_comp_eq {F : Type*} [NormedAddCommGroup F] [NormedS
   refine (condExp_ae_eq_integral_condDistrib hX h.aemeasurable_snd hg hint).trans ?_
   filter_upwards [ae_of_ae_map hX.aemeasurable h.condDistrib_eq] with ω hω
   rw [hω]
-
-/-- **Conditional expectation of `Y` from its conditional distribution.**
-If `Y` (valued in a Banach space) has conditional distribution `κ` given `X` under `P`, then its
-conditional expectation given `σ(X)` is the mean of the kernel:
-`P[Y | σ(X)] =ᵐ[P] fun ω ↦ ∫ y, y ∂(κ (X ω))`. -/
-lemma HasCondDistrib.condExp_eq [NormedAddCommGroup 𝓨] [NormedSpace ℝ 𝓨] [CompleteSpace 𝓨]
-    [BorelSpace 𝓨] [SecondCountableTopology 𝓨]
-    (h : HasCondDistrib Y X κ P) (hX : Measurable X) (hint : Integrable Y P) :
-    P[Y | mβ.comap X] =ᵐ[P] fun ω ↦ ∫ y, y ∂(κ (X ω)) :=
-  h.condExp_comp_eq hX stronglyMeasurable_id hint
 
 /-- **A conditionally-distributed real random variable is in `L²` as soon as its conditional laws
 have uniformly bounded second moments.** Disintegrating,

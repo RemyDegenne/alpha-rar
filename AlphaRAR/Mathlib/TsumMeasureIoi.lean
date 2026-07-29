@@ -3,7 +3,6 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import Mathlib.Algebra.Order.Star.Real
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 
 /-!
@@ -17,6 +16,15 @@ bound `∑_i μ{X > i} = ∫⁻ ∑_i 𝟙{X > i} ≤ ∫⁻ (X + 1) = ofReal(�
 `∑_i 𝟙{i < X ω} = ⌈X ω⌉₊ ≤ X ω + 1`.
 
 This belongs upstream in Mathlib (a `μ`-general version of `tsum_prob_mem_Ioi_lt_top`).
+
+## Main results
+
+* `AlphaRAR.tsum_measure_Ioi_ne_top`: `∑' i, μ {X > i} < ∞` for a finite measure and a
+  nonnegative integrable `X`.
+* `AlphaRAR.tsum_measure_abs_sub_gt_sqrt_ne_top` and
+  `AlphaRAR.tsum_measure_abs_sub_ge_sqrt_ne_top`: the `√i` truncation tails
+  `∑' i, ρ {√i < |· - θ|}` and `∑' i, ρ {√i ≤ |· - θ|}` are finite for a law with finite second
+  central moment (blueprint `lem:trunc_tail_summable`).
 -/
 
 open MeasureTheory Filter Finset
@@ -72,18 +80,10 @@ For a finite measure `ρ` on `ℝ` with finite second central moment `∫ (x-θ)
 lemma tsum_measure_abs_sub_gt_sqrt_ne_top {ρ : Measure ℝ} [IsFiniteMeasure ρ] (θ : ℝ)
     (hρ2 : Integrable (fun x ↦ (x - θ) ^ 2) ρ) :
     (∑' i : ℕ, ρ {x | √i < |x - θ|}) ≠ ∞ := by
-  have hset : ∀ i : ℕ, {x | √i < |x - θ|} = {x | (i : ℝ) < (x - θ) ^ 2} := by
-    intro i
+  have hset : ∀ i : ℕ, {x | √i < |x - θ|} = {x | (i : ℝ) < (x - θ) ^ 2} := fun i ↦ by
     ext x
-    simp only [Set.mem_ofPred_eq]
-    constructor
-    · intro h
-      have := mul_self_lt_mul_self (Real.sqrt_nonneg (i : ℝ)) h
-      rw [Real.mul_self_sqrt (Nat.cast_nonneg i), abs_mul_abs_self, ← pow_two] at this
-      exact this
-    · intro h
-      have h2 : √i < √((x - θ) ^ 2) := Real.sqrt_lt_sqrt (Nat.cast_nonneg i) h
-      rwa [Real.sqrt_sq_eq_abs] at h2
+    rw [Set.mem_ofPred_eq, Set.mem_ofPred_eq, ← Real.sqrt_sq_eq_abs,
+      Real.sqrt_lt_sqrt_iff (Nat.cast_nonneg i)]
   simp_rw [hset]
   exact tsum_measure_Ioi_ne_top (by fun_prop) hρ2 fun x ↦ sq_nonneg _
 

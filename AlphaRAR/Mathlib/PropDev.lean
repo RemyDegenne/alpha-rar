@@ -16,11 +16,10 @@ increment is controlled by the estimator increment,
 estimator-increment control, the coefficient `o_p`/`O_p` bounds,
 the drift-sign argument, the simplex reverse step) is proved.
 
-
 ## Main results
 
 * `AlphaRAR.ell_rho_control`: the `ρ`-increment bound `ℓ(ρ̂_ℓ - ρ̂_n) ≤ Vρ·(n-ℓ) + Wρ`.
-* `AlphaRAR.prop_dev_of_generic`: `Dev_k = o_p(√n)` from the per-arm one-sided bounds.
+* `AlphaRAR.prop_dev`: `Dev_k = o_p(√n)` from the per-arm one-sided bounds.
 -/
 
 open MeasureTheory Filter Finset

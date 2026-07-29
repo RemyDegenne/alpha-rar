@@ -55,11 +55,7 @@ lemma lintegral_le_two_mul_sqrt_of_meas_ge_le {Y : Ω → ℝ} (hYnn : 0 ≤ᵐ[
     set A : ℝ := √B with hAdef
     have hApos : 0 < A := Real.sqrt_pos.mpr hBpos
     have hunion : Ioi (0 : ℝ) = Ioc 0 A ∪ Ioi A := (Ioc_union_Ioi_eq_Ioi hApos.le).symm
-    have hdisj : Disjoint (Ioc (0 : ℝ) A) (Ioi A) := by
-      simp only [Set.disjoint_left, mem_Ioc, mem_Ioi]
-      rintro x ⟨_, hxA⟩ hxA'
-      exact absurd hxA (not_le.mpr hxA')
-    rw [hunion, lintegral_union measurableSet_Ioi hdisj]
+    rw [hunion, lintegral_union measurableSet_Ioi Ioc_disjoint_Ioi_same]
     -- Part 1: the head `(0, A]` contributes at most `A` (probabilities `≤ 1`).
     have hpart1 : ∫⁻ t in Ioc 0 A, μ {ω | t ≤ Y ω} ≤ ENNReal.ofReal A := by
       calc ∫⁻ t in Ioc 0 A, μ {ω | t ≤ Y ω}
