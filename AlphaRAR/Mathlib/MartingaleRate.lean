@@ -48,8 +48,9 @@ lemma isBigOpOne_martingale_div_sqrt [IsFiniteMeasure μ] (hM : Martingale M ℱ
   have hmeasM : ∀ n, AEMeasurable (M n) μ := fun n ↦
     ((hM.stronglyMeasurable n).mono (ℱ.le n)).measurable.aemeasurable
   -- The integrated bound `∫⁻ (M n)² ≤ ofReal (σ² (v n)²)`.
-  have hlin : ∀ n, ∫⁻ ω, ENNReal.ofReal ((M n ω) ^ 2) ∂μ ≤ ENNReal.ofReal (σ2 * (v n) ^ 2) := by
+  have hlin : ∀ n, ∫⁻ ω, ‖M n ω‖ₑ ^ 2 ∂μ ≤ ENNReal.ofReal (σ2 * (v n) ^ 2) := by
     intro n
+    simp_rw [Real.enorm_eq_ofReal_abs, ← ENNReal.ofReal_pow (abs_nonneg _), sq_abs]
     have hnn : 0 ≤ᵐ[μ] fun ω ↦ (M n ω) ^ 2 := Eventually.of_forall fun ω ↦ sq_nonneg _
     rw [← ofReal_integral_eq_lintegral_ofReal (hM2 n) hnn]
     apply ENNReal.ofReal_le_ofReal
@@ -67,7 +68,7 @@ lemma isBigOpOne_martingale_div_sqrt [IsFiniteMeasure μ] (hM : Martingale M ℱ
     · rw [max_eq_left (by exact_mod_cast hn1 : (1 : ℝ) ≤ (n : ℝ))]
       exact hgrow n
   have hOp : IsBigOpOne μ (fun n ω ↦ M n ω / v n) :=
-    isBigOpOne_of_lintegral_sq_le M v σ2 hvpos hσ2 hmeasM hlin
+    isBigOpOne_of_lintegral_sq_le hvpos hσ2 hmeasM hlin
   -- Transfer the rate `v = √(max n 1)` to `√n`.
   refine IsBigOpOne.congr (fun n ↦ ?_) hOp
   rcases Nat.eq_zero_or_pos n with hn0 | hn1

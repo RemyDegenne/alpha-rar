@@ -123,7 +123,8 @@ AlphaRAR.isProjection_one_sub_vecMulVec
 AlphaRAR.isLittleOpOne_of_tendsto_ae
 AlphaRAR.IsLittleOpOne.add
 AlphaRAR.IsBigOpOne.add
-AlphaRAR.IsBigOpOne.add_littleOp
+AlphaRAR.IsLittleOpOne.add_bigOpOne
+AlphaRAR.IsBigOpOne.mul
 AlphaRAR.IsBigOpOne.mul_littleOp
 AlphaRAR.IsBigOpOne.bdd_mul
 AlphaRAR.predQuadVar

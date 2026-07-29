@@ -234,7 +234,7 @@ lemma g_littleOp_of_hitting (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     have hprodop : IsLittleOpOne P (fun n ω ↦
         (Sseq n ω / √n + a / √n) * (√n / (Nc n ω + 1))) := by
       have hOpseq : IsBigOpOne P (fun n ω ↦ Sseq n ω / √n + a / √n) :=
-        hSOp.add ((isLittleOpOne_const_div_sqrt a).isBigOpOne (fun _ ↦ measurable_const))
+        hSOp.add ((isLittleOpOne_const_div_sqrt a).isBigOpOne (fun _ ↦ aemeasurable_const))
       have hopseq : IsLittleOpOne P (fun n ω ↦ √n / (Nc n ω + 1)) := by
         refine isLittleOpOne_of_tendsto_ae (fun n ↦ (measurable_const.div
           ((measurable_count_armIndicator h k'' n).add_const 1)).aestronglyMeasurable) ?_

@@ -286,12 +286,12 @@ lemma isBigOpOne_sup'_abs_div_sqrt (hN : Martingale N ℱ μ)
   set v : ℕ → ℝ := fun n ↦ √(max (n : ℝ) 1) with hv
   have hvpos : ∀ n, 0 < v n := fun n ↦
     Real.sqrt_pos.mpr (lt_of_lt_of_le one_pos (le_max_right _ _))
-  have hbound : ∀ n, ∫⁻ ω, ENNReal.ofReal |S n ω| ∂μ
+  have hbound : ∀ n, ∫⁻ ω, ‖S n ω‖ₑ ∂μ
       ≤ ENNReal.ofReal (2 * √σ2 * v n) := by
     intro n
     have hle := lintegral_sup'_abs_le_two_mul_sqrt hN hN2 hd2 hprod n
-    rw [show (fun ω ↦ ENNReal.ofReal |S n ω|) = fun ω ↦ ENNReal.ofReal (S n ω) from by
-      funext ω; rw [abs_of_nonneg (hSnn n ω)]]
+    rw [show (fun ω ↦ ‖S n ω‖ₑ) = fun ω ↦ ENNReal.ofReal (S n ω) from by
+      funext ω; rw [Real.enorm_eq_ofReal_abs, abs_of_nonneg (hSnn n ω)]]
     refine hle.trans (ENNReal.ofReal_le_ofReal ?_)
     have h1 : √(∫ ω, N n ω ^ 2 ∂μ) ≤ √(σ2 * n) := Real.sqrt_le_sqrt (hgrow n)
     have h2 : √(σ2 * n) ≤ √σ2 * v n := by
@@ -302,7 +302,7 @@ lemma isBigOpOne_sup'_abs_div_sqrt (hN : Martingale N ℱ μ)
         ≤ 2 * (√σ2 * v n) := by gcongr; exact h1.trans h2
       _ = 2 * √σ2 * v n := by ring
   have hOp : IsBigOpOne μ (fun n ω ↦ S n ω / v n) :=
-    isBigOpOne_of_lintegral_le S v (2 * √σ2) hvpos (by positivity)
+    isBigOpOne_of_lintegral_le (C := 2 * √σ2) hvpos (by positivity)
       (fun n ↦ (hSmeas n).aemeasurable) hbound
   refine IsBigOpOne.congr (fun n ↦ ?_) hOp
   rcases Nat.eq_zero_or_pos n with hn0 | hn1
