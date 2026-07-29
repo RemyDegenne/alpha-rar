@@ -54,9 +54,8 @@ lemma multivariateGaussian_map_matrix (S : Matrix n n ℝ) (G : Matrix m n ℝ) 
     fun x ↦ WithLp.toLp 2 (G.mulVec (WithLp.ofLp x)) with hLdef
   set L' : EuclideanSpace ℝ m → EuclideanSpace ℝ n :=
     fun t ↦ WithLp.toLp 2 (Gᵀ.mulVec (WithLp.ofLp t)) with hL'def
-  have hLmeas : Measurable L := by
-    rw [hLdef]
-    exact ((PiLp.continuous_toLp 2 (fun _ : m ↦ ℝ)).comp
+  have hLmeas : Measurable L :=
+    ((PiLp.continuous_toLp 2 (fun _ : m ↦ ℝ)).comp
       (((Matrix.mulVecLin G).continuous_of_finiteDimensional).comp
         (PiLp.continuous_ofLp 2 (fun _ : n ↦ ℝ)))).measurable
   have : IsProbabilityMeasure ((multivariateGaussian 0 S).map L) :=
