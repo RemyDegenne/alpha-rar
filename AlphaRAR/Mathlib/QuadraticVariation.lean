@@ -19,6 +19,9 @@ wrappers around Mathlib's discrete Doob decomposition.
 * `AlphaRAR.predQuadVar`: the predictable quadratic variation (blueprint `def:pred_qv`).
 * `AlphaRAR.martingale_sq_sub_predQuadVar`: `M² - ⟨M⟩` is a martingale
   (blueprint `lem:qv_mart`).
+* `AlphaRAR.IsPredQuadVar`: the property that characterizes `⟨M⟩` — predictable, null at `0`,
+  and compensating `M²` — together with the two theorems saying `⟨M⟩` has it and nothing else
+  does, up to indistinguishability.
 -/
 
 open MeasureTheory Finset
@@ -184,8 +187,8 @@ lemma martingale_integral_eq [IsFiniteMeasure μ] {N : ℕ → Ω → ℝ}
 /-- **`M² - ⟨M⟩` is a martingale** (blueprint `lem:qv_mart`).
 For an adapted process `M` with square-integrable values, `M² - ⟨M⟩` is a
 martingale, being the martingale part of `M²` in its Doob decomposition. -/
-@[specifies predQuadVar "the compensator property: `⟨M⟩` is exactly the increasing process that \
-turns `M²` into a martingale, which with `predQuadVar_zero` determines it uniquely"]
+@[specifies predQuadVar "the compensator property, the half of `IsPredQuadVar` that carries the \
+content: `⟨M⟩` is what turns `M²` into a martingale"]
 lemma martingale_sq_sub_predQuadVar [IsFiniteMeasure μ]
     (hM : StronglyAdapted ℱ M) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) :
     Martingale (fun n ↦ (fun ω ↦ M n ω ^ 2) - predQuadVar M ℱ μ n) ℱ μ := by
@@ -205,6 +208,92 @@ lemma integrable_predQuadVar [IsFiniteMeasure μ]
     funext ω; simp [Pi.sub_apply]
   rw [hid]
   exact (hM2 n).sub hNk
+
+/-! ## Characterization
+
+`predQuadVar` is *defined* by a formula — the Doob predictable part of `M²` — and a formula is not
+a reason to call it a quadratic variation. `IsPredQuadVar` is the property that does: `A` is
+predictable, starts at `0`, and **compensates** `M²`, meaning `M² - A` is a martingale. The
+compensator property is the content; predictability and `A 0 = 0` are what make it pin `A` down,
+and they do so exactly, up to indistinguishability. -/
+
+/-- Two processes are **indistinguishable**: almost surely they agree at every time — one null set
+for the whole path, not one per time. Processes built out of conditional expectations —
+`predQuadVar` among them — are only ever determined up to this, so it is the relation their
+characterizations are stated up to.
+
+Over a countable index this is no stronger than agreeing a.e. at each fixed time
+(`Indistinguishable.of_forall_ae_eq`), but it is the statement about paths, which is what a
+uniqueness claim for a *process* should say.
+
+A structure rather than an abbreviation because a characterization reads the "up to what" off the
+head of a uniqueness statement, and an unfolded `∀ᵐ`/`∀` has none. -/
+structure Indistinguishable {ι E : Type*} (μ : Measure Ω) (A B : ι → Ω → E) : Prop where
+  /-- Almost surely, the two processes agree at every time. -/
+  ae_forall_eq : ∀ᵐ ω ∂μ, ∀ i, A i ω = B i ω
+
+/-- Indistinguishable processes agree a.e. at each fixed time. -/
+lemma Indistinguishable.ae_eq {ι E : Type*} {A B : ι → Ω → E} (h : Indistinguishable μ A B)
+    (i : ι) : A i =ᵐ[μ] B i := by
+  filter_upwards [h.ae_forall_eq] with ω hω using hω i
+
+/-- Over a countable index, agreeing a.e. at each fixed time upgrades to indistinguishability: the
+exceptional sets are countably many, so their union is still null. -/
+lemma Indistinguishable.of_forall_ae_eq {ι E : Type*} [Countable ι] {A B : ι → Ω → E}
+    (h : ∀ i, A i =ᵐ[μ] B i) : Indistinguishable μ A B :=
+  ⟨ae_all_iff.mpr h⟩
+
+/-- **`A` is a predictable quadratic variation of `M`**: `A` compensates `M²`, in that `M² - A` is
+a martingale, and `A` is predictable and null at `0`.
+
+This is the Doob decomposition of `M²` stated as a property rather than computed by a formula. It
+holds of `predQuadVar M ℱ μ` (`isPredQuadVar_predQuadVar`) and of nothing else, up to
+indistinguishability (`IsPredQuadVar.indistinguishable_predQuadVar`). -/
+@[characterization property predQuadVar "the compensator of `M²`: predictable, null at `0`, and \
+turning `M²` into a martingale"]
+structure IsPredQuadVar (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω)
+    (A : ℕ → Ω → ℝ) : Prop where
+  /-- `A` compensates `M²`. This is the content of the property; the other three fields are the
+  regularity and the normalisation that turn it from something `A` happens to satisfy into a
+  description of `A`. -/
+  martingale_sq_sub : Martingale (fun n ↦ (fun ω ↦ M n ω ^ 2) - A n) ℱ μ
+  /-- `A` is predictable: `A (n + 1)` is already `ℱ n`-measurable. This is what makes the
+  compensator property pin `A` down. Without it there is nothing to pin: adding to `A` any
+  martingale null at `0` leaves `M² - A` a martingale and `A 0 = 0` intact. -/
+  predictable : StronglyAdapted ℱ fun n ↦ A (n + 1)
+  /-- `A` starts at `0`, which fixes the additive constant the other fields leave free. -/
+  zero : A 0 = 0
+  /-- Each `A n` is integrable, so that `A` can sit in a Doob decomposition at all. -/
+  integrable : ∀ n, Integrable (A n) μ
+
+/-- **`⟨M⟩` compensates `M²`** — the existence half of the characterization: `predQuadVar` has the
+property that describes a predictable quadratic variation. -/
+@[characterization existence]
+lemma isPredQuadVar_predQuadVar [IsFiniteMeasure μ] (hM : StronglyAdapted ℱ M)
+    (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) :
+    IsPredQuadVar M ℱ μ (predQuadVar M ℱ μ) where
+  martingale_sq_sub := martingale_sq_sub_predQuadVar hM hM2
+  predictable := stronglyAdapted_predictablePart
+  zero := predQuadVar_zero
+  integrable := integrable_predQuadVar hM hM2
+
+/-- **Nothing else compensates `M²`** — the uniqueness half of the characterization: any `A` that
+is predictable, null at `0` and compensates `M²` is indistinguishable from `⟨M⟩`. This is the
+uniqueness of the Doob decomposition (`predictablePart_add_ae_eq`) applied to the martingale
+`M² - A` and the predictable process `A`, which gives one null set per time; the index is `ℕ`, so
+that is already indistinguishability. -/
+@[characterization uniqueness]
+lemma IsPredQuadVar.indistinguishable_predQuadVar [IsFiniteMeasure μ] {A : ℕ → Ω → ℝ}
+    (hA : IsPredQuadVar M ℱ μ A) : Indistinguishable μ A (predQuadVar M ℱ μ) := by
+  -- `M²` is the sum of the martingale `M² - A` and the predictable process `A`.
+  have hsum : (fun n ↦ (fun ω ↦ M n ω ^ 2) - A n) + A = fun n ↦ M n ^ 2 := by
+    funext n ω
+    simp
+  refine .of_forall_ae_eq fun n ↦ ?_
+  have h := predictablePart_add_ae_eq (ℱ := ℱ) (μ := μ) hA.martingale_sq_sub hA.predictable
+    hA.zero hA.integrable n
+  rw [hsum] at h
+  exact h.symm
 
 /-- **The square of a martingale is a submartingale.** For a square-integrable martingale `M`,
 `M²` is a submartingale: `M² = (M² - ⟨M⟩) + ⟨M⟩` is the sum of the martingale `M² - ⟨M⟩` and the

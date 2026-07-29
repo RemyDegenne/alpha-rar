@@ -20,6 +20,7 @@ git = "https://github.com/PatrickMassot/checkdecls.git"
 [[require]]
 name = "LeanSpec"
 git = "https://github.com/LeanMachineLearning/exposition"
+rev = "main"
 subDir = "LeanSpec"
 
 [[lean_lib]]

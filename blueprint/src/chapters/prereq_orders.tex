@@ -142,6 +142,27 @@ This is the martingale part in the Doob decomposition of $M^2$
 (\texttt{martingale\_martingalePart}).
 \end{proof}
 
+\begin{lemma}[$\langle M\rangle$ is the unique compensator]\label{lem:qv_unique}
+\lean{AlphaRAR.IsPredQuadVar, AlphaRAR.isPredQuadVar_predQuadVar,
+AlphaRAR.IsPredQuadVar.indistinguishable_predQuadVar}\leanok
+\uses{def:pred_qv, lem:qv_mart}
+Call a process $A$ a \emph{compensator} of $M^2$ if $M^2 - A$ is an $(\filt_n)$-martingale, $A$ is
+predictable, $A_0 = 0$, and each $A_n$ is integrable. Then $\langle M\rangle$ is a compensator of
+$M^2$, and any compensator $A$ of $M^2$ is indistinguishable from it:
+$\P[\forall n,\ A_n = \langle M\rangle_n] = 1$. So Definition~\ref{def:pred_qv}, which is a
+formula, defines the object the name describes, and does so up to the a.s.\ equality of paths that
+is the best any statement about conditional expectations can offer.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:qv_mart, lem:qv_incr}
+Existence is Lemma~\ref{lem:qv_mart} together with the predictability of the Doob predictable part
+(Lemma~\ref{lem:qv_incr}). For uniqueness, $M^2 = (M^2 - A) + A$ exhibits $M^2$ as a martingale
+plus a predictable process null at $0$, and the Doob decomposition is unique up to null sets
+(\texttt{predictablePart\_add\_ae\_eq}), so $A_n = \langle M\rangle_n$ a.s.\ for each fixed $n$;
+the index set is countable, so the countably many exceptional sets union to a null set.
+\end{proof}
+
 \begin{lemma}[Expected quadratic variation equals second moment]\label{lem:qv_second_moment}
 \lean{AlphaRAR.integral_sq_eq_integral_predQuadVar}\leanok
 \uses{def:pred_qv, lem:qv_mart}
