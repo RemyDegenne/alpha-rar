@@ -3,8 +3,10 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import Mathlib.Probability.Martingale.Centering
-import LeanSpec
+module
+
+public import Mathlib.Probability.Martingale.Centering
+public meta import LeanSpec
 
 /-!
 # Predictable quadratic variation
@@ -23,6 +25,8 @@ wrappers around Mathlib's discrete Doob decomposition.
   and compensating `M²` — together with the two theorems saying `⟨M⟩` has it and nothing else
   does, up to indistinguishability.
 -/
+
+@[expose] public section
 
 open MeasureTheory Finset
 

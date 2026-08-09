@@ -3,10 +3,12 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.PropDev
-import AlphaRAR.YDK2026.ARTSAlgorithm
-import AlphaRAR.YDK2026.ResponseIncrement
-import AlphaRAR.YDK2026.PluginTargetCLT
+module
+
+public import AlphaRAR.Mathlib.PropDev
+public import AlphaRAR.YDK2026.ARTSAlgorithm
+public import AlphaRAR.YDK2026.ResponseIncrement
+public import AlphaRAR.YDK2026.PluginTargetCLT
 
 /-!
 # The `o_p(√n)` proportion-deviation bound for the aRTS design
@@ -26,6 +28,8 @@ Lipschitz near `θ`, non-sparsity `v_k > 0`, and the a.s. consistency `N/n → v
 
 * `AlphaRAR.aRTS_prop_dev`.
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory Filter Learning Finset
 open scoped Topology ENNReal NNReal

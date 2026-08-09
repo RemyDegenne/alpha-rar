@@ -3,7 +3,9 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.Tactic.Tendsto
+module
+
+public import AlphaRAR.Mathlib.Tactic.Tendsto
 
 /-!
 # Regression tests for the `tendsto` tactic
@@ -12,6 +14,8 @@ Each `example` mirrors a hand-written limit-algebra idiom found in the project's
 proofs (see `AlphaRAR/Mathlib/StochasticOrder.lean`, `ResponseConsistency.lean`,
 `LILLogLog.lean`, `ResponseCLT.lean`).
 -/
+
+@[expose] public section
 
 open Filter Topology
 

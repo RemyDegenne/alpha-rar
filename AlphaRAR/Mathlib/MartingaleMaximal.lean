@@ -3,10 +3,12 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.QuadraticVariation
-import AlphaRAR.Mathlib.TailBoundLIntegral
-import Mathlib.Probability.Martingale.OptionalStopping
-import LeanSpec
+module
+
+public import AlphaRAR.Mathlib.QuadraticVariation
+public import AlphaRAR.Mathlib.TailBoundLIntegral
+public import Mathlib.Probability.Martingale.OptionalStopping
+public meta import LeanSpec
 
 /-!
 # Doob's `L²` maximal inequality (`L¹` form)
@@ -24,6 +26,8 @@ submartingale `M²` via `AlphaRAR.submartingale_sq`) with the analytic core
 
 * `AlphaRAR.lintegral_sup'_abs_le_two_mul_sqrt`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Finset Filter
 open scoped ENNReal

@@ -3,11 +3,13 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.Kronecker
-import AlphaRAR.Mathlib.QuadraticVariation
-import Mathlib.Analysis.PSeries
-import Mathlib.Probability.Martingale.Convergence
-import LeanSpec
+module
+
+public import AlphaRAR.Mathlib.Kronecker
+public import AlphaRAR.Mathlib.QuadraticVariation
+public import Mathlib.Analysis.PSeries
+public import Mathlib.Probability.Martingale.Convergence
+public meta import LeanSpec
 
 /-!
 # Strong law of large numbers for martingales
@@ -22,6 +24,8 @@ theorem, then apply Kronecker's lemma (`AlphaRAR.kronecker`).
 
 * `AlphaRAR.martingale_ae_tendsto_of_eLpNorm_two_le`: an `L²`-bounded martingale converges a.e.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Finset
 open scoped Topology ENNReal NNReal

@@ -3,13 +3,16 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import Mathlib.MeasureTheory.Function.ConditionalExpectation.PullOut
-import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
-import Mathlib.MeasureTheory.Measure.LevyConvergence
-import Mathlib.Probability.CondVar
-import Mathlib.Probability.Distributions.Gaussian.Real
-import Mathlib.Probability.Process.Filtration
-import LeanSpec
+module
+
+public import Mathlib.MeasureTheory.Function.ConditionalExpectation.CondJensen
+public import Mathlib.MeasureTheory.Function.ConditionalExpectation.PullOut
+public import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
+public import Mathlib.MeasureTheory.Measure.LevyConvergence
+public import Mathlib.Probability.CondVar
+public import Mathlib.Probability.Distributions.Gaussian.Real
+public import Mathlib.Probability.Process.Filtration
+public meta import LeanSpec
 
 /-!
 # Martingale central limit theorem (Lindeberg form)
@@ -49,6 +52,8 @@ This file is Mathlib-bound staging (cf. the `AlphaRAR/Mathlib/` directory).
 * `AlphaRAR.MartDiffArray.condVar_ae_eq_condVar` : the array's conditional variance agrees a.e.
   with Mathlib's `ProbabilityTheory.condVar`.
 -/
+
+@[expose] public section
 
 open Complex intervalIntegral MeasureTheory
 open scoped ProbabilityTheory Real Topology

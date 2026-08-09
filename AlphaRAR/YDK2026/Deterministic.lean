@@ -3,12 +3,14 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.Convergence
-import Mathlib.Algebra.BigOperators.Field
-import Mathlib.Algebra.Order.Star.Real
-import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
-import Mathlib.Analysis.Complex.ExponentialBounds
-import LeanSpec
+module
+
+public import AlphaRAR.Mathlib.Convergence
+public import Mathlib.Algebra.BigOperators.Field
+public import Mathlib.Algebra.Order.Star.Real
+public import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
+public import Mathlib.Analysis.Complex.ExponentialBounds
+public meta import LeanSpec
 
 /-!
 # Deterministic core of the auxiliary processes
@@ -34,6 +36,8 @@ so all processes sum over `Finset.range n` = patients `0, …, n-1`.
 * `AlphaRAR.hitting_basic`: the last under-sampling time is non-decreasing and
   bounded by `n` (blueprint `lem:hitting_basic`).
 -/
+
+@[expose] public section
 
 open Finset Filter
 

@@ -3,8 +3,10 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.YDK2026.ResponseLIL
-import Mathlib.Analysis.Calculus.FDeriv.Basic
+module
+
+public import AlphaRAR.YDK2026.ResponseLIL
+public import Mathlib.Analysis.Calculus.FDeriv.Basic
 
 /-!
 # Convergence rate of the plug-in target (the delta method)
@@ -26,6 +28,8 @@ first-order expansion of `T` at `θ` shows that a differentiable map preserves t
 * `AlphaRAR.rho_rate` (blueprint `lem:rho_rate`): the almost-sure loglog rate of the plug-in target,
   `ρ̂_{n,k} - v_k = O(√(log log n / n))`, given estimator consistency and the loglog estimator rate.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter ProbabilityTheory Learning Real Asymptotics
 

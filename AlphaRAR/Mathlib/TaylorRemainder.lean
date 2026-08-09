@@ -3,10 +3,12 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import Mathlib.Analysis.Calculus.ContDiff.Comp
-import Mathlib.Analysis.Calculus.ContDiff.RCLike
-import Mathlib.Analysis.Calculus.LocalExtr.Basic
-import Mathlib.Analysis.Calculus.MeanValue
+module
+
+public import Mathlib.Analysis.Calculus.ContDiff.Comp
+public import Mathlib.Analysis.Calculus.ContDiff.RCLike
+public import Mathlib.Analysis.Calculus.LocalExtr.Basic
+public import Mathlib.Analysis.Calculus.MeanValue
 
 /-!
 # A quadratic remainder bound for the first-order Taylor expansion
@@ -35,6 +37,8 @@ with no explicit Hessian.
 * `AlphaRAR.sq_norm_le_sum_sq` — sup-norm to sum-of-squares, converting the bounds above into the
   coordinatewise form used downstream.
 -/
+
+@[expose] public section
 
 open Filter Set
 

@@ -3,7 +3,9 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import Mathlib.Analysis.Normed.Group.Basic
+module
+
+public import Mathlib.Analysis.Normed.Group.Basic
 
 /-!
 # Increment control from maximal bounds
@@ -26,6 +28,8 @@ turn maximal martingale bounds into pointwise increment bounds.
 
 Lemma `lem:increment_control` in the technical chapter of the blueprint.
 -/
+
+@[expose] public section
 
 open Finset
 

@@ -3,15 +3,17 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.LILLogLog
-import AlphaRAR.Mathlib.LILSharp
-import AlphaRAR.Mathlib.LILTruncation
-import AlphaRAR.Mathlib.MartingaleSLLN
-import AlphaRAR.Mathlib.TsumMeasureIoi
-import Mathlib.Probability.ConditionalExpectation
-import Mathlib.Analysis.SumIntegralComparisons
-import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
-import LeanSpec
+module
+
+public import AlphaRAR.Mathlib.LILLogLog
+public import AlphaRAR.Mathlib.LILSharp
+public import AlphaRAR.Mathlib.LILTruncation
+public import AlphaRAR.Mathlib.MartingaleSLLN
+public import AlphaRAR.Mathlib.TsumMeasureIoi
+public import Mathlib.Probability.ConditionalExpectation
+public import Mathlib.Analysis.SumIntegralComparisons
+public import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
+public meta import LeanSpec
 
 /-!
 # The i.i.d. Hartman–Wintner law of the iterated logarithm
@@ -49,6 +51,8 @@ the high part vanishes eventually; the drift and medium parts are `o(√(n log l
   `AlphaRAR.abs_truncation_sub_integral_le` (increment bound `|ΔS̃_j| ≤ 2 b_j`), and
   `AlphaRAR.integral_truncation_sub_integral_sq_le` (`Var(Y^L) ≤ σ²`).
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter ProbabilityTheory Real
 

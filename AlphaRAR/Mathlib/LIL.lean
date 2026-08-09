@@ -3,10 +3,12 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.QuadraticVariation
-import Mathlib.Order.CompletePartialOrder
-import Mathlib.Probability.Martingale.OptionalStopping
-import LeanSpec
+module
+
+public import AlphaRAR.Mathlib.QuadraticVariation
+public import Mathlib.Order.CompletePartialOrder
+public import Mathlib.Probability.Martingale.OptionalStopping
+public meta import LeanSpec
 
 /-!
 # Exponential supermartingale for the law of the iterated logarithm
@@ -54,6 +56,8 @@ the `δ = 1, η = 1` instance (`exp_le_one_add_add_sq`, which is Mathlib's
 * `AlphaRAR.ae_eventually_le_sqrt_nat_mul_log`: the `O(√(n log n))` a.s. bound for a
   bounded-increment martingale (blueprint `cor:lil_upper_nat`).
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Real
 

@@ -3,10 +3,12 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
-import Mathlib.MeasureTheory.Measure.Tight
-import Mathlib.MeasureTheory.Order.Group.Lattice
-import LeanSpec
+module
+
+public import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
+public import Mathlib.MeasureTheory.Measure.Tight
+public import Mathlib.MeasureTheory.Order.Group.Lattice
+public meta import LeanSpec
 
 /-!
 # Stochastic Landau orders `o_p` and `O_p`
@@ -49,6 +51,8 @@ whole `TendstoInMeasure` API of Mathlib applies to it; `IsLittleOpOne.congr` and
 measures, because that is the form every downstream proof consumes;
 `isBigOpOne_iff_isTightMeasureSet` records that the two agree.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped ENNReal

@@ -3,10 +3,12 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import Mathlib.Probability.CentralLimitTheorem
-import AlphaRAR.Mathlib.MartingaleMaximal
-import AlphaRAR.Mathlib.LILHartmanWintner
-import AlphaRAR.Mathlib.MartingaleCLT
+module
+
+public import Mathlib.Probability.CentralLimitTheorem
+public import AlphaRAR.Mathlib.MartingaleMaximal
+public import AlphaRAR.Mathlib.LILHartmanWintner
+public import AlphaRAR.Mathlib.MartingaleCLT
 
 /-!
 # The Anscombe random-time-change central limit theorem
@@ -50,6 +52,8 @@ Decompose `S_{N_n}/√(N_n) = (S_{c_n}/√(c_n)) · √(c_n/N_n) + (S_{N_n} - S_
 * `AlphaRAR.tendsto_map_add_of_tendstoInMeasure_zero` : the Slutsky step absorbing the window
   remainder.
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory Filter Finset
 

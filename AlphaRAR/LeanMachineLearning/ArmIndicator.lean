@@ -3,8 +3,10 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.LeanMachineLearning.Filtration
-import LeanSpec
+module
+
+public import AlphaRAR.LeanMachineLearning.Filtration
+public meta import LeanSpec
 
 /-!
 # The arm indicator
@@ -30,6 +32,8 @@ environment.
   partial-sum identities.
 * `Learning.stronglyAdapted_armIndicator`, `Learning.integrable_armIndicator`.
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory Filter Finset
 

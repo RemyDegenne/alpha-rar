@@ -3,7 +3,9 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import Mathlib.Topology.MetricSpace.Pseudo.Lemmas
+module
+
+public import Mathlib.Topology.MetricSpace.Pseudo.Lemmas
 
 /-!
 # A positive-part convergence lemma
@@ -27,6 +29,8 @@ expression is asymptotically `≤ 0`.
 Lemma `lem:convergence` in the technical chapter of the blueprint. The hypothesis
 `limsup ε ≤ 0` is formalized in its operational form `∀ δ > 0, ∀ᶠ n, ε n < δ`.
 -/
+
+@[expose] public section
 
 open Filter Topology Finset
 

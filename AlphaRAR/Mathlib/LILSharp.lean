@@ -3,8 +3,10 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.LILLogLog
-import LeanSpec
+module
+
+public import AlphaRAR.Mathlib.LILLogLog
+public meta import LeanSpec
 
 /-!
 # The sharp-constant martingale law of the iterated logarithm
@@ -58,6 +60,8 @@ and pushes `δ ↓ 0`, together with geometric blocks of base `ρ ↓ 1`, to yie
 * `AlphaRAR.ae_limsup_abs_div_sqrt_nat_mul_loglog_of_growth_le_one`: the same in genuine `limsup`
   form, `limsup_n |M_n|/√(2 v n log log n) ≤ 1` a.s. The sharp constant `1` for the low part.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Real
 

@@ -3,7 +3,9 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.StochasticOrder
+module
+
+public import AlphaRAR.Mathlib.StochasticOrder
 
 /-!
 # One-sided `o_p(√n)` deviation bounds
@@ -25,6 +27,8 @@ this file is the drift-sign argument and its assembly into a per-arm deviation b
 * `AlphaRAR.isLittleOpOne_maxDev_of_le` and `AlphaRAR.isLittleOpOne_dev_of_sum_zero`: transfer to
   the deviations, and the simplex reverse step turning one-sided bounds into two-sided ones.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped ENNReal Topology

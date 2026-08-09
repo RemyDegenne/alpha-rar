@@ -3,9 +3,11 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.YDK2026.PluginTargetCLT
-import Mathlib.Data.Matrix.ColumnRowPartitioned
-import LeanSpec
+module
+
+public import AlphaRAR.YDK2026.PluginTargetCLT
+public import Mathlib.Data.Matrix.ColumnRowPartitioned
+public meta import LeanSpec
 
 /-!
 # The joint central limit theorem for proportions and plug-in targets
@@ -26,6 +28,8 @@ product-space Slutsky lemma, exactly as for `clt_rho`.
 
 * `AlphaRAR.clt_joint`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter ProbabilityTheory Learning
 

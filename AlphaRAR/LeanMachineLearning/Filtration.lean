@@ -3,8 +3,10 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import LeanMachineLearning.SequentialLearning.FiniteActions
-import LeanMachineLearning.SequentialLearning.StationaryEnv
+module
+
+public import LeanMachineLearning.SequentialLearning.FiniteActions
+public import LeanMachineLearning.SequentialLearning.StationaryEnv
 
 /-!
 # Filtration facts for the algorithm–environment framework
@@ -18,6 +20,8 @@ algorithm–environment framework, and belong upstream with it. They are what ma
 property through `filtrationAction` usable — the *assignment* `A (n+1)` is fresh given `ℱ n`, while
 the *response* `Y (n+1)` is fresh given `ℱ n` together with `A (n+1)`.
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory Filter Learning
 

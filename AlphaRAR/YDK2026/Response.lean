@@ -3,15 +3,17 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.LeanMachineLearning.ArmIndicator
-import AlphaRAR.LeanMachineLearning.IsAlgEnvSeq
-import AlphaRAR.Mathlib.HasCondDistrib
-import AlphaRAR.Mathlib.Variance
-import AlphaRAR.Mathlib.MartingaleRate
-import LeanMachineLearning.SequentialLearning.FiniteActions
-import LeanMachineLearning.SequentialLearning.StationaryEnv
-import Mathlib.Topology.Separation.CompletelyRegular
-import LeanSpec
+module
+
+public import AlphaRAR.LeanMachineLearning.ArmIndicator
+public import AlphaRAR.LeanMachineLearning.IsAlgEnvSeq
+public import AlphaRAR.Mathlib.HasCondDistrib
+public import AlphaRAR.Mathlib.Variance
+public import AlphaRAR.Mathlib.MartingaleRate
+public import LeanMachineLearning.SequentialLearning.FiniteActions
+public import LeanMachineLearning.SequentialLearning.StationaryEnv
+public import Mathlib.Topology.Separation.CompletelyRegular
+public meta import LeanSpec
 
 /-!
 # The response martingale, via the algorithm–environment framework
@@ -38,6 +40,8 @@ information at each step, made rigorous here by the tower property through
 * `AlphaRAR.condExp_feedback`: `𝔼[Y n | filtrationAction n] = (ν (A n))[id]`.
 * `AlphaRAR.memLp_feedback`: `Y n ∈ L²(P)` as soon as every arm's reward distribution is in `L²`.
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory Filter Learning
 

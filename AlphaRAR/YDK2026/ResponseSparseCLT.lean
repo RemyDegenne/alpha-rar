@@ -3,9 +3,11 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.AnscombeCLT
-import AlphaRAR.YDK2026.ResponseLIL
-import AlphaRAR.YDK2026.ResponseCLT
+module
+
+public import AlphaRAR.Mathlib.AnscombeCLT
+public import AlphaRAR.YDK2026.ResponseLIL
+public import AlphaRAR.YDK2026.ResponseCLT
 
 /-!
 # The self-normalized response-martingale CLT for sparse targets
@@ -21,6 +23,8 @@ regularity `N_{n,k}/c_{n,k} → 1` for a deterministic `c_{n,k} → ∞` — the
 for **sparse** targets `v_k = 0`, replaces positivity. This is the componentwise ingredient of the
 sparse CLT (blueprint `cor:sparse_clt`, `lem:componentwise`).
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter ProbabilityTheory Learning Real
 

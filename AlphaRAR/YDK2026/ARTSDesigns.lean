@@ -3,9 +3,11 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.YDK2026.ARTSAlgorithm
-import LeanMachineLearning.ForMathlib.MeasureTheory.Order.MeasurableArg
-import LeanSpec
+module
+
+public import AlphaRAR.YDK2026.ARTSAlgorithm
+public import LeanMachineLearning.ForMathlib.MeasureTheory.Order.MeasurableArg
+public meta import LeanSpec
 
 /-!
 # Example designs in the aRTS family
@@ -29,6 +31,8 @@ function whose simplex property and throttle inequality are pure arithmetic on t
 * `AlphaRAR.eradeAlgorithm`, `AlphaRAR.erade_isARTS`;
 * `AlphaRAR.dTrackingAlgorithm`, `AlphaRAR.dTracking_isARTS`.
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory Filter Learning Finset
 open scoped ENNReal NNReal

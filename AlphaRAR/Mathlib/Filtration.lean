@@ -3,8 +3,10 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import Mathlib.Probability.Process.Filtration
-import LeanSpec
+module
+
+public import Mathlib.Probability.Process.Filtration
+public meta import LeanSpec
 
 /-!
 # The previous-index filtration
@@ -13,6 +15,8 @@ import LeanSpec
 `(ℱ.shiftDown) 0 = ⊥`. It is the filtration with respect to which the increment at step `n` is
 *fresh*, and so the one a Doob decomposition of a step-`n` increment must be taken against.
 -/
+
+@[expose] public section
 
 open MeasureTheory
 

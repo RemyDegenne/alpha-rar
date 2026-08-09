@@ -3,8 +3,10 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.QuadraticVariation
-import AlphaRAR.Mathlib.StochasticOrder
+module
+
+public import AlphaRAR.Mathlib.QuadraticVariation
+public import AlphaRAR.Mathlib.StochasticOrder
 
 /-!
 # A square-integrable martingale is `O_p(√n)`
@@ -15,6 +17,8 @@ the discrete Itô isometry plus telescoping of the quadratic variation) with the
 martingale with `M 0 = 0` and increment second moments bounded by `σ²` is
 `O_p(√n)`. This is blueprint `cor:mart_Op`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped ENNReal NNReal

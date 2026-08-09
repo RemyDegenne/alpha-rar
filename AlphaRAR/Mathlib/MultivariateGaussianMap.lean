@@ -3,7 +3,9 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import Mathlib.Probability.Distributions.Gaussian.Multivariate
+module
+
+public import Mathlib.Probability.Distributions.Gaussian.Multivariate
 
 /-!
 # Linear pushforward of a centered multivariate Gaussian
@@ -19,6 +21,8 @@ and behind joint/stacked central limit theorems (`x ↦ (G x, G x)` via a stacke
 
 * `AlphaRAR.multivariateGaussian_map_matrix`.
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory
 

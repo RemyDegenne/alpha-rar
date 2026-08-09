@@ -3,9 +3,11 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.YDK2026.ConsistencyMatching
-import AlphaRAR.YDK2026.ResponseConsistency
-import LeanSpec
+module
+
+public import AlphaRAR.YDK2026.ConsistencyMatching
+public import AlphaRAR.YDK2026.ResponseConsistency
+public meta import LeanSpec
 
 /-!
 # Consistency of the aRTS design family
@@ -41,6 +43,8 @@ hypothesis; everything downstream of it is proved.
 
 * `AlphaRAR.aRTS_consistency`: the concrete a.s. consistency of the aRTS proportions.
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory Filter Learning
 

@@ -3,10 +3,12 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.MartingaleCLT
-import AlphaRAR.YDK2026.ARTSConsistency
-import AlphaRAR.Mathlib.Tactic.Tendsto
-import LeanSpec
+module
+
+public import AlphaRAR.Mathlib.MartingaleCLT
+public import AlphaRAR.YDK2026.ARTSConsistency
+public import AlphaRAR.Mathlib.Tactic.Tendsto
+public meta import LeanSpec
 
 /-!
 # The self-normalized central limit theorem for the response martingale
@@ -33,6 +35,8 @@ The deterministic-normalizer CLT (`respMart_div_sqrt_tendsto_gaussianReal`) then
 `Q_{n,k}/√(V_k v_k n) ⇒ 𝒩(0,1)`, and self-normalization by `√(v_k n/N_{n,k}) → 1`
 (`tendsto_map_mul_of_tendstoInMeasure_one`) recovers the random-normalizer statement.
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory Filter Learning
 

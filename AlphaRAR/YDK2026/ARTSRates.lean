@@ -3,8 +3,10 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.YDK2026.ARTSAlgorithm
-import AlphaRAR.YDK2026.PluginTargetRate
+module
+
+public import AlphaRAR.YDK2026.ARTSAlgorithm
+public import AlphaRAR.YDK2026.PluginTargetRate
 
 /-!
 # Strong consistency and rates for the aRTS design
@@ -21,6 +23,8 @@ delta-method rate `rho_rate` with the subsampled loglog LIL for the estimator, d
 the positive allocation proportion. Condition **B** enters as `hTpos` (non-sparsity) and `hT_diff`
 (differentiability at `θ`).
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter ProbabilityTheory Learning Real Asymptotics
 

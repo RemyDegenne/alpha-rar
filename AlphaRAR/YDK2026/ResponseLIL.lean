@@ -3,9 +3,11 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.YDK2026.OptionalSkipping
-import AlphaRAR.Mathlib.LILHartmanWintner
-import AlphaRAR.YDK2026.ResponseConsistency
+module
+
+public import AlphaRAR.YDK2026.OptionalSkipping
+public import AlphaRAR.Mathlib.LILHartmanWintner
+public import AlphaRAR.YDK2026.ResponseConsistency
 
 /-!
 # Loglog law of the iterated logarithm for the response martingale
@@ -25,6 +27,8 @@ time-change `N_{n,k} → ∞` transports the `limsup` bound to `Q_k`.
 
 * `AlphaRAR.respMart_eq_sum_sampledSeq`: the reindexing `Q_k n = ∑_{i<N_{n,k}} (Y_{τ_i} − θ_k)`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter ProbabilityTheory Learning Real
 open scoped Topology ENNReal

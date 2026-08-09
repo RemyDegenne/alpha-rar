@@ -3,11 +3,13 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.Filtration
-import AlphaRAR.YDK2026.Deterministic
-import Mathlib.Order.CompletePartialOrder
-import Mathlib.Probability.Martingale.Centering
-import LeanSpec
+module
+
+public import AlphaRAR.Mathlib.Filtration
+public import AlphaRAR.YDK2026.Deterministic
+public import Mathlib.Order.CompletePartialOrder
+public import Mathlib.Probability.Martingale.Centering
+public meta import LeanSpec
 
 /-!
 # The assignment martingale
@@ -36,6 +38,8 @@ probability, and `M` is a martingale for `ℱ.shiftDown`. At `n = 0` there is no
 * `AlphaRAR.martingale_assignMart`: `M` is a martingale (blueprint `lem:M_martingale`).
 * `AlphaRAR.assignMart_succ_sub`: the increment `M (n+1) - M n = X n - μ[X n | ℱ (n-1)]`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Finset
 

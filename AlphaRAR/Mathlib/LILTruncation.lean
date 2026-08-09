@@ -3,9 +3,11 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.LIL
-import Mathlib.Analysis.Complex.ExponentialBounds
-import Mathlib.Probability.StrongLaw
+module
+
+public import AlphaRAR.Mathlib.LIL
+public import Mathlib.Analysis.Complex.ExponentialBounds
+public import Mathlib.Probability.StrongLaw
 
 /-!
 # Ingredients for the finite-variance law of the iterated logarithm
@@ -30,6 +32,8 @@ controls the tail, drift, and centred-truncated pieces separately.
 * `AlphaRAR.sum_one_div_sqrt_le`: `∑_{i<n} 1/√i ≤ 2√n`, the deterministic core of the drift
   bound (blueprint `lem:trunc_drift`).
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter ProbabilityTheory
 

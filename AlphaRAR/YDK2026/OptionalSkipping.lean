@@ -3,10 +3,12 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.YDK2026.Response
-import Mathlib.Data.Nat.Nth
-import Mathlib.Probability.Independence.Basic
-import LeanSpec
+module
+
+public import AlphaRAR.YDK2026.Response
+public import Mathlib.Data.Nat.Nth
+public import Mathlib.Probability.Independence.Basic
+public meta import LeanSpec
 
 /-!
 # Doob optional skipping
@@ -47,6 +49,8 @@ carries the optional-skipping argument for an arbitrary predictable selector.
   product `∏ ρ (E i)` (master formula, proved by induction).
 * `AlphaRAR.iIndepFun_sampledSeq`, `AlphaRAR.map_sampledSeq_eq`: independence and law of samples.
 -/
+
+@[expose] public section
 
 -- A single classical `Decidable (D j ω = 1)` instance is shared throughout (`Nat.count` and its
 -- `card_filter` rewrites must agree on it), so we open `Classical` file-wide rather than locally.

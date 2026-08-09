@@ -3,10 +3,12 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.StochasticOrder
-import AlphaRAR.Mathlib.MartingaleMaximal
-import AlphaRAR.Mathlib.IncrementControl
-import LeanSpec
+module
+
+public import AlphaRAR.Mathlib.StochasticOrder
+public import AlphaRAR.Mathlib.MartingaleMaximal
+public import AlphaRAR.Mathlib.IncrementControl
+public meta import LeanSpec
 
 /-!
 # `o_p` increment bounds for a martingale family
@@ -26,6 +28,8 @@ shown to be `o_p(1)` and `o_p(√n)` from the vector Doob maximal bounds (`mart_
 * `AlphaRAR.isLittleOpOne_wmaxSeq_div_sqrt`: `wmaxSeq = o_p(√n)`.
 * `AlphaRAR.norm_increment_le_vmaxSeq_wmaxSeq`: the pathwise increment-control bound.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Finset
 open scoped ENNReal Topology

@@ -3,9 +3,11 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.HasCondDistrib
-import LeanMachineLearning.SequentialLearning.FiniteActions
-import LeanMachineLearning.SequentialLearning.StationaryEnv
+module
+
+public import AlphaRAR.Mathlib.HasCondDistrib
+public import LeanMachineLearning.SequentialLearning.FiniteActions
+public import LeanMachineLearning.SequentialLearning.StationaryEnv
 
 /-!
 # The feedback of an algorithm–environment sequence in a stationary environment
@@ -23,6 +25,8 @@ consequences are recorded here:
 Nothing here is specific to any particular design; these are statements about
 `Learning.IsAlgEnvSeq` under `Learning.stationaryEnv` and belong upstream with them.
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory Filter Learning
 

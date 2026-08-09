@@ -3,10 +3,12 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.LIL
-import AlphaRAR.Mathlib.Tactic.Tendsto
-import Mathlib.Analysis.PSeries
-import Mathlib.Analysis.Complex.ExponentialBounds
+module
+
+public import AlphaRAR.Mathlib.LIL
+public import AlphaRAR.Mathlib.Tactic.Tendsto
+public import Mathlib.Analysis.PSeries
+public import Mathlib.Analysis.Complex.ExponentialBounds
 
 /-!
 # A general martingale law of the iterated logarithm at the `log log` rate
@@ -38,6 +40,8 @@ in `k`, so the Borel–Cantelli step is used through its eventual-admissibility 
   `AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog`: the `√(n log log n)`-scale forms, the second
   two-sided (blueprint `cor:llil_nat`), used for the bounded assignment martingale.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Real
 

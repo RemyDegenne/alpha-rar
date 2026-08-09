@@ -3,10 +3,12 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.TsumMeasureIoi
-import AlphaRAR.Mathlib.LILTruncation
-import AlphaRAR.YDK2026.Response
-import LeanSpec
+module
+
+public import AlphaRAR.Mathlib.TsumMeasureIoi
+public import AlphaRAR.Mathlib.LILTruncation
+public import AlphaRAR.YDK2026.Response
+public meta import LeanSpec
 
 /-!
 # The truncated response martingale
@@ -38,6 +40,8 @@ increments `ξ̃_i = truncation(ξ_i, √i) - m_i`).
 * `AlphaRAR.truncVar_le_variance`, `AlphaRAR.predQuadVar_truncRespMart_le`: `v_i ≤ V_k` and hence
   `⟨M̃⟩_n ≤ V_k N_{n,k}` (blueprint `lem:trunc_qv_le`).
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory Filter Learning Real
 

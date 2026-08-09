@@ -3,8 +3,10 @@ Copyright (c) 2026 Ivo Malinowski. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Ivo Malinowski
 -/
-import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
-import Mathlib.MeasureTheory.Measure.LevyConvergence
+module
+
+public import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
+public import Mathlib.MeasureTheory.Measure.LevyConvergence
 
 /-!
 # Cramér–Wold device
@@ -20,6 +22,8 @@ It proves one direction of the Cramér–Wold device.
   `⟪Xn n, t⟫` under `P` converge to the pushforward distribution of `⟪X, t⟫` under `Q`, then the
   distributions of `Xn` under `P` converge to the distribution of `X` under `Q`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Complex BoundedContinuousFunction RealInnerProductSpace ProbabilityMeasure
 

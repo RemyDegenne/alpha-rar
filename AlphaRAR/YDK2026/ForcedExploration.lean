@@ -3,10 +3,12 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.TaylorRemainder
-import AlphaRAR.YDK2026.ARTSNormality
-import AlphaRAR.YDK2026.PropDevLIL
-import LeanSpec
+module
+
+public import AlphaRAR.Mathlib.TaylorRemainder
+public import AlphaRAR.YDK2026.ARTSNormality
+public import AlphaRAR.YDK2026.PropDevLIL
+public meta import LeanSpec
 
 /-!
 # Forced exploration and sparse targets
@@ -42,6 +44,8 @@ and `O(√(n log log n))` (a.s. deviation) by the exploration-schedule condition
   `maths/sparse-clt-fix.md`; `AlphaRAR.sched23_satisfies_schedule_hypotheses` shows the schedule
   hypotheses are satisfiable, and only outside the paper's condition (ii).
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory Filter Learning Real
 open scoped Topology ENNReal NNReal Matrix

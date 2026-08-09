@@ -3,10 +3,12 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.YDK2026.PropDevARTS
-import AlphaRAR.YDK2026.AssignmentRate
-import AlphaRAR.YDK2026.ARTSRates
-import LeanSpec
+module
+
+public import AlphaRAR.YDK2026.PropDevARTS
+public import AlphaRAR.YDK2026.AssignmentRate
+public import AlphaRAR.YDK2026.ARTSRates
+public meta import LeanSpec
 
 /-!
 # The a.s. `O(√(n log log n))` proportion-deviation bound for the aRTS design
@@ -29,6 +31,8 @@ the simplex identity `sum_count_sub_smul_eq_zero` for the reverse step.
 * `AlphaRAR.logLogRate` (the `√(n log log n)` rate) and its analytic lemmas.
 * `AlphaRAR.aRTS_prop_dev_ae`, `AlphaRAR.aRTS_count_sub_smul_ae`.
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory Filter Learning Real
 open scoped Topology ENNReal NNReal

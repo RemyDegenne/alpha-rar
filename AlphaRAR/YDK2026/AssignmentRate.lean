@@ -3,10 +3,12 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.YDK2026.Assignment
-import AlphaRAR.Mathlib.LILLogLog
-import AlphaRAR.Mathlib.MartingaleRate
-import AlphaRAR.Mathlib.MartingaleSLLN
+module
+
+public import AlphaRAR.YDK2026.Assignment
+public import AlphaRAR.Mathlib.LILLogLog
+public import AlphaRAR.Mathlib.MartingaleRate
+public import AlphaRAR.Mathlib.MartingaleSLLN
 
 /-!
 # Rates for the assignment martingale
@@ -17,6 +19,8 @@ rate bound `isBigOpOne_of_bdd_increments` gives `M n = O_p(√n)` (blueprint `le
 and into the martingale strong law `martingale_div_atTop_ae_tendsto_zero_of_bdd` gives
 `M n / n → 0` a.e. (blueprint `lem:M_lln`).
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 

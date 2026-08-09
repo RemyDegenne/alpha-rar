@@ -3,12 +3,15 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.CramerWold
-import AlphaRAR.Mathlib.MultivariateGaussianMap
-import AlphaRAR.YDK2026.ResponseCLT
-import AlphaRAR.Mathlib.Tactic.Tendsto
-import Mathlib.Probability.Distributions.Gaussian.Multivariate
-import LeanSpec
+module
+
+public import AlphaRAR.Mathlib.CramerWold
+public import AlphaRAR.Mathlib.MultivariateGaussianMap
+public import AlphaRAR.YDK2026.ResponseCLT
+public import AlphaRAR.Mathlib.Tactic.Tendsto
+public import Mathlib.Probability.Distributions.Gaussian.Fernique
+public import Mathlib.Probability.Distributions.Gaussian.Multivariate
+public meta import LeanSpec
 
 /-!
 # The joint componentwise central limit theorem
@@ -21,6 +24,8 @@ martingale row sum: the increment is `∑_k w_k 𝟙{A i = k}(Y i - θ_k)` (the 
 make its conditional square `∑_k w_k² 𝟙{A i = k} V_k`), so `MartDiffArray.mart_clt` applies with
 limit variance `∑_k w_k² v_k V_k`.
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory Filter Learning
 

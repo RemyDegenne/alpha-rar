@@ -3,11 +3,13 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.YDK2026.Deterministic
-import AlphaRAR.Mathlib.MartingaleSLLN
-import AlphaRAR.YDK2026.Response
-import Mathlib.Algebra.Ring.IsFormallyReal
-import LeanSpec
+module
+
+public import AlphaRAR.YDK2026.Deterministic
+public import AlphaRAR.Mathlib.MartingaleSLLN
+public import AlphaRAR.YDK2026.Response
+public import Mathlib.Algebra.Ring.IsFormallyReal
+public meta import LeanSpec
 
 /-!
 # Consistency of the sequential estimator on `{N → ∞}`
@@ -35,6 +37,8 @@ The two bridge lemmas `count_indicator_eq_pullCount` and
 indicator `𝟙{A · = k}` and the response `Y · ω`) with the probabilistic objects
 `pullCount` and `respMart`.
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory Filter Learning
 

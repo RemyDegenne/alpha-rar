@@ -3,8 +3,10 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.YDK2026.JointCLT
-import AlphaRAR.YDK2026.PropDevARTS
+module
+
+public import AlphaRAR.YDK2026.JointCLT
+public import AlphaRAR.YDK2026.PropDevARTS
 
 /-!
 # The joint central limit theorem for the aRTS design
@@ -30,6 +32,8 @@ consistencies `N/n → v`, `θ̂ → θ` and the non-sparsity `0 < v_k` are all 
 * `AlphaRAR.tendstoInMeasure_toLp_of_forall_isLittleOpOne` (generic: coordinatewise `o_p ⟹` vector).
 * `AlphaRAR.aRTS_clt_joint`.
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory Filter Learning
 open scoped Topology ENNReal NNReal Matrix

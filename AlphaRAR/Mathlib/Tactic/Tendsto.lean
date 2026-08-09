@@ -3,9 +3,11 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import Mathlib.Analysis.SpecificLimits.Basic
-import Mathlib.Tactic.Ring
-import Mathlib.Tactic.NormNum
+module
+
+public import Mathlib.Analysis.SpecificLimits.Basic
+public meta import Mathlib.Tactic.Ring
+public meta import Mathlib.Tactic.NormNum
 
 /-!
 # The `tendsto` tactic
@@ -44,6 +46,8 @@ The set of structural rules is currently hard-coded; the natural next step is to
 leaf/atomic-limit rules off an attribute (à la `@[positivity]`/`@[fun_prop]`) so the "known
 limits" library becomes user-extensible.
 -/
+
+public meta section
 
 open Lean Lean.Meta Lean.Elab.Tactic Filter Topology
 

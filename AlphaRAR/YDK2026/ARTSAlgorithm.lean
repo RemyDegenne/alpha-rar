@@ -3,8 +3,10 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.YDK2026.ARTSConsistency
-import LeanSpec
+module
+
+public import AlphaRAR.YDK2026.ARTSConsistency
+public meta import LeanSpec
 
 /-!
 # The aRTS design family as a property of an `Algorithm`
@@ -32,6 +34,8 @@ a.e. — a conditional-expectation-from-conditional-distribution computation
 * `AlphaRAR.IsARTS`: the aRTS family membership predicate on an `Algorithm`.
 * `AlphaRAR.aRTS_consistency_of_isARTS`: an `IsARTS` algorithm's proportions converge a.s.
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory Filter Learning Finset
 

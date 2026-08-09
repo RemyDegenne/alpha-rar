@@ -3,7 +3,9 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import Mathlib.Probability.Moments.Variance
+module
+
+public import Mathlib.Probability.Moments.Variance
 
 /-!
 # The variance of the identity as a central second moment
@@ -12,6 +14,8 @@ import Mathlib.Probability.Moments.Variance
 `id x = x` beta-reduction already performed. This is the form in which the arm variances
 `Var[id; ν a]` are compared with truncated second moments.
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory
 

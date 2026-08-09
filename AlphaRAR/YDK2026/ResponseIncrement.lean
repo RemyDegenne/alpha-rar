@@ -3,8 +3,10 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.MartingaleIncrement
-import AlphaRAR.YDK2026.Response
+module
+
+public import AlphaRAR.Mathlib.MartingaleIncrement
+public import AlphaRAR.YDK2026.Response
 
 /-!
 # `o_p` increment bounds for the response martingale `Q`
@@ -19,6 +21,8 @@ per-arm martingale/integrability facts and the increment second-moment bound
 * `AlphaRAR.qm_increments_resp`: `vmaxSeq Q = o_p(1)` and `wmaxSeq Q = o_p(√n)`, the probabilistic
   half of blueprint `lem:QM_increments` for `Q`.
 -/
+
+@[expose] public section
 
 open MeasureTheory ProbabilityTheory Filter Learning
 open scoped ENNReal Topology

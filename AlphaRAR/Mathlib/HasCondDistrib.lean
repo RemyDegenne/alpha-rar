@@ -3,7 +3,9 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import LeanMachineLearning.ForMathlib.Probability.HasCondDistrib
+module
+
+public import LeanMachineLearning.ForMathlib.Probability.HasCondDistrib
 
 /-!
 # Conditional expectation from a conditional distribution
@@ -25,6 +27,8 @@ These belong in Mathlib next to `HasCondDistrib`.
 * `ProbabilityTheory.memLp_two_of_hasCondDistrib`: membership in `L²` from uniformly bounded
   conditional second moments.
 -/
+
+@[expose] public section
 
 open MeasureTheory
 

@@ -3,8 +3,10 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import Mathlib.MeasureTheory.Integral.Layercake
-import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
+module
+
+public import Mathlib.MeasureTheory.Integral.Layercake
+public import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
 
 /-!
 # An `L¹` bound from an inverse-square tail bound
@@ -21,6 +23,8 @@ moment), and this lemma turns it into the `L¹` bound on the maximum. The argume
 
 * `MeasureTheory.lintegral_le_two_mul_sqrt_of_meas_ge_le`.
 -/
+
+@[expose] public section
 
 open Set Filter
 open scoped ENNReal Topology

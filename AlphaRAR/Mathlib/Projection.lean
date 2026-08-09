@@ -3,10 +3,13 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import Mathlib.Data.Real.Basic
-import Mathlib.LinearAlgebra.Matrix.Symmetric
-import Mathlib.Tactic.Abel
-import Mathlib.Tactic.NoncommRing
+module
+
+public import Mathlib.Data.Real.Basic
+public import Mathlib.LinearAlgebra.Matrix.Symmetric
+public import Mathlib.Tactic.Abel
+public import Mathlib.Tactic.NoncommRing
+public import Mathlib.Tactic.Ring
 
 /-!
 # The projection `I - s sᵀ`
@@ -20,6 +23,8 @@ statement is not formalized here.
 
 * `AlphaRAR.isProjection_one_sub_vecMulVec`.
 -/
+
+@[expose] public section
 
 open Matrix
 

@@ -3,8 +3,10 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
-import Mathlib.MeasureTheory.Measure.Portmanteau
+module
+
+public import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
+public import Mathlib.MeasureTheory.Measure.Portmanteau
 
 /-!
 # A remainder-in-probability lemma for the delta method
@@ -31,6 +33,8 @@ shrinking balls' complements `{‖x‖ ≥ j} ↓ ∅`.
 * `MeasureTheory.tendstoInMeasure_smul_littleO_of_tight`.
 * `MeasureTheory.tight_of_tendsto_probabilityMeasure`.
 -/
+
+@[expose] public section
 
 open Filter Topology
 open scoped ENNReal

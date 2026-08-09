@@ -3,7 +3,9 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.DeviationBound
+module
+
+public import AlphaRAR.Mathlib.DeviationBound
 
 /-!
 # `ell_rho_control` and the assembled `prop_dev` deviation bound
@@ -21,6 +23,8 @@ the drift-sign argument, the simplex reverse step) is proved.
 * `AlphaRAR.ell_rho_control`: the `ρ`-increment bound `ℓ(ρ̂_ℓ - ρ̂_n) ≤ Vρ·(n-ℓ) + Wρ`.
 * `AlphaRAR.prop_dev`: `Dev_k = o_p(√n)` from the per-arm one-sided bounds.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Finset
 open scoped ENNReal Topology

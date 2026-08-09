@@ -3,7 +3,9 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import Mathlib.MeasureTheory.Integral.Bochner.Basic
+module
+
+public import Mathlib.MeasureTheory.Integral.Bochner.Basic
 
 /-!
 # Summability of tail measures (layer cake)
@@ -26,6 +28,8 @@ This belongs upstream in Mathlib (a `μ`-general version of `tsum_prob_mem_Ioi_l
   `∑' i, ρ {√i < |· - θ|}` and `∑' i, ρ {√i ≤ |· - θ|}` are finite for a law with finite second
   central moment (blueprint `lem:trunc_tail_summable`).
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Finset
 

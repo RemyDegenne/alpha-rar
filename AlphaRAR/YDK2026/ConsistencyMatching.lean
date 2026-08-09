@@ -3,8 +3,10 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.YDK2026.Deterministic
-import AlphaRAR.YDK2026.AssignmentRate
+module
+
+public import AlphaRAR.YDK2026.Deterministic
+public import AlphaRAR.YDK2026.AssignmentRate
 
 /-!
 # Bridging the probabilistic assignment martingale to the deterministic core
@@ -26,6 +28,8 @@ This file records that identification and the resulting a.s. statement
 * `AlphaRAR.assignMart_eq_assignMG`: the per-path identification above.
 * `AlphaRAR.assignMG_path_div_ae_tendsto_zero`: `assignMG(path)/n → 0` a.s.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 

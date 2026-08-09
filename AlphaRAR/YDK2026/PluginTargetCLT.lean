@@ -3,9 +3,11 @@ Copyright (c) 2026 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne
 -/
-import AlphaRAR.Mathlib.TendstoInMeasure
-import AlphaRAR.YDK2026.ResponseCLTJoint
-import LeanSpec
+module
+
+public import AlphaRAR.Mathlib.TendstoInMeasure
+public import AlphaRAR.YDK2026.ResponseCLTJoint
+public meta import LeanSpec
 
 /-!
 # The delta-method central limit theorem for the plug-in target
@@ -28,6 +30,8 @@ probability — enters as the hypothesis `hR`, isolating it for a separate argum
 * `AlphaRAR.clt_rho_of_tendstoInMeasure`: the delta-method CLT for the plug-in target, conditional
   on the Taylor-remainder-in-probability hypothesis.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter ProbabilityTheory Learning
 
