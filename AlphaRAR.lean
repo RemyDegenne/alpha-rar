@@ -1,4 +1,4 @@
-module
+module  -- shake: keep-all --deprecated_module: ignore
 
 public import AlphaRAR.LeanMachineLearning.ArmIndicator
 public import AlphaRAR.LeanMachineLearning.Filtration
