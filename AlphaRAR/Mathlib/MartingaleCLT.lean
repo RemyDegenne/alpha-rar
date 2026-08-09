@@ -387,12 +387,13 @@ lemma norm_condExp_expI_sub_le [IsProbabilityMeasure P] (hm : m ≤ m0)
 /-- Conditional variance split at level `ε` (blueprint `lem:clt_max_var`, per-cell core):
 `E[d²|m] ≤ ε² + E[d²·𝟙{|d|>ε}|m]` a.e. -/
 lemma condExp_sq_le [IsProbabilityMeasure P] {d : Ω → ℝ} (hd : Measurable d)
-    (hd2 : Integrable (fun ω ↦ (d ω) ^ 2) P) (hm : m ≤ m0) (ε : ℝ) :
+    (hd2 : MemLp d 2 P) (hm : m ≤ m0) (ε : ℝ) :
     P[fun ω ↦ (d ω) ^ 2 | m] ≤ᵐ[P]
       fun ω ↦ ε ^ 2 + (P[{ω | ε < |d ω|}.indicator (fun ω ↦ (d ω) ^ 2) | m]) ω := by
   set s : Set Ω := {ω | ε < |d ω|} with hs_def
   have hs : MeasurableSet s := measurableSet_lt measurable_const hd.abs
-  have hind_int : Integrable (s.indicator (fun ω ↦ (d ω) ^ 2)) P := hd2.indicator hs
+  have hind_int : Integrable (s.indicator (fun ω ↦ (d ω) ^ 2)) P :=
+    hd2.integrable_sq.indicator hs
   have hle : ((fun ω ↦ (d ω) ^ 2) - s.indicator (fun ω ↦ (d ω) ^ 2)) ≤ᵐ[P] fun _ ↦ ε ^ 2 := by
     filter_upwards with ω
     simp only [Pi.sub_apply]
@@ -404,8 +405,8 @@ lemma condExp_sq_le [IsProbabilityMeasure P] {d : Ω → ℝ} (hd : Measurable d
   have hsub : P[(fun ω ↦ (d ω) ^ 2) - s.indicator (fun ω ↦ (d ω) ^ 2) | m]
       ≤ᵐ[P] fun _ ↦ ε ^ 2 := by
     rw [← condExp_const (μ := P) hm (ε ^ 2)]
-    exact condExp_mono (hd2.sub hind_int) (integrable_const _) hle
-  filter_upwards [condExp_sub hd2 hind_int m, hsub] with ω hsplit hb
+    exact condExp_mono (hd2.integrable_sq.sub hind_int) (integrable_const _) hle
+  filter_upwards [condExp_sub hd2.integrable_sq hind_int m, hsub] with ω hsplit hb
   rw [hsplit] at hb
   simp only [Pi.sub_apply] at hb
   linarith
@@ -417,18 +418,19 @@ lemma condExp_const_mul (c : ℝ) (f : Ω → ℝ) :
 /-- Split the conditional expectation of `min(2t²d², |t|³|d|³)` at level `ε ≥ 0` into a
 `v`-term and a Lindeberg term (blueprint `lem:clt_sum_rem`, per-cell core). -/
 lemma condExp_min_le {d : Ω → ℝ} (hd : Measurable d)
-    (hd2 : Integrable (fun ω ↦ (d ω) ^ 2) P) {ε : ℝ} (hε : 0 ≤ ε) (t : ℝ) :
+    (hd2 : MemLp d 2 P) {ε : ℝ} (hε : 0 ≤ ε) (t : ℝ) :
     P[fun ω ↦ min (2 * t ^ 2 * (d ω) ^ 2) (|t| ^ 3 * |d ω| ^ 3) | m] ≤ᵐ[P]
       fun ω ↦ |t| ^ 3 * ε * (P[fun ω ↦ (d ω) ^ 2 | m]) ω
         + 2 * t ^ 2 * (P[{ω | ε < |d ω|}.indicator (fun ω ↦ (d ω) ^ 2) | m]) ω := by
   set s : Set Ω := {ω | ε < |d ω|} with hs_def
   have hs : MeasurableSet s := measurableSet_lt measurable_const hd.abs
-  have hind_int : Integrable (s.indicator (fun ω ↦ (d ω) ^ 2)) P := hd2.indicator hs
+  have hind_int : Integrable (s.indicator (fun ω ↦ (d ω) ^ 2)) P :=
+    hd2.integrable_sq.indicator hs
   have hmin_int :
       Integrable (fun ω ↦ min (2 * t ^ 2 * (d ω) ^ 2) (|t| ^ 3 * |d ω| ^ 3)) P := by
     have hcont : Continuous (fun x : ℝ ↦ min (2 * t ^ 2 * x ^ 2) (|t| ^ 3 * |x| ^ 3)) := by
       fun_prop
-    refine (hd2.const_mul (2 * t ^ 2)).mono'
+    refine (hd2.integrable_sq.const_mul (2 * t ^ 2)).mono'
       (hcont.comp_aestronglyMeasurable hd.aestronglyMeasurable) (ae_of_all _ fun ω ↦ ?_)
     rw [Real.norm_eq_abs, abs_of_nonneg (le_min (by positivity) (by positivity))]
     exact min_le_left _ _
@@ -449,10 +451,11 @@ lemma condExp_min_le {d : Ω → ℝ} (hd : Measurable d)
           rw [h2]; exact mul_le_mul_of_nonneg_right hd_le (sq_nonneg _)
         rw [mul_assoc]; exact mul_le_mul_of_nonneg_left hi (pow_nonneg (abs_nonneg t) 3)
       linarith
-  have hg_int := (hd2.const_mul (|t| ^ 3 * ε)).add (hind_int.const_mul (2 * t ^ 2))
+  have hg_int := (hd2.integrable_sq.const_mul (|t| ^ 3 * ε)).add
+    (hind_int.const_mul (2 * t ^ 2))
   have hmono := condExp_mono (m := m) hmin_int hg_int (ae_of_all _ hle)
   filter_upwards [hmono,
-    condExp_add (hd2.const_mul (|t| ^ 3 * ε)) (hind_int.const_mul (2 * t ^ 2)) m,
+    condExp_add (hd2.integrable_sq.const_mul (|t| ^ 3 * ε)) (hind_int.const_mul (2 * t ^ 2)) m,
     condExp_const_mul (m := m) (|t| ^ 3 * ε) (fun ω ↦ (d ω) ^ 2),
     condExp_const_mul (m := m) (2 * t ^ 2) (s.indicator (fun ω ↦ (d ω) ^ 2))]
     with ω hm1 hadd h1 h2
@@ -584,14 +587,15 @@ lemma tendstoInMeasure_zero_of_le {g h : ℕ → Ω → ℝ}
 each cell's conditional Lindeberg quantity is (a proportion times) `E[(ξ-θ)²𝟙{|ξ-θ|>c_n}]` with
 `c_n → ∞`. -/
 lemma tendsto_integral_sq_indicator_gt {Z : Ω → ℝ} (hZ : Measurable Z)
-    (hZ2 : Integrable (fun ω ↦ (Z ω) ^ 2) P) :
+    (hZ2 : MemLp Z 2 P) :
     Tendsto (fun c : ℝ ↦ ∫ ω, {ω | c < |Z ω|}.indicator (fun ω ↦ (Z ω) ^ 2) ω ∂P)
       atTop (𝓝 0) := by
   rw [show (0 : ℝ) = ∫ _ω, (0 : ℝ) ∂P by simp]
   refine tendsto_integral_filter_of_dominated_convergence (fun ω ↦ (Z ω) ^ 2)
-    (Eventually.of_forall fun c ↦ (hZ2.aestronglyMeasurable).indicator
+    (Eventually.of_forall fun c ↦ (hZ2.integrable_sq.aestronglyMeasurable).indicator
       (measurableSet_lt measurable_const hZ.abs))
-    (Eventually.of_forall fun c ↦ ae_of_all _ fun ω ↦ ?_) hZ2 (ae_of_all _ fun ω ↦ ?_)
+    (Eventually.of_forall fun c ↦ ae_of_all _ fun ω ↦ ?_) hZ2.integrable_sq
+    (ae_of_all _ fun ω ↦ ?_)
   · rw [Real.norm_eq_abs, abs_of_nonneg (Set.indicator_nonneg (fun _ _ ↦ sq_nonneg _) ω)]
     exact Set.indicator_le_self' (fun a _ ↦ sq_nonneg (Z a)) ω
   · apply tendsto_nhds_of_eventually_eq
@@ -661,7 +665,7 @@ uniform-asymptotic-negligibility statistic: driving it to `0` forces every indiv
 variance to `0` as well"]
 lemma condVar_le_lindeberg [IsProbabilityMeasure P] (n i : ℕ) (hi : i < A.k n) (ε : ℝ) :
     A.condVar n i ≤ᵐ[P] fun ω ↦ ε ^ 2 + A.lindeberg n ε ω := by
-  have hsq := condExp_sq_le (A.measurable_d n i) (A.integrable_sq n i) ((A.𝓕 n).le i) ε
+  have hsq := condExp_sq_le (A.measurable_d n i) (A.memLp n i) ((A.𝓕 n).le i) ε
   have hnn : ∀ j, (0 : Ω → ℝ) ≤ᵐ[P]
       P[{ω | ε < |A.d n j ω|}.indicator (fun ω ↦ (A.d n j ω) ^ 2) | A.𝓕 n j] :=
     fun j ↦ condExp_nonneg (ae_of_all _ fun ω ↦
@@ -729,7 +733,7 @@ lemma sum_condExp_min_le (n : ℕ) {ε : ℝ} (hε : 0 ≤ ε) (t : ℝ) :
     intro i
     by_cases hi : i ∈ Finset.range (A.k n)
     · filter_upwards
-        [condExp_min_le (A.measurable_d n i) (A.integrable_sq n i) hε t] with ω hω
+        [condExp_min_le (A.measurable_d n i) (A.memLp n i) hε t] with ω hω
       intro _; exact hω
     · exact ae_of_all _ fun ω hmem ↦ absurd hmem hi
   filter_upwards [ae_all_iff.mpr hcell] with ω hω

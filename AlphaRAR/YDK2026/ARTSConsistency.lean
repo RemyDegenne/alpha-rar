@@ -88,7 +88,7 @@ respective predicates (last under-sampling time, resp. forced-exploration hittin
 else — the vanishing normalised martingale, the plug-in-target convergence, and the generic key
 inequality (`generic_ineq_of_hitting`, valid for *any* predicate) — is discharged uniformly. -/
 lemma consistency_of_hitting [Fintype 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
@@ -111,7 +111,7 @@ lemma consistency_of_hitting [Fintype 𝓐]
   -- Plug-in-target convergence (`rho_converges`), phrased via `aRTSTarget`.
   have hrho : ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
       Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop (𝓝 (u k)) :=
-    rho_converges h hY2 θ₀ T hT
+    rho_converges h hνk θ₀ T hT
   -- Discharge each hypothesis of `consistency_of_generic_ae`.
   have hYsum : ∀ᵐ ω ∂P, ∀ j, ∑ k, armIndicator A k j ω = 1 :=
     Eventually.of_forall fun ω j ↦ sum_armIndicator A j ω
@@ -190,7 +190,7 @@ design-specific inputs) and Condition **B**'s non-sparsity `hTpos`, the sequenti
 converges a.s. to the true parameter `θ̂_n → θ = ((ν k)[id])_k`, via the design-independent
 `theta_consistent_pi_of_condB`. -/
 lemma theta_consistent_of_hitting [Fintype 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
@@ -205,8 +205,8 @@ lemma theta_consistent_of_hitting [Fintype 𝓐]
     ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
       (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 (fun k ↦ (ν k)[id])) := by
   classical
-  refine theta_consistent_pi_of_condB h hY2 θ₀ T hT hTpos ?_
-  filter_upwards [consistency_of_hitting h hY2 θ₀ T hT hTnn hTsum α hα Q hthrottle hgs] with ω hω
+  refine theta_consistent_pi_of_condB h hνk θ₀ T hT hTpos ?_
+  filter_upwards [consistency_of_hitting h hνk θ₀ T hT hTnn hTsum α hα Q hthrottle hgs] with ω hω
   obtain ⟨u, hu⟩ := hω
   exact ⟨u, fun k ↦ ⟨((hu k).1).congr fun n ↦ by rw [count_indicator_eq_pullCount], (hu k).2⟩⟩
 
@@ -217,7 +217,7 @@ lemma theta_consistent_of_hitting [Fintype 𝓐]
 `theta_consistent_of_hitting` (so `ρ̂_{n,k} → T(θ)_k` by continuity) identifies the limit as the
 deterministic `v_k = T(θ)_k`: `N_{n,k}/n → v_k` a.s. -/
 lemma proportion_tendsto_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
@@ -231,8 +231,8 @@ lemma proportion_tendsto_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) (k : 𝓐) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ))
       atTop (𝓝 (T (fun k ↦ (ν k)[id]) k)) := by
-  filter_upwards [consistency_of_hitting h hY2 θ₀ T hT hTnn hTsum α hα Q hthrottle hgs,
-    theta_consistent_of_hitting h hY2 θ₀ T hT hTnn hTsum α hα Q hthrottle hgs hTpos]
+  filter_upwards [consistency_of_hitting h hνk θ₀ T hT hTnn hTsum α hα Q hthrottle hgs,
+    theta_consistent_of_hitting h hνk θ₀ T hT hTnn hTsum α hα Q hthrottle hgs hTpos]
     with ω hjω hθω
   obtain ⟨u, hu⟩ := hjω
   have hrho : Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop
@@ -248,7 +248,7 @@ The `aRTS` instantiation of `consistency_of_hitting` at the last under-sampling 
 (`hthrottle`), so the smallness `N_{ℓ} - ℓ ρ̂_{ℓ} ≤ 0` is automatic (`generic_small_of_hitting`).
 Almost surely there is a common limit `u` with `N_{n,k}/n → u_k`, `ρ̂_{n,k} → u_k` for every `k`. -/
 lemma aRTS_consistency [Fintype 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
@@ -258,7 +258,7 @@ lemma aRTS_consistency [Fintype 𝓐]
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
       Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 (u k))
         ∧ Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop (𝓝 (u k)) :=
-  consistency_of_hitting h hY2 θ₀ T hT hTnn hTsum α hα (aRTSUnder A Y θ₀ T) hthrottle
+  consistency_of_hitting h hνk θ₀ T hT hTnn hTsum α hα (aRTSUnder A Y θ₀ T) hthrottle
     (fun k ↦ Eventually.of_forall fun ω δ hδ ↦ generic_small_of_hitting
       (fun j ↦ armIndicator A k j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k)
       (aRTSUnder A Y θ₀ T k ω) (fun _ hm ↦ hm) δ hδ)

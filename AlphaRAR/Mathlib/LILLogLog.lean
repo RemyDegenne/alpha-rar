@@ -70,7 +70,7 @@ hold only *eventually* in `k`. This is what the loglog schedule needs: its optim
 `θ_k = λ_k/(2 v_k) → 0`, so admissibility `λ_k c ≤ 2 v_k` fails on a finite prefix. There the
 trivial bound `μ(s_k) ≤ 1` keeps `∑_k μ(s_k)` finite, and the first Borel–Cantelli lemma applies. -/
 lemma ae_eventually_forall_lt_of_summable_eventually [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {c : ℝ} (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {lam v : ℕ → ℝ}
     (hadm : ∀ᶠ k in atTop, 0 < lam k ∧ 0 < v k ∧ lam k * c ≤ 2 * v k)
     (hsum : Summable fun k ↦ exp (-lam k ^ 2 / (4 * v k))) :
@@ -127,7 +127,7 @@ large `k` and every `n`, `⟨M⟩_n ≤ 2^k ⇒ M_n < κ √(2^k · log(k+2))`. 
 `p`-series (`summable_exp_neg_mul_log_add`), and whose admissibility `λ_k c ≤ 2 v_k` holds
 eventually (`eventually_mul_add_two_le_two_pow`), so the eventual-admissibility step applies. -/
 lemma ae_eventually_forall_lt_dyadic_loglog [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c κ : ℝ} (hc : 0 < c)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c κ : ℝ} (hc : 0 < c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) (hκ : 2 < κ) :
     ∀ᵐ ω ∂μ, ∀ᶠ (k : ℕ) in atTop, ∀ n, predQuadVar M ℱ μ n ω ≤ (2 : ℝ) ^ k →
       M n ω < κ * √((2 : ℝ) ^ k * log ((k : ℝ) + 2)) := by
@@ -185,7 +185,7 @@ deterministic `C`. Repackages `ae_eventually_forall_lt_dyadic_loglog`: for large
 `k` with `⟨M⟩_n ≤ 2^k`; minimality gives `2^k ≤ 2⟨M⟩_n` and `k ≤ log₂⟨M⟩_n + 1`, so
 `log(k+2) ≤ C'' log log⟨M⟩_n`, whence `κ√(2^k log(k+2)) ≤ C√(⟨M⟩_n log log⟨M⟩_n)`. -/
 lemma ae_eventually_le_sqrt_predQuadVar_mul_loglog [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ} (hc : 0 < c)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c : ℝ} (hc : 0 < c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
     ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop, M n ω
@@ -260,7 +260,7 @@ lemma ae_eventually_le_sqrt_predQuadVar_mul_loglog [IsProbabilityMeasure μ] (hM
 `ae_eventually_le_sqrt_predQuadVar_mul_loglog` with `⟨M⟩_n ≤ c² n` (`predQuadVar_le_of_bound`) and
 `log log⟨M⟩_n ≤ 2 log log n` (valid once `n` is large), giving `M_n ≤ C √(n log log n)` a.s. -/
 lemma ae_eventually_le_sqrt_nat_mul_loglog [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ} (hc : 0 < c)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c : ℝ} (hc : 0 < c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
     ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop, M n ω ≤ C * √((n : ℝ) * log (log n)) := by
@@ -270,9 +270,7 @@ lemma ae_eventually_le_sqrt_nat_mul_loglog [IsProbabilityMeasure μ] (hM : Marti
       ((hM.stronglyMeasurable i).mono (ℱ.le _))).aestronglyMeasurable
   have hdmem : ∀ i, MemLp (fun ω ↦ M (i + 1) ω - M i ω) 2 μ := fun i ↦
     MemLp.of_bound (haesm_d i) c (by filter_upwards [hb i] with ω h; rwa [norm_eq_abs])
-  have hMmem : ∀ n, MemLp (M n) 2 μ := fun n ↦
-    (memLp_two_iff_integrable_sq
-      ((hM.stronglyMeasurable n).mono (ℱ.le n)).aestronglyMeasurable).mpr (hM2 n)
+  have hMmem : ∀ n, MemLp (M n) 2 μ := hM2
   have hd2 : ∀ i, Integrable (fun ω ↦ (M (i + 1) ω - M i ω) ^ 2) μ :=
     fun i ↦ (hdmem i).integrable_sq
   have hprod : ∀ i, Integrable (M i * (M (i + 1) - M i)) μ := fun i ↦
@@ -316,17 +314,14 @@ lemma ae_eventually_le_sqrt_nat_mul_loglog [IsProbabilityMeasure μ] (hM : Marti
 increment bound) gives `|M_n| ≤ C √(n log log n)` eventually, a.s. This is the consumable form for
 the bounded assignment martingale. -/
 lemma ae_eventually_abs_le_sqrt_nat_mul_loglog [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ} (hc : 0 < c)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c : ℝ} (hc : 0 < c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
     ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop, |M n ω| ≤ C * √((n : ℝ) * log (log n)) := by
   have hM0neg : (-M) 0 =ᵐ[μ] 0 := by
     filter_upwards [hM0] with ω hω
     simp only [Pi.neg_apply, Pi.zero_apply] at hω ⊢; rw [hω, neg_zero]
-  have hM2neg : ∀ n, Integrable (fun ω ↦ (-M) n ω ^ 2) μ := fun n ↦ by
-    have he : (fun ω ↦ (-M) n ω ^ 2) = (fun ω ↦ M n ω ^ 2) := by
-      funext ω; simp only [Pi.neg_apply, neg_sq]
-    rw [he]; exact hM2 n
+  have hM2neg : ∀ n, MemLp ((-M) n) 2 μ := fun n ↦ (hM2 n).neg
   have hbneg : ∀ i, ∀ᵐ ω ∂μ, |(-M) (i + 1) ω - (-M) i ω| ≤ c := fun i ↦ by
     filter_upwards [hb i] with ω hω
     have he : (-M) (i + 1) ω - (-M) i ω = -(M (i + 1) ω - M i ω) := by
@@ -353,7 +348,7 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_loglog [IsProbabilityMeasure μ] (hM : M
 `|M_n| ≤ C √(⟨M⟩_n log log⟨M⟩_n)` eventually, a.s., by applying
 `ae_eventually_le_sqrt_predQuadVar_mul_loglog` to `M` and `-M`. -/
 lemma ae_eventually_abs_le_sqrt_predQuadVar_mul_loglog [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {c : ℝ} (hc : 0 < c) (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
     ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop,
@@ -361,10 +356,7 @@ lemma ae_eventually_abs_le_sqrt_predQuadVar_mul_loglog [IsProbabilityMeasure μ]
   have hM0neg : (-M) 0 =ᵐ[μ] 0 := by
     filter_upwards [hM0] with ω hω
     simp only [Pi.neg_apply, Pi.zero_apply] at hω ⊢; rw [hω, neg_zero]
-  have hM2neg : ∀ n, Integrable (fun ω ↦ (-M) n ω ^ 2) μ := fun n ↦ by
-    have he : (fun ω ↦ (-M) n ω ^ 2) = (fun ω ↦ M n ω ^ 2) := by
-      funext ω; simp only [Pi.neg_apply, neg_sq]
-    rw [he]; exact hM2 n
+  have hM2neg : ∀ n, MemLp ((-M) n) 2 μ := fun n ↦ (hM2 n).neg
   have hbneg : ∀ i, ∀ᵐ ω ∂μ, |(-M) (i + 1) ω - (-M) i ω| ≤ c := fun i ↦ by
     filter_upwards [hb i] with ω hω
     have he : (-M) (i + 1) ω - (-M) i ω = -(M (i + 1) ω - M i ω) := by
@@ -402,7 +394,7 @@ horizon `2^j`, threshold `λ_j = C √(2^j log(j+2))` and quadratic-variation bo
 horizon Freedman inequality gives exponent `(α²v - αC) log(j+2)` — the square roots collapse
 (`√(L/2^j)·√(2^j·L) = L`). Admissibility `θ_j · c ≤ 1` is a hypothesis. -/
 lemma measure_exists_ge_le_exp_block_loglog [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {v C α c : ℝ} (hα : 0 < α) (hc0 : 0 ≤ c) (j : ℕ)
     (hadm : α * √(log ((j : ℝ) + 2) / (2 : ℝ) ^ j) * c ≤ 1)
     (hinc : ∀ i < 2 ^ j, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
@@ -444,7 +436,7 @@ per-block increment bound `c j` up to horizon `2^j` with admissible `θ_j c_j �
 `1 < αC - α²v` (so the block tails `exp((α²v-αC)log(j+2)) = (j+2)^{α²v-αC}` are summable), almost
 surely for all large `j` and every `m ≤ 2^j`, `⟨M⟩_m ≤ v·2^j ⇒ M_m < C√(2^j log(j+2))`. -/
 lemma ae_eventually_lt_block_of_growing_loglog [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {v C α : ℝ} (hα : 0 < α) (c : ℕ → ℝ) (hc0 : ∀ j, 0 ≤ c j) (hp : 1 < α * C - α ^ 2 * v)
     (hadm : ∀ j : ℕ, α * √(log ((j : ℝ) + 2) / (2 : ℝ) ^ j) * c j ≤ 1)
     (hinc : ∀ j : ℕ, ∀ i < 2 ^ j, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c j) :
@@ -477,7 +469,7 @@ lemma ae_eventually_lt_block_of_growing_loglog [IsProbabilityMeasure μ] (hM : M
 almost surely `M_n ≤ C'√(n log log n)` eventually. For large `n` take the least `j` with `n ≤ 2^j`;
 then `2^j ≤ 2n`, `j ≤ log₂n + 1`, `⟨M⟩_n ≤ v·n ≤ v·2^j`, and `log(j+2) ≤ C'' log log n`. -/
 lemma ae_eventually_le_sqrt_nat_mul_loglog_of_growing [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {v C α : ℝ} (hα : 0 < α) (c : ℕ → ℝ) (hc0 : ∀ j, 0 ≤ c j) (hp : 1 < α * C - α ^ 2 * v)
     (hadm : ∀ j : ℕ, α * √(log ((j : ℝ) + 2) / (2 : ℝ) ^ j) * c j ≤ 1)
     (hinc : ∀ j : ℕ, ∀ i < 2 ^ j, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c j) (hv : 0 ≤ v)
@@ -557,7 +549,7 @@ lemma ae_eventually_le_sqrt_nat_mul_loglog_of_growing [IsProbabilityMeasure μ]
 quadratic variation, `predQuadVar_neg`) gives `|M_n| ≤ C'√(n log log n)` eventually, a.s. Reusable —
 growing-increment loglog LIL — the engine for the truncated main part of the i.i.d. case. -/
 lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growing [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {v C α : ℝ} (hα : 0 < α) (c : ℕ → ℝ) (hc0 : ∀ j, 0 ≤ c j) (hp : 1 < α * C - α ^ 2 * v)
     (hadm : ∀ j : ℕ, α * √(log ((j : ℝ) + 2) / (2 : ℝ) ^ j) * c j ≤ 1)
     (hinc : ∀ j : ℕ, ∀ i < 2 ^ j, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c j) (hv : 0 ≤ v)
@@ -566,10 +558,7 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growing [IsProbabilityMeasure 
   have hM0neg : (-M) 0 =ᵐ[μ] 0 := by
     filter_upwards [hM0] with ω hω
     simp only [Pi.neg_apply, Pi.zero_apply] at hω ⊢; rw [hω, neg_zero]
-  have hM2neg : ∀ n, Integrable (fun ω ↦ (-M) n ω ^ 2) μ := fun n ↦ by
-    have he : (fun ω ↦ (-M) n ω ^ 2) = (fun ω ↦ M n ω ^ 2) := by
-      funext ω; simp only [Pi.neg_apply, neg_sq]
-    rw [he]; exact hM2 n
+  have hM2neg : ∀ n, MemLp ((-M) n) 2 μ := fun n ↦ (hM2 n).neg
   have hincneg : ∀ j : ℕ, ∀ i < 2 ^ j, ∀ᵐ ω ∂μ, |(-M) (i + 1) ω - (-M) i ω| ≤ c j :=
     fun j i hi ↦ by
       filter_upwards [hinc j i hi] with ω hω
@@ -624,11 +613,12 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd [IsProbabilityMeasure μ]
       _ ≤ ∑ k ∈ Finset.range n, |M (k + 1) ω - M k ω| := Finset.abs_sum_le_sum_abs _ _
       _ ≤ ∑ k ∈ Finset.range n, c := Finset.sum_le_sum fun k _ ↦ hbω k
       _ = n * c := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
-  have hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ := fun n ↦
-    (integrable_const (((n : ℝ) * c) ^ 2)).mono' ((hmeasM n).pow_const 2).aestronglyMeasurable
-      (by filter_upwards [hbdd n] with ω hb'
-          rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]
-          exact sq_le_sq' (neg_le_of_abs_le hb') (le_of_abs_le hb'))
+  have hM2 : ∀ n, MemLp (M n) 2 μ := fun n ↦
+    (memLp_two_iff_integrable_sq (hmeasM n).aestronglyMeasurable).mpr
+      ((integrable_const (((n : ℝ) * c) ^ 2)).mono' ((hmeasM n).pow_const 2).aestronglyMeasurable
+        (by filter_upwards [hbdd n] with ω hb'
+            rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]
+            exact sq_le_sq' (neg_le_of_abs_le hb') (le_of_abs_le hb')))
   have haesm_d : ∀ i, AEStronglyMeasurable (fun ω ↦ M (i + 1) ω - M i ω) μ := fun i ↦
     (((hM.stronglyMeasurable (i + 1)).mono (ℱ.le _)).sub
       ((hM.stronglyMeasurable i).mono (ℱ.le _))).aestronglyMeasurable
@@ -636,9 +626,7 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd [IsProbabilityMeasure μ]
     MemLp.of_bound (haesm_d i) c (by filter_upwards [hb i] with ω h; rwa [norm_eq_abs])
   have hd2 : ∀ i, Integrable (fun ω ↦ (M (i + 1) ω - M i ω) ^ 2) μ :=
     fun i ↦ (hdmem i).integrable_sq
-  have hMmem : ∀ n, MemLp (M n) 2 μ := fun n ↦
-    (memLp_two_iff_integrable_sq
-      ((hM.stronglyMeasurable n).mono (ℱ.le n)).aestronglyMeasurable).mpr (hM2 n)
+  have hMmem : ∀ n, MemLp (M n) 2 μ := hM2
   have hprod : ∀ i, Integrable (M i * (M (i + 1) - M i)) μ := fun i ↦
     (hMmem i).integrable_mul ((hMmem (i + 1)).sub (hMmem i))
   have hqv : ∀ᵐ ω ∂μ, ∀ n, predQuadVar M ℱ μ n ω ≤ c ^ 2 * (n : ℝ) :=

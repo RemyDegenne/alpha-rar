@@ -108,9 +108,10 @@ If `X` is centred (`∫ X = 0`) with `X²` integrable, then `|∫ truncation X A
 `A > 0`. Applied to `ξ_i` with `A = √i` and `∫ ξ_i² = σ²`, this gives `|m_i| ≤ σ²/√i`.
 The point is that `∫ truncation X A = ∫(truncation X A - X)` (using `∫ X = 0`) and the pointwise
 bound `abs_truncation_sub_le`. -/
-lemma abs_integral_truncation_le [IsFiniteMeasure μ] {X : Ω → ℝ} (hint : Integrable X μ)
-    (hX2 : Integrable (fun ω ↦ X ω ^ 2) μ) (hX0 : ∫ ω, X ω ∂μ = 0) {A : ℝ} (hA : 0 < A) :
+lemma abs_integral_truncation_le [IsFiniteMeasure μ] {X : Ω → ℝ}
+    (hX2 : MemLp X 2 μ) (hX0 : ∫ ω, X ω ∂μ = 0) {A : ℝ} (hA : 0 < A) :
     |∫ ω, truncation X A ω ∂μ| ≤ (∫ ω, X ω ^ 2 ∂μ) / A := by
+  have hint : Integrable X μ := hX2.integrable one_le_two
   have htrunc_int : Integrable (truncation X A) μ := hint.aestronglyMeasurable.integrable_truncation
   have heq : ∫ ω, truncation X A ω ∂μ = ∫ ω, (truncation X A ω - X ω) ∂μ := by
     rw [integral_sub htrunc_int hint, hX0, sub_zero]
@@ -118,7 +119,7 @@ lemma abs_integral_truncation_le [IsFiniteMeasure μ] {X : Ω → ℝ} (hint : I
       = |∫ ω, (truncation X A ω - X ω) ∂μ| := by rw [heq]
     _ ≤ ∫ ω, |truncation X A ω - X ω| ∂μ := abs_integral_le_integral_abs
     _ ≤ ∫ ω, X ω ^ 2 / A ∂μ :=
-        integral_mono (htrunc_int.sub hint).abs (hX2.div_const A)
+        integral_mono (htrunc_int.sub hint).abs (hX2.integrable_sq.div_const A)
           (fun ω ↦ abs_truncation_sub_le X hA ω)
     _ = (∫ ω, X ω ^ 2 ∂μ) / A := integral_div A _
 
@@ -179,7 +180,7 @@ increment scale `a` (so the horizon-local bound is `c_j = a√{2^j}`), and the c
 `μ(∃ m ≤ 2^j : λ_j ≤ M_m, ⟨M⟩_m ≤ v·2^j) ≤ exp(-(C/a)√j + v/a²)` for `λ_j = C√(2^j j)`, because
 `θ_j λ_j = (C/a)√j` (the `√{2^j}` cancels) and `θ_j² · v·2^j = v/a²` stays bounded. -/
 lemma measure_exists_ge_le_exp_block [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {a : ℝ} (ha : 0 < a) (hinc : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ a * √i)
     (v C : ℝ) (j : ℕ) :
     μ {ω | ∃ m ≤ 2 ^ j, C * √((2 : ℝ) ^ j * j) ≤ M m ω
@@ -217,7 +218,7 @@ lemma measure_exists_ge_le_exp_block [IsProbabilityMeasure μ] (hM : Martingale 
 Borel–Cantelli lemma gives that a.s. only finitely many blocks are bad: for a.e. `ω`, for all large
 `j` and every `m ≤ 2^j`, `⟨M⟩_m ≤ v·2^j ⇒ M_m < C√(2^j j)`. -/
 lemma ae_eventually_lt_block_of_growing [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {a : ℝ} (ha : 0 < a) (hinc : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ a * √i)
     (v : ℝ) {C : ℝ} (hC : 0 < C) :
     ∀ᵐ ω ∂μ, ∀ᶠ (j : ℕ) in atTop, ∀ m ≤ 2 ^ j,
@@ -249,7 +250,7 @@ with `n ≤ 2^j` (so `2^j ≤ 2n` and `j ≤ log₂ n + 1`); then `⟨M⟩_n ≤
 applies at `m = n`, giving `M_n < √(2^j j) ≤ C'√(n log n)`. The horizon restriction `m ≤ 2^j` yields
 the `n`-scale (not the `⟨M⟩_n`-scale): time-blocking is what the growing increments permit. -/
 lemma ae_eventually_le_sqrt_nat_mul_log_of_growing [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {a : ℝ} (ha : 0 < a) (hinc : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ a * √i)
     {v : ℝ} (hv : 0 ≤ v) (hqv : ∀ᵐ ω ∂μ, ∀ n, predQuadVar M ℱ μ n ω ≤ v * (n : ℝ)) :
     ∀ᵐ ω ∂μ, ∃ C', ∀ᶠ n in atTop, M n ω ≤ C' * √((n : ℝ) * Real.log n) := by
@@ -322,7 +323,7 @@ with the same quadratic variation, `predQuadVar_neg`, and the same increment bou
 `|M_n| ≤ C'√(n log n)` eventually, a.s. This is the reusable finite-variance LIL used to control a
 martingale with square-root-growing increments on both sides. -/
 lemma ae_eventually_abs_le_sqrt_nat_mul_log_of_growing [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {a : ℝ} (ha : 0 < a) (hinc : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ a * √i)
     {v : ℝ} (hv : 0 ≤ v) (hqv : ∀ᵐ ω ∂μ, ∀ n, predQuadVar M ℱ μ n ω ≤ v * (n : ℝ)) :
     ∀ᵐ ω ∂μ, ∃ C', ∀ᶠ n in atTop, |M n ω| ≤ C' * √((n : ℝ) * Real.log n) := by
@@ -330,10 +331,7 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_log_of_growing [IsProbabilityMeasure μ]
     filter_upwards [hM0] with ω hω
     simp only [Pi.neg_apply, Pi.zero_apply] at hω ⊢
     rw [hω, neg_zero]
-  have hM2neg : ∀ n, Integrable (fun ω ↦ (-M) n ω ^ 2) μ := fun n ↦ by
-    have he : (fun ω ↦ (-M) n ω ^ 2) = (fun ω ↦ M n ω ^ 2) := by
-      funext ω; simp only [Pi.neg_apply, neg_sq]
-    rw [he]; exact hM2 n
+  have hM2neg : ∀ n, MemLp ((-M) n) 2 μ := fun n ↦ (hM2 n).neg
   have hincneg : ∀ i, ∀ᵐ ω ∂μ, |(-M) (i + 1) ω - (-M) i ω| ≤ a * √i := fun i ↦ by
     filter_upwards [hinc i] with ω hω
     have he : (-M) (i + 1) ω - (-M) i ω = -(M (i + 1) ω - M i ω) := by

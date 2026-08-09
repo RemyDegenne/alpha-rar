@@ -295,7 +295,7 @@ is `aRTSFE_smallness`. -/
 consistency — no `o(√m)` condition is needed, which is precisely the point of weakening the \
 paper's definition"]
 theorem aRTSFE_proportion_tendsto [Fintype 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
@@ -306,8 +306,8 @@ theorem aRTSFE_proportion_tendsto [Fintype 𝓐]
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
       Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 (u k))
         ∧ Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop (𝓝 (u k)) :=
-  consistency_of_hitting h hY2 θ₀ T hT hTnn hTsum α hα (aRTSFEUnder A Y θ₀ T hsched) hthrottle
-    (aRTSFE_smallness_all θ₀ T hTnn hh)
+  consistency_of_hitting h hνk θ₀ T hT hTnn hTsum α hα
+    (aRTSFEUnder A Y θ₀ T hsched) hthrottle (aRTSFE_smallness_all θ₀ T hTnn hh)
 
 /-! ### Asymptotic normality under forced exploration (non-sparse targets)
 
@@ -322,7 +322,7 @@ hypothesis `hthrottle`, and the new ingredients are the forced-exploration small
 A direct reuse of `prop_dev_of_hitting`; the `o_p`-smallness is `aRTSFE_smallness_op` (using
 `h(n) = o(√n)`). -/
 theorem aRTSFE_prop_dev [Fintype 𝓐] [DecidableEq 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
@@ -336,10 +336,10 @@ theorem aRTSFE_prop_dev [Fintype 𝓐] [DecidableEq 𝓐]
       - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k) / √n) := by
   have hT : Continuous T := hlip.continuous
   have hgs := aRTSFE_smallness_all (A := A) (Y := Y) (P := P) θ₀ T hTnn hh
-  exact prop_dev_of_hitting h hY2 θ₀ T hTnn hTsum α hα hα1 hlip hTpos
-    (theta_consistent_of_hitting h hY2 θ₀ T hT hTnn hTsum α hα
+  exact prop_dev_of_hitting h hνk θ₀ T hTnn hTsum α hα hα1 hlip hTpos
+    (theta_consistent_of_hitting h hνk θ₀ T hT hTnn hTsum α hα
       (aRTSFEUnder A Y θ₀ T hsched) hthrottle hgs hTpos)
-    (fun k' ↦ (proportion_tendsto_of_hitting h hY2 θ₀ T hT hTnn hTsum α hα
+    (fun k' ↦ (proportion_tendsto_of_hitting h hνk θ₀ T hT hTnn hTsum α hα
       (aRTSFEUnder A Y θ₀ T hsched) hthrottle hgs hTpos k').mono
         fun ω hω ↦ hω.congr fun n ↦ by rw [count_indicator_eq_pullCount])
     (aRTSFEUnder A Y θ₀ T hsched) (fun k m ↦ measurableSet_aRTSFEUnder h θ₀ hT hsched k m)
@@ -350,14 +350,12 @@ theorem aRTSFE_prop_dev [Fintype 𝓐] [DecidableEq 𝓐]
 a.s. for the `aRTSFE` family. A direct reuse of `prop_dev_ae_of_hitting`; the loglog rate is
 `rho_rate_of_hitting` and the smallness is `aRTSFE_smallness_upper` (using `h(n) = o(√n)`). -/
 theorem aRTSFE_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hT_diff : DifferentiableAt ℝ T (fun k ↦ (ν k)[id]))
-    (hint_id : ∀ k, Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k))
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched) (hlo : IsSqrtSmall hsched)
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ aRTSFEUnder A Y θ₀ T hsched k ω m →
       aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
@@ -366,25 +364,23 @@ theorem aRTSFE_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐]
       =O[atTop] logLogRate := by
   have hgs := aRTSFE_smallness_all (A := A) (Y := Y) (P := P) θ₀ T hTnn hh
   exact prop_dev_ae_of_hitting h θ₀ T hT hTnn hTsum α hα hα1 hTpos
-    (theta_consistent_of_hitting h hY2 θ₀ T hT hTnn hTsum α hα
+    (theta_consistent_of_hitting h hνk θ₀ T hT hTnn hTsum α hα
       (aRTSFEUnder A Y θ₀ T hsched) hthrottle hgs hTpos)
     (aRTSFEUnder A Y θ₀ T hsched) hthrottle
-    (fun k' ↦ rho_rate_of_hitting h hY2 hT hTnn hTsum hα (aRTSFEUnder A Y θ₀ T hsched)
-      hthrottle hgs hTpos hT_diff hint_id hint_sq k')
+    (fun k' ↦ rho_rate_of_hitting h hνk hT hTnn hTsum hα (aRTSFEUnder A Y θ₀ T hsched)
+      hthrottle hgs hTpos hT_diff k')
     (fun k' ↦ aRTSFE_smallness_upper θ₀ T hTnn hh hlo k') k
 
 /-- **A.s. `O(√(n log log n))` count-versus-target deviation under forced exploration** (blueprint
 `thm:forced_valid`, `thm:normality` part (i), last line). `N_{n,k} - n v_k = O(√(n log log n))` a.s.
 for the `aRTSFE` family. A direct reuse of `count_sub_smul_ae_of_hitting`. -/
 theorem aRTSFE_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hT_diff : DifferentiableAt ℝ T (fun k ↦ (ν k)[id]))
-    (hint_id : ∀ k, Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k))
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched) (hlo : IsSqrtSmall hsched)
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ aRTSFEUnder A Y θ₀ T hsched k ω m →
       aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
@@ -393,11 +389,11 @@ theorem aRTSFE_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐]
       =O[atTop] logLogRate := by
   have hgs := aRTSFE_smallness_all (A := A) (Y := Y) (P := P) θ₀ T hTnn hh
   exact count_sub_smul_ae_of_hitting h θ₀ T hT hTnn hTsum α hα hα1 hTpos
-    (theta_consistent_of_hitting h hY2 θ₀ T hT hTnn hTsum α hα
+    (theta_consistent_of_hitting h hνk θ₀ T hT hTnn hTsum α hα
       (aRTSFEUnder A Y θ₀ T hsched) hthrottle hgs hTpos)
     (aRTSFEUnder A Y θ₀ T hsched) hthrottle
-    (fun k' ↦ rho_rate_of_hitting h hY2 hT hTnn hTsum hα (aRTSFEUnder A Y θ₀ T hsched)
-      hthrottle hgs hTpos hT_diff hint_id hint_sq k')
+    (fun k' ↦ rho_rate_of_hitting h hνk hT hTnn hTsum hα (aRTSFEUnder A Y θ₀ T hsched)
+      hthrottle hgs hTpos hT_diff k')
     (fun k' ↦ aRTSFE_smallness_upper θ₀ T hTnn hh hlo k') k
 
 /-- **Joint central limit theorem under forced exploration** (blueprint `thm:forced_valid`,
@@ -406,8 +402,8 @@ converges weakly to the block-Gaussian `𝒩(0, Ω)` for the `aRTSFE` family. A 
 `clt_joint_of_hitting`; the smallness conditions are `aRTSFE_smallness_all` and
 `aRTSFE_smallness_op`. -/
 theorem aRTSFE_clt_joint [Fintype 𝓐] [DecidableEq 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
-    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
     {K : ℝ≥0} (hlip : LipschitzWith K T)
@@ -433,7 +429,7 @@ theorem aRTSFE_clt_joint [Fintype 𝓐] [DecidableEq 𝓐]
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T (fun k' ↦ (ν k')[id]) a) * Gᵀ)),
           inferInstance⟩) := by
   have hT : Continuous T := hlip.continuous
-  exact clt_joint_of_hitting h hY2 hνk θ₀ T hTnn hTsum α hα hα1 hlip hTpos G hTderiv
+  exact clt_joint_of_hitting h hνk θ₀ T hTnn hTsum α hα hα1 hlip hTpos G hTderiv
     (aRTSFEUnder A Y θ₀ T hsched) (fun k m ↦ measurableSet_aRTSFEUnder h θ₀ hT hsched k m)
     hthrottle (aRTSFE_smallness_all θ₀ T hTnn hh) (aRTSFE_smallness_op θ₀ T hTnn hh hlo)
 
@@ -1478,8 +1474,8 @@ Both arms are then covered by the *same* per-arm normalizer
 The split is unavoidable: not every arm can be FE-fed, since `∑_a N_{n,a} = n` while
 `card 𝓐 · h(n) = o(n)`. -/
 lemma aRTSFE_sparse_clt [Fintype 𝓐] [DecidableEq 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
-    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a))
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
+    (hνk : ∀ a, MemLp id 2 (ν a))
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched)
     (hshift : Tendsto
       (fun n ↦ hsched (n - (Fintype.card 𝓐 * ⌈hsched n⌉₊ + 1)) / hsched n) atTop (𝓝 1))
@@ -1538,7 +1534,7 @@ lemma aRTSFE_sparse_clt [Fintype 𝓐] [DecidableEq 𝓐]
       rw [div_self hva.ne'] at hdiv
       refine hdiv.congr fun n ↦ ?_
       rw [div_div, mul_comm]
-  exact estimatorError_joint_tendsto_multivariateGaussian h hY2 θ₀ hνk hc hc_atTop
+  exact estimatorError_joint_tendsto_multivariateGaussian h θ₀ hνk hc hc_atTop
     (v := fun _ ↦ 1) (fun _ ↦ one_pos) hNconv
 
 /-- **The `N`-scaled loglog estimator rate** (the analytic core of `thm:sparse_rate`). If arm `k`'s
@@ -1551,15 +1547,14 @@ LIL `abs_respMart_le_sqrt_nat_mul_loglog` (`|Q_{n,k}| ≤ 2√(2 V_k N_{n,k} log
 terms are `O(√(N log log N)/N)` and `O(1/N)`, both `O(√(log log N/N))` (once `log log N ≥ 1`). -/
 lemma abs_estimator_sub_le_rate_loglog_N [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
-    (θ₀ : ℝ) (hint_id : Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k))
+    (θ₀ : ℝ) (hνk : MemLp id 2 (ν k))
     (hNinf : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop) :
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
       |estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) θ₀ n - (ν k)[id]|
         ≤ C' * √(Real.log (Real.log (pullCount A k n ω : ℝ)) / (pullCount A k n ω : ℝ)) := by
   have hk_inf : ∀ᵐ ω ∂P, {j | A j ω = k}.Infinite := by
     filter_upwards [hNinf] with ω hNω; exact infinite_setOf_eq_of_pullCount_atTop hNω
-  filter_upwards [hNinf, abs_respMart_le_sqrt_nat_mul_loglog h k hk_inf hint_id hint_sq]
+  filter_upwards [hNinf, abs_respMart_le_sqrt_nat_mul_loglog h k hk_inf hνk]
     with ω hNω hQω
   have hV : (0 : ℝ) ≤ Var[id; ν k] := variance_nonneg _ _
   refine ⟨2 * √(2 * Var[id; ν k]) + |θ₀ - (ν k)[id]|, ?_⟩
@@ -1626,12 +1621,10 @@ never uses positivity) — `N/n → T(θ)`; the rate is `abs_estimator_sub_le_ra
 enters through the throttle `hthrottle` (matching) and the action-level rule `hfe`
 (no-starvation). -/
 theorem aRTSFE_sparse_rate [Fintype 𝓐] [DecidableEq 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
-    (hint_id : ∀ k, Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : ∀ k, Integrable (fun x : ℝ ↦ x ^ 2) (ν k))
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched)
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ aRTSFEUnder A Y θ₀ T hsched k ω m →
       aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
@@ -1656,7 +1649,7 @@ theorem aRTSFE_sparse_rate [Fintype 𝓐] [DecidableEq 𝓐]
     have hper : ∀ k', ∀ᵐ ω ∂P, Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k' j ω)
         (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 ((ν k')[id])) := by
       intro k'
-      filter_upwards [estimator_ae_tendsto_of_pullCount_atTop h k' hY2 (θ₀ k'), hNinf]
+      filter_upwards [estimator_ae_tendsto_of_pullCount_atTop h k' hνk (θ₀ k'), hNinf]
         with ω hest hNall
       exact hest (hNall k')
     filter_upwards [ae_all_iff.mpr hper] with ω hω
@@ -1669,14 +1662,14 @@ theorem aRTSFE_sparse_rate [Fintype 𝓐] [DecidableEq 𝓐]
   -- `N/n → T(θ)_k`: the common matching limit `u_k` equals `T(θ)_k` (uniqueness with `ρ̂ → T(θ)`).
   have hprop : ∀ᵐ ω ∂P, Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ))
       atTop (𝓝 (T (fun k' ↦ (ν k')[id]) k)) := by
-    filter_upwards [consistency_of_hitting h hY2 θ₀ T hT hTnn hTsum α hα
+    filter_upwards [consistency_of_hitting h hνk θ₀ T hT hTnn hTsum α hα
       (aRTSFEUnder A Y θ₀ T hsched) hthrottle (aRTSFE_smallness_all θ₀ T hTnn hh), hρconv]
       with ω hmatch hρω
     obtain ⟨u, hu⟩ := hmatch
     rw [← tendsto_nhds_unique (hu k).2 hρω]
     exact (hu k).1
   filter_upwards [aRTSFE_no_starvation hh.tendsto_atTop hfe k, hprop,
-    abs_estimator_sub_le_rate_loglog_N h k (θ₀ k) (hint_id k) (hint_sq k)
+    abs_estimator_sub_le_rate_loglog_N h k (θ₀ k) (hνk k)
       (hNinf.mono fun ω hω ↦ hω k)] with ω h1 h2 h3
   exact ⟨h1, h2, h3⟩
 
@@ -2059,10 +2052,10 @@ eventually fed only by forced exploration; here that assumption is *proved*, fro
   (`sched23_star`, `not_isSqrtSmall_sched23`);
 * `hT2` — the target is `C²` at `Θ` on the sparse arms.
 . -/
-lemma aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
+theorem aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
     [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
-    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a))
+    (hνk : ∀ a, MemLp id 2 (ν a))
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched)
     (hshift : Tendsto
       (fun n ↦ hsched (n - (Fintype.card 𝓐 * ⌈hsched n⌉₊ + 1)) / hsched n) atTop (𝓝 1))
@@ -2080,12 +2073,8 @@ lemma aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [Standar
       atTop
       (𝓝 ⟨multivariateGaussian 0 (Matrix.diagonal (fun a ↦ Var[id; ν a])), inferInstance⟩) := by
   classical
-  -- Condition **A** on the arms already puts the response in `L²`.
-  have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
   have hfe := fe_of_isARTSFE h hARTSFE
   have hthrottle := fun a ↦ throttle_of_isARTSFE h hARTSFE a
-  have hint_id : ∀ a, Integrable (fun x : ℝ ↦ x) (ν a) := fun a ↦ (hνk a).integrable (by norm_num)
-  have hint_sq : ∀ a, Integrable (fun x : ℝ ↦ x ^ 2) (ν a) := fun a ↦ (hνk a).integrable_sq
   -- Condition **A** already gives, for *every* arm, that the count diverges, that the proportion
   -- converges to `T(Θ)_a` (no positivity needed), and the `N`-scaled loglog rate.
   have hsr : ∀ᵐ ω ∂P, ∀ a : 𝓐,
@@ -2096,14 +2085,14 @@ lemma aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [Standar
         |estimator (fun j ↦ armIndicator A a j ω) (fun j ↦ Y j ω) (θ₀ a) n - (ν a)[id]|
           ≤ C' * √(Real.log (Real.log (pullCount A a n ω : ℝ))
               / (pullCount A a n ω : ℝ)) :=
-    ae_all_iff.mpr fun a ↦ aRTSFE_sparse_rate h hY2 θ₀ T hT hTnn hTsum α hα hint_id hint_sq
+    ae_all_iff.mpr fun a ↦ aRTSFE_sparse_rate h hνk θ₀ T hT hTnn hTsum α hα
       hh hthrottle hfe a
   have hprop : ∀ᵐ ω ∂P, ∀ a : 𝓐, T (fun j ↦ (ν j)[id]) a ≠ 0 →
       Tendsto (fun n ↦ (pullCount A a n ω : ℝ) / (n : ℝ)) atTop
         (𝓝 (T (fun j ↦ (ν j)[id]) a)) := by
     filter_upwards [hsr] with ω hω a _
     exact ((hω a).2.1).congr fun n ↦ by rw [count_indicator_eq_pullCount]
-  refine aRTSFE_sparse_clt (v := fun a ↦ T (fun j ↦ (ν j)[id]) a) h hY2 θ₀ hνk hh hshift
+  refine aRTSFE_sparse_clt (v := fun a ↦ T (fun j ↦ (ν j)[id]) a) h θ₀ hνk hh hshift
     (fun a ↦ T (fun j ↦ (ν j)[id]) a = 0)
     (fun a ha ↦ lt_of_le_of_ne (hTnn _ a) (Ne.symm ha)) hfe ?_ hprop
   -- The deterministic floor `L(n) = h(n - W(n))` that forced exploration guarantees.

@@ -176,8 +176,8 @@ lemma tendsto_sqrt_div_count (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
 `F₁ = ℓ/(N_ℓ+1) = O_p(1)` (a.s. bounded) and `F₂ = (|Q_ℓ|+|a|)/(N_n+1) = o_p(1)` (via the Doob
 running-max `sup_{m≤n}|Q_m| = O_p(√n)` and `√n/(N_n+1) → 0`); then `O_p·o_p = o_p`. The argument
 uses only `ℓ ≤ n` and measurability of `Q`, so it is design-independent. -/
-lemma g_littleOp_of_hitting (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
+lemma g_littleOp_of_hitting [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ)
     {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (Q ω)] (hQmeas : ∀ m, MeasurableSet {ω | Q ω m})
     (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
     (hN : ∀ᵐ ω ∂P, Tendsto (fun m ↦ count (fun j ↦ armIndicator A k'' j ω) m / (m : ℝ))
@@ -186,6 +186,7 @@ lemma g_littleOp_of_hitting (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
       * (|respMart ν A Y k'' (hitting (Q ω) n) ω| + |θ₀ k'' - (ν k'')[id]|)
       / ((count (fun j ↦ armIndicator A k'' j ω) (hitting (Q ω) n) + 1)
         * (count (fun j ↦ armIndicator A k'' j ω) n + 1))) := by
+  have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
   have hint : ∀ n, Integrable (Y n) P := fun n ↦ (hY2 n).integrable one_le_two
   set ℓ : ℕ → Ω → ℕ := fun n ω ↦ hitting (Q ω) n with hℓ
   set Nc : ℕ → Ω → ℝ := fun n ω ↦ count (fun j ↦ armIndicator A k'' j ω) n with hNc
@@ -208,20 +209,10 @@ lemma g_littleOp_of_hitting (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (fun m ↦ |respMart ν A Y k'' m ω|) with hSseq
   have hSOp : IsBigOpOne P (fun n ω ↦ Sseq n ω / √n) := by
     refine isBigOpOne_sup'_abs_div_sqrt (martingale_respMart h hint k'')
-      (fun n ↦ (memLp_respMart h.measurable_action hY2 k'' n).integrable_sq)
+      (fun n ↦ memLp_respMart h.measurable_action hY2 k'' n)
       (ae_of_all _ fun ω ↦ by simp [respMart, Finset.range_zero]) (Var[id; ν k''])
-      (variance_nonneg _ _) ?_ ?_
+      (variance_nonneg _ _)
       (fun n ↦ integral_respMart_increment_sq_le h k'' n (hY2 n))
-    · intro n
-      have heq : (fun ω ↦ (respMart ν A Y k'' (n + 1) ω - respMart ν A Y k'' n ω) ^ 2)
-          = fun ω ↦ (armIndicator A k'' n ω * (Y n ω - (ν k'')[id])) ^ 2 := by
-        funext ω; rw [respMart_succ]; simp only [Pi.add_apply]; ring
-      rw [heq]
-      exact integrable_respMart_increment_sq k'' (h.measurable_action n)
-        (((hY2 n).sub (memLp_const _)).integrable_sq)
-    · exact fun n ↦ (memLp_respMart h.measurable_action hY2 k'' n).integrable_mul
-        ((memLp_respMart h.measurable_action hY2 k'' (n + 1)).sub
-          (memLp_respMart h.measurable_action hY2 k'' n))
   have hSseqnn : ∀ n ω, 0 ≤ Sseq n ω := fun n ω ↦ by
     rw [hSseq]
     exact le_trans (abs_nonneg (respMart ν A Y k'' 0 ω))
@@ -279,7 +270,7 @@ martingale `M`-increment, and the `ell_rho_control` `g`/`h`-coefficients (`g_lit
 `h_bigOp_of_hitting`) — depends only on `hitting (Q k ·) n ≤ n`, so it is discharged uniformly. The
 `aRTS`/`aRTSFE` designs then instantiate it with their respective predicates. -/
 lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
@@ -372,13 +363,13 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
         assignMart (fun j ↦ armIndicator A k' j) ℱ P))
       ∧ IsLittleOpOne P (fun n ω ↦ wmaxSeq (fun _ : Unit ↦
         assignMart (fun j ↦ armIndicator A k' j) ℱ P) n ω / √n) := fun k' ↦
-    qm_increments_of_bdd (hMmart k') (hMzero k') (by norm_num) (hMdelta k')
+    qm_increments_of_bdd (hMmart k') (hMzero k') (hMdelta k')
   -- The ρ-increment control coefficients from `ell_rho_control`.
   have hρctrl : ∀ k', ∃ Vρ Wρ : ℕ → Ω → ℝ,
       (∀ᶠ n in atTop, ∀ ω, rhoterm k' n ω ≤ Vρ n ω * d k' n ω + Wρ n ω)
         ∧ IsLittleOpOne P Vρ ∧ IsLittleOpOne P (fun n ω ↦ Wρ n ω / √n) := by
     intro k'
-    obtain ⟨hQvop, hQwop⟩ := qm_increments_resp h hY2
+    obtain ⟨hQvop, hQwop⟩ := qm_increments_resp h hνk
     refine ell_rho_control (rhoterm := rhoterm k') (d := d k') (L := L)
       (θdiff := fun k'' n ω ↦ (ℓ k' n ω : ℝ)
         * |estimator (fun j ↦ armIndicator A k'' j ω) (fun j ↦ Y j ω) (θ₀ k'') (ℓ k' n ω)
@@ -428,7 +419,7 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
       exact hae
     · -- hg
       intro k''
-      exact g_littleOp_of_hitting h hY2 θ₀ (hQmeas k') k'' (hv k'') (hNconv k'')
+      exact g_littleOp_of_hitting h hνk θ₀ (hQmeas k') k'' (hv k'') (hNconv k'')
     · -- hhnn
       intro k'' n ω
       exact div_nonneg (Nat.cast_nonneg _) (by linarith [count_armIndicator_nonneg A k'' n ω])
@@ -662,7 +653,7 @@ smallness is automatic: at the last under-sampling time `N_ℓ - ℓ ρ̂_ℓ �
 `(1 + N_ℓ - ℓ ρ̂_ℓ)^+/√n ≤ 1/√n = o_p(1)`. The a.s. `O(√(n log log n))` bounds are a separate
 statement. -/
 lemma aRTS_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1) (hARTS : IsARTS alg θ₀ T α)
@@ -671,9 +662,9 @@ lemma aRTS_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] 
     IsLittleOpOne P (fun n ω ↦ ((pullCount A k n ω : ℝ)
       - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k) / √n) := by
   have hT : Continuous T := hlip.continuous
-  refine prop_dev_of_hitting h hY2 θ₀ T hTnn hTsum α hα hα1 hlip hTpos
-    (aRTS_theta_consistent h hY2 hT hTnn hTsum hα hARTS hTpos)
-    (fun k' ↦ (aRTS_proportion_tendsto h hY2 hT hTnn hTsum hα hARTS hTpos k').mono
+  refine prop_dev_of_hitting h hνk θ₀ T hTnn hTsum α hα hα1 hlip hTpos
+    (aRTS_theta_consistent h hνk hT hTnn hTsum hα hARTS hTpos)
+    (fun k' ↦ (aRTS_proportion_tendsto h hνk hT hTnn hTsum hα hARTS hTpos k').mono
       fun ω hω ↦ hω.congr fun n ↦ by rw [count_indicator_eq_pullCount])
     (aRTSUnder A Y θ₀ T) (fun k m ↦ measurableSet_aRTSUnder h θ₀ hT k m)
     (fun k ↦ throttle_of_isARTS h hARTS k) ?_ k

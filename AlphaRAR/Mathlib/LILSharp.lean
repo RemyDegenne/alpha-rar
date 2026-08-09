@@ -72,7 +72,7 @@ variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω} {ℱ : Filtrat
 `lem:llil_refined_freedman`). At the optimizer the exponent is the sharp `-λ²/(2(1+δ)v)`; the
 admissibility `θ c ≤ η` reads `λ c ≤ (1+δ) v η`. -/
 lemma measure_exists_ge_le_exp_optimized_refined [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c δ η : ℝ} (hδ : 0 ≤ δ)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c δ η : ℝ} (hδ : 0 ≤ δ)
     (hη : ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {lam v : ℝ} (hlam : 0 < lam) (hv : 0 < v)
     (hadm : lam * c ≤ (1 + δ) * v * η) (n : ℕ) :
@@ -93,7 +93,7 @@ lemma measure_exists_ge_le_exp_optimized_refined [IsProbabilityMeasure μ] (hM :
 /-- **Refined Freedman with the optimal `θ`, infinite horizon** (sharp analogue of
 `measure_exists_ge_le_exp_all`). Taking `n → ∞` over the increasing events. -/
 lemma measure_exists_ge_le_exp_all_refined [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c δ η : ℝ} (hδ : 0 ≤ δ)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c δ η : ℝ} (hδ : 0 ≤ δ)
     (hη : ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {lam v : ℝ} (hlam : 0 < lam) (hv : 0 < v)
     (hadm : lam * c ≤ (1 + δ) * v * η) :
@@ -114,7 +114,7 @@ version). The sharp analogue of `ae_eventually_forall_lt_of_summable_eventually`
 Freedman bounds `exp(-λ_k²/(2(1+δ)v_k))` summable and admissibility `λ_k c ≤ (1+δ)v_k η` holding
 eventually, almost surely for all large `k` and every `n`, `⟨M⟩_n ≤ v_k ⇒ M_n < λ_k`. -/
 lemma ae_eventually_forall_lt_of_summable_eventually_refined [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {c δ η : ℝ} (hδ : 0 ≤ δ) (hη : ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {lam v : ℕ → ℝ}
     (hadm : ∀ᶠ k in atTop, 0 < lam k ∧ 0 < v k ∧ lam k * c ≤ (1 + δ) * v k * η)
@@ -172,7 +172,7 @@ refined Freedman tail is `exp(-((1+ε)/(1+δ)) log(k+2))`, a `p`-series with `p 
 (`summable_exp_neg_mul_log_add`); admissibility `λ_k c ≤ (1+δ)ρ^k η_δ` holds eventually since
 `log(k+2)/ρ^k → 0`. -/
 lemma ae_eventually_forall_lt_pow_loglog_sharp [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ} (hc : 0 < c)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c : ℝ} (hc : 0 < c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {ρ ε δ : ℝ} (hρ : 1 < ρ) (hδ : 0 < δ)
     (hεδ : δ < ε) :
     ∀ᵐ ω ∂μ, ∀ᶠ (k : ℕ) in atTop, ∀ n, predQuadVar M ℱ μ n ω ≤ ρ ^ k →
@@ -223,7 +223,7 @@ For bounded increments with `⟨M⟩_n → ∞`, if `b² > (1+ε)ρ` then almost
 leading term; the additive `D_ρ` is absorbed since `log log⟨M⟩_n → ∞`. Taking `ρ ↓ 1`, `ε ↓ 0`,
 `b ↓ 1` gives the sharp constant `limsup ≤ 1`. -/
 lemma ae_eventually_le_sqrt_predQuadVar_mul_loglog_sharp [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {c : ℝ} (hc : 0 < c) (hbd : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop)
     {ρ ε δ b : ℝ} (hρ : 1 < ρ) (hδ : 0 < δ) (hεδ : δ < ε) (hb0 : 0 < b)
@@ -311,7 +311,7 @@ every `b > 1` almost surely eventually `M_n ≤ b √(2 ⟨M⟩_n log log⟨M⟩
 `ae_eventually_le_sqrt_predQuadVar_mul_loglog_sharp` with `ρ = 1+t`, `ε = t`, `δ = t/2` for
 `t = min((b²-1)/4, 1) > 0`, which satisfies `(1+ε)ρ < b²`. -/
 lemma ae_eventually_le_sqrt_predQuadVar_mul_loglog_sharp' [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {c : ℝ} (hc : 0 < c) (hbd : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) {b : ℝ} (hb : 1 < b) :
     ∀ᵐ ω ∂μ, ∀ᶠ n in atTop, M n ω ≤ b * √(2 * predQuadVar M ℱ μ n ω
@@ -330,7 +330,7 @@ lemma ae_eventually_le_sqrt_predQuadVar_mul_loglog_sharp' [IsProbabilityMeasure 
 `M_n ≤ b √(2 ⟨M⟩_n log log⟨M⟩_n)`, i.e. `limsup M_n/√(2⟨M⟩_n log log⟨M⟩_n) ≤ 1`. Countable
 intersection over `b_m = 1 + 1/(m+1) ↓ 1` of the previous lemma. -/
 lemma ae_eventually_le_sqrt_predQuadVar_mul_loglog_sharp_all [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {c : ℝ} (hc : 0 < c) (hbd : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
     ∀ᵐ ω ∂μ, ∀ b : ℝ, 1 < b → ∀ᶠ n in atTop, M n ω ≤ b * √(2 * predQuadVar M ℱ μ n ω
@@ -352,7 +352,7 @@ lemma ae_eventually_le_sqrt_predQuadVar_mul_loglog_sharp_all [IsProbabilityMeasu
 bound to `M` and `-M` (same quadratic variation, `predQuadVar_neg`) gives, a.s., for every `b > 1`
 eventually `|M_n| ≤ b √(2 ⟨M⟩_n log log⟨M⟩_n)`. This is the sharp constant `1` (two-sided). -/
 lemma ae_eventually_abs_le_sqrt_predQuadVar_mul_loglog_sharp [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {c : ℝ} (hc : 0 < c) (hbd : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
     ∀ᵐ ω ∂μ, ∀ b : ℝ, 1 < b → ∀ᶠ n in atTop, |M n ω| ≤ b * √(2 * predQuadVar M ℱ μ n ω
@@ -360,10 +360,7 @@ lemma ae_eventually_abs_le_sqrt_predQuadVar_mul_loglog_sharp [IsProbabilityMeasu
   have hM0neg : (-M) 0 =ᵐ[μ] 0 := by
     filter_upwards [hM0] with ω hω
     simp only [Pi.neg_apply, Pi.zero_apply] at hω ⊢; rw [hω, neg_zero]
-  have hM2neg : ∀ n, Integrable (fun ω ↦ (-M) n ω ^ 2) μ := fun n ↦ by
-    have he : (fun ω ↦ (-M) n ω ^ 2) = (fun ω ↦ M n ω ^ 2) := by
-      funext ω; simp only [Pi.neg_apply, neg_sq]
-    rw [he]; exact hM2 n
+  have hM2neg : ∀ n, MemLp ((-M) n) 2 μ := fun n ↦ (hM2 n).neg
   have hbdneg : ∀ i, ∀ᵐ ω ∂μ, |(-M) (i + 1) ω - (-M) i ω| ≤ c := fun i ↦ by
     filter_upwards [hbd i] with ω hω
     have he : (-M) (i + 1) ω - (-M) i ω = -(M (i + 1) ω - M i ω) := by
@@ -387,7 +384,7 @@ in genuine `limsup` form: almost surely
 (`limsup_le_of_le`, the quotient being cobounded below by `0`), and `limsup ≤ b` for all `b > 1`
 gives `limsup ≤ 1`. -/
 lemma ae_limsup_abs_div_sqrt_predQuadVar_mul_loglog_le_one [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {c : ℝ} (hc : 0 < c) (hbd : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
     ∀ᵐ ω ∂μ, limsup (fun n ↦ |M n ω| / √(2 * predQuadVar M ℱ μ n ω
@@ -428,7 +425,7 @@ that random-stopping quadratic-variation identity is the remaining ingredient. -
 `measure_exists_ge_le_exp_horizon`: the increment bound `|ΔM_i| ≤ c` is required only for `i < N`,
 via the process stopped at `N` (`stopMart`), whose increments are globally bounded by `c`. -/
 lemma measure_exists_ge_le_exp_horizon_refined [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c θ δ η : ℝ} (hδ : 0 ≤ δ)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c θ δ η : ℝ} (hδ : 0 ≤ δ)
     (hη : ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2) (hc : 0 ≤ c)
     (hθc : |θ| * c ≤ η) (hθ0 : 0 < θ) (lam v : ℝ) (N : ℕ)
     (hb : ∀ i < N, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
@@ -437,8 +434,8 @@ lemma measure_exists_ge_le_exp_horizon_refined [IsProbabilityMeasure μ] (hM : M
   have hM'0 : stopMart M N 0 =ᵐ[μ] 0 := by
     have : stopMart M N 0 = M 0 := by rw [stopMart_apply, Nat.zero_min]
     rw [this]; exact hM0
-  have hM'2 : ∀ n, Integrable (fun ω ↦ stopMart M N n ω ^ 2) μ := fun n ↦ by
-    simp only [stopMart_apply]; exact hM2 (min n N)
+  have hM'2 : ∀ n, MemLp (stopMart M N n) 2 μ := fun n ↦ by
+    simpa only [stopMart_apply] using hM2 (min n N)
   have hb' : ∀ i, ∀ᵐ ω ∂μ, |stopMart M N (i + 1) ω - stopMart M N i ω| ≤ c := fun i ↦ by
     by_cases hi : i < N
     · have h1 : min i N = i := by omega
@@ -465,7 +462,7 @@ lemma measure_exists_ge_le_exp_horizon_refined [IsProbabilityMeasure μ] (hM : M
 the sharp exponent `(½(1+δ)α²v - αC)log(j+2)` (square roots collapse). Admissibility
 `θ_j c ≤ η` is a hypothesis (`η` from the refined inequality). -/
 lemma measure_exists_ge_le_exp_block_loglog_sharp [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {v C α δ η c : ℝ}
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {v C α δ η c : ℝ}
     (hδ : 0 ≤ δ) (hη : ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2) (hα : 0 < α)
     (hc0 : 0 ≤ c) (j Nj : ℕ) (hNj : 1 ≤ Nj)
     (hadm : α * √(log ((j : ℝ) + 2) / (Nj : ℝ)) * c ≤ η)
@@ -510,7 +507,7 @@ large `j` and every `m ≤ N j`, `⟨M⟩_m ≤ v·N j ⇒ M_m < C√(N j·log(j
 parameter: taking `N j = ⌈ρ^j⌉` with `ρ ↓ 1` (rather than `2^j`) is what delivers the sharp constant
 in the repackaging. -/
 lemma ae_eventually_lt_block_of_growing_loglog_sharp [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {v C α δ η : ℝ} (hδ : 0 ≤ δ) (hη : ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2)
     (hα : 0 < α) (N : ℕ → ℕ) (hN : ∀ j, 1 ≤ N j) (c : ℕ → ℝ) (hc0 : ∀ j, 0 ≤ c j)
     (hp : 1 < α * C - (1 + δ) / 2 * α ^ 2 * v)
@@ -563,7 +560,7 @@ block via the least `j` with `n ≤ N_j`: `N_j ≤ ρn+1` and (additively) `log(
 so the constant is `C√ρ/√(2v)·(1+o(1)) < b`. No random stopping time is used: the linear QV bound
 lets a deterministic time horizon play the role of quadratic-variation stopping. -/
 lemma ae_eventually_le_sqrt_nat_mul_loglog_of_growing_sharp [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {v C α δ b ρ : ℝ} (hρ : 1 < ρ) (hδ : 0 < δ) (hα : 0 < α) (hv : 0 < v)
     (hp : 1 < α * C - (1 + δ) / 2 * α ^ 2 * v) (hb0 : 0 < b) (hbC : C * √ρ < b * √(2 * v))
     (N : ℕ → ℕ) (hNmono : Monotone N) (hN1 : ∀ j, 1 ≤ N j) (hNle : ∀ j, ρ ^ j ≤ (N j : ℝ))
@@ -727,7 +724,7 @@ sharp block/repackaging with an internally-chosen optimizer `α = C/((1+δ)v)`,
 This packages the `C, α` arithmetic; the caller supplies only the horizons, the increment bound and
 condition \textbf{(H)}. -/
 lemma ae_eventually_le_sqrt_nat_mul_loglog_of_growing_sharp' [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {v δ b ρ : ℝ} (hρ : 1 < ρ) (hδ : 0 < δ) (hv : 0 < v) (hb0 : 0 < b) (hbρ : (1 + δ) * ρ < b ^ 2)
     (N : ℕ → ℕ) (hNmono : Monotone N) (hN1 : ∀ j, 1 ≤ N j) (hNle : ∀ j, ρ ^ j ≤ (N j : ℝ))
     (hNlt : ∀ j, (N j : ℝ) < ρ ^ j + 1) (c : ℕ → ℝ) (hc0 : ∀ j, 0 ≤ c j)
@@ -834,7 +831,7 @@ and linear quadratic variation `⟨M⟩_n ≤ v·n`, almost surely for every `b 
 `M_n ≤ b √(2 v n loglog n)`. For each `b`, blocks with base `ρ = 1 + (b-1)/2 ↓ 1` and
 `δ = (b-1)/2` give `(1+δ)ρ = ρ² < b²`; condition (H) comes from `tendsto_growth_horizon`. -/
 lemma ae_eventually_le_sqrt_nat_mul_loglog_of_growth_sharp_all [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {v : ℝ} (hv : 0 < v) {g : ℕ → ℝ} (hgmono : Monotone g) (hgnn : ∀ i, 0 ≤ g i)
     (hginc : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ g i)
     (hg : Tendsto (fun n : ℕ ↦ g n * √(log (log n) / n)) atTop (𝓝 0))
@@ -877,7 +874,7 @@ lemma ae_eventually_le_sqrt_nat_mul_loglog_of_growth_sharp_all [IsProbabilityMea
 and `-M` (same increment growth and quadratic variation, `predQuadVar_neg`) gives, a.s., for every
 `b > 1` eventually `|M_n| ≤ b √(2 v n loglog n)`: the sharp constant `1` for growing increments. -/
 lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growth_sharp_all [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {v : ℝ} (hv : 0 < v) {g : ℕ → ℝ} (hgmono : Monotone g) (hgnn : ∀ i, 0 ≤ g i)
     (hginc : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ g i)
     (hg : Tendsto (fun n : ℕ ↦ g n * √(log (log n) / n)) atTop (𝓝 0))
@@ -887,10 +884,7 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growth_sharp_all [IsProbabilit
   have hM0neg : (-M) 0 =ᵐ[μ] 0 := by
     filter_upwards [hM0] with ω hω; simp only [Pi.neg_apply, Pi.zero_apply] at hω ⊢
     rw [hω, neg_zero]
-  have hM2neg : ∀ n, Integrable (fun ω ↦ (-M) n ω ^ 2) μ := fun n ↦ by
-    have he : (fun ω ↦ (-M) n ω ^ 2) = (fun ω ↦ M n ω ^ 2) := by
-      funext ω; simp only [Pi.neg_apply, neg_sq]
-    rw [he]; exact hM2 n
+  have hM2neg : ∀ n, MemLp ((-M) n) 2 μ := fun n ↦ (hM2 n).neg
   have hgincneg : ∀ i, ∀ᵐ ω ∂μ, |(-M) (i + 1) ω - (-M) i ω| ≤ g i := fun i ↦ by
     filter_upwards [hginc i] with ω hω
     have he : (-M) (i + 1) ω - (-M) i ω = -(M (i + 1) ω - M i ω) := by
@@ -910,7 +904,7 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growth_sharp_all [IsProbabilit
 /-- **Sharp growing-increment LIL as a `limsup`** (two-sided). Almost surely
 `limsup_n |M_n| / √(2 v n log log n) ≤ 1`, from the `∀ b > 1, ∀ᶠ` two-sided form. -/
 lemma ae_limsup_abs_div_sqrt_nat_mul_loglog_of_growth_le_one [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {v : ℝ} (hv : 0 < v) {g : ℕ → ℝ} (hgmono : Monotone g) (hgnn : ∀ i, 0 ≤ g i)
     (hginc : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ g i)
     (hg : Tendsto (fun n : ℕ ↦ g n * √(log (log n) / n)) atTop (𝓝 0))

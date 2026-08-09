@@ -47,14 +47,12 @@ lemma martingale_ae_tendsto_of_eLpNorm_two_le [IsProbabilityMeasure μ]
 `∫ (S n)² ∂μ ≤ C` for all `n` converges a.e. to a finite limit. The uniform second-moment bound
 gives `eLpNorm (S n) 2 μ ≤ √C`, so `martingale_ae_tendsto_of_eLpNorm_two_le` applies. -/
 lemma martingale_ae_tendsto_of_integral_sq_le [IsProbabilityMeasure μ]
-    (hS : Martingale S ℱ μ) (hS2 : ∀ n, Integrable (fun ω ↦ (S n ω) ^ 2) μ)
+    (hS : Martingale S ℱ μ) (hS2 : ∀ n, MemLp (S n) 2 μ)
     {C : ℝ} (hbdd : ∀ n, ∫ ω, (S n ω) ^ 2 ∂μ ≤ C) :
     ∀ᵐ ω ∂μ, ∃ c, Tendsto (fun n ↦ S n ω) atTop (𝓝 c) := by
   have hCnn : 0 ≤ C := le_trans (integral_nonneg fun ω ↦ sq_nonneg _) (hbdd 0)
   refine martingale_ae_tendsto_of_eLpNorm_two_le hS (C := (√C).toNNReal) fun n ↦ ?_
-  have haesm : AEStronglyMeasurable (S n) μ :=
-    ((hS.stronglyMeasurable n).mono (ℱ.le n)).aestronglyMeasurable
-  have hmem : MemLp (S n) 2 μ := (memLp_two_iff_integrable_sq haesm).mpr (hS2 n)
+  have hmem : MemLp (S n) 2 μ := hS2 n
   rw [hmem.eLpNorm_eq_integral_rpow_norm two_ne_zero (by norm_num)]
   have h2 : ((2 : ℝ≥0∞).toReal)⁻¹ = 1 / 2 := by norm_num
   have hnorm : (fun ω ↦ ‖S n ω‖ ^ ((2 : ℝ≥0∞).toReal)) = fun ω ↦ (S n ω) ^ 2 := by
@@ -110,8 +108,7 @@ into the bound `hbdd` below). By `martingale_weightedSeries` and
 `∑_{k<n} (k+1)·x_k = ∑_{k<n} ΔM_k = M n` (using `M 0 = 0`). -/
 theorem martingale_div_atTop_ae_tendsto_zero [IsProbabilityMeasure μ]
     (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0)
-    (hS2 : ∀ n, Integrable
-      (fun ω ↦ (∑ k ∈ range n, (M (k + 1) ω - M k ω) / ((k : ℝ) + 1)) ^ 2) μ)
+    (hS2 : ∀ n, MemLp (fun ω ↦ ∑ k ∈ range n, (M (k + 1) ω - M k ω) / ((k : ℝ) + 1)) 2 μ)
     {C : ℝ} (hbdd : ∀ n, ∫ ω, (∑ k ∈ range n, (M (k + 1) ω - M k ω) / ((k : ℝ) + 1)) ^ 2 ∂μ ≤ C) :
     ∀ᵐ ω ∂μ, Tendsto (fun n ↦ M n ω / n) atTop (𝓝 0) := by
   have hconv := martingale_ae_tendsto_of_integral_sq_le
@@ -137,7 +134,7 @@ for the loglog-scale weight `a n = √(2 n log log n)` of the Hartman–Wintner 
 lemma martingale_div_weight_ae_tendsto_zero [IsProbabilityMeasure μ]
     (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) {a : ℕ → ℝ}
     (ha_pos : ∀ n, 0 < a n) (ha_mono : Monotone a) (ha_top : Tendsto a atTop atTop)
-    (hS2 : ∀ n, Integrable (fun ω ↦ (∑ k ∈ range n, (M (k + 1) ω - M k ω) / a (k + 1)) ^ 2) μ)
+    (hS2 : ∀ n, MemLp (fun ω ↦ ∑ k ∈ range n, (M (k + 1) ω - M k ω) / a (k + 1)) 2 μ)
     {C : ℝ} (hbdd : ∀ n, ∫ ω, (∑ k ∈ range n, (M (k + 1) ω - M k ω) / a (k + 1)) ^ 2 ∂μ ≤ C) :
     ∀ᵐ ω ∂μ, Tendsto (fun n ↦ M n ω / a n) atTop (𝓝 0) := by
   have hconv := martingale_ae_tendsto_of_integral_sq_le
@@ -182,21 +179,16 @@ lemma martingale_div_atTop_ae_tendsto_zero_of_bdd [IsProbabilityMeasure μ]
     simpa only [div_eq_inv_mul] using (hdmem k).const_mul ((k : ℝ) + 1)⁻¹
   have hSmem : ∀ n, MemLp (S n) 2 μ := fun n ↦
     memLp_finsetSum (Finset.range n) fun k _ ↦ hDmem k
-  have hS2 : ∀ n, Integrable (fun ω ↦ (S n ω) ^ 2) μ := fun n ↦ (hSmem n).integrable_sq
-  have hd2 : ∀ k, Integrable (fun ω ↦ (S (k + 1) ω - S k ω) ^ 2) μ := fun k ↦
-    ((hSmem (k + 1)).sub (hSmem k)).integrable_sq
-  have hprod : ∀ k, Integrable (S k * (S (k + 1) - S k)) μ := fun k ↦
-    (hSmem k).integrable_mul ((hSmem (k + 1)).sub (hSmem k))
   -- Orthogonality / discrete Itô isometry: `∫ (S n)² = ∑_{k<n} ∫ (S (k+1) − S k)²`.
   have hsqeq : ∀ n, ∫ ω, (S n ω) ^ 2 ∂μ
       = ∑ k ∈ range n, ∫ ω, (S (k + 1) ω - S k ω) ^ 2 ∂μ := by
     intro n
-    rw [integral_sq_eq_integral_predQuadVar hSmart.stronglyAdapted hS2 hS0 n]
+    rw [integral_sq_eq_integral_predQuadVar hSmart.stronglyAdapted hSmem hS0 n]
     have e : ∑ k ∈ range n, ∫ ω, (S (k + 1) ω - S k ω) ^ 2 ∂μ
         = ∑ k ∈ range n,
             ((∫ ω, predQuadVar S ℱ μ (k + 1) ω ∂μ) - ∫ ω, predQuadVar S ℱ μ k ω ∂μ) :=
       Finset.sum_congr rfl fun k _ ↦
-        (integral_predQuadVar_succ_sub hSmart hS2 k (hd2 k) (hprod k)).symm
+        (integral_predQuadVar_succ_sub hSmart hSmem k).symm
     rw [e, Finset.sum_range_sub (fun k ↦ ∫ ω, predQuadVar S ℱ μ k ω ∂μ) n]
     simp [predQuadVar_zero]
   -- The summability `∑ (k+1)⁻² < ∞`.
@@ -235,7 +227,7 @@ lemma martingale_div_atTop_ae_tendsto_zero_of_bdd [IsProbabilityMeasure μ]
       _ ≤ c ^ 2 * ∑' k : ℕ, 1 / ((k : ℝ) + 1) ^ 2 := by
           gcongr
           exact hsummable.sum_le_tsum (Finset.range n) fun i _ ↦ by positivity
-  exact martingale_div_atTop_ae_tendsto_zero hM hM0 hS2 hbdd
+  exact martingale_div_atTop_ae_tendsto_zero hM hM0 hSmem hbdd
 
 /-! ### Bracket-normalized strong law -/
 
@@ -452,8 +444,7 @@ theorem martingale_div_predQuadVar_ae_tendsto_zero [IsProbabilityMeasure μ]
   have hTmart : Martingale (bracketSeries M ℱ μ) ℱ μ := martingale_bracketSeries hM hM2
   have hT0 : bracketSeries M ℱ μ 0 =ᵐ[μ] 0 :=
     Eventually.of_forall fun ω ↦ by simp [bracketSeries]
-  have hT2 : ∀ n, Integrable (fun ω ↦ (bracketSeries M ℱ μ n ω) ^ 2) μ := fun n ↦
-    (memLp_bracketSeries hM hM2 n).integrable_sq
+  have hT2 : ∀ n, MemLp (bracketSeries M ℱ μ n) 2 μ := memLp_bracketSeries hM hM2
   have hbdd : ∀ n, ∫ ω, (bracketSeries M ℱ μ n ω) ^ 2 ∂μ ≤ 1 := by
     intro n
     rw [integral_sq_eq_integral_predQuadVar hTmart.stronglyAdapted hT2 hT0 n]

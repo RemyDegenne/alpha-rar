@@ -150,12 +150,10 @@ lemma norm_increment_le_vmaxSeq_wmaxSeq (n : ℕ) (hn : 2 ≤ n) {ℓ : ℕ} (h�
             (Finset.mem_range.mpr (Nat.lt_succ_of_lt (Finset.mem_range.mp hm)))
 
 variable (hM : ∀ k, Martingale (M k) ℱ μ)
-  (hM2 : ∀ k n, Integrable (fun ω ↦ M k n ω ^ 2) μ)
-  (hd2 : ∀ k n, Integrable (fun ω ↦ (M k (n + 1) ω - M k n ω) ^ 2) μ)
-  (hcross : ∀ k a b, Integrable (fun ω ↦ M k a ω * M k b ω) μ)
+  (hM2 : ∀ k n, MemLp (M k n) 2 μ)
   {C₀ : ℝ} (hC₀ : 0 ≤ C₀) (hinc : ∀ k n, ∫ ω, (M k (n + 1) ω - M k n ω) ^ 2 ∂μ ≤ C₀)
 
-include hM hC₀ hinc hM2 hd2 hcross in
+include hM hC₀ hinc hM2 in
 /-- **The long-range normalized increment maximum is `o_p(1)`.** -/
 @[specifies vmaxSeq "the scale claimed by the name: the `√n`-to-`n` window and the `1/m` \
 normalization are chosen exactly so that this maximum is `o_p(1)`"]
@@ -183,7 +181,7 @@ lemma isLittleOpOne_vmaxSeq : IsLittleOpOne μ (vmaxSeq M) := by
     exact (Finset.measurable_sup' _ (fun m _ ↦ (hgmeas n m).div_const _)).aemeasurable
   · -- eventual lintegral bound
     filter_upwards [eventually_gt_atTop 0] with n hn
-    exact mart_maximal_dyadic_pi M hM hM2 hd2 hcross hC₀ hinc (Nat.sqrt_pos.mpr hn)
+    exact mart_maximal_dyadic_pi M hM hM2 hC₀ hinc (Nat.sqrt_pos.mpr hn)
       (Nat.sqrt_le_self n)
   · -- b n → 0
     rw [hbdef]
@@ -196,7 +194,7 @@ lemma isLittleOpOne_vmaxSeq : IsLittleOpOne μ (vmaxSeq M) := by
     have h1 := (hsqrt.const_mul (32 : ℝ)).const_mul (Fintype.card ι : ℝ)
     simpa using h1
 
-include hM hC₀ hinc hM2 hd2 hcross in
+include hM hC₀ hinc hM2 in
 /-- **The short-range increment maximum is `o_p(√n)`.** -/
 @[specifies wmaxSeq "the scale claimed by the name: the short range `m ≤ ⌊√n⌋` is chosen exactly \
 so that this unnormalized maximum is `o_p(√n)`"]
@@ -226,7 +224,7 @@ lemma isLittleOpOne_wmaxSeq_div_sqrt :
   · -- eventual bound
     filter_upwards [eventually_gt_atTop 0] with n hn
     have hsn : (0 : ℝ) < √n := Real.sqrt_pos.mpr (by exact_mod_cast hn)
-    have hmp := mart_maximal_pi M hM hM2 hd2 hcross hinc (L := Nat.sqrt n) (n := n)
+    have hmp := mart_maximal_pi M hM hM2 hinc (L := Nat.sqrt n) (n := n)
       (Nat.sqrt_le_self n)
     calc ∫⁻ ω, ENNReal.ofReal (wmaxSeq M n ω / √n) ∂μ
         = ENNReal.ofReal (1 / √n) * ∫⁻ ω, ENNReal.ofReal (wmaxSeq M n ω) ∂μ := by
@@ -265,14 +263,12 @@ variable [IsProbabilityMeasure μ] {ℱ : Filtration ℕ mΩ} {N : ℕ → Ω �
 with `N 0 = 0` and increment second moments `≤ σ²`, `max_{m ≤ n} |N_m| = O_p(√n)`. Combines the
 Doob `L²` maximal bound (`lintegral_sup'_abs_le_two_mul_sqrt`) with `E[N_n²] ≤ σ²n` and Markov. -/
 lemma isBigOpOne_sup'_abs_div_sqrt (hN : Martingale N ℱ μ)
-    (hN2 : ∀ n, Integrable (fun ω ↦ N n ω ^ 2) μ) (hN0 : N 0 =ᵐ[μ] 0)
+    (hN2 : ∀ n, MemLp (N n) 2 μ) (hN0 : N 0 =ᵐ[μ] 0)
     (σ2 : ℝ) (hσ2 : 0 ≤ σ2)
-    (hd2 : ∀ n, Integrable (fun ω ↦ (N (n + 1) ω - N n ω) ^ 2) μ)
-    (hprod : ∀ n, Integrable (N n * (N (n + 1) - N n)) μ)
     (hinc : ∀ n, ∫ ω, (N (n + 1) ω - N n ω) ^ 2 ∂μ ≤ σ2) :
     IsBigOpOne μ (fun n ω ↦ (Finset.range (n + 1)).sup' nonempty_range_add_one
       (fun m ↦ |N m ω|) / √n) := by
-  have hgrow := integral_sq_le_of_increment_bound hN hN2 hN0 σ2 hd2 hprod hinc
+  have hgrow := integral_sq_le_of_increment_bound hN hN2 hN0 σ2 hinc
   have hNmeas : ∀ k, Measurable (N k) := fun k ↦
     (hN.stronglyAdapted k).measurable.mono (ℱ.le k) le_rfl
   set S : ℕ → Ω → ℝ := fun n ω ↦ (Finset.range (n + 1)).sup' nonempty_range_add_one
@@ -289,7 +285,7 @@ lemma isBigOpOne_sup'_abs_div_sqrt (hN : Martingale N ℱ μ)
   have hbound : ∀ n, ∫⁻ ω, ‖S n ω‖ₑ ∂μ
       ≤ ENNReal.ofReal (2 * √σ2 * v n) := by
     intro n
-    have hle := lintegral_sup'_abs_le_two_mul_sqrt hN hN2 hd2 hprod n
+    have hle := lintegral_sup'_abs_le_two_mul_sqrt hN hN2 n
     rw [show (fun ω ↦ ‖S n ω‖ₑ) = fun ω ↦ ENNReal.ofReal (S n ω) from by
       funext ω; rw [Real.enorm_eq_ofReal_abs, abs_of_nonneg (hSnn n ω)]]
     refine hle.trans (ENNReal.ofReal_le_ofReal ?_)
@@ -323,7 +319,7 @@ lemma isBigOpOne_sup'_abs_div_sqrt (hN : Martingale N ℱ μ)
 For a martingale `N` with `N 0 = 0` and `|ΔN| ≤ c` a.e., the increment maxima of the singleton
 family `fun _ : Unit ↦ N` are `o_p(1)` and `o_p(√n)`. Provides the `M`-side of blueprint
 `lem:QM_increments` (the assignment martingale has `|ΔM| ≤ 1`). -/
-lemma qm_increments_of_bdd (hN : Martingale N ℱ μ) (hN0 : N 0 =ᵐ[μ] 0) {c : ℝ} (hc : 0 ≤ c)
+lemma qm_increments_of_bdd (hN : Martingale N ℱ μ) (hN0 : N 0 =ᵐ[μ] 0) {c : ℝ}
     (hΔ : ∀ n, ∀ᵐ ω ∂μ, |N (n + 1) ω - N n ω| ≤ c) :
     IsLittleOpOne μ (vmaxSeq (fun _ : Unit ↦ N)) ∧
       IsLittleOpOne μ (fun n ω ↦ wmaxSeq (fun _ : Unit ↦ N) n ω / √n) := by
@@ -342,22 +338,17 @@ lemma qm_increments_of_bdd (hN : Martingale N ℱ μ) (hN0 : N 0 =ᵐ[μ] 0) {c 
       _ ≤ ∑ k ∈ Finset.range n, |N (k + 1) ω - N k ω| := Finset.abs_sum_le_sum_abs _ _
       _ ≤ ∑ k ∈ Finset.range n, c := Finset.sum_le_sum fun k _ ↦ hΔω k
       _ = n * c := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
-  have hM2 : ∀ n, Integrable (fun ω ↦ N n ω ^ 2) μ := fun n ↦
-    bdd_int _ (((n : ℝ) * c) ^ 2) ((hmeasN n).pow_const 2).aestronglyMeasurable
-      (by filter_upwards [hbdd n] with ω hb
-          rw [abs_of_nonneg (sq_nonneg _)]
-          exact sq_le_sq' (neg_le_of_abs_le hb) (le_of_abs_le hb))
+  have hM2 : ∀ n, MemLp (N n) 2 μ := fun n ↦
+    (memLp_two_iff_integrable_sq (hmeasN n).aestronglyMeasurable).mpr
+      (bdd_int _ (((n : ℝ) * c) ^ 2) ((hmeasN n).pow_const 2).aestronglyMeasurable
+        (by filter_upwards [hbdd n] with ω hb
+            rw [abs_of_nonneg (sq_nonneg _)]
+            exact sq_le_sq' (neg_le_of_abs_le hb) (le_of_abs_le hb)))
   have hd2 : ∀ n, Integrable (fun ω ↦ (N (n + 1) ω - N n ω) ^ 2) μ := fun n ↦
     bdd_int _ (c ^ 2) (((hmeasN (n + 1)).sub (hmeasN n)).pow_const 2).aestronglyMeasurable
       (by filter_upwards [hΔ n] with ω hb
           rw [abs_of_nonneg (sq_nonneg _)]
           exact sq_le_sq' (neg_le_of_abs_le hb) (le_of_abs_le hb))
-  have hcross : ∀ a b, Integrable (fun ω ↦ N a ω * N b ω) μ := fun a b ↦ by
-    refine bdd_int _ ((a : ℝ) * c * ((b : ℝ) * c))
-      ((hmeasN a).mul (hmeasN b)).aestronglyMeasurable ?_
-    filter_upwards [hbdd a, hbdd b] with ω hba hbb
-    rw [abs_mul]
-    exact mul_le_mul hba hbb (abs_nonneg _) (mul_nonneg (Nat.cast_nonneg a) hc)
   have hinc : ∀ n, ∫ ω, (N (n + 1) ω - N n ω) ^ 2 ∂μ ≤ c ^ 2 := fun n ↦ by
     have hb : (fun ω ↦ (N (n + 1) ω - N n ω) ^ 2) ≤ᵐ[μ] fun _ ↦ c ^ 2 := by
       filter_upwards [hΔ n] with ω h
@@ -366,9 +357,9 @@ lemma qm_increments_of_bdd (hN : Martingale N ℱ μ) (hN0 : N 0 =ᵐ[μ] 0) {c 
         ≤ ∫ _, c ^ 2 ∂μ := integral_mono_ae (hd2 n) (integrable_const _) hb
       _ = c ^ 2 := by simp
   exact ⟨isLittleOpOne_vmaxSeq (M := fun _ : Unit ↦ N) (fun _ ↦ hN) (fun _ ↦ hM2)
-      (fun _ ↦ hd2) (fun _ ↦ hcross) (sq_nonneg c) (fun _ ↦ hinc),
+      (sq_nonneg c) (fun _ ↦ hinc),
     isLittleOpOne_wmaxSeq_div_sqrt (M := fun _ : Unit ↦ N) (fun _ ↦ hN) (fun _ ↦ hM2)
-      (fun _ ↦ hd2) (fun _ ↦ hcross) (sq_nonneg c) (fun _ ↦ hinc)⟩
+      (sq_nonneg c) (fun _ ↦ hinc)⟩
 
 end Scalar
 

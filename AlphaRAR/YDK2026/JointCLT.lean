@@ -102,8 +102,8 @@ centring as `targetSqrtNVec`, so that their difference vanishing in probability 
 blueprint `lem:prop_dev`, and the first diagonal block of the limit is the proportion's own \
 Gaussian"]
 theorem clt_joint
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
-    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
+    (hνk : ∀ a, MemLp id 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a)))
     {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (G : Matrix 𝓐 𝓐 ℝ)
@@ -144,7 +144,7 @@ theorem clt_joint
     fun p ↦ d p.1 + p.2 with hg_def
   have hg : Continuous g := (hd_cont.comp continuous_fst).add continuous_snd
   -- Base weak convergence: `√n(ρ̂_n - v) ⇒ 𝒩(0, M)` (this is `clt_rho`).
-  have hclt := clt_rho h hY2 θ₀ hνk hv hNconv hT G hTderiv hcons
+  have hclt := clt_rho h θ₀ hνk hv hNconv hT G hTderiv hcons
   have hXmeas : ∀ n, Measurable (targetSqrtNVec ν A Y θ₀ T n) := measurable_targetSqrtNVec h θ₀ hT
   -- The remainder `Rn = jointSqrtNVec - d(√n(ρ̂_n - v)) = (√n(N_n/n - ρ̂_n), 0)`.
   set Rn : ℕ → Ω → EuclideanSpace ℝ (𝓐 ⊕ 𝓐) :=

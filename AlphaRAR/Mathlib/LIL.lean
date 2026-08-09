@@ -187,7 +187,7 @@ carries `½(1+δ)θ²⟨M⟩` instead of `θ²⟨M⟩`. -/
 compensator that still yields a supermartingale under the sharpened MGF bound, and shrinking it \
 towards the Gaussian `½` is exactly what buys the sharp LIL constant"]
 lemma supermartingale_expProcessRefined [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {c θ δ η : ℝ} (hδ : 0 ≤ δ)
     (hη : ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2) (hθ : |θ| * c ≤ η)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
@@ -199,9 +199,7 @@ lemma supermartingale_expProcessRefined [IsProbabilityMeasure μ] (hM : Martinga
       ((hM.stronglyMeasurable i).mono (ℱ.le _))).aestronglyMeasurable
   have hdmem : ∀ i, MemLp (fun ω ↦ M (i + 1) ω - M i ω) 2 μ := fun i ↦
     MemLp.of_bound (haesm_d i) c (by filter_upwards [hb i] with ω h; rwa [Real.norm_eq_abs])
-  have hMmem : ∀ n, MemLp (M n) 2 μ := fun n ↦
-    (memLp_two_iff_integrable_sq ((hM.stronglyMeasurable n).mono (ℱ.le n)).aestronglyMeasurable).mpr
-      (hM2 n)
+  have hMmem : ∀ n, MemLp (M n) 2 μ := hM2
   have hd2 : ∀ i, Integrable (fun ω ↦ (M (i + 1) ω - M i ω) ^ 2) μ :=
     fun i ↦ (hdmem i).integrable_sq
   have hprod : ∀ i, Integrable (M i * (M (i + 1) - M i)) μ := fun i ↦
@@ -339,7 +337,7 @@ The one-step bound is `μ[Z_{i+1} | ℱ_i] = Z_i e^{-θ² Δ⟨M⟩_i} μ[e^{θ 
 exactly large enough to make the exponential a supermartingale in the bounded-increment regime \
 `|θ|c ≤ 1`"]
 lemma supermartingale_expProcess [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {c θ : ℝ} (hθ : |θ| * c ≤ 1)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
     Supermartingale (expProcess M ℱ μ θ) ℱ μ := by
@@ -403,7 +401,7 @@ The sharp-constant analogue of `measure_exists_ge_le_exp`, with variance proxy `
 `2v`: `μ{∃ k ≤ n, λ ≤ M_k, ⟨M⟩_k ≤ v} ≤ exp(-θλ + ½(1+δ)θ²v)`, via Ville's inequality on the refined
 supermartingale `expProcessRefined`. -/
 lemma measure_exists_ge_le_exp_refined [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {c θ δ η : ℝ} (hδ : 0 ≤ δ)
     (hη : ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2) (hθc : |θ| * c ≤ η) (hθ0 : 0 < θ)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) (lam v : ℝ) (n : ℕ) :
@@ -457,7 +455,7 @@ On this event the exponential supermartingale `Z_k(θ) = exp(θ M_k - θ² ⟨M�
 `exp(θλ - θ² v)`, so Ville's inequality (`smul_measure_sup_le_integral_zero`) with `E[Z_0] = 1`
 gives the bound. Optimizing `θ = λ/(2v) ∧ 1/c` yields the classical `exp(-λ²/(2(v+cλ)))`. -/
 lemma measure_exists_ge_le_exp [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {c θ : ℝ} (hθc : |θ| * c ≤ 1) (hθ0 : 0 < θ)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) (lam v : ℝ) (n : ℕ) :
     μ {ω | ∃ k ≤ n, lam ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v}
@@ -475,7 +473,7 @@ This is `measure_exists_ge_le_exp` evaluated at `θ = λ/(2v)`, where
 `-θλ + θ² v = -λ²/(4v)`. The variance proxy is `2v` rather than the sharp `v` because the
 one-step bound uses `eˣ ≤ 1 + x + x²`; this costs a factor `√2` in the eventual LIL constant. -/
 lemma measure_exists_ge_le_exp_optimized [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ}
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c : ℝ}
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {lam v : ℝ} (hlam : 0 < lam) (hv : 0 < v)
     (hadm : lam * c ≤ 2 * v) (n : ℕ) :
     μ {ω | ∃ k ≤ n, lam ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v}
@@ -544,7 +542,7 @@ globally bounded by `c` (they vanish past `N`) and whose value and quadratic var
 *constrained* `θ = 1/c` (the true optimizer `λ/(2v)` is inadmissible), so `measure_exists_ge_le_exp`
 rather than `measure_exists_ge_le_exp_optimized` is what stops at the horizon. -/
 lemma measure_exists_ge_le_exp_horizon [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c θ : ℝ} (hc : 0 ≤ c)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c θ : ℝ} (hc : 0 ≤ c)
     (hθc : |θ| * c ≤ 1) (hθ0 : 0 < θ) (lam v : ℝ) (N : ℕ)
     (hb : ∀ i < N, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
     μ {ω | ∃ m ≤ N, lam ≤ M m ω ∧ predQuadVar M ℱ μ m ω ≤ v}
@@ -552,8 +550,8 @@ lemma measure_exists_ge_le_exp_horizon [IsProbabilityMeasure μ] (hM : Martingal
   have hM'0 : stopMart M N 0 =ᵐ[μ] 0 := by
     have : stopMart M N 0 = M 0 := by rw [stopMart_apply, Nat.zero_min]
     rw [this]; exact hM0
-  have hM'2 : ∀ n, Integrable (fun ω ↦ stopMart M N n ω ^ 2) μ := fun n ↦ by
-    simp only [stopMart_apply]; exact hM2 (min n N)
+  have hM'2 : ∀ n, MemLp (stopMart M N n) 2 μ := fun n ↦ by
+    simpa only [stopMart_apply] using hM2 (min n N)
   -- Increments of the stopped process are globally bounded by `c`.
   have hb' : ∀ i, ∀ᵐ ω ∂μ, |stopMart M N (i + 1) ω - stopMart M N i ω| ≤ c := fun i ↦ by
     by_cases hi : i < N
@@ -581,7 +579,7 @@ Taking `n → ∞` in `measure_exists_ge_le_exp_optimized` (the events increase 
 `μ{ω : ∃ k, λ ≤ M_k ω ∧ ⟨M⟩_k ω ≤ v} ≤ exp(-λ²/(4v))`. This is the form fed to Borel–Cantelli
 in the one-sided law of the iterated logarithm. -/
 lemma measure_exists_ge_le_exp_all [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ}
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c : ℝ}
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {lam v : ℝ} (hlam : 0 < lam) (hv : 0 < v)
     (hadm : lam * c ≤ 2 * v) :
     μ {ω | ∃ k, lam ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v}
@@ -604,7 +602,7 @@ This is the first Borel–Cantelli lemma (`ae_eventually_notMem`) applied to the
 `s_k = {∃ n, M_n ≥ λ_k ∧ ⟨M⟩_n ≤ v_k}`, whose measures are bounded via
 `measure_exists_ge_le_exp_all`. -/
 lemma ae_eventually_forall_lt_of_summable [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ}
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c : ℝ}
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {lam v : ℕ → ℝ} (hlam : ∀ k, 0 < lam k)
     (hv : ∀ k, 0 < v k) (hadm : ∀ k, lam k * c ≤ 2 * v k)
     (hsum : Summable fun k ↦ Real.exp (-lam k ^ 2 / (4 * v k))) :
@@ -635,7 +633,7 @@ time `n`, `⟨M⟩_n ≤ 2^k ⇒ M_n < K √(2^k (k+1))`. Since on the block `�
 `√(2^k(k+1)) ≍ √(⟨M⟩_n log ⟨M⟩_n)`, this is the `O(√(⟨M⟩_n log ⟨M⟩_n))` upper bound — a `log`
 (not `log log`) rate, which suffices for the `o(⟨M⟩_n)` uses downstream. -/
 lemma ae_eventually_forall_lt_dyadic [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c K : ℝ} (hc : 0 ≤ c)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c K : ℝ} (hc : 0 ≤ c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) (hK : 0 < K) (hKc : K * c ≤ 2) :
     ∀ᵐ ω ∂μ, ∀ᶠ (k : ℕ) in atTop, ∀ n, predQuadVar M ℱ μ n ω ≤ (2 : ℝ) ^ k →
       M n ω < K * √((2 : ℝ) ^ k * ((k : ℝ) + 1)) := by
@@ -696,7 +694,7 @@ statement `ae_eventually_forall_lt_dyadic`: for large `n`, take the least block 
 downstream (blueprint `lem:U_increment_bound`, via the bounded assignment martingale) — a `log`
 rather than `log log` rate, which suffices for the `o(⟨M⟩_n)` conclusions. -/
 lemma ae_eventually_le_sqrt_predQuadVar_mul_log [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ} (hc : 0 < c)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c : ℝ} (hc : 0 < c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
     ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop,
@@ -773,7 +771,7 @@ almost surely `M_n ≤ C √(n log n)` eventually. This combines the normalized 
 downstream to the bounded assignment martingale (blueprint `lem:U_increment_bound`, stated there
 with `log log`, weakened here to `log`). -/
 lemma ae_eventually_le_sqrt_nat_mul_log [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) {c : ℝ} (hc : 0 < c)
+    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c : ℝ} (hc : 0 < c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
     ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop, M n ω ≤ C * √(n * Real.log n) := by
@@ -783,9 +781,7 @@ lemma ae_eventually_le_sqrt_nat_mul_log [IsProbabilityMeasure μ] (hM : Martinga
       ((hM.stronglyMeasurable i).mono (ℱ.le _))).aestronglyMeasurable
   have hdmem : ∀ i, MemLp (fun ω ↦ M (i + 1) ω - M i ω) 2 μ := fun i ↦
     MemLp.of_bound (haesm_d i) c (by filter_upwards [hb i] with ω h; rwa [Real.norm_eq_abs])
-  have hMmem : ∀ n, MemLp (M n) 2 μ := fun n ↦
-    (memLp_two_iff_integrable_sq
-      ((hM.stronglyMeasurable n).mono (ℱ.le n)).aestronglyMeasurable).mpr (hM2 n)
+  have hMmem : ∀ n, MemLp (M n) 2 μ := hM2
   have hd2 : ∀ i, Integrable (fun ω ↦ (M (i + 1) ω - M i ω) ^ 2) μ :=
     fun i ↦ (hdmem i).integrable_sq
   have hprod : ∀ i, Integrable (M i * (M (i + 1) - M i)) μ := fun i ↦

@@ -35,35 +35,26 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
 blueprint `lem:QM_increments` for `Q`). For each window the deterministic increment control is
 `AlphaRAR.norm_increment_le_vmaxSeq_wmaxSeq`. -/
 lemma qm_increments_resp (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) :
+    (hνk : ∀ a, MemLp id 2 (ν a)) :
     IsLittleOpOne P (vmaxSeq (fun k ↦ respMart ν A Y k)) ∧
       IsLittleOpOne P
         (fun n ω ↦ wmaxSeq (fun k ↦ respMart ν A Y k) n ω / √n) := by
+  have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
   set ℱ := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with hℱdef
   have hint : ∀ n, Integrable (Y n) P := fun n ↦ (hY2 n).integrable one_le_two
   have hMfam : ∀ k, Martingale (respMart ν A Y k) ℱ P := fun k ↦ martingale_respMart h hint k
-  have hM2fam : ∀ k n, Integrable (fun ω ↦ respMart ν A Y k n ω ^ 2) P :=
-    fun k n ↦ (memLp_respMart h.measurable_action hY2 k n).integrable_sq
+  have hM2fam : ∀ k n, MemLp (respMart ν A Y k n) 2 P :=
+    fun k n ↦ memLp_respMart h.measurable_action hY2 k n
   have hcent2 : ∀ k n, Integrable (fun ω ↦ (Y n ω - (ν k)[id]) ^ 2) P :=
     fun k n ↦ ((hY2 n).sub (memLp_const _)).integrable_sq
-  have hd2fam : ∀ k n,
-      Integrable (fun ω ↦ (respMart ν A Y k (n + 1) ω - respMart ν A Y k n ω) ^ 2) P :=
-    fun k n ↦ by
-      have heq : (fun ω ↦ (respMart ν A Y k (n + 1) ω - respMart ν A Y k n ω) ^ 2)
-          = fun ω ↦ (armIndicator A k n ω * (Y n ω - (ν k)[id])) ^ 2 := by
-        funext ω; rw [respMart_succ]; simp only [Pi.add_apply]; ring
-      rw [heq]; exact integrable_respMart_increment_sq k (h.measurable_action n) (hcent2 k n)
-  have hcrossfam : ∀ k a b, Integrable (fun ω ↦ respMart ν A Y k a ω * respMart ν A Y k b ω) P :=
-    fun k a b ↦ (memLp_respMart h.measurable_action hY2 k a).integrable_mul
-      (memLp_respMart h.measurable_action hY2 k b)
   have harmnn : ∀ k, 0 ≤ Var[id; ν k] := fun k ↦ variance_nonneg _ _
   have hC₀ : 0 ≤ ∑ k, Var[id; ν k] := Finset.sum_nonneg (fun k _ ↦ harmnn k)
   have hincfam : ∀ k n, ∫ ω, (respMart ν A Y k (n + 1) ω - respMart ν A Y k n ω) ^ 2 ∂P
       ≤ ∑ k, Var[id; ν k] := fun k n ↦ (integral_respMart_increment_sq_le h k n (hY2 n)).trans
     (Finset.single_le_sum (fun k' _ ↦ harmnn k') (Finset.mem_univ k))
   exact ⟨isLittleOpOne_vmaxSeq (M := fun k ↦ respMart ν A Y k)
-      hMfam hM2fam hd2fam hcrossfam hC₀ hincfam,
+      hMfam hM2fam hC₀ hincfam,
     isLittleOpOne_wmaxSeq_div_sqrt (M := fun k ↦ respMart ν A Y k)
-      hMfam hM2fam hd2fam hcrossfam hC₀ hincfam⟩
+      hMfam hM2fam hC₀ hincfam⟩
 
 end AlphaRAR

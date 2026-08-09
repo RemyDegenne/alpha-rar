@@ -41,7 +41,7 @@ lemma isBigOpOne_assignMart_div_sqrt [IsFiniteMeasure μ]
     intro n
     filter_upwards [abs_assignMart_succ_sub_le hX_int h0X h1X n] with ω h
     simpa only [Pi.sub_apply] using h
-  exact isBigOpOne_of_bdd_increments (martingale_assignMart hX hX_int) hM0 1 zero_le_one hΔ
+  exact isBigOpOne_of_bdd_increments (martingale_assignMart hX hX_int) hM0 1 hΔ
 
 /-- **LLN for the assignment martingale** (blueprint `lem:M_lln`). For a `[0,1]`-valued adapted
 integrable assignment indicator `X` on a probability space, the assignment martingale `M` satisfies

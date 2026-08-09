@@ -192,13 +192,13 @@ throttle hypothesis discharged by `throttle_of_isARTS`. -/
 Condition **A** and a simplex-valued continuous `T`) forces the allocation proportions to converge"]
 lemma aRTS_consistency_of_isARTS [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
+    (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
       Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 (u k))
         ∧ Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop (𝓝 (u k)) :=
-  aRTS_consistency h hY2 θ₀ T hT hTnn hTsum α hα (fun k ↦ throttle_of_isARTS h hARTS k)
+  aRTS_consistency h hνk θ₀ T hT hTnn hTsum α hα (fun k ↦ throttle_of_isARTS h hARTS k)
 
 /-- **aRTS allocation proportions in pull-count form** (blueprint `cor:aRTS_consistency`). Restates
 the aRTS consistency limit `N_{n,k}/n → u_k` (`aRTS_consistency_of_isARTS`) with the pull count
@@ -210,12 +210,12 @@ the only piece still needed to pin the limiting proportion `v_k := u_k` is its s
 `u_k > 0` (the non-sparsity of Condition **B**, deferred). -/
 lemma aRTS_pullCount_div_ae_tendsto [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
+    (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
       Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (u k)) := by
-  filter_upwards [aRTS_consistency_of_isARTS h hY2 hT hTnn hTsum hα hARTS] with ω hω
+  filter_upwards [aRTS_consistency_of_isARTS h hνk hT hTnn hTsum hα hARTS] with ω hω
   obtain ⟨u, hu⟩ := hω
   exact ⟨u, fun k ↦ ((hu k).1).congr fun n ↦ by rw [count_indicator_eq_pullCount]⟩
 
@@ -230,14 +230,14 @@ arm mean. This is `lem:theta_consistent` with Condition **B**'s non-sparsity as 
 hypothesis. -/
 lemma aRTS_theta_consistent [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
+    (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) :
     ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
       (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 (fun k ↦ (ν k)[id])) := by
-  refine theta_consistent_pi_of_condB h hY2 θ₀ T hT hTpos ?_
-  filter_upwards [aRTS_consistency_of_isARTS h hY2 hT hTnn hTsum hα hARTS] with ω hω
+  refine theta_consistent_pi_of_condB h hνk θ₀ T hT hTpos ?_
+  filter_upwards [aRTS_consistency_of_isARTS h hνk hT hTnn hTsum hα hARTS] with ω hω
   obtain ⟨u, hu⟩ := hω
   exact ⟨u, fun k ↦ ⟨((hu k).1).congr fun n ↦ by rw [count_indicator_eq_pullCount], (hu k).2⟩⟩
 
@@ -248,14 +248,14 @@ an aRTS design, under Condition **B** the allocation proportion converges a.s. t
 `ρ̂_{n,k}` share the limit `u_k`) identifies `u_k = T(θ)_k = v_k`. -/
 lemma aRTS_proportion_tendsto [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
+    (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) (k : 𝓐) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ))
       atTop (𝓝 (T (fun k ↦ (ν k)[id]) k)) := by
-  filter_upwards [aRTS_consistency_of_isARTS h hY2 hT hTnn hTsum hα hARTS,
-    aRTS_theta_consistent h hY2 hT hTnn hTsum hα hARTS hTpos] with ω hjω hθω
+  filter_upwards [aRTS_consistency_of_isARTS h hνk hT hTnn hTsum hα hARTS,
+    aRTS_theta_consistent h hνk hT hTnn hTsum hα hARTS hTpos] with ω hjω hθω
   obtain ⟨u, hu⟩ := hjω
   have hrho : Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop
       (𝓝 (T (fun k ↦ (ν k)[id]) k)) :=

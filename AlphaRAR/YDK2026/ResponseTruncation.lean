@@ -440,12 +440,11 @@ lemma abs_truncMean_le (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) (i
   · have hipos : (0 : ℝ) < √i := sqrt_pos.mpr (by exact_mod_cast hi)
     have hintX : Integrable (fun x ↦ x - (ν k)[id]) (ν k) :=
       (hν2.integrable one_le_two).sub (integrable_const _)
-    have hX2 : Integrable (fun x ↦ (x - (ν k)[id]) ^ 2) (ν k) :=
-      (hν2.sub (memLp_const _)).integrable_sq
+    have hX2 : MemLp (fun x ↦ x - (ν k)[id]) 2 (ν k) := hν2.sub (memLp_const _)
     have hX0 : ∫ x, (x - (ν k)[id]) ∂(ν k) = 0 := by
       rw [integral_sub (hν2.integrable one_le_two) (integrable_const _), integral_const]
       simp
-    have h := abs_integral_truncation_le hintX hX2 hX0 hipos
+    have h := abs_integral_truncation_le hX2 hX0 hipos
     rwa [← variance_id_eq_integral] at h
 
 /-- The truncated **drift** process `Dr_n = ∑_{i<n} m_i 𝟙{A i = k}` (blueprint `lem:trunc_drift`),
@@ -566,13 +565,12 @@ lemma truncRespMart_zero_ae (k : 𝓐) : truncRespMart ν A Y k 0 =ᵐ[P] 0 := b
   have h0 : truncRespMart ν A Y k 0 = (0 : Ω → ℝ) := by simp [truncRespMart, genRespMart]
   filter_upwards with ω; rw [h0]
 
-/-- Squares of the truncated response martingale are integrable (from `MemLp 2`). -/
-@[fun_prop]
+/-- The truncated response martingale is square-integrable. -/
 lemma integrable_truncRespMart_sq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) (n : ℕ) :
-    Integrable (fun ω ↦ truncRespMart ν A Y k n ω ^ 2) P :=
-  (memLp_genRespMart (g := fun i ↦ truncation (fun y ↦ y - (ν k)[id]) (√i))
-    h.measurable_action (fun m ↦ memLp_truncation_comp hint ((ν k)[id]) m) k n).integrable_sq
+    MemLp (truncRespMart ν A Y k n) 2 P :=
+  memLp_genRespMart (g := fun i ↦ truncation (fun y ↦ y - (ν k)[id]) (√i))
+    h.measurable_action (fun m ↦ memLp_truncation_comp hint ((ν k)[id]) m) k n
 
 omit [MeasurableSingletonClass 𝓐] [IsProbabilityMeasure P] in
 /-- The truncated increments obey the `√i`-growing bound `|ΔM̃_i| ≤ 2√i` a.e.

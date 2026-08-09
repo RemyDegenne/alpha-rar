@@ -74,8 +74,10 @@ lemma wIncr_eq_sum (w : 𝓐 → ℝ) (i : ℕ) :
 
 omit [DecidableEq 𝓐] in
 /-- Each weighted increment is in `L²` (finite combination of `L²` per-arm increments). -/
-lemma memLp_wIncr (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+lemma memLp_wIncr [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a))
     (w : 𝓐 → ℝ) (i : ℕ) : MemLp (wIncr ν A Y w i) 2 P := by
+  have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
   rw [wIncr_eq_sum]
   exact memLp_finsetSum' _ fun a _ ↦
     (memLp_respMart_increment a (h.measurable_action i) (hY2 i)).const_mul (w a)
@@ -91,10 +93,12 @@ lemma stronglyMeasurable_wIncr (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (w
 
 omit [DecidableEq 𝓐] in
 /-- The weighted increment is a martingale difference: `E[∑_k w_k Δ_k | 𝒢 i] = 0`. -/
-lemma condExp_wIncr (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+lemma condExp_wIncr [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a))
     (w : 𝓐 → ℝ) (i : ℕ) :
     P[wIncr ν A Y w i | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]
       =ᵐ[P] 0 := by
+  have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
   have hint : ∀ a, Integrable (fun ω ↦ w a * respIncr ν A Y a i ω) P := fun a ↦
     (integrable_respMart_increment (h.measurable_action i) ((hY2 i).integrable one_le_two)
       a).const_mul (w a)
@@ -125,29 +129,29 @@ Allowing the weight to depend on the row is what lets a *single* array cover bot
 deterministic normalization `(wn n)_k = w_k/√n` (giving `(∑_k w_k Q_{n,k})/√n`, used for the
 non-sparse joint CLT) and *per-arm* normalizations `(wn n)_k = w_k/√(c_{k,n})` (used for the sparse
 joint CLT, where the arms grow at genuinely different rates). -/
-noncomputable def wArray (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (wn : ℕ → 𝓐 → ℝ) : MartDiffArray P where
+noncomputable def wArray [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (wn : ℕ → 𝓐 → ℝ) : MartDiffArray P where
   𝓕 := fun _ ↦ IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback
   d n i := wIncr ν A Y (wn n) i
   k := id
-  memLp n i := memLp_wIncr h hY2 (wn n) i
-  mgdiff n i := condExp_wIncr h hY2 (wn n) i
+  memLp n i := memLp_wIncr h hνk (wn n) i
+  mgdiff n i := condExp_wIncr h hνk (wn n) i
   adapted n i := stronglyMeasurable_wIncr h (wn n) i
 
 omit [DecidableEq 𝓐] in
-@[simp] lemma wArray_d (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (wn : ℕ → 𝓐 → ℝ) (n i : ℕ) :
-    (wArray h hY2 wn).d n i = wIncr ν A Y (wn n) i := rfl
+@[simp] lemma wArray_d [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (wn : ℕ → 𝓐 → ℝ) (n i : ℕ) :
+    (wArray h hνk wn).d n i = wIncr ν A Y (wn n) i := rfl
 
 omit [DecidableEq 𝓐] in
-@[simp] lemma wArray_filt (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (wn : ℕ → 𝓐 → ℝ) :
-    (wArray h hY2 wn).𝓕
+@[simp] lemma wArray_filt [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (wn : ℕ → 𝓐 → ℝ) :
+    (wArray h hνk wn).𝓕
       = fun _ ↦ IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback := rfl
 
 omit [DecidableEq 𝓐] in
-@[simp] lemma wArray_k (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (wn : ℕ → 𝓐 → ℝ) : (wArray h hY2 wn).k = id := rfl
+@[simp] lemma wArray_k [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (wn : ℕ → 𝓐 → ℝ) : (wArray h hνk wn).k = id := rfl
 
 omit [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] [IsMarkovKernel ν] [IsProbabilityMeasure P] in
 /-- On `{A i = a}`, only arm `a` contributes: `∑_k w_k Δ_k = w_a (Y i - θ_a)`. -/
@@ -185,9 +189,9 @@ omit [DecidableEq 𝓐] in
 @[specifies wArray "row `n` really carries row `n`'s weights: its row sum is \
 `∑_k (wn n)_k Q_{n,k}`, so a row-dependent weight family gives a *different* statistic per row — \
 which is what per-arm normalizers require"]
-lemma rowSum_wArray (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (wn : ℕ → 𝓐 → ℝ) (n : ℕ) :
-    (wArray h hY2 wn).rowSum n = fun ω ↦ ∑ a, wn n a * respMart ν A Y a n ω := by
+lemma rowSum_wArray [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (wn : ℕ → 𝓐 → ℝ) (n : ℕ) :
+    (wArray h hνk wn).rowSum n = fun ω ↦ ∑ a, wn n a * respMart ν A Y a n ω := by
   funext ω
   simp only [MartDiffArray.rowSum, wArray_k, wArray_d, id]
   exact sum_wIncr (wn n) n ω
@@ -195,11 +199,13 @@ lemma rowSum_wArray (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
 omit [DecidableEq 𝓐] in
 /-- **Conditional square of the weighted increment**:
 `E[(∑_k w_k Δ_k)² | 𝒢 i] = ∑_k w_k² 𝟙{A i=k} V_k` (diagonal collapse + per-arm second moment). -/
-lemma condExp_sq_wIncr (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
+lemma condExp_sq_wIncr [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a))
     (w : 𝓐 → ℝ) (i : ℕ) :
     P[fun ω ↦ (wIncr ν A Y w i ω) ^ 2
         | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]
       =ᵐ[P] fun ω ↦ ∑ a, w a ^ 2 * (armIndicator A a i ω * Var[id; ν a]) := by
+  have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
   have hsq : (fun ω ↦ (wIncr ν A Y w i ω) ^ 2)
       = ∑ a, (fun ω ↦ w a ^ 2 * (respIncr ν A Y a i ω) ^ 2) := by
     funext ω; rw [sq_wIncr, Finset.sum_apply]
@@ -230,11 +236,11 @@ omit [DecidableEq 𝓐] in
 @[specifies wArray "the variance is purely diagonal — no cross terms `w_a w_b` survive — and each \
 arm accumulates on its own count `N_{n,k}`. This is the limit computation the joint CLT turns into \
 a diagonal covariance matrix"]
-lemma predVar_wArray_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (wn : ℕ → 𝓐 → ℝ) (n : ℕ) :
-    (wArray h hY2 wn).predVar n =ᵐ[P]
+lemma predVar_wArray_ae [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (wn : ℕ → 𝓐 → ℝ) (n : ℕ) :
+    (wArray h hνk wn).predVar n =ᵐ[P]
       fun ω ↦ ∑ a, wn n a ^ 2 * Var[id; ν a] * count (fun j ↦ armIndicator A a j ω) n := by
-  filter_upwards [ae_all_iff.mpr (fun i ↦ condExp_sq_wIncr h hY2 (wn n) i)] with ω hcs
+  filter_upwards [ae_all_iff.mpr (fun i ↦ condExp_sq_wIncr h hνk (wn n) i)] with ω hcs
   simp only [MartDiffArray.predVar, MartDiffArray.condVar, wArray_k, wArray_filt, wArray_d, id]
   calc ∑ i ∈ Finset.range n, (P[fun ω ↦ (wIncr ν A Y (wn n) i ω) ^ 2
         | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]) ω
@@ -250,12 +256,12 @@ lemma predVar_wArray_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
 omit [DecidableEq 𝓐] in
 /-- The scaled row weights `(wn n)_k = w_k/√(c_{k,n})` turn the predictable variation into
 `∑_k w_k² V_k (N_{n,k}/c_{k,n})`. -/
-lemma predVar_wArray_scaled_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (w : 𝓐 → ℝ) {c : 𝓐 → ℕ → ℝ} (hc : ∀ a n, 0 ≤ c a n) (n : ℕ) :
-    (wArray h hY2 (fun n a ↦ w a / √(c a n))).predVar n =ᵐ[P]
+lemma predVar_wArray_scaled_ae [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (w : 𝓐 → ℝ) {c : 𝓐 → ℕ → ℝ} (hc : ∀ a n, 0 ≤ c a n) (n : ℕ) :
+    (wArray h hνk (fun n a ↦ w a / √(c a n))).predVar n =ᵐ[P]
       fun ω ↦ ∑ a, w a ^ 2 * Var[id; ν a]
         * (count (fun j ↦ armIndicator A a j ω) n / c a n) := by
-  filter_upwards [predVar_wArray_ae h hY2 (fun n a ↦ w a / √(c a n)) n] with ω hω
+  filter_upwards [predVar_wArray_ae h hνk (fun n a ↦ w a / √(c a n)) n] with ω hω
   rw [hω]
   refine Finset.sum_congr rfl fun a _ ↦ ?_
   rw [div_pow, Real.sq_sqrt (hc a n)]
@@ -268,12 +274,12 @@ scaled weights `(wn n)_k = w_k/√(c_{k,n})` under the regularity `N_{n,k}/c_{k,
 Taking `c_{k,n} = n` and `ρ = v` recovers the non-sparse statement (limit `∑_k w_k² v_k V_k`);
 taking `c_{k,n}` to be per-arm normalizers with `ρ ≡ 1` gives the sparse one
 (limit `∑_k w_k² V_k`). -/
-lemma tendstoInMeasure_predVar_wArray (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (w : 𝓐 → ℝ) {c : 𝓐 → ℕ → ℝ} (hc : ∀ a n, 0 ≤ c a n) {ρ : 𝓐 → ℝ}
+lemma tendstoInMeasure_predVar_wArray [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (w : 𝓐 → ℝ) {c : 𝓐 → ℕ → ℝ} (hc : ∀ a n, 0 ≤ c a n) {ρ : 𝓐 → ℝ}
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / c a n)
       atTop (𝓝 (ρ a))) :
     TendstoInMeasure P
-      (fun n ↦ (wArray h hY2 (fun n a ↦ w a / √(c a n))).predVar n) atTop
+      (fun n ↦ (wArray h hνk (fun n a ↦ w a / √(c a n))).predVar n) atTop
       (fun _ ↦ ∑ a, w a ^ 2 * Var[id; ν a] * ρ a) := by
   have hmeas : ∀ n : ℕ, AEStronglyMeasurable
       (fun ω ↦ ∑ a, w a ^ 2 * Var[id; ν a]
@@ -281,8 +287,8 @@ lemma tendstoInMeasure_predVar_wArray (h : IsAlgEnvSeq A Y alg (stationaryEnv ν
     fun n ↦ (Finset.measurable_sum _ fun a _ ↦ measurable_const.mul
       ((measurable_count_armIndicator h a n).div_const _)).aestronglyMeasurable
   refine tendstoInMeasure_of_tendsto_ae
-    (fun n ↦ (hmeas n).congr (predVar_wArray_scaled_ae h hY2 w hc n).symm) ?_
-  filter_upwards [ae_all_iff.mpr (fun n ↦ predVar_wArray_scaled_ae h hY2 w hc n), hNconv]
+    (fun n ↦ (hmeas n).congr (predVar_wArray_scaled_ae h hνk w hc n).symm) ?_
+  filter_upwards [ae_all_iff.mpr (fun n ↦ predVar_wArray_scaled_ae h hνk w hc n), hNconv]
     with ω hpred hconv
   refine Tendsto.congr (fun n ↦ (hpred n).symm) ?_
   exact tendsto_finsetSum _ fun a _ ↦ (hconv a).const_mul (w a ^ 2 * Var[id; ν a])
@@ -305,9 +311,10 @@ lemma stronglyMeasurable_lindTrunc (wn : ℕ → 𝓐 → ℝ) (ε : ℝ) (n : �
 omit [MeasurableSingletonClass 𝓐] [Fintype 𝓐] [DecidableEq 𝓐] in
 /-- `x ↦ lindTrunc … (Y i x)` is integrable (bounded by the integrable centered square). -/
 @[fun_prop]
-lemma integrable_lindTrunc_comp (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (wn : ℕ → 𝓐 → ℝ) (ε : ℝ) (n : ℕ) (a : 𝓐) (i : ℕ) :
+lemma integrable_lindTrunc_comp [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (wn : ℕ → 𝓐 → ℝ) (ε : ℝ) (n : ℕ) (a : 𝓐) (i : ℕ) :
     Integrable (fun ω ↦ lindTrunc ν wn ε n a (Y i ω)) P := by
+  have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
   have hcomp : (fun ω ↦ lindTrunc ν wn ε n a (Y i ω))
       = fun ω ↦ wn n a ^ 2
         * ((Y i ⁻¹' {y' | ε < |wn n a| * |y' - (ν a)[id]|}).indicator
@@ -342,19 +349,19 @@ omit [DecidableEq 𝓐] in
 `h_{n,k}(ε) = ∫ (x-θ_k)² 𝟙{|(wn n)_k||x-θ_k|>ε} dν_k`. Each cell contributes
 `∑_k 𝟙{A i=k}·∫ lindTrunc dν_k` (`condExp_indicator_comp` per arm on the diagonal-collapsed
 square). -/
-lemma lindeberg_wArray_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (wn : ℕ → 𝓐 → ℝ) (ε : ℝ) (n : ℕ) :
-    (wArray h hY2 wn).lindeberg n ε =ᵐ[P]
+lemma lindeberg_wArray_ae [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (wn : ℕ → 𝓐 → ℝ) (ε : ℝ) (n : ℕ) :
+    (wArray h hνk wn).lindeberg n ε =ᵐ[P]
       fun ω ↦ ∑ a, wn n a ^ 2
         * (∫ x, {x | ε < |wn n a| * |x - (ν a)[id]|}.indicator
             (fun x ↦ (x - (ν a)[id]) ^ 2) x ∂(ν a))
         * count (fun j ↦ armIndicator A a j ω) n := by
-  have hFi : ∀ i, {ω | ε < |(wArray h hY2 wn).d n i ω|}.indicator
-        (fun ω ↦ ((wArray h hY2 wn).d n i ω) ^ 2)
+  have hFi : ∀ i, {ω | ε < |(wArray h hνk wn).d n i ω|}.indicator
+        (fun ω ↦ ((wArray h hνk wn).d n i ω) ^ 2)
       = fun ω ↦ ∑ a, armIndicator A a i ω * lindTrunc ν wn ε n a (Y i ω) := by
     intro i
     funext ω
-    have hd : (wArray h hY2 wn).d n i ω = wn n (A i ω) * (Y i ω - (ν (A i ω))[id]) := by
+    have hd : (wArray h hνk wn).d n i ω = wn n (A i ω) * (Y i ω - (ν (A i ω))[id]) := by
       simp only [wArray_d]; rw [wIncr_eq_single rfl (wn n)]
     rw [Finset.sum_eq_single (A i ω) (fun b _ hb ↦ ?_)
       (fun hh ↦ absurd (Finset.mem_univ _) hh)]
@@ -362,15 +369,15 @@ lemma lindeberg_wArray_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
         change Set.indicator {ω' | A i ω' = A i ω} (fun _ ↦ (1 : ℝ)) ω = 1
         rw [Set.indicator_of_mem (show ω ∈ {ω' | A i ω' = A i ω} from rfl)]
       rw [harm, one_mul]
-      have hcond : (ε < |(wArray h hY2 wn).d n i ω|)
+      have hcond : (ε < |(wArray h hνk wn).d n i ω|)
           ↔ (ε < |wn n (A i ω)| * |Y i ω - (ν (A i ω))[id]|) := by
         rw [hd, abs_mul]
       rw [Set.indicator_apply]
       by_cases hc : ε < |wn n (A i ω)| * |Y i ω - (ν (A i ω))[id]|
-      · rw [if_pos (show ω ∈ {ω | ε < |(wArray h hY2 wn).d n i ω|} from hcond.mpr hc), hd,
+      · rw [if_pos (show ω ∈ {ω | ε < |(wArray h hνk wn).d n i ω|} from hcond.mpr hc), hd,
           lindTrunc, Set.indicator_of_mem
             (show Y i ω ∈ {y' | ε < |wn n (A i ω)| * |y' - (ν (A i ω))[id]|} from hc), mul_pow]
-      · rw [if_neg (show ω ∉ {ω | ε < |(wArray h hY2 wn).d n i ω|} from
+      · rw [if_neg (show ω ∉ {ω | ε < |(wArray h hνk wn).d n i ω|} from
           fun hmem ↦ hc (hcond.mp hmem)), lindTrunc, Set.indicator_of_notMem
             (show Y i ω ∉ {y' | ε < |wn n (A i ω)| * |y' - (ν (A i ω))[id]|} from hc),
           mul_zero]
@@ -378,13 +385,13 @@ lemma lindeberg_wArray_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
         simp only [armIndicator, Set.indicator_of_notMem
           (show ω ∉ {ω | A i ω = b} by simp only [Set.mem_ofPred_eq]; exact fun hh ↦ hb hh.symm)]
       rw [hb0, zero_mul]
-  have hsummand : ∀ i, (P[{ω | ε < |(wArray h hY2 wn).d n i ω|}.indicator
-        (fun ω ↦ ((wArray h hY2 wn).d n i ω) ^ 2)
+  have hsummand : ∀ i, (P[{ω | ε < |(wArray h hνk wn).d n i ω|}.indicator
+        (fun ω ↦ ((wArray h hνk wn).d n i ω) ^ 2)
         | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]) =ᵐ[P]
       fun ω ↦ ∑ a, armIndicator A a i ω * ∫ y, lindTrunc ν wn ε n a y ∂(ν a) := by
     intro i
-    have hSi_eq : {ω | ε < |(wArray h hY2 wn).d n i ω|}.indicator
-          (fun ω ↦ ((wArray h hY2 wn).d n i ω) ^ 2)
+    have hSi_eq : {ω | ε < |(wArray h hνk wn).d n i ω|}.indicator
+          (fun ω ↦ ((wArray h hνk wn).d n i ω) ^ 2)
         = ∑ a, (fun ω ↦ armIndicator A a i ω * lindTrunc ν wn ε n a (Y i ω)) := by
       rw [hFi i]; funext ω; rw [Finset.sum_apply]
     rw [hSi_eq]
@@ -395,7 +402,7 @@ lemma lindeberg_wArray_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
         funext ω; simp only [armIndicator, Set.indicator]
         by_cases hω : ω ∈ {ω | A i ω = a} <;> simp [hω]
       rw [hform]
-      exact (integrable_lindTrunc_comp h hY2 wn ε n a i).indicator
+      exact (integrable_lindTrunc_comp h hνk wn ε n a i).indicator
         (h.measurable_action i (measurableSet_singleton a))
     have hcs := condExp_finsetSum (μ := P) (s := (Finset.univ : Finset 𝓐))
       (f := fun a ω ↦ armIndicator A a i ω * lindTrunc ν wn ε n a (Y i ω)) (fun a _ ↦ hint a)
@@ -404,7 +411,7 @@ lemma lindeberg_wArray_ae (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
         | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]
         =ᵐ[P] fun ω ↦ armIndicator A a i ω * ∫ y, lindTrunc ν wn ε n a y ∂(ν a) := fun a ↦
       condExp_indicator_comp h a i (stronglyMeasurable_lindTrunc wn ε n a)
-        (integrable_lindTrunc_comp h hY2 wn ε n a i)
+        (integrable_lindTrunc_comp h hνk wn ε n a i)
     filter_upwards [hcs, ae_all_iff.mpr hper] with ω hcsω hperω
     rw [hcsω, Finset.sum_apply]
     exact Finset.sum_congr rfl fun a _ ↦ hperω a
@@ -423,14 +430,14 @@ omit [DecidableEq 𝓐] in
 `L_n(ε) = ∑_k w_k² h_{n,k}(ε) (N_{n,k}/c_{k,n})`, where each truncated moment `h_{n,k}(ε) → 0` by
 dominated convergence (`tendsto_integral_sq_indicator_gt`; the threshold `ε√(c_{k,n})/|w_k| → ∞`)
 while `N_{n,k}/c_{k,n} → ρ_k`, so the product tends to `0` a.s., hence in measure. -/
-lemma tendstoInMeasure_lindeberg_wArray (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (w : 𝓐 → ℝ) (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a))
+lemma tendstoInMeasure_lindeberg_wArray [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (w : 𝓐 → ℝ)
     {c : 𝓐 → ℕ → ℝ} (hc : ∀ a n, 0 ≤ c a n) (hc_atTop : ∀ a, Tendsto (c a) atTop atTop)
     {ρ : 𝓐 → ℝ}
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / c a n)
       atTop (𝓝 (ρ a))) :
     ∀ ε, 0 < ε → TendstoInMeasure P
-      (fun n ↦ (wArray h hY2 (fun n a ↦ w a / √(c a n))).lindeberg n ε) atTop 0 := by
+      (fun n ↦ (wArray h hνk (fun n a ↦ w a / √(c a n))).lindeberg n ε) atTop 0 := by
   intro ε hε
   obtain ⟨G, hG⟩ : ∃ G : ℕ → 𝓐 → ℝ, ∀ n a, G n a
       = ∫ x, {x | ε < |w a / √(c a n)| * |x - (ν a)[id]|}.indicator
@@ -450,8 +457,7 @@ lemma tendstoInMeasure_lindeberg_wArray (h : IsAlgEnvSeq A Y alg (stationaryEnv 
         simp
       simp only [hz]
       exact tendsto_const_nhds
-    · have hcent2νa : Integrable (fun x ↦ (x - (ν a)[id]) ^ 2) (ν a) :=
-        ((hνk a).sub (memLp_const _)).integrable_sq
+    · have hcent2νa : MemLp (fun x ↦ x - (ν a)[id]) 2 (ν a) := (hνk a).sub (memLp_const _)
       have hDCTa := tendsto_integral_sq_indicator_gt (P := ν a) (Z := fun x ↦ x - (ν a)[id])
         (measurable_id.sub_const _) hcent2νa
       have hwapos : (0 : ℝ) < |w a| := abs_pos.mpr hwa
@@ -469,10 +475,10 @@ lemma tendstoInMeasure_lindeberg_wArray (h : IsAlgEnvSeq A Y alg (stationaryEnv 
           mul_comm (|w a|) (|x - (ν a)[id]|)]
       rw [hG, hset]
   -- Closed form with the scaled weights: `L_n(ε) = ∑_a w_a² G_n(a) (N_{n,a}/c_{a,n})`.
-  have hlin' : ∀ n, (wArray h hY2 (fun n a ↦ w a / √(c a n))).lindeberg n ε =ᵐ[P]
+  have hlin' : ∀ n, (wArray h hνk (fun n a ↦ w a / √(c a n))).lindeberg n ε =ᵐ[P]
       fun ω ↦ ∑ a, w a ^ 2 * G n a * (count (fun j ↦ armIndicator A a j ω) n / c a n) := by
     intro n
-    filter_upwards [lindeberg_wArray_ae h hY2 (fun n a ↦ w a / √(c a n)) ε n] with ω hω
+    filter_upwards [lindeberg_wArray_ae h hνk (fun n a ↦ w a / √(c a n)) ε n] with ω hω
     rw [hω]
     refine Finset.sum_congr rfl fun a _ ↦ ?_
     rw [← hG, div_pow, Real.sq_sqrt (hc a n)]
@@ -500,7 +506,7 @@ with a different normalizer for each arm* — is again a single martingale-diffe
 what makes Cramér–Wold available for the sparse joint CLT, where the arms grow at genuinely
 different rates and no common normalizer exists. -/
 lemma wLinComb_scaled_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (w : 𝓐 → ℝ) (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a))
+    (w : 𝓐 → ℝ) (hνk : ∀ a, MemLp id 2 (ν a))
     {c : 𝓐 → ℕ → ℝ} (hc : ∀ a n, 0 ≤ c a n) (hc_atTop : ∀ a, Tendsto (c a) atTop atTop)
     {ρ : 𝓐 → ℝ} (hσ2 : 0 ≤ ∑ a, w a ^ 2 * Var[id; ν a] * ρ a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / c a n)
@@ -512,10 +518,10 @@ lemma wLinComb_scaled_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationaryE
           fun a _ ↦ (measurable_respMart h a n).const_mul _).aemeasurable⟩
             : ProbabilityMeasure ℝ))
       atTop (𝓝 ⟨gaussianReal 0 (∑ a, w a ^ 2 * Var[id; ν a] * ρ a).toNNReal, inferInstance⟩) := by
-  have hmart := (wArray h hY2 (fun n a ↦ w a / √(c a n))).mart_clt
+  have hmart := (wArray h hνk (fun n a ↦ w a / √(c a n))).mart_clt
     (σ2 := ∑ a, w a ^ 2 * Var[id; ν a] * ρ a) hσ2
-    (tendstoInMeasure_predVar_wArray h hY2 w hc hNconv)
-    (tendstoInMeasure_lindeberg_wArray h hY2 w hνk hc hc_atTop hNconv)
+    (tendstoInMeasure_predVar_wArray h hνk w hc hNconv)
+    (tendstoInMeasure_lindeberg_wArray h hνk w hc hc_atTop hNconv)
   simp only [rowSum_wArray] at hmart
   exact hmart
 
@@ -524,8 +530,8 @@ omit [DecidableEq 𝓐] in
 projection ingredient, common normalizer `√n`): `(∑_k w_k Q_{n,k})/√n ⇒ 𝒩(0, ∑_k w_k² v_k V_k)`.
 The `c_{k,n} = n`, `ρ = v` instance of `wLinComb_scaled_tendsto_gaussianReal`. -/
 lemma wLinComb_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (w : 𝓐 → ℝ) {v : 𝓐 → ℝ}
-    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) (hσ2 : 0 ≤ ∑ a, w a ^ 2 * Var[id; ν a] * v a)
+    (w : 𝓐 → ℝ) {v : 𝓐 → ℝ}
+    (hνk : ∀ a, MemLp id 2 (ν a)) (hσ2 : 0 ≤ ∑ a, w a ^ 2 * Var[id; ν a] * v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a))) :
     Tendsto (β := ProbabilityMeasure ℝ)
@@ -534,7 +540,7 @@ lemma wLinComb_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) 
           fun a _ ↦ (measurable_respMart h a n).const_mul (w a))).aemeasurable⟩
             : ProbabilityMeasure ℝ))
       atTop (𝓝 ⟨gaussianReal 0 (∑ a, w a ^ 2 * Var[id; ν a] * v a).toNNReal, inferInstance⟩) := by
-  have hgen := wLinComb_scaled_tendsto_gaussianReal h hY2 w hνk (c := fun _ n ↦ (n : ℝ))
+  have hgen := wLinComb_scaled_tendsto_gaussianReal h w hνk (c := fun _ n ↦ (n : ℝ))
     (fun _ n ↦ Nat.cast_nonneg n) (fun _ ↦ tendsto_natCast_atTop_atTop) hσ2 hNconv
   refine hgen.congr' (Filter.Eventually.of_forall fun n ↦ Subtype.ext (congrArg (P.map ·) ?_))
   funext ω
@@ -650,8 +656,8 @@ Proved by the Cramér–Wold device (`tendsto_map_of_tendsto_map_inner`): every 
 With `c_{k,n} = n`, `ρ = v` this is the non-sparse statement (limit `diag(v_k V_k)`); with per-arm
 `c_{k,n}` and `ρ ≡ 1` it is the sparse one (limit `diag(V_k)`), valid even when some `v_k = 0`. -/
 lemma respMart_joint_tendsto_multivariateGaussian
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
-    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {c : 𝓐 → ℕ → ℝ} (hc : ∀ a n, 0 ≤ c a n)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) {c : 𝓐 → ℕ → ℝ} (hc : ∀ a n, 0 ≤ c a n)
     (hc_atTop : ∀ a, Tendsto (c a) atTop atTop) {ρ : 𝓐 → ℝ} (hρ : ∀ a, 0 ≤ ρ a)
     (hV : ∀ a, 0 ≤ Var[id; ν a])
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / c a n)
@@ -690,7 +696,7 @@ lemma respMart_joint_tendsto_multivariateGaussian
     exact congrArg (P.map ·) (funext fun ω ↦ inner_respVec c n ω t)
   rw [hQ]
   exact Tendsto.congr (fun n ↦ (hP n).symm)
-    (wLinComb_scaled_tendsto_gaussianReal h hY2 t.ofLp hνk hc hc_atTop hs2nn hNconv)
+    (wLinComb_scaled_tendsto_gaussianReal h t.ofLp hνk hc hc_atTop hs2nn hNconv)
 
 omit [Fintype 𝓐] [DecidableEq 𝓐] in
 /-- The self-normalized joint response-martingale vector `((√N_{n,a})⁻¹ Q_{n,a})_a ∈ ℝ^𝓐`. -/
@@ -719,8 +725,8 @@ needs `v_k > 0`); taking per-arm `c_{k,n}` with `ρ ≡ 1` gives the **sparse** 
 the limiting proportion `v_k` is `0`. Note that some such regularity is genuinely needed:
 `N_{n,k} → ∞` alone does not suffice for an adaptively chosen index. -/
 lemma respMart_joint_selfNorm_tendsto_multivariateGaussian
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
-    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {c : 𝓐 → ℕ → ℝ} (hc : ∀ a n, 0 ≤ c a n)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) {c : 𝓐 → ℕ → ℝ} (hc : ∀ a n, 0 ≤ c a n)
     (hc_atTop : ∀ a, Tendsto (c a) atTop atTop) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / c a n)
       atTop (𝓝 (v a))) :
@@ -795,7 +801,7 @@ lemma respMart_joint_selfNorm_tendsto_multivariateGaussian
           * ((√(count (fun j ↦ armIndicator A a j ω) n))⁻¹ * respMart ν A Y a n ω)
         by ring, mul_inv_cancel₀ hsn, one_mul]
   · -- The deterministic-normalizer joint CLT, in the `⟨P.map ·, ·⟩` form.
-    have hjoint := respMart_joint_tendsto_multivariateGaussian h hY2 hνk hc hc_atTop
+    have hjoint := respMart_joint_tendsto_multivariateGaussian h hνk hc hc_atTop
       (fun a ↦ (hv a).le) hVnn hNconv
     have e2 : (⟨μ', inferInstance⟩ : ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
         = ProbabilityMeasure.map
@@ -845,8 +851,8 @@ Some regularity of this kind is genuinely necessary: `N_{n,k} → ∞` alone doe
 the index is chosen adaptively (one can freeze the self-normalized martingale above its typical
 value by pausing an arm near a level crossing, using the law of the iterated logarithm). -/
 lemma estimatorError_joint_tendsto_multivariateGaussian
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
-    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {cn : 𝓐 → ℕ → ℝ} (hcn : ∀ a n, 0 ≤ cn a n)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
+    (hνk : ∀ a, MemLp id 2 (ν a)) {cn : 𝓐 → ℕ → ℝ} (hcn : ∀ a n, 0 ≤ cn a n)
     (hcn_atTop : ∀ a, Tendsto (cn a) atTop atTop) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / cn a n)
       atTop (𝓝 (v a))) :
@@ -930,7 +936,7 @@ lemma estimatorError_joint_tendsto_multivariateGaussian
       rw [mul_zero] at hc2
       exact hc2.congr fun n ↦ (mul_div_assoc _ _ _).symm
   -- Apply multivariate Slutsky; identify source (Bahadur) and limit (`g(·,c)=id`).
-  have hX := respMart_joint_selfNorm_tendsto_multivariateGaussian h hY2 hνk hcn hcn_atTop hv hNconv
+  have hX := respMart_joint_selfNorm_tendsto_multivariateGaussian h hνk hcn hcn_atTop hv hNconv
   have hslut := tendsto_map_comp_of_tendstoInMeasure_const (P := P) (μ' := μ') g hg
     (fun n ↦ (measurable_respSelfNormVec h n).aemeasurable) hRmeas hX hRtendsto
   have hlimid : (fun x : EuclideanSpace ℝ 𝓐 ↦ g (x, c)) = id := by
@@ -999,8 +1005,8 @@ open scoped RealInnerProductSpace in
 factors tend to `1/√v_k` and `0`, so the diagonal Gaussian rescaling
 (`multivariateGaussian_diagonal_smul_map`) sends `diag(V_k)` to `diag(V_k/v_k)`. -/
 lemma estimator_sqrtN_joint_tendsto_multivariateGaussian
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
-    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
+    (hνk : ∀ a, MemLp id 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a))) :
     Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
@@ -1099,7 +1105,7 @@ lemma estimator_sqrtN_joint_tendsto_multivariateGaussian
       have hc2 := hU.const_mul (θ₀ k - (ν k)[id])
       rw [mul_zero] at hc2
       exact hc2.congr fun n ↦ (mul_div_assoc _ _ _).symm
-  have hX := respMart_joint_selfNorm_tendsto_multivariateGaussian h hY2 hνk
+  have hX := respMart_joint_selfNorm_tendsto_multivariateGaussian h hνk
     (c := fun _ m ↦ (m : ℝ)) (fun _ m ↦ Nat.cast_nonneg m)
     (fun _ ↦ tendsto_natCast_atTop_atTop) hv hNconv
   have hslut := tendsto_map_comp_of_tendstoInMeasure_const (P := P) (μ' := μ') g hg

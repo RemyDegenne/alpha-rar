@@ -62,10 +62,11 @@ variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
 integrable, `|∑_{j<m} ∫ trunc(X,√j)| ≤ 2 (∫X²) √m`. Each summand is bounded by `(∫X²)/√j`
 (`abs_integral_truncation_le`) and `∑_{j<m} 1/√j ≤ 2√m` (`sum_one_div_sqrt_le`). The truncated mean
 at level `√j` is exactly `E[Y 𝟙_{|Y|≤√j}]`, so this bounds the Hartman–Wintner drift `Dr_m`. -/
-lemma abs_sum_integral_truncation_le [IsFiniteMeasure μ] {X : Ω → ℝ} (hint : Integrable X μ)
-    (hX2 : Integrable (fun ω ↦ X ω ^ 2) μ) (hX0 : ∫ ω, X ω ∂μ = 0) (m : ℕ) :
+lemma abs_sum_integral_truncation_le [IsFiniteMeasure μ] {X : Ω → ℝ}
+    (hX2 : MemLp X 2 μ) (hX0 : ∫ ω, X ω ∂μ = 0) (m : ℕ) :
     |∑ j ∈ Finset.range m, ∫ ω, truncation X (√(j : ℝ)) ω ∂μ|
       ≤ 2 * (∫ ω, X ω ^ 2 ∂μ) * √(m : ℝ) := by
+  have hint : Integrable X μ := hX2.integrable one_le_two
   have hX2nn : 0 ≤ ∫ ω, X ω ^ 2 ∂μ := integral_nonneg (fun ω ↦ sq_nonneg _)
   calc |∑ j ∈ Finset.range m, ∫ ω, truncation X (√(j : ℝ)) ω ∂μ|
       ≤ ∑ j ∈ Finset.range m, |∫ ω, truncation X (√(j : ℝ)) ω ∂μ| :=
@@ -76,7 +77,7 @@ lemma abs_sum_integral_truncation_le [IsFiniteMeasure μ] {X : Ω → ℝ} (hint
         · subst hj0
           simp only [Nat.cast_zero, sqrt_zero, truncation_zero, Pi.zero_apply, integral_zero,
             abs_zero, div_zero, le_refl]
-        · exact abs_integral_truncation_le hint hX2 hX0 (sqrt_pos.mpr (by exact_mod_cast hjpos))
+        · exact abs_integral_truncation_le hX2 hX0 (sqrt_pos.mpr (by exact_mod_cast hjpos))
     _ = (∫ ω, X ω ^ 2 ∂μ) * ∑ j ∈ Finset.range m, 1 / √(j : ℝ) := by
         rw [Finset.mul_sum]; exact Finset.sum_congr rfl (fun j _ ↦ (mul_one_div _ _).symm)
     _ ≤ (∫ ω, X ω ^ 2 ∂μ) * (2 * √(m : ℝ)) :=
@@ -87,18 +88,19 @@ lemma abs_sum_integral_truncation_le [IsFiniteMeasure μ] {X : Ω → ℝ} (hint
 integrable, `∫ (trunc(X,A))² ≤ ∫ X²`, since `|trunc(X,A)| ≤ |X|` pointwise
 (`abs_truncation_le_abs_self`). Hence `Var(Y^L) ≤ E[(Y^L)²] ≤ σ²`, giving `⟨S̃⟩_n ≤ σ² n` for the
 truncated main part. -/
-lemma integral_sq_truncation_le [IsFiniteMeasure μ] {X : Ω → ℝ} (hint : Integrable X μ)
-    (hX2 : Integrable (fun ω ↦ X ω ^ 2) μ) (A : ℝ) :
+lemma integral_sq_truncation_le [IsFiniteMeasure μ] {X : Ω → ℝ}
+    (hX2 : MemLp X 2 μ) (A : ℝ) :
     ∫ ω, truncation X A ω ^ 2 ∂μ ≤ ∫ ω, X ω ^ 2 ∂μ := by
+  have hint : Integrable X μ := hX2.integrable one_le_two
   have hptwise : ∀ ω, truncation X A ω ^ 2 ≤ X ω ^ 2 := fun ω ↦ by
     have h := pow_le_pow_left₀ (abs_nonneg (truncation X A ω)) (abs_truncation_le_abs_self X A ω) 2
     rwa [sq_abs, sq_abs] at h
   have haesm : AEStronglyMeasurable (fun ω ↦ truncation X A ω ^ 2) μ :=
     (hint.aestronglyMeasurable.integrable_truncation.aestronglyMeasurable.pow 2)
   have htrunc2_int : Integrable (fun ω ↦ truncation X A ω ^ 2) μ :=
-    Integrable.mono' hX2 haesm (Eventually.of_forall fun ω ↦ by
+    Integrable.mono' hX2.integrable_sq haesm (Eventually.of_forall fun ω ↦ by
       rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]; exact hptwise ω)
-  exact integral_mono htrunc2_int hX2 hptwise
+  exact integral_mono htrunc2_int hX2.integrable_sq hptwise
 
 /-- **A centred truncation is bounded by `2|A|`.** On a probability space, both
 `|truncation f A| ≤ |A|` and `|E[truncation f A]| ≤ |A|`, so the centred truncation
@@ -124,14 +126,15 @@ lemma abs_truncation_sub_integral_le [IsProbabilityMeasure μ] {f : Ω → ℝ}
 (`Var ≤ E[·²]`) with `integral_sq_truncation_le`. This is `Var(Y^L) ≤ σ²`, giving the linear
 quadratic-variation bound `⟨S̃⟩_n ≤ σ² n` for the centred truncated martingale. -/
 lemma integral_truncation_sub_integral_sq_le [IsProbabilityMeasure μ] {X : Ω → ℝ}
-    (hint : Integrable X μ) (hX2 : Integrable (fun ω ↦ X ω ^ 2) μ) (A : ℝ) :
+    (hX2 : MemLp X 2 μ) (A : ℝ) :
     ∫ ω, (truncation X A ω - ∫ x, truncation X A x ∂μ) ^ 2 ∂μ ≤ ∫ ω, X ω ^ 2 ∂μ := by
+  have hint : Integrable X μ := hX2.integrable one_le_two
   calc ∫ ω, (truncation X A ω - ∫ x, truncation X A x ∂μ) ^ 2 ∂μ
       = variance (truncation X A) μ :=
         (variance_eq_integral hint.aestronglyMeasurable.truncation.aemeasurable).symm
     _ ≤ ∫ ω, truncation X A ω ^ 2 ∂μ :=
         variance_le_expectation_sq hint.aestronglyMeasurable.truncation
-    _ ≤ ∫ ω, X ω ^ 2 ∂μ := integral_sq_truncation_le hint hX2 A
+    _ ≤ ∫ ω, X ω ^ 2 ∂μ := integral_sq_truncation_le hX2 A
 
 /-- **High part is eventually zero** (blueprint `lem:hw_high`). For an identically distributed
 sequence `Y` with finite second moment, almost surely `|Y j| ≤ √j` for all large `j`; hence the
@@ -143,7 +146,7 @@ distribution, not independence. -/
 lemma ae_eventually_abs_le_sqrt_of_identDistrib [IsProbabilityMeasure μ]
     {Y : ℕ → Ω → ℝ} (hmeas : ∀ j, Measurable (Y j))
     (hident : ∀ j, IdentDistrib (Y j) (Y 0) μ μ)
-    (hint2 : Integrable (fun ω ↦ Y 0 ω ^ 2) μ) :
+    (hint2 : MemLp (Y 0) 2 μ) :
     ∀ᵐ ω ∂μ, ∀ᶠ j in atTop, |Y j ω| ≤ √(j : ℝ) := by
   set ρ : Measure ℝ := μ.map (Y 0) with hρ
   haveI : IsFiniteMeasure ρ := by rw [hρ]; infer_instance
@@ -151,7 +154,7 @@ lemma ae_eventually_abs_le_sqrt_of_identDistrib [IsProbabilityMeasure μ]
     simp only [sub_zero]
     rw [hρ, integrable_map_measure (g := fun x : ℝ ↦ x ^ 2) (by fun_prop)
       (hmeas 0).aemeasurable]
-    exact hint2
+    exact hint2.integrable_sq
   have hfin : (∑' j : ℕ, μ {ω | √(j : ℝ) < |Y j ω|}) ≠ ∞ := by
     have hkey : ∀ j : ℕ, μ {ω | √(j : ℝ) < |Y j ω|} = ρ {x | √(j : ℝ) < |x - 0|} := by
       intro j
@@ -256,19 +259,19 @@ conditional second moment of `ΔS_n = Y_n` (`predQuadVar_succ_sub_eq`), which in
 constant equal to `E[Y_n²]` (`condExp_natFiltLT_comp_indep` with `g = (·²)`). -/
 lemma predQuadVar_iidSum_succ_sub [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
     (hY : ∀ i, StronglyMeasurable (Y i)) (hindep : iIndepFun Y μ)
-    (hint : ∀ i, Integrable (Y i) μ) (hcent : ∀ i, ∫ ω, Y i ω ∂μ = 0)
-    (hint2 : ∀ i, Integrable (fun ω ↦ Y i ω ^ 2) μ) (n : ℕ) :
+    (hcent : ∀ i, ∫ ω, Y i ω ∂μ = 0)
+    (hint2 : ∀ i, MemLp (Y i) 2 μ) (n : ℕ) :
     predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ (n + 1)
         - predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ n
       =ᵐ[μ] fun _ ↦ ∫ ω, Y n ω ^ 2 ∂μ := by
+  have hint : ∀ i, Integrable (Y i) μ := fun i ↦ (hint2 i).integrable one_le_two
   set S : ℕ → Ω → ℝ := fun m ↦ ∑ j ∈ Finset.range m, Y j with hS
-  have hmemLp : ∀ i, MemLp (Y i) 2 μ := fun i ↦
-    (memLp_two_iff_integrable_sq (hY i).aestronglyMeasurable).mpr (hint2 i)
+  have hmemLp : ∀ i, MemLp (Y i) 2 μ := hint2
   have hM : Martingale S (natFiltLT Y hY) μ := martingale_iidSum hY hindep hint hcent
   have hΔ : ∀ ω, S (n + 1) ω - S n ω = Y n ω := fun ω ↦ by
     simp only [hS, Finset.sum_apply, Finset.sum_range_succ]; ring
   have hd2 : Integrable (fun ω ↦ (S (n + 1) ω - S n ω) ^ 2) μ :=
-    (hint2 n).congr (Filter.Eventually.of_forall fun ω ↦ by simp only [hΔ ω])
+    (hint2 n).integrable_sq.congr (Filter.Eventually.of_forall fun ω ↦ by simp only [hΔ ω])
   have hprod : Integrable (S n * (S (n + 1) - S n)) μ := by
     rw [show S (n + 1) - S n = Y n from funext fun ω ↦ hΔ ω]
     exact MemLp.integrable_mul (memLp_finsetSum' _ fun j _ ↦ hmemLp j) (hmemLp n)
@@ -283,15 +286,16 @@ increments `⟨S⟩_{k+1} - ⟨S⟩_k = E[Y_k²]` (`predQuadVar_iidSum_succ_sub`
 input required by the growing-increment loglog LIL. -/
 lemma predQuadVar_iidSum_le [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
     (hY : ∀ i, StronglyMeasurable (Y i)) (hindep : iIndepFun Y μ)
-    (hint : ∀ i, Integrable (Y i) μ) (hcent : ∀ i, ∫ ω, Y i ω ∂μ = 0)
-    (hint2 : ∀ i, Integrable (fun ω ↦ Y i ω ^ 2) μ) {v : ℝ} (hv : ∀ i, ∫ ω, Y i ω ^ 2 ∂μ ≤ v) :
+    (hcent : ∀ i, ∫ ω, Y i ω ∂μ = 0)
+    (hint2 : ∀ i, MemLp (Y i) 2 μ) {v : ℝ} (hv : ∀ i, ∫ ω, Y i ω ^ 2 ∂μ ≤ v) :
     ∀ᵐ ω ∂μ, ∀ n,
       predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ n ω ≤ v * n := by
+  have hint : ∀ i, Integrable (Y i) μ := fun i ↦ (hint2 i).integrable one_le_two
   have hstep : ∀ k, ∀ᵐ ω ∂μ,
       predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ (k + 1) ω
         - predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ k ω ≤ v := by
     intro k
-    filter_upwards [predQuadVar_iidSum_succ_sub hY hindep hint hcent hint2 k] with ω e
+    filter_upwards [predQuadVar_iidSum_succ_sub hY hindep hcent hint2 k] with ω e
     have he : predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ (k + 1) ω
         - predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ k ω
         = ∫ ω, Y k ω ^ 2 ∂μ := by simpa using e
@@ -317,15 +321,16 @@ second moment `E[Y_i²] ≥ w`, then almost surely `w·n ≤ ⟨S⟩_n` for all 
 `⟨S⟩_n → ∞`, the hypothesis of the (bounded-increment) loglog LIL. -/
 lemma predQuadVar_iidSum_ge [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
     (hY : ∀ i, StronglyMeasurable (Y i)) (hindep : iIndepFun Y μ)
-    (hint : ∀ i, Integrable (Y i) μ) (hcent : ∀ i, ∫ ω, Y i ω ∂μ = 0)
-    (hint2 : ∀ i, Integrable (fun ω ↦ Y i ω ^ 2) μ) {w : ℝ} (hw : ∀ i, w ≤ ∫ ω, Y i ω ^ 2 ∂μ) :
+    (hcent : ∀ i, ∫ ω, Y i ω ∂μ = 0)
+    (hint2 : ∀ i, MemLp (Y i) 2 μ) {w : ℝ} (hw : ∀ i, w ≤ ∫ ω, Y i ω ^ 2 ∂μ) :
     ∀ᵐ ω ∂μ, ∀ n,
       w * n ≤ predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ n ω := by
+  have hint : ∀ i, Integrable (Y i) μ := fun i ↦ (hint2 i).integrable one_le_two
   have hstep : ∀ k, ∀ᵐ ω ∂μ, w ≤
       predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ (k + 1) ω
         - predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ k ω := by
     intro k
-    filter_upwards [predQuadVar_iidSum_succ_sub hY hindep hint hcent hint2 k] with ω e
+    filter_upwards [predQuadVar_iidSum_succ_sub hY hindep hcent hint2 k] with ω e
     have he : predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ (k + 1) ω
         - predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ k ω
         = ∫ ω, Y k ω ^ 2 ∂μ := by simpa using e
@@ -363,22 +368,19 @@ lemma ae_eventually_abs_sum_le_sqrt_nat_mul_loglog_of_bounded [IsProbabilityMeas
   have hmemLp2 : ∀ i, MemLp (Y i) 2 μ := fun i ↦ MemLp.of_bound (hY i).aestronglyMeasurable c
     (by filter_upwards [hbdd i] with ω h; rwa [Real.norm_eq_abs])
   have hint : ∀ i, Integrable (Y i) μ := fun i ↦ (hmemLp2 i).integrable one_le_two
-  have hint2 : ∀ i, Integrable (fun ω ↦ Y i ω ^ 2) μ := fun i ↦
-    (memLp_two_iff_integrable_sq (hY i).aestronglyMeasurable).mp (hmemLp2 i)
+  have hint2 : ∀ i, MemLp (Y i) 2 μ := hmemLp2
   set M : ℕ → Ω → ℝ := fun n ↦ ∑ j ∈ Finset.range n, Y j with hM_def
   have hM : Martingale M (natFiltLT Y hY) μ := martingale_iidSum hY hindep hint hcent
   have hM0 : M 0 =ᵐ[μ] 0 := by simp [hM_def]
-  have hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ := fun n ↦
-    (memLp_two_iff_integrable_sq
-      (memLp_finsetSum' (Finset.range n) fun j _ ↦ hmemLp2 j).aestronglyMeasurable).mp
-      (memLp_finsetSum' (Finset.range n) fun j _ ↦ hmemLp2 j)
+  have hM2 : ∀ n, MemLp (M n) 2 μ := fun n ↦
+    memLp_finsetSum' (Finset.range n) fun j _ ↦ hmemLp2 j
   have hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c := fun i ↦ by
     filter_upwards [hbdd i] with ω h
     have hΔ : M (i + 1) ω - M i ω = Y i ω := by
       simp only [hM_def, Finset.sum_apply, Finset.sum_range_succ]; ring
     rw [hΔ]; exact h
   have hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M (natFiltLT Y hY) μ n ω) atTop atTop := by
-    filter_upwards [predQuadVar_iidSum_ge hY hindep hint hcent hint2 hvar] with ω hge
+    filter_upwards [predQuadVar_iidSum_ge hY hindep hcent hint2 hvar] with ω hge
     exact tendsto_atTop_mono hge (Tendsto.const_mul_atTop hw tendsto_natCast_atTop_atTop)
   exact ae_eventually_abs_le_sqrt_nat_mul_loglog hM hM0 hM2 hc hb hV
 
@@ -440,7 +442,7 @@ lemma martingale_centeredTruncation [IsProbabilityMeasure μ] {Y : ℕ → Ω �
 Since `Var(Y_j^L) ≤ E[Y_j²] ≤ v`, the centred-truncation martingale has `⟨S̃⟩_n ≤ v·n` a.s. -/
 lemma predQuadVar_centeredTruncation_le [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
     (hY : ∀ i, StronglyMeasurable (Y i)) (hindep : iIndepFun Y μ)
-    (hint : ∀ i, Integrable (Y i) μ) (hint2 : ∀ i, Integrable (fun ω ↦ Y i ω ^ 2) μ)
+    (hint2 : ∀ i, MemLp (Y i) 2 μ)
     (b : ℕ → ℝ) {v : ℝ} (hv : ∀ i, ∫ ω, Y i ω ^ 2 ∂μ ≤ v) :
     ∀ᵐ ω ∂μ, ∀ n,
       predQuadVar
@@ -451,15 +453,12 @@ lemma predQuadVar_centeredTruncation_le [IsProbabilityMeasure μ] {Y : ℕ → �
   predQuadVar_iidSum_le
     (stronglyMeasurable_centeredTruncation hY b fun j ↦ ∫ x, truncation (Y j) (b j) x ∂μ)
     (iIndepFun_truncation_sub_const hindep b fun j ↦ ∫ x, truncation (Y j) (b j) x ∂μ)
-    (fun i ↦ (memLp_two_truncation_sub_const hY b
-      (fun j ↦ ∫ x, truncation (Y j) (b j) x ∂μ) i).integrable one_le_two)
     (fun i ↦ by
       rw [integral_sub (hY i).aestronglyMeasurable.integrable_truncation (integrable_const _)]
       simp)
-    (fun i ↦ (memLp_two_iff_integrable_sq (stronglyMeasurable_centeredTruncation hY b
-      (fun j ↦ ∫ x, truncation (Y j) (b j) x ∂μ) i).aestronglyMeasurable).mp
-      (memLp_two_truncation_sub_const hY b (fun j ↦ ∫ x, truncation (Y j) (b j) x ∂μ) i))
-    (fun i ↦ (integral_truncation_sub_integral_sq_le (hint i) (hint2 i) (b i)).trans (hv i))
+    (fun i ↦ memLp_two_truncation_sub_const hY b
+      (fun j ↦ ∫ x, truncation (Y j) (b j) x ∂μ) i)
+    (fun i ↦ (integral_truncation_sub_integral_sq_le (hint2 i) (b i)).trans (hv i))
 
 /-- **Sharp low-part LIL (`β > 1` limit, two-sided).** For an independent, `L²` sequence `Y` with
 second moments `∫ Y_i² ≤ v` (`0 < v`) and truncation levels `b` that are monotone, nonnegative and
@@ -474,7 +473,7 @@ growing-increment engine `ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growth_sha
 `b_n √(loglog n/n) = √(loglog n/log(n+2)) → 0`. -/
 lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation_sharp [IsProbabilityMeasure μ]
     {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i)) (hindep : iIndepFun Y μ)
-    (hint : ∀ i, Integrable (Y i) μ) (hint2 : ∀ i, Integrable (fun ω ↦ Y i ω ^ 2) μ)
+    (hint2 : ∀ i, MemLp (Y i) 2 μ)
     {v : ℝ} (hv0 : 0 < v) (hv : ∀ i, ∫ ω, Y i ω ^ 2 ∂μ ≤ v)
     {b : ℕ → ℝ} (hbmono : Monotone b) (hbnn : ∀ i, 0 ≤ b i)
     (hbH : Tendsto (fun n : ℕ ↦ b n * √(log (log n) / n)) atTop (𝓝 0)) :
@@ -482,6 +481,7 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation_sharp [IsProba
       |(∑ j ∈ Finset.range n,
           fun ω ↦ truncation (Y j) (b j) ω - ∫ x, truncation (Y j) (b j) x ∂μ) ω|
         ≤ β * √(2 * v * (n : ℝ) * log (log n)) := by
+  have hint : ∀ i, Integrable (Y i) μ := fun i ↦ (hint2 i).integrable one_le_two
   set SL : ℕ → Ω → ℝ := fun n ↦ ∑ j ∈ Finset.range n,
     fun ω ↦ truncation (Y j) (b j) ω - ∫ x, truncation (Y j) (b j) x ∂μ with hSL_def
   have hmemLp : ∀ j, MemLp (fun ω ↦ truncation (Y j) (b j) ω
@@ -491,10 +491,8 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation_sharp [IsProba
       fun j ↦ ∫ x, truncation (Y j) (b j) x ∂μ)) μ :=
     martingale_centeredTruncation hY hindep b
   have hM0 : SL 0 =ᵐ[μ] 0 := by simp [hSL_def]
-  have hM2 : ∀ n, Integrable (fun ω ↦ SL n ω ^ 2) μ := fun n ↦
-    (memLp_two_iff_integrable_sq
-      (memLp_finsetSum' (Finset.range n) fun j _ ↦ hmemLp j).aestronglyMeasurable).mp
-      (memLp_finsetSum' (Finset.range n) fun j _ ↦ hmemLp j)
+  have hM2 : ∀ n, MemLp (SL n) 2 μ := fun n ↦
+    memLp_finsetSum' (Finset.range n) fun j _ ↦ hmemLp j
   have hgmono : Monotone (fun i ↦ 2 * b i) := hbmono.const_mul (by norm_num)
   have hgnn : ∀ i, 0 ≤ 2 * b i := fun i ↦ mul_nonneg (by norm_num) (hbnn i)
   have hg : Tendsto (fun n : ℕ ↦ 2 * b n * √(log (log n) / n)) atTop (𝓝 0) := by
@@ -510,7 +508,7 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation_sharp [IsProba
   have hqv : ∀ᵐ ω ∂μ, ∀ n, predQuadVar SL (natFiltLT _
       (stronglyMeasurable_centeredTruncation hY b fun j ↦ ∫ x, truncation (Y j) (b j) x ∂μ))
       μ n ω ≤ v * (n : ℝ) :=
-    predQuadVar_centeredTruncation_le hY hindep hint hint2 b hv
+    predQuadVar_centeredTruncation_le hY hindep hint2 b hv
   exact ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growth_sharp_all hM hM0 hM2 hv0 hgmono hgnn
     hginc hg hqv
 
@@ -518,14 +516,14 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation_sharp [IsProba
 `limsup_n |S̃_n| / √(2 v n log log n) ≤ 1`. -/
 lemma ae_limsup_abs_div_sqrt_nat_mul_loglog_centeredTruncation_le_one [IsProbabilityMeasure μ]
     {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i)) (hindep : iIndepFun Y μ)
-    (hint : ∀ i, Integrable (Y i) μ) (hint2 : ∀ i, Integrable (fun ω ↦ Y i ω ^ 2) μ)
+    (hint2 : ∀ i, MemLp (Y i) 2 μ)
     {v : ℝ} (hv0 : 0 < v) (hv : ∀ i, ∫ ω, Y i ω ^ 2 ∂μ ≤ v)
     {b : ℕ → ℝ} (hbmono : Monotone b) (hbnn : ∀ i, 0 ≤ b i)
     (hbH : Tendsto (fun n : ℕ ↦ b n * √(log (log n) / n)) atTop (𝓝 0)) :
     ∀ᵐ ω ∂μ, limsup (fun n ↦ |(∑ j ∈ Finset.range n,
           fun ω ↦ truncation (Y j) (b j) ω - ∫ x, truncation (Y j) (b j) x ∂μ) ω|
         / √(2 * v * (n : ℝ) * log (log n))) atTop ≤ 1 := by
-  filter_upwards [ae_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation_sharp hY hindep hint
+  filter_upwards [ae_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation_sharp hY hindep
     hint2 hv0 hv hbmono hbnn hbH] with ω hω
   have hf_nonneg : ∀ n, 0 ≤ |(∑ j ∈ Finset.range n,
       fun ω ↦ truncation (Y j) (b j) ω - ∫ x, truncation (Y j) (b j) x ∂μ) ω|
@@ -861,7 +859,7 @@ each partial sum is `≤ C·∫X²`; `summable_of_sum_range_le` / `Real.tsum_le_
 With `Var(Y_j^M) ≤ E[(Y_j^M)²] = E[X² 𝟙{…}]` (identical distribution) this gives
 `lem:hw_medium_var`. -/
 lemma medium_variance_series_le {X : Ω → ℝ} (hX : Measurable X)
-    (hX2 : Integrable (fun ω ↦ X ω ^ 2) μ) :
+    (hX2 : MemLp X 2 μ) :
     ∃ C : ℝ, 0 ≤ C ∧
       Summable (fun j : ℕ ↦ if 3 ≤ j then
         (∫ ω, Set.indicator {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)}
@@ -899,7 +897,7 @@ lemma medium_variance_series_le {X : Ω → ℝ} (hX : Measurable X)
       (fun ω ↦ X ω ^ 2) ω / ((j : ℝ) * log (log (j : ℝ))) else 0 with hm
   have hint_m : ∀ j, Integrable (m j) μ := fun j ↦ by
     simp only [hm]; by_cases hj3 : 3 ≤ j
-    · simp only [if_pos hj3]; exact (hX2.indicator (hSmeas j)).div_const _
+    · simp only [if_pos hj3]; exact (hX2.integrable_sq.indicator (hSmeas j)).div_const _
     · simp only [if_neg hj3]; exact integrable_zero _ _ _
   set F : ℕ → ℝ := fun j ↦ if 3 ≤ j then
     (∫ ω, Set.indicator {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)}
@@ -946,7 +944,7 @@ lemma medium_variance_series_le {X : Ω → ℝ} (hX : Measurable X)
       exact Finset.sum_congr rfl (fun j _ ↦ hFm j)
     rw [h1]
     have h2 : ∫ ω, ∑ j ∈ Finset.range n, m j ω ∂μ ≤ ∫ ω, C * X ω ^ 2 ∂μ :=
-      integral_mono (integrable_finsetSum _ (fun j _ ↦ hint_m j)) (hX2.const_mul C)
+      integral_mono (integrable_finsetSum _ (fun j _ ↦ hint_m j)) (hX2.integrable_sq.const_mul C)
         (fun ω ↦ hptwise ω n)
     rwa [integral_const_mul] at h2
   exact ⟨C, hC0, summable_of_sum_range_le hFnn hbound, Real.tsum_le_of_sum_range_le hFnn hbound⟩
@@ -957,7 +955,7 @@ lemma medium_variance_series_le {X : Ω → ℝ} (hX : Measurable X)
 `(X 𝟙_S)² = X² 𝟙_S`) and comparison of nonnegative series. With identical distribution
 (`Var(Y_j^M) = Var(Y_0 𝟙_{S_j})`) this is exactly the medium-band variance series. -/
 lemma medium_variance_summable [IsProbabilityMeasure μ] {X : Ω → ℝ} (hX : Measurable X)
-    (hX2 : Integrable (fun ω ↦ X ω ^ 2) μ) :
+    (hX2 : MemLp X 2 μ) :
     Summable (fun j : ℕ ↦ if 3 ≤ j then
       variance (Set.indicator {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)} X) μ
         / ((j : ℝ) * log (log (j : ℝ))) else 0) := by
@@ -1035,7 +1033,7 @@ mediumTrunc j ∘ Y_j`. Reduces to `medium_variance_summable` (at `Y 0`) via
 (`Var(mediumTrunc j ∘ Y_j) = Var(mediumTrunc j ∘ Y_0)`). -/
 lemma medium_variance_summable_seq [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
     (hY : ∀ i, Measurable (Y i)) (hident : ∀ j, IdentDistrib (Y j) (Y 0) μ μ)
-    (hint2 : Integrable (fun ω ↦ Y 0 ω ^ 2) μ) :
+    (hint2 : MemLp (Y 0) 2 μ) :
     Summable (fun j : ℕ ↦ if 3 ≤ j then
       variance (fun ω ↦ mediumTrunc j (Y j ω)) μ / ((j : ℝ) * log (log (j : ℝ))) else 0) := by
   refine (medium_variance_summable (hY 0) hint2).congr (fun j ↦ ?_)
@@ -1100,7 +1098,7 @@ moment, `W_m = ∑_{j<m}(Y_j^{\mathrm M} − 𝔼 Y_j^{\mathrm M}) = o(√(m log
 `martingale_div_weight_ae_tendsto_zero` (weight `a m = √(2(m+3)L(m+3))`) give the conclusion. -/
 lemma ae_medium_div_weight_tendsto_zero [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
     (hY : ∀ i, StronglyMeasurable (Y i)) (hindep : iIndepFun Y μ)
-    (hident : ∀ j, IdentDistrib (Y j) (Y 0) μ μ) (hint2 : Integrable (fun ω ↦ Y 0 ω ^ 2) μ) :
+    (hident : ∀ j, IdentDistrib (Y j) (Y 0) μ μ) (hint2 : MemLp (Y 0) 2 μ) :
     ∀ᵐ ω ∂μ, Tendsto (fun m ↦
       (∑ j ∈ Finset.range m, (mediumTrunc j (Y j ω) - ∫ x, mediumTrunc j (Y j x) ∂μ))
         / √(2 * ((m : ℝ) + 3) * log (log ((m : ℝ) + 3)))) atTop (𝓝 0) := by
@@ -1162,21 +1160,16 @@ lemma ae_medium_div_weight_tendsto_zero [IsProbabilityMeasure μ] {Y : ℕ → �
   have hDmem : ∀ k, MemLp (fun ω ↦ (M (k + 1) ω - M k ω) / a (k + 1)) 2 μ := fun k ↦ by
     simpa only [div_eq_inv_mul] using (hdmem k).const_mul (a (k + 1))⁻¹
   have hSmem : ∀ n, MemLp (S n) 2 μ := fun n ↦ memLp_finsetSum (Finset.range n) fun k _ ↦ hDmem k
-  have hS2 : ∀ n, Integrable (fun ω ↦ (S n ω) ^ 2) μ := fun n ↦ (hSmem n).integrable_sq
-  have hd2 : ∀ k, Integrable (fun ω ↦ (S (k + 1) ω - S k ω) ^ 2) μ := fun k ↦
-    ((hSmem (k + 1)).sub (hSmem k)).integrable_sq
-  have hprod : ∀ k, Integrable (S k * (S (k + 1) - S k)) μ := fun k ↦
-    (hSmem k).integrable_mul ((hSmem (k + 1)).sub (hSmem k))
   -- Discrete Itô isometry: `∫ (S n)² = ∑_{k<n} ∫ (ΔS_k)²`.
   have hsqeq : ∀ n, ∫ ω, (S n ω) ^ 2 ∂μ
       = ∑ k ∈ Finset.range n, ∫ ω, (S (k + 1) ω - S k ω) ^ 2 ∂μ := by
     intro n
-    rw [integral_sq_eq_integral_predQuadVar hSmart.stronglyAdapted hS2 hS0 n]
+    rw [integral_sq_eq_integral_predQuadVar hSmart.stronglyAdapted hSmem hS0 n]
     have e : ∑ k ∈ Finset.range n, ∫ ω, (S (k + 1) ω - S k ω) ^ 2 ∂μ
         = ∑ k ∈ Finset.range n,
             ((∫ ω, predQuadVar S 𝒢 μ (k + 1) ω ∂μ) - ∫ ω, predQuadVar S 𝒢 μ k ω ∂μ) :=
       Finset.sum_congr rfl fun k _ ↦
-        (integral_predQuadVar_succ_sub hSmart hS2 k (hd2 k) (hprod k)).symm
+        (integral_predQuadVar_succ_sub hSmart hSmem k).symm
     rw [e, Finset.sum_range_sub (fun k ↦ ∫ ω, predQuadVar S 𝒢 μ k ω ∂μ) n]
     simp [predQuadVar_zero]
   -- Per-increment: `∫ (ΔS_k)² = Var(Y_k^M)/a(k+1)²`.
@@ -1230,7 +1223,7 @@ lemma ae_medium_div_weight_tendsto_zero [IsProbabilityMeasure μ] {Y : ℕ → �
       _ ≤ ∑' k, variance (fun ω ↦ mediumTrunc k (Y k ω)) μ / a (k + 1) ^ 2 :=
           hsummable.sum_le_tsum (Finset.range n)
             fun k _ ↦ div_nonneg (variance_nonneg _ _) (sq_nonneg _)
-  filter_upwards [martingale_div_weight_ae_tendsto_zero hM hM0 ha_pos ha_mono ha_top hS2 hbdd]
+  filter_upwards [martingale_div_weight_ae_tendsto_zero hM hM0 ha_pos ha_mono ha_top hSmem hbdd]
     with ω hω
   refine hω.congr (fun m ↦ ?_)
   simp only [hMdef, hadef, Finset.sum_apply]
@@ -1585,9 +1578,8 @@ lemma mediumWeight_le_hwWeight {c : ℝ} (hc : 0 < c) :
 boundary atom, bounded by the deterministic drift `2σ²√m` (`abs_sum_integral_truncation_le`) plus
 the atom total `𝔼|Y_0|` (`sum_atom_le`). -/
 lemma hw_drift_bound [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i))
-    (hident : ∀ j, IdentDistrib (Y j) (Y 0) μ μ) (hint0 : Integrable (Y 0) μ)
-    (hint2 : Integrable (fun ω ↦ Y 0 ω ^ 2) μ) (hcent : ∫ ω, Y 0 ω ∂μ = 0)
-    (hintabs : Integrable (fun ω ↦ |Y 0 ω|) μ) (m : ℕ) :
+    (hident : ∀ j, IdentDistrib (Y j) (Y 0) μ μ) (hint2 : MemLp (Y 0) 2 μ)
+    (hcent : ∫ ω, Y 0 ω ∂μ = 0) (m : ℕ) :
     ∑ j ∈ Finset.range m,
         (∫ x, truncation (Y j) (hwCutoff j) x ∂μ + ∫ x, mediumTrunc j (Y j x) ∂μ)
       ≤ 2 * (∫ x, Y 0 x ^ 2 ∂μ) * √(m : ℝ) + ∫ x, |Y 0 x| ∂μ := by
@@ -1628,13 +1620,14 @@ lemma hw_drift_bound [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : �
         + ∑ j ∈ Finset.range m, hwCutoff j * (μ {ω | Y j ω = -hwCutoff j}).toReal :=
         Finset.sum_add_distrib
     _ ≤ 2 * (∫ x, Y 0 x ^ 2 ∂μ) * √(m : ℝ) + ∫ x, |Y 0 x| ∂μ := by
-        refine add_le_add ?_ (sum_atom_le (fun i ↦ (hY i).measurable) hident hintabs m)
+        refine add_le_add ?_ (sum_atom_le (fun i ↦ (hY i).measurable) hident
+          (hint2.integrable one_le_two).abs m)
         have heq : ∑ j ∈ Finset.range m, ∫ x, truncation (Y j) (√(j : ℝ)) x ∂μ
             = ∑ j ∈ Finset.range m, ∫ x, truncation (Y 0) (√(j : ℝ)) x ∂μ :=
           Finset.sum_congr rfl fun j _ ↦
             ((hident j).comp (measurable_id.indicator measurableSet_Ioc)).integral_eq
         rw [heq]
-        exact (le_abs_self _).trans (abs_sum_integral_truncation_le hint0 hint2 hcent m)
+        exact (le_abs_self _).trans (abs_sum_integral_truncation_le hint2 hcent m)
 
 /-- **Hartman–Wintner upper bound, eventually form** (coboundedness-free core). For an i.i.d.,
 centred, `L²` sequence, a.s. `∀ β>1`, eventually
@@ -1647,7 +1640,7 @@ No positivity of `σ²` is needed: if `σ² = 0` then every `Y_j` vanishes a.s. 
 `√(2σ² m log log m)`.) -/
 lemma hw_eventually [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i))
     (hindep : iIndepFun Y μ) (hident : ∀ j, IdentDistrib (Y j) (Y 0) μ μ)
-    (hint2 : Integrable (fun ω ↦ Y 0 ω ^ 2) μ) (hcent : ∫ ω, Y 0 ω ∂μ = 0) :
+    (hint2 : MemLp (Y 0) 2 μ) (hcent : ∫ ω, Y 0 ω ∂μ = 0) :
     ∀ᵐ ω ∂μ, ∀ β : ℝ, 1 < β → ∀ᶠ m in atTop,
       (∑ j ∈ Finset.range m, Y j ω)
         ≤ β * √(2 * (∫ x, Y 0 x ^ 2 ∂μ) * (m : ℝ) * log (log (m : ℝ))) := by
@@ -1656,7 +1649,7 @@ lemma hw_eventually [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : ∀
   · -- Degenerate case `σ² = 0`: every `Y j` vanishes a.s., and both sides are `0`.
     have hY0 : Y 0 =ᵐ[μ] 0 := by
       have hz := (integral_eq_zero_iff_of_nonneg_ae
-        (Eventually.of_forall fun ω ↦ sq_nonneg (Y 0 ω)) hint2).mp hσ.symm
+        (Eventually.of_forall fun ω ↦ sq_nonneg (Y 0 ω)) hint2.integrable_sq).mp hσ.symm
       filter_upwards [hz] with ω hω
       have h2 : Y 0 ω ^ 2 = 0 := hω
       simpa using sq_eq_zero_iff.mp h2
@@ -1674,17 +1667,15 @@ lemma hw_eventually [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : ∀
     simp
   set σ2 := ∫ x, Y 0 x ^ 2 ∂μ with hσ2def
   set K := ∫ x, |Y 0 x| ∂μ with hKdef
-  have hmem0 : MemLp (Y 0) 2 μ :=
-    (memLp_two_iff_integrable_sq (hY 0).aestronglyMeasurable).mpr hint2
-  have hint0 : Integrable (Y 0) μ := hmem0.integrable one_le_two
-  have hintabs : Integrable (fun ω ↦ |Y 0 ω|) μ := hint0.abs
+  have hint0 : Integrable (Y 0) μ := hint2.integrable one_le_two
   have hident2 : ∀ j, IdentDistrib (fun ω ↦ Y j ω ^ 2) (fun ω ↦ Y 0 ω ^ 2) μ μ := fun j ↦
     (hident j).comp (u := fun x : ℝ ↦ x ^ 2) (by fun_prop)
   have hint_i : ∀ i, Integrable (Y i) μ := fun i ↦ ((hident i).integrable_iff).mpr hint0
-  have hint2_i : ∀ i, Integrable (fun ω ↦ Y i ω ^ 2) μ := fun i ↦
-    ((hident2 i).integrable_iff).mpr hint2
+  have hint2_i : ∀ i, MemLp (Y i) 2 μ := fun i ↦
+    (memLp_two_iff_integrable_sq (hY i).aestronglyMeasurable).mpr
+      (((hident2 i).integrable_iff).mpr hint2.integrable_sq)
   have hv : ∀ i, ∫ ω, Y i ω ^ 2 ∂μ ≤ σ2 := fun i ↦ le_of_eq (hident2 i).integral_eq
-  have hdrift := hw_drift_bound hY hident hint0 hint2 hcent hintabs
+  have hdrift := hw_drift_bound hY hident hint2 hcent
   have ha_top : Tendsto (fun m : ℕ ↦ √(2 * σ2 * (m : ℝ) * log (log (m : ℝ)))) atTop atTop :=
     tendsto_hwWeight_atTop hσ
   have ha_pos : ∀ᶠ m : ℕ in atTop, 0 < √(2 * σ2 * (m : ℝ) * log (log (m : ℝ))) :=
@@ -1697,7 +1688,7 @@ lemma hw_eventually [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : ∀
         _ < log ((m : ℝ) + 3) := Real.log_lt_log (exp_pos 1) (by linarith [Real.exp_one_lt_d9])
     exact Real.sqrt_pos.mpr (mul_pos (mul_pos (by norm_num) (by linarith)) (Real.log_pos hlt))
   filter_upwards [ae_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation_sharp hY hindep
-      hint_i hint2_i hσ hv (b := hwCutoff) monotone_cutoff cutoff_nonneg cutoff_condH,
+      hint2_i hσ hv (b := hwCutoff) monotone_cutoff cutoff_nonneg cutoff_condH,
     ae_medium_div_weight_tendsto_zero hY hindep hident hint2,
     ae_eventually_abs_le_sqrt_of_identDistrib (fun i ↦ (hY i).measurable) hident hint2]
     with ω hlowω hmedω hhighω
@@ -1813,7 +1804,7 @@ bound `hw_eventually` applied to `Y` (upper bound) and to `-Y` (lower bound, giv
 theorem iid_hartmanWintner_limsup_le_one [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
     (hY : ∀ i, StronglyMeasurable (Y i)) (hindep : iIndepFun Y μ)
     (hident : ∀ j, IdentDistrib (Y j) (Y 0) μ μ)
-    (hint2 : Integrable (fun ω ↦ Y 0 ω ^ 2) μ) (hcent : ∫ ω, Y 0 ω ∂μ = 0)
+    (hint2 : MemLp (Y 0) 2 μ) (hcent : ∫ ω, Y 0 ω ∂μ = 0)
     (hσ : 0 < ∫ ω, Y 0 ω ^ 2 ∂μ) :
     ∀ᵐ ω ∂μ, limsup (fun m ↦ (∑ j ∈ Finset.range m, Y j ω)
       / √(2 * (∫ x, Y 0 x ^ 2 ∂μ) * (m : ℝ) * log (log (m : ℝ)))) atTop ≤ 1 := by
@@ -1826,7 +1817,7 @@ theorem iid_hartmanWintner_limsup_le_one [IsProbabilityMeasure μ] {Y : ℕ → 
   have hnegY_ev := hw_eventually (Y := fun i ω ↦ -Y i ω) (fun i ↦ (hY i).neg)
     (hindep.comp (fun _ ↦ (- ·)) (fun _ ↦ measurable_neg))
     (fun j ↦ (hident j).comp (u := fun x : ℝ ↦ -x) measurable_neg)
-    (hint2.congr (Eventually.of_forall fun ω ↦ (neg_sq (Y 0 ω)).symm))
+    hint2.neg
     (by simp only [integral_neg, hcent, neg_zero])
   simp only [hσeq] at hnegY_ev
   filter_upwards [hY_ev, hnegY_ev] with ω h1 h2

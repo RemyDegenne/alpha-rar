@@ -56,8 +56,7 @@ is required, so this holds for sparse targets `v_k = 0`. -/
 lemma respMart_selfNorm_anscombe_tendsto
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hk_inf : ∀ᵐ ω ∂P, {j | A j ω = k}.Infinite)
-    (hint_id : Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k))
+    (hνk : MemLp id 2 (ν k))
     {c : ℕ → ℕ} (hc : Tendsto c atTop atTop)
     (hreg : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (c n : ℝ)) atTop (𝓝 1)) :
     Tendsto (β := ProbabilityMeasure ℝ)
@@ -66,6 +65,8 @@ lemma respMart_selfNorm_anscombe_tendsto
           (measurable_respSelfNorm h k n).aemeasurable⟩ : ProbabilityMeasure ℝ)) atTop
       (𝓝 (⟨gaussianReal 0 (Var[id; ν k]).toNNReal, inferInstance⟩ : ProbabilityMeasure ℝ)) := by
   haveI : IsProbabilityMeasure (ν k) := IsMarkovKernel.isProbabilityMeasure k
+  have hint_id : Integrable (fun x : ℝ ↦ x) (ν k) := hνk.integrable (by norm_num)
+  have hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k) := hνk.integrable_sq
   set D := armIndicator A k with hDdef
   set θ := (ν k)[id] with hθdef
   -- Clean-sample setup (globally i.i.d.\ representative of the sampled responses of arm `k`).
@@ -172,8 +173,7 @@ Slutsky steps (the scaling factors `N/(N+1) → 1` and `√N/(N+1) → 0` in pro
 lemma estimator_sqrtN_anscombe_tendsto
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hk_inf : ∀ᵐ ω ∂P, {j | A j ω = k}.Infinite)
-    (hint_id : Integrable (fun x : ℝ ↦ x) (ν k))
-    (hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k)) (θ₀ : ℝ)
+    (hνk : MemLp id 2 (ν k)) (θ₀ : ℝ)
     {c : ℕ → ℕ} (hc : Tendsto c atTop atTop)
     (hreg : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (c n : ℝ)) atTop (𝓝 1)) :
     Tendsto (β := ProbabilityMeasure ℝ)
@@ -184,7 +184,7 @@ lemma estimator_sqrtN_anscombe_tendsto
       atTop
       (𝓝 (⟨gaussianReal 0 (Var[id; ν k]).toNNReal, inferInstance⟩ : ProbabilityMeasure ℝ)) := by
   set θ := (ν k)[id] with hθdef
-  have hQ := respMart_selfNorm_anscombe_tendsto h k hk_inf hint_id hint_sq hc hreg
+  have hQ := respMart_selfNorm_anscombe_tendsto h k hk_inf hνk hc hreg
   -- pull count `→ ∞` a.e. (from infinitely many pulls)
   have hpcinf : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop := by
     have hDinf : ∀ᵐ ω ∂P, {j | armIndicator A k j ω = 1}.Infinite := by

@@ -75,8 +75,8 @@ matches definitionally. -/
 the arm-`k` variance inflated by `1/v_k` because arm `k` is only pulled a fraction `v_k` of the \
 time"]
 lemma estimatorSqrtNVec_joint_tendsto_multivariateGaussian
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
-    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
+    (hνk : ∀ a, MemLp id 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a))) :
     Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
@@ -85,7 +85,7 @@ lemma estimatorSqrtNVec_joint_tendsto_multivariateGaussian
           : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)))
       atTop
       (𝓝 ⟨multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a] / v a), inferInstance⟩) :=
-  estimator_sqrtN_joint_tendsto_multivariateGaussian h hY2 θ₀ hνk hv hNconv
+  estimator_sqrtN_joint_tendsto_multivariateGaussian h θ₀ hνk hv hNconv
 
 omit [DecidableEq 𝓐] [Fintype 𝓐] in
 /-- Measurability of the estimator vector `ω ↦ (θ̂_{n,k}(ω))_k : 𝓐 → ℝ`. -/
@@ -119,8 +119,8 @@ plug-in target satisfies `√n(T(θ̂_n) - T(θ)) ⇒ 𝒩(0, G · diag(V_k/v_k)
 the linear pushforward of the estimator's Gaussian (`multivariateGaussian_map_matrix`), obtained via
 the product-space Slutsky lemma with `g(x, r) = G·x + r`. -/
 lemma clt_rho_of_tendstoInMeasure
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
-    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
+    (hνk : ∀ a, MemLp id 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a)))
     {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (G : Matrix 𝓐 𝓐 ℝ)
@@ -157,7 +157,7 @@ lemma clt_rho_of_tendstoInMeasure
   have hRmeas : ∀ n, AEMeasurable (fun ω ↦ targetSqrtNVec ν A Y θ₀ T n ω
       - WithLp.toLp 2 (G.mulVec (WithLp.ofLp (estimatorSqrtNVec ν A Y θ₀ n ω)))) P := fun n ↦
     (((measurable_targetSqrtNVec h θ₀ hT n).sub (hGXmeas n))).aemeasurable
-  have hclt := estimator_sqrtN_joint_tendsto_multivariateGaussian h hY2 θ₀ hνk hv hNconv
+  have hclt := estimator_sqrtN_joint_tendsto_multivariateGaussian h θ₀ hνk hv hNconv
   have hslut := tendsto_map_comp_of_tendstoInMeasure_const (P := P) (μ' := μ') g hg
     (fun n ↦ (hXmeas n).aemeasurable) hRmeas hclt hR
   -- the limiting law: `μ'.map (g(·, 0)) = 𝒩(0, G diag Gᵀ)`
@@ -200,8 +200,8 @@ and whose `Sₙ → 0` input is the a.s. consistency. -/
 the estimator error (no extra rate is introduced by `T`) and the centring at `T(θ)` rather than at \
 any running quantity, which is what makes the limit the delta-method Gaussian `G Σ Gᵀ`"]
 lemma clt_rho
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ)
-    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
+    (hνk : ∀ a, MemLp id 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a)))
     {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (G : Matrix 𝓐 𝓐 ℝ)
@@ -217,7 +217,7 @@ lemma clt_rho
       atTop
       (𝓝 ⟨multivariateGaussian 0
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / v a) * Gᵀ), inferInstance⟩) := by
-  refine clt_rho_of_tendstoInMeasure h hY2 θ₀ hνk hv hNconv hT G ?_
+  refine clt_rho_of_tendstoInMeasure h θ₀ hνk hv hNconv hT G ?_
   -- Notation for the un-scaled error vector `S`, base point `p`, derivative `L`, remainder `φ`.
   set p : EuclideanSpace ℝ 𝓐 := WithLp.toLp 2 (fun k ↦ (ν k)[id]) with hpdef
   set L : EuclideanSpace ℝ 𝓐 →L[ℝ] EuclideanSpace ℝ 𝓐 :=
@@ -274,7 +274,7 @@ lemma clt_rho
   have hX : ∀ η : ℝ≥0∞, 0 < η → ∃ M : ℝ, 0 < M ∧
       ∀ᶠ n in atTop, P {ω | M ≤ dist (estimatorSqrtNVec ν A Y θ₀ n ω) 0} ≤ η := fun η hη ↦
     tight_of_tendsto_probabilityMeasure (measurable_estimatorSqrtNVec' h θ₀) (fun n ↦ rfl)
-      (estimator_sqrtN_joint_tendsto_multivariateGaussian h hY2 θ₀ hνk hv hNconv) η hη
+      (estimator_sqrtN_joint_tendsto_multivariateGaussian h θ₀ hνk hv hNconv) η hη
   -- The remainder equals `√n • φ(S)`.
   have hpt : ∀ n ω, targetSqrtNVec ν A Y θ₀ T n ω
       - WithLp.toLp 2 (G.mulVec (WithLp.ofLp (estimatorSqrtNVec ν A Y θ₀ n ω)))

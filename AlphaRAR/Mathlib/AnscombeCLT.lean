@@ -113,9 +113,7 @@ dividing by `√((1-ε) c_n)` and applying Markov it is `O(√ε)`, uniformly in
 (after the good
 event `|N_n - c_n| ≤ ε c_n` has probability `→ 1`) gives the claim. -/
 lemma tendstoInMeasure_window {S : ℕ → Ω → ℝ} {𝒢 : Filtration ℕ mΩ} (hM : Martingale S 𝒢 P)
-    (hM2 : ∀ n, Integrable (fun ω ↦ S n ω ^ 2) P)
-    (hd2 : ∀ n, Integrable (fun ω ↦ (S (n + 1) ω - S n ω) ^ 2) P)
-    (hcross : ∀ a b, Integrable (fun ω ↦ S a ω * S b ω) P)
+    (hM2 : ∀ n, MemLp (S n) 2 P)
     {v : ℝ} (hv0 : 0 ≤ v) (hinc : ∀ n, ∫ ω, (S (n + 1) ω - S n ω) ^ 2 ∂P ≤ v)
     {N : ℕ → Ω → ℕ} (hNmeas : ∀ n, Measurable (N n))
     {c : ℕ → ℕ} (hc : Tendsto (fun n ↦ (c n : ℕ)) atTop atTop)
@@ -185,7 +183,7 @@ lemma tendstoInMeasure_window {S : ℕ → Ω → ℝ} {𝒢 : Filtration ℕ m�
   have hmax : ∀ k, ∫⁻ ω, ENNReal.ofReal (W k ω) ∂P
       ≤ ENNReal.ofReal (4 * √(v * ((2 * L k : ℕ) : ℝ))) := fun k ↦ by
     simp only [hWdef]
-    exact mart_maximal hM hM2 hd2 hcross hinc (L := 2 * L k) (n := a k)
+    exact mart_maximal hM hM2 hinc (L := 2 * L k) (n := a k)
       (by have h := hLle k; simp only [hadef]; omega)
   -- The good event `G k = {|N_k - c_k| ≤ ε c_k}`; its complement has probability `→ 0`.
   set G : ℕ → Set Ω := fun k ↦ {ω | |(N k ω : ℝ) - (c k : ℝ)| ≤ ε * (c k : ℝ)} with hGdef
@@ -404,14 +402,7 @@ lemma tendsto_map_anscombe_iid {X : ℕ → Ω → ℝ} (hXmeas : ∀ i, Measura
     (hMart.stronglyAdapted m).measurable.mono ((natFiltLT Yc hYcmeas).le m) le_rfl
   have hΔ : ∀ n ω, S (n + 1) ω - S n ω = Yc n ω := fun n ω ↦ by
     simp only [hS, Finset.sum_apply, Finset.sum_range_succ]; ring
-  have hM2 : ∀ n, Integrable (fun ω ↦ S n ω ^ 2) P := fun n ↦
-    (memLp_two_iff_integrable_sq (hmemLpS n).aestronglyMeasurable).mp (hmemLpS n)
-  have hd2 : ∀ n, Integrable (fun ω ↦ (S (n + 1) ω - S n ω) ^ 2) P := fun n ↦ by
-    have he : (fun ω ↦ (S (n + 1) ω - S n ω) ^ 2) = fun ω ↦ Yc n ω ^ 2 := by
-      funext ω; rw [hΔ n ω]
-    rw [he]; exact hint2 n
-  have hcross : ∀ a b, Integrable (fun ω ↦ S a ω * S b ω) P := fun a b ↦
-    (hmemLpS a).integrable_mul (hmemLpS b)
+  have hM2 : ∀ n, MemLp (S n) 2 P := hmemLpS
   have hinc : ∀ n, ∫ ω, (S (n + 1) ω - S n ω) ^ 2 ∂P ≤ v := fun n ↦ by
     have he : (fun ω ↦ (S (n + 1) ω - S n ω) ^ 2) = fun ω ↦ (X n ω - μ) ^ 2 := by
       funext ω; rw [hΔ n ω]
@@ -444,7 +435,7 @@ lemma tendsto_map_anscombe_iid {X : ℕ → Ω → ℝ} (hXmeas : ∀ i, Measura
     refine h2.congr' (Filter.Eventually.of_forall fun n ↦ ?_)
     rw [Real.sqrt_div (Nat.cast_nonneg _), div_eq_mul_inv]
   -- Window remainder `E_n → 0` in probability.
-  have hwindow := tendstoInMeasure_window hMart hM2 hd2 hcross hv0 hinc hNmeas hc hreg
+  have hwindow := tendstoInMeasure_window hMart hM2 hv0 hinc hNmeas hc hreg
   -- Measurability of the three assembled pieces.
   have hA_meas : ∀ n, AEMeasurable (fun ω ↦ (√(c n : ℝ))⁻¹ *
       (∑ k ∈ Finset.range (c n), X k ω - (c n : ℝ) * μ)) P := fun n ↦

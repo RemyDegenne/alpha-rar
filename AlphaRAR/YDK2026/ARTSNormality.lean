@@ -83,8 +83,8 @@ vector `(√n(N_n/n - v), √n(ρ̂_n - v))` converges weakly to the block-Gauss
 (`proportion_tendsto_of_hitting`) and the non-sparsity are derived, and the proportion-deviation
 `√n(N_n/n - ρ̂_n) →ₚ 0` is discharged from `prop_dev_of_hitting` (part (i)). -/
 lemma clt_joint_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
-    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
     {K : ℝ≥0} (hlip : LipschitzWith K T)
@@ -116,11 +116,12 @@ lemma clt_joint_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T (fun k' ↦ (ν k')[id]) a) * Gᵀ)
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T (fun k' ↦ (ν k')[id]) a) * Gᵀ)),
           inferInstance⟩) := by
+  have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
   have hT : Continuous T := hlip.continuous
   -- The `thm:LLN` consistencies at the hitting time.
   have hcons : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
       (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 (fun k ↦ (ν k)[id])) :=
-    theta_consistent_of_hitting h hY2 θ₀ T hT hTnn hTsum α hα Q hthrottle hgs hTpos
+    theta_consistent_of_hitting h hνk θ₀ T hT hTnn hTsum α hα Q hthrottle hgs hTpos
   have hmem : ∀ k', (ν k')[id] ∈ attainableSet A Y (θ₀ k') k' := by
     obtain ⟨ω, hω⟩ := hcons.exists
     exact fun k' ↦ estimator_limit_mem_attainableSet k' (θ₀ k') (tendsto_pi_nhds.mp hω k')
@@ -128,7 +129,7 @@ lemma clt_joint_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
   have hNconv_arm : ∀ k', ∀ᵐ ω ∂P,
       Tendsto (fun n ↦ count (fun j ↦ armIndicator A k' j ω) n / (n : ℝ))
         atTop (𝓝 (T (fun k'' ↦ (ν k'')[id]) k')) := fun k' ↦
-    (proportion_tendsto_of_hitting h hY2 θ₀ T hT hTnn hTsum α hα Q hthrottle hgs hTpos k').mono
+    (proportion_tendsto_of_hitting h hνk θ₀ T hT hTnn hTsum α hα Q hthrottle hgs hTpos k').mono
       fun ω hω ↦ hω.congr fun n ↦ by rw [count_indicator_eq_pullCount]
   have hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (T (fun k' ↦ (ν k')[id]) a)) := ae_all_iff.mpr hNconv_arm
@@ -137,7 +138,7 @@ lemma clt_joint_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
       - targetSqrtNVec ν A Y θ₀ T n ω) atTop (fun _ ↦ 0) := by
     have hpd : ∀ k, IsLittleOpOne P (fun n ω ↦ ((pullCount A k n ω : ℝ)
         - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k) / √n) :=
-      fun k ↦ prop_dev_of_hitting h hY2 θ₀ T hTnn hTsum α hα hα1 hlip hTpos hcons hNconv_arm
+      fun k ↦ prop_dev_of_hitting h hνk θ₀ T hTnn hTsum α hα hα1 hlip hTpos hcons hNconv_arm
         Q hQmeas hthrottle hsmall_op k
     have hfun : (fun n ω ↦ propSqrtNVec A (T (fun k' ↦ (ν k')[id])) n ω
           - targetSqrtNVec ν A Y θ₀ T n ω)
@@ -166,7 +167,7 @@ lemma clt_joint_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     rw [hfun]
     exact tendstoInMeasure_toLp_of_forall_isLittleOpOne hpd
   exact clt_joint (v := T (fun k' ↦ (ν k')[id]))
-    h hY2 θ₀ hνk hv hNconv hT G hTderiv hcons hprop
+    h θ₀ hνk hv hNconv hT G hTderiv hcons hprop
 
 /-- **Joint central limit theorem for the aRTS design** (blueprint `thm:normality` part (ii)),
 fully self-contained. From the `aRTS` design bundle — an `IsAlgEnvSeq` sequence, Condition **A**
@@ -181,8 +182,8 @@ The `aRTS` instantiation of `clt_joint_of_hitting` at the last under-sampling ti
 `throttle_of_isARTS` (from `IsARTS`), the consistency smallness is `generic_small_of_hitting`, and
 the `o_p`-smallness is automatic (`N_ℓ - ℓ ρ̂_ℓ ≤ 0`, `preliminary_small`). -/
 theorem aRTS_clt_joint [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P)
-    (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1) (hARTS : IsARTS alg θ₀ T α)
     {K : ℝ≥0} (hlip : LipschitzWith K T)
@@ -203,7 +204,7 @@ theorem aRTS_clt_joint [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace �
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T (fun k' ↦ (ν k')[id]) a) * Gᵀ)
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T (fun k' ↦ (ν k')[id]) a) * Gᵀ)),
           inferInstance⟩) :=
-  clt_joint_of_hitting h hY2 hνk θ₀ T hTnn hTsum α hα hα1 hlip hTpos G hTderiv
+  clt_joint_of_hitting h hνk θ₀ T hTnn hTsum α hα hα1 hlip hTpos G hTderiv
     (aRTSUnder A Y θ₀ T) (fun k m ↦ measurableSet_aRTSUnder h θ₀ hlip.continuous k m)
     (fun k ↦ throttle_of_isARTS h hARTS k)
     (fun k ↦ Eventually.of_forall fun ω δ hδ ↦ generic_small_of_hitting

@@ -78,10 +78,11 @@ If `V_k = Var[id; ν k] > 0`, then on `{N_{n,k} → ∞}` the quadratic variatio
 tends to `∞`, and the bracket SLLN gives `Q_{n,k}/⟨Q_k⟩_n → 0`, whence
 `Q_{n,k}/N_{n,k} = V_k · (Q_{n,k}/⟨Q_k⟩_n) → 0`. If `V_k = 0`, then `𝔼[Q_{n,k}²] = V_k 𝔼[N] = 0`,
 so `Q_{n,k} = 0` a.s. for every `n`, and the ratio is identically `0`. -/
-lemma respMart_div_pullCount_ae_tendsto_zero
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (hY2 : ∀ n, MemLp (Y n) 2 P) :
+lemma respMart_div_pullCount_ae_tendsto_zero [Finite 𝓐]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (hνk : ∀ a, MemLp id 2 (ν a)) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop →
       Tendsto (fun n ↦ respMart ν A Y k n ω / (pullCount A k n ω : ℝ)) atTop (𝓝 0) := by
+  have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
   have hint : ∀ n, Integrable (Y n) P := fun n ↦ (hY2 n).integrable one_le_two
   have hV : (0 : ℝ) ≤ Var[id; ν k] := variance_nonneg _ _
   rcases hV.eq_or_lt with hV0 | hVpos
@@ -89,7 +90,7 @@ lemma respMart_div_pullCount_ae_tendsto_zero
     have hzero : ∀ n, respMart ν A Y k n =ᵐ[P] 0 := by
       intro n
       have hsq0 : ∫ ω, respMart ν A Y k n ω ^ 2 ∂P = 0 := by
-        rw [integral_respMart_sq_eq h k hY2 n, ← hV0, zero_mul]
+        rw [integral_respMart_sq_eq h k hνk n, ← hV0, zero_mul]
       have hnn : 0 ≤ᵐ[P] fun ω ↦ respMart ν A Y k n ω ^ 2 :=
         Eventually.of_forall fun ω ↦ sq_nonneg _
       have hintsq : Integrable (fun ω ↦ respMart ν A Y k n ω ^ 2) P :=
@@ -104,7 +105,7 @@ lemma respMart_div_pullCount_ae_tendsto_zero
     have hM0 : respMart ν A Y k 0 =ᵐ[P] 0 := by filter_upwards with ω; simp [respMart]
     have hM2 : ∀ n, MemLp (respMart ν A Y k n) 2 P := memLp_respMart h.measurable_action hY2 k
     have hbracket := martingale_div_predQuadVar_ae_tendsto_zero hM hM0 hM2
-    have hqv := ae_all_iff.mpr (fun n ↦ predQuadVar_respMart_eq h k hY2 n)
+    have hqv := ae_all_iff.mpr (fun n ↦ predQuadVar_respMart_eq h k hνk n)
     filter_upwards [hbracket, hqv] with ω hbω hqvω hN
     have hVne : Var[id; ν k] ≠ 0 := hVpos.ne'
     have hQinf : Tendsto (fun n ↦ predQuadVar (respMart ν A Y k)
@@ -130,13 +131,13 @@ From the exact error identity `θ̂_{n,k} - θ_k = (Q_{n,k} + (θ₀-θ_k))/(N_{
 (`estimator_sub_eq`), both fractions vanish: `Q_{n,k}/(N_{n,k}+1) → 0` because
 `Q_{n,k}/N_{n,k} → 0` (`respMart_div_pullCount_ae_tendsto_zero`) and `N_{n,k}/(N_{n,k}+1) → 1`,
 while the constant offset `(θ₀-θ_k)/(N_{n,k}+1) → 0` since `N_{n,k} → ∞`. -/
-lemma estimator_ae_tendsto_of_pullCount_atTop
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (hY2 : ∀ n, MemLp (Y n) 2 P)
+lemma estimator_ae_tendsto_of_pullCount_atTop [Finite 𝓐]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : ℝ) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop →
       Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
         (fun j ↦ Y j ω) θ₀ n) atTop (𝓝 ((ν k)[id])) := by
-  filter_upwards [respMart_div_pullCount_ae_tendsto_zero h k hY2] with ω hslln hN
+  filter_upwards [respMart_div_pullCount_ae_tendsto_zero h k hνk] with ω hslln hN
   have hslln' := hslln hN
   -- `N_{n,k} + 1 → ∞` and its inverse → 0.
   have hpc1 : Tendsto (fun n ↦ (pullCount A k n ω : ℝ) + 1) atTop atTop :=
@@ -248,13 +249,13 @@ the arm mean `θ_k = (ν k)[id]` on `\{N_{n,k}\to\infty\}` (Lemma
 `estimator_ae_tendsto_of_pullCount_atTop`), and to an eventually-attained value on
 `\{\sup_n N_{n,k}<\infty\}` (Lemma `exists_tendsto_estimator_of_not_pullCount_atTop`). The
 dichotomy is exhaustive because `N_{n,k}` is monotone in `n`. -/
-lemma estimator_ae_tendsto (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : ℝ) :
+lemma estimator_ae_tendsto [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : ℝ) :
     ∀ᵐ ω ∂P, ∃ L, Tendsto (fun n ↦ estimator
       (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) θ₀ n)
       atTop (𝓝 L) := by
   classical
-  filter_upwards [estimator_ae_tendsto_of_pullCount_atTop h k hY2 θ₀] with ω hω
+  filter_upwards [estimator_ae_tendsto_of_pullCount_atTop h k hνk θ₀] with ω hω
   by_cases hlim : Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop
   · exact ⟨(ν k)[id], hω hlim⟩
   · exact exists_tendsto_estimator_of_not_pullCount_atTop k θ₀ ω hlim
@@ -265,12 +266,12 @@ omit [DecidableEq 𝓐] in
 into a single a.s. limit vector `z : 𝓐 → ℝ`: almost surely there is `z` with
 `\hat\theta_{n,k}\to z_k` for every arm `k` simultaneously. This is the a.s. convergence
 `\hat\Params_n \to z` that Condition **B** then transports through the (continuous) target map. -/
-lemma estimator_ae_tendsto_pi [Countable 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ) :
+lemma estimator_ae_tendsto_pi [Finite 𝓐] [Countable 𝓐]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) :
     ∀ᵐ ω ∂P, ∃ z : 𝓐 → ℝ, ∀ k, Tendsto (fun n ↦ estimator
       (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) (θ₀ k) n)
       atTop (𝓝 (z k)) := by
-  filter_upwards [ae_all_iff.mpr fun k ↦ estimator_ae_tendsto h k hY2 (θ₀ k)] with ω hω
+  filter_upwards [ae_all_iff.mpr fun k ↦ estimator_ae_tendsto h k hνk (θ₀ k)] with ω hω
   choose z hz using hω
   exact ⟨z, hz⟩
 
@@ -282,14 +283,14 @@ positivity `u_k > 0` is the non-sparsity of Condition **B**, blueprint `lem:rho_
 arm `k` is sampled infinitely often (`all_arms_infinite`), so the dichotomy's first branch
 (`estimator_ae_tendsto_of_pullCount_atTop`) identifies the estimator limit as the true arm mean:
 `θ̂_{n,k} → θ_k = (ν k)[id]` a.s. -/
-lemma theta_consistent (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ) {u : Ω → 𝓐 → ℝ}
+lemma theta_consistent [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) {u : Ω → 𝓐 → ℝ}
     (hmatch : ∀ k, ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (u ω k)))
     (hpos : ∀ k, ∀ᵐ ω ∂P, 0 < u ω k) (k : 𝓐) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
       (fun j ↦ Y j ω) (θ₀ k) n) atTop (𝓝 ((ν k)[id])) := by
   filter_upwards [hmatch k, hpos k,
-    estimator_ae_tendsto_of_pullCount_atTop h k hY2 (θ₀ k)] with ω hmω hpω hestω
+    estimator_ae_tendsto_of_pullCount_atTop h k hνk (θ₀ k)] with ω hmω hpω hestω
   refine hestω ?_
   have hcount := all_arms_infinite (fun i k' ↦ armIndicator A k' i ω) k hpω
     (hmω.congr fun n ↦ by rw [count_indicator_eq_pullCount])
@@ -300,13 +301,13 @@ positive allocation-proportion limit for every arm, the estimator vector converg
 parameter: `θ̂_n → θ = ((ν k)[id])_k`. Bundles `theta_consistent` over the finitely many arms via
 `ae_all_iff` and `tendsto_pi_nhds`. This is the a.s. consistency the delta-method rate `rho_rate`
 consumes. -/
-lemma theta_consistent_pi [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ) {u : Ω → 𝓐 → ℝ}
+lemma theta_consistent_pi [Finite 𝓐] [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) {u : Ω → 𝓐 → ℝ}
     (hmatch : ∀ k, ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (u ω k)))
     (hpos : ∀ k, ∀ᵐ ω ∂P, 0 < u ω k) :
     ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
       (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 (fun k ↦ (ν k)[id])) := by
-  filter_upwards [ae_all_iff.mpr fun k ↦ theta_consistent h hY2 θ₀ hmatch hpos k] with ω hω
+  filter_upwards [ae_all_iff.mpr fun k ↦ theta_consistent h hνk θ₀ hmatch hpos k] with ω hω
   exact tendsto_pi_nhds.mpr hω
 
 /-- **Attainable set of the estimator** (blueprint `def:attainable`, closure form). The closure of
@@ -339,12 +340,12 @@ limit is
 lie in the attainable sets (`estimator_limit_mem_attainableSet`); `hTpos` makes `u` positive and
 continuity of `T` transports the convergence. This is the non-sparse refinement supplying the
 positivity `u_k > 0` identifying the estimator limit as the true parameter (`theta_consistent`). -/
-lemma rho_converges_pos [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
+lemma rho_converges_pos [Finite 𝓐] [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, (∀ k, 0 < u k) ∧ ∀ k, Tendsto (fun n ↦ T (fun k' ↦ estimator
       (fun j ↦ armIndicator A k' j ω) (fun j ↦ Y j ω) (θ₀ k') n) k) atTop (𝓝 (u k)) := by
-  filter_upwards [estimator_ae_tendsto_pi h hY2 θ₀] with ω hω
+  filter_upwards [estimator_ae_tendsto_pi h hνk θ₀] with ω hω
   obtain ⟨z, hz⟩ := hω
   refine ⟨T z, hTpos z (fun k ↦ estimator_limit_mem_attainableSet k (θ₀ k) (hz k)), fun k ↦ ?_⟩
   have hvec : Tendsto (fun n ↦ (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
@@ -358,8 +359,8 @@ consistency `hjoint` — for a.e. `ω` a common limit `u` with `N_{n,k}/n → u_
 sets), the shared limit `u` is positive: `u_k = T(z)_k > 0` where `z` is the estimator-vector limit.
 This turns the joint consistency into the *positive* proportion limit that identifies the estimator
 limit as the true parameter. -/
-lemma proportion_pos_of_condB [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
+lemma proportion_pos_of_condB [Finite 𝓐] [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hjoint : ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
       Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (u k)) ∧
@@ -367,7 +368,7 @@ lemma proportion_pos_of_condB [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (station
         (fun j ↦ Y j ω) (θ₀ k') n) k) atTop (𝓝 (u k))) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, (∀ k, 0 < u k) ∧
       ∀ k, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (u k)) := by
-  filter_upwards [hjoint, estimator_ae_tendsto_pi h hY2 θ₀] with ω hjω hzω
+  filter_upwards [hjoint, estimator_ae_tendsto_pi h hνk θ₀] with ω hjω hzω
   obtain ⟨u, hu⟩ := hjω
   obtain ⟨z, hz⟩ := hzω
   have hrho : ∀ k, Tendsto (fun n ↦ T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
@@ -385,13 +386,13 @@ lemma proportion_pos_of_condB [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (station
 existential form). Same as `theta_consistent` but taking the positive proportion limit as a per-`ω`
 existential `∃ u_k > 0, N_{n,k}/n → u_k`, which is the shape `proportion_pos_of_condB` produces —
 avoiding a global choice of the (random) limit. -/
-lemma theta_consistent_of_pos (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : ℝ) (k : 𝓐)
+lemma theta_consistent_of_pos [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : ℝ) (k : 𝓐)
     (hpp : ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧
       Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 uk)) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
       (fun j ↦ Y j ω) θ₀ n) atTop (𝓝 ((ν k)[id])) := by
-  filter_upwards [hpp, estimator_ae_tendsto_of_pullCount_atTop h k hY2 θ₀] with ω hppω hestω
+  filter_upwards [hpp, estimator_ae_tendsto_of_pullCount_atTop h k hνk θ₀] with ω hppω hestω
   obtain ⟨uk, hukpos, hlim⟩ := hppω
   refine hestω ?_
   have hcount := all_arms_infinite (fun i k' ↦ armIndicator A k' i ω) k hukpos
@@ -403,8 +404,9 @@ discharged). From the joint consistency `hjoint` and Condition **B**, the estima
 a.s. to the true parameter `θ̂_n → θ = ((ν k)[id])_k`: `proportion_pos_of_condB` makes the shared
 proportion limit positive, then `theta_consistent_of_pos` identifies each arm's limit as its
 mean. -/
-lemma theta_consistent_pi_of_condB [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
+lemma theta_consistent_pi_of_condB [Finite 𝓐] [Countable 𝓐]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hjoint : ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
       Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (u k)) ∧
@@ -412,11 +414,11 @@ lemma theta_consistent_pi_of_condB [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (st
         (fun j ↦ Y j ω) (θ₀ k') n) k) atTop (𝓝 (u k))) :
     ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
       (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 (fun k ↦ (ν k)[id])) := by
-  have hprop := proportion_pos_of_condB h hY2 θ₀ T hT hTpos hjoint
+  have hprop := proportion_pos_of_condB h hνk θ₀ T hT hTpos hjoint
   have hper : ∀ k, ∀ᵐ ω ∂P, Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
       (fun j ↦ Y j ω) (θ₀ k) n) atTop (𝓝 ((ν k)[id])) := by
     intro k
-    refine theta_consistent_of_pos h hY2 (θ₀ k) k ?_
+    refine theta_consistent_of_pos h hνk (θ₀ k) k ?_
     filter_upwards [hprop] with ω hpω
     obtain ⟨u, hupos, hulim⟩ := hpω
     exact ⟨u k, hupos k, hulim k⟩
@@ -431,12 +433,12 @@ For any continuous target map `T : (𝓐 → ℝ) → (𝓐 → ℝ)`, the plug-
 estimator vector (`estimator_ae_tendsto_pi`); continuity of `T` transports the convergence
 `\hat\Params_n \to z` (in the product topology) to `T(\hat\Params_n) \to T z`. The blueprint's
 non-sparse refinement `u \in (0,1)^K` needs the rest of Condition **B** and is deferred. -/
-lemma rho_converges [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hY2 : ∀ n, MemLp (Y n) 2 P) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T) :
+lemma rho_converges [Finite 𝓐] [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k, Tendsto (fun n ↦ T (fun k' ↦ estimator
       (fun j ↦ armIndicator A k' j ω) (fun j ↦ Y j ω) (θ₀ k') n) k)
       atTop (𝓝 (u k)) := by
-  filter_upwards [estimator_ae_tendsto_pi h hY2 θ₀] with ω hω
+  filter_upwards [estimator_ae_tendsto_pi h hνk θ₀] with ω hω
   obtain ⟨z, hz⟩ := hω
   refine ⟨T z, fun k ↦ ?_⟩
   have hvec : Tendsto (fun n ↦ (fun k' ↦ estimator

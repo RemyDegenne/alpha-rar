@@ -68,9 +68,7 @@ lemma martingale_shift (hM : Martingale M ℱ μ) (j : ℕ) :
 /-- **Doob `L²` maximal inequality, `L¹` form.** For a square-integrable martingale `M`,
 `∫⁻ (max_{k ≤ N} |M k|) ≤ 2√(E[M_N²])`. -/
 lemma lintegral_sup'_abs_le_two_mul_sqrt (hM : Martingale M ℱ μ)
-    (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
-    (hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
-    (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ) (N : ℕ) :
+    (hM2 : ∀ n, MemLp (M n) 2 μ) (N : ℕ) :
     ∫⁻ ω, ENNReal.ofReal ((range (N + 1)).sup' nonempty_range_add_one (fun k ↦ |M k ω|)) ∂μ
       ≤ ENNReal.ofReal (2 * √(∫ ω, M N ω ^ 2 ∂μ)) := by
   set Y : Ω → ℝ := fun ω ↦ (range (N + 1)).sup' nonempty_range_add_one (fun k ↦ |M k ω|) with hYdef
@@ -83,7 +81,7 @@ lemma lintegral_sup'_abs_le_two_mul_sqrt (hM : Martingale M ℱ μ)
   have hYnn : 0 ≤ᵐ[μ] Y := ae_of_all _ fun ω ↦
     le_trans (abs_nonneg (M 0 ω))
       (Finset.le_sup' (fun k ↦ |M k ω|) (mem_range.mpr (Nat.succ_pos N)))
-  have hsub := submartingale_sq hM hM2 hd2 hprod
+  have hsub := submartingale_sq hM hM2
   have hnn : (0 : ℕ → Ω → ℝ) ≤ fun n ω ↦ M n ω ^ 2 := fun n ω ↦ sq_nonneg _
   -- Inverse-square tail from the weak-type maximal inequality on `M²`.
   have htail : ∀ t : ℝ, 0 < t → μ {ω | t ≤ Y ω} ≤ ENNReal.ofReal (B / t ^ 2) := by
@@ -105,7 +103,7 @@ lemma lintegral_sup'_abs_le_two_mul_sqrt (hM : Martingale M ℱ μ)
     have hmax := maximal_ineq hsub hnn (ε := (t ^ 2).toNNReal) N
     have hle2 : (∫ ω in {ω | ((t ^ 2).toNNReal : ℝ)
         ≤ (range (N + 1)).sup' nonempty_range_add_one (fun k ↦ M k ω ^ 2)}, M N ω ^ 2 ∂μ) ≤ B :=
-      setIntegral_le_integral (hM2 N) (ae_of_all _ fun ω ↦ sq_nonneg _)
+      setIntegral_le_integral ((hM2 N).integrable_sq) (ae_of_all _ fun ω ↦ sq_nonneg _)
     rw [ENNReal.ofReal_div_of_pos (by positivity : (0 : ℝ) < t ^ 2),
       ENNReal.le_div_iff_mul_le (Or.inl (by simpa using ht.ne')) (Or.inl ENNReal.ofReal_ne_top),
       mul_comm]
@@ -130,9 +128,7 @@ Reduces to the forward Doob `L²` maximal inequality via the shifted martingale
 `S k = M (n-L+k) - M (n-L)`: since `M n - M (n-m) = S L - S (L-m)`, the backward max is
 `≤ 2·max_{k≤L}|S k|`, and `E[S_L²] ≤ C₀ L` by `integral_sq_le_of_increment_bound`. -/
 lemma mart_maximal (hM : Martingale M ℱ μ)
-    (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
-    (hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
-    (hcross : ∀ a b, Integrable (fun ω ↦ M a ω * M b ω) μ)
+    (hM2 : ∀ n, MemLp (M n) 2 μ)
     {C₀ : ℝ} (hinc : ∀ n, ∫ ω, (M (n + 1) ω - M n ω) ^ 2 ∂μ ≤ C₀) {L n : ℕ} (hLn : L ≤ n) :
     ∫⁻ ω, ENNReal.ofReal ((range (L + 1)).sup' nonempty_range_add_one
         (fun m ↦ |M n ω - M (n - m) ω|)) ∂μ
@@ -144,30 +140,14 @@ lemma mart_maximal (hM : Martingale M ℱ μ)
   set S : ℕ → Ω → ℝ := fun k ω ↦ M (j + k) ω - M j ω with hSdef
   have hSmart : Martingale S (shiftFiltration ℱ j) μ := martingale_shift hM j
   have hS0 : S 0 =ᵐ[μ] 0 := by filter_upwards with ω; simp [hSdef]
-  have hS2 : ∀ k, Integrable (fun ω ↦ S k ω ^ 2) μ := fun k ↦ by
-    have heq : (fun ω ↦ S k ω ^ 2)
-        = fun ω ↦ M (j + k) ω ^ 2 - 2 * (M (j + k) ω * M j ω) + M j ω ^ 2 := by
-      funext ω; simp only [hSdef]; ring
-    rw [heq]; exact ((hM2 (j + k)).sub ((hcross (j + k) j).const_mul 2)).add (hM2 j)
-  have hSd2 : ∀ k, Integrable (fun ω ↦ (S (k + 1) ω - S k ω) ^ 2) μ := fun k ↦ by
-    have heq : (fun ω ↦ (S (k + 1) ω - S k ω) ^ 2)
-        = fun ω ↦ (M (j + (k + 1)) ω - M (j + k) ω) ^ 2 := by funext ω; simp only [hSdef]; ring
-    rw [heq]; exact hd2 (j + k)
-  have hSprod : ∀ k, Integrable (S k * (S (k + 1) - S k)) μ := fun k ↦ by
-    have heq : (S k * (S (k + 1) - S k))
-        = fun ω ↦ M (j + k) ω * M (j + (k + 1)) ω - M (j + k) ω ^ 2
-            - M j ω * M (j + (k + 1)) ω + M j ω * M (j + k) ω := by
-      funext ω; simp only [hSdef, Pi.mul_apply, Pi.sub_apply]; ring
-    rw [heq]
-    exact (((hcross (j + k) (j + (k + 1))).sub (hM2 (j + k))).sub
-      (hcross j (j + (k + 1)))).add (hcross j (j + k))
+  have hS2 : ∀ k, MemLp (S k) 2 μ := fun k ↦ (hM2 (j + k)).sub (hM2 j)
   have hSinc : ∀ k, ∫ ω, (S (k + 1) ω - S k ω) ^ 2 ∂μ ≤ C₀ := fun k ↦ by
     have heq : (fun ω ↦ (S (k + 1) ω - S k ω) ^ 2)
         = fun ω ↦ (M (j + (k + 1)) ω - M (j + k) ω) ^ 2 := by funext ω; simp only [hSdef]; ring
     rw [heq]; exact hinc (j + k)
   have hSL2 : ∫ ω, S L ω ^ 2 ∂μ ≤ C₀ * L :=
-    integral_sq_le_of_increment_bound hSmart hS2 hS0 C₀ hSd2 hSprod hSinc L
-  have hdoob := lintegral_sup'_abs_le_two_mul_sqrt hSmart hS2 hSd2 hSprod L
+    integral_sq_le_of_increment_bound hSmart hS2 hS0 C₀ hSinc L
+  have hdoob := lintegral_sup'_abs_le_two_mul_sqrt hSmart hS2 L
   -- Measurability of the forward sup for pulling out the factor `2`.
   have hSsupmeas : Measurable (fun ω ↦
       (range (L + 1)).sup' nonempty_range_add_one (fun k ↦ |S k ω|)) :=
@@ -259,9 +239,7 @@ private lemma geom_dyadic_sum_le {L : ℕ} (hL : 0 < L) (jL j1 : ℕ) (hjL : L �
 square-integrable martingale `M` whose increments have second moment `≤ C₀`, and `0 < L ≤ n`,
 `∫⁻ (max_{L ≤ m ≤ n} |M n - M (n-m)| / m) ≤ 32√(C₀/L)`. -/
 lemma mart_maximal_dyadic (hM : Martingale M ℱ μ)
-    (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ)
-    (hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
-    (hcross : ∀ a b, Integrable (fun ω ↦ M a ω * M b ω) μ)
+    (hM2 : ∀ n, MemLp (M n) 2 μ)
     {C₀ : ℝ} (hC₀ : 0 ≤ C₀) (hinc : ∀ n, ∫ ω, (M (n + 1) ω - M n ω) ^ 2 ∂μ ≤ C₀)
     {L n : ℕ} (hL : 0 < L) (hLn : L ≤ n) :
     ∫⁻ ω, ENNReal.ofReal ((Finset.Icc L n).sup' (Finset.nonempty_Icc.mpr hLn)
@@ -327,7 +305,7 @@ lemma mart_maximal_dyadic (hM : Martingale M ℱ μ)
       simp only [hhdef]
       rw [ENNReal.ofReal_mul (by positivity)]
     rw [hstep]
-    have hmm := mart_maximal hM hM2 hd2 hcross hinc (L := L' j) (n := n)
+    have hmm := mart_maximal hM hM2 hinc (L := L' j) (n := n)
       (le_trans (min_le_right _ _) le_rfl)
     have hL'le : ((L' j : ℕ) : ℝ) ≤ (2:ℝ) ^ j := by
       have hnat : L' j ≤ 2 ^ j := le_trans (min_le_left (2 ^ j - 1) n) (Nat.sub_le _ _)
@@ -407,9 +385,7 @@ running maximum of the Euclidean norm of the increment vector satisfies
 `∫⁻ (max_{m ≤ L} ‖(M_k n - M_k (n-m))_k‖) ≤ (card ι)·4√(C₀ L)`. -/
 lemma mart_maximal_pi {ι : Type*} [Fintype ι] (M : ι → ℕ → Ω → ℝ)
     (hM : ∀ k, Martingale (M k) ℱ μ)
-    (hM2 : ∀ k n, Integrable (fun ω ↦ M k n ω ^ 2) μ)
-    (hd2 : ∀ k n, Integrable (fun ω ↦ (M k (n + 1) ω - M k n ω) ^ 2) μ)
-    (hcross : ∀ k a b, Integrable (fun ω ↦ M k a ω * M k b ω) μ)
+    (hM2 : ∀ k n, MemLp (M k n) 2 μ)
     {C₀ : ℝ} (hinc : ∀ k n, ∫ ω, (M k (n + 1) ω - M k n ω) ^ 2 ∂μ ≤ C₀) {L n : ℕ} (hLn : L ≤ n) :
     ∫⁻ ω, ENNReal.ofReal ((Finset.range (L + 1)).sup' nonempty_range_add_one
         (fun m ↦ √(∑ k, (M k n ω - M k (n - m) ω) ^ 2))) ∂μ
@@ -444,7 +420,7 @@ lemma mart_maximal_pi {ι : Type*} [Fintype ι] (M : ι → ℕ → Ω → ℝ)
     _ = ∑ k, ∫⁻ ω, ENNReal.ofReal (F k ω) ∂μ := lintegral_finsetSum _ (fun k _ ↦ hFmeas k)
     _ ≤ ∑ _k : ι, ENNReal.ofReal (4 * √(C₀ * L)) :=
         Finset.sum_le_sum (fun k _ ↦
-          mart_maximal (hM k) (hM2 k) (hd2 k) (hcross k) (hinc k) hLn)
+          mart_maximal (hM k) (hM2 k) (hinc k) hLn)
     _ = ENNReal.ofReal ((Fintype.card ι : ℝ) * (4 * √(C₀ * L))) := by
         rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, ← ENNReal.ofReal_natCast,
           ← ENNReal.ofReal_mul (Nat.cast_nonneg _)]
@@ -454,9 +430,7 @@ uniformly bounded increment second moments (`≤ C₀`), and `0 < L ≤ n`,
 `∫⁻ (max_{L ≤ m ≤ n} ‖(M_k n - M_k (n-m))_k‖ / m) ≤ (card ι)·32√(C₀/L)`. -/
 lemma mart_maximal_dyadic_pi {ι : Type*} [Fintype ι] (M : ι → ℕ → Ω → ℝ)
     (hM : ∀ k, Martingale (M k) ℱ μ)
-    (hM2 : ∀ k n, Integrable (fun ω ↦ M k n ω ^ 2) μ)
-    (hd2 : ∀ k n, Integrable (fun ω ↦ (M k (n + 1) ω - M k n ω) ^ 2) μ)
-    (hcross : ∀ k a b, Integrable (fun ω ↦ M k a ω * M k b ω) μ)
+    (hM2 : ∀ k n, MemLp (M k n) 2 μ)
     {C₀ : ℝ} (hC₀ : 0 ≤ C₀) (hinc : ∀ k n, ∫ ω, (M k (n + 1) ω - M k n ω) ^ 2 ∂μ ≤ C₀)
     {L n : ℕ} (hL : 0 < L) (hLn : L ≤ n) :
     ∫⁻ ω, ENNReal.ofReal ((Finset.Icc L n).sup' (Finset.nonempty_Icc.mpr hLn)
@@ -502,7 +476,7 @@ lemma mart_maximal_dyadic_pi {ι : Type*} [Fintype ι] (M : ι → ℕ → Ω �
     _ = ∑ k, ∫⁻ ω, ENNReal.ofReal (F k ω) ∂μ := lintegral_finsetSum _ (fun k _ ↦ hFmeas k)
     _ ≤ ∑ _k : ι, ENNReal.ofReal (32 * √(C₀ / L)) :=
         Finset.sum_le_sum (fun k _ ↦
-          mart_maximal_dyadic (hM k) (hM2 k) (hd2 k) (hcross k) hC₀ (hinc k) hL hLn)
+          mart_maximal_dyadic (hM k) (hM2 k) hC₀ (hinc k) hL hLn)
     _ = ENNReal.ofReal ((Fintype.card ι : ℝ) * (32 * √(C₀ / L))) := by
         rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, ← ENNReal.ofReal_natCast,
           ← ENNReal.ofReal_mul (Nat.cast_nonneg _)]

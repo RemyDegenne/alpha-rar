@@ -33,13 +33,11 @@ it to the `L²` Chebyshev inequality (`isBigOpOne_of_lintegral_sq_le`). The rate
 taken as `√(max n 1)` to keep it strictly positive, then transferred to `√n`
 (the two agree for `n ≥ 1`, and both vanish at `n = 0` since `M 0 = 0`). -/
 lemma isBigOpOne_martingale_div_sqrt [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
-    (hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ) (hM0 : M 0 =ᵐ[μ] 0)
+    (hM2 : ∀ n, MemLp (M n) 2 μ) (hM0 : M 0 =ᵐ[μ] 0)
     (σ2 : ℝ) (hσ2 : 0 ≤ σ2)
-    (hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ)
-    (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ)
     (hinc : ∀ n, ∫ ω, (M (n + 1) ω - M n ω) ^ 2 ∂μ ≤ σ2) :
     IsBigOpOne μ (fun n ω ↦ M n ω / √n) := by
-  have hgrow := integral_sq_le_of_increment_bound hM hM2 hM0 σ2 hd2 hprod hinc
+  have hgrow := integral_sq_le_of_increment_bound hM hM2 hM0 σ2 hinc
   set v : ℕ → ℝ := fun n ↦ √(max (n : ℝ) 1) with hv
   have hmax_pos : ∀ n, (0 : ℝ) < max (n : ℝ) 1 := fun n ↦
     lt_of_lt_of_le one_pos (le_max_right _ _)
@@ -52,7 +50,7 @@ lemma isBigOpOne_martingale_div_sqrt [IsFiniteMeasure μ] (hM : Martingale M ℱ
     intro n
     simp_rw [Real.enorm_eq_ofReal_abs, ← ENNReal.ofReal_pow (abs_nonneg _), sq_abs]
     have hnn : 0 ≤ᵐ[μ] fun ω ↦ (M n ω) ^ 2 := Eventually.of_forall fun ω ↦ sq_nonneg _
-    rw [← ofReal_integral_eq_lintegral_ofReal (hM2 n) hnn]
+    rw [← ofReal_integral_eq_lintegral_ofReal (hM2 n).integrable_sq hnn]
     apply ENNReal.ofReal_le_ofReal
     rw [hvsq n]
     rcases Nat.eq_zero_or_pos n with hn0 | hn1
@@ -91,7 +89,7 @@ bounded increments give all the integrability side conditions (`M n` is a.e. bou
 by `c n`, hence square-integrable) and the increment second moment bound
 `E[(ΔM)²] ≤ c² μ(univ)`. -/
 lemma isBigOpOne_of_bdd_increments [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (c : ℝ) (hc : 0 ≤ c)
+    (hM0 : M 0 =ᵐ[μ] 0) (c : ℝ)
     (hΔ : ∀ n, ∀ᵐ ω ∂μ, |M (n + 1) ω - M n ω| ≤ c) :
     IsBigOpOne μ (fun n ω ↦ M n ω / √n) := by
   have hmeasM : ∀ n, AEMeasurable (M n) μ := fun n ↦
@@ -112,25 +110,20 @@ lemma isBigOpOne_of_bdd_increments [IsFiniteMeasure μ] (hM : Martingale M ℱ �
       _ ≤ ∑ k ∈ Finset.range n, c := Finset.sum_le_sum fun k _ ↦ hΔω k
       _ = n * c := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
   -- integrability of `M n ²`, `(ΔM)²`, and the cross term.
-  have hM2 : ∀ n, Integrable (fun ω ↦ M n ω ^ 2) μ := fun n ↦
-    bdd_int _ (((n : ℝ) * c) ^ 2) ((hmeasM n).pow_const 2).aestronglyMeasurable
-      (by filter_upwards [hbdd n] with ω hb
-          rw [abs_of_nonneg (sq_nonneg _)]
-          exact sq_le_sq' (neg_le_of_abs_le hb) (le_of_abs_le hb))
+  have hM2 : ∀ n, MemLp (M n) 2 μ := fun n ↦
+    (memLp_two_iff_integrable_sq (hmeasM n).aestronglyMeasurable).mpr
+      (bdd_int _ (((n : ℝ) * c) ^ 2) ((hmeasM n).pow_const 2).aestronglyMeasurable
+        (by filter_upwards [hbdd n] with ω hb
+            rw [abs_of_nonneg (sq_nonneg _)]
+            exact sq_le_sq' (neg_le_of_abs_le hb) (le_of_abs_le hb)))
   have hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ := fun n ↦
     bdd_int _ (c ^ 2) (((hmeasM (n + 1)).sub (hmeasM n)).pow_const 2).aestronglyMeasurable
       (by filter_upwards [hΔ n] with ω hb
           rw [abs_of_nonneg (sq_nonneg _)]
           exact sq_le_sq' (neg_le_of_abs_le hb) (le_of_abs_le hb))
-  have hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ := fun n ↦ by
-    refine bdd_int _ ((n : ℝ) * c * c)
-      ((hmeasM n).mul ((hmeasM (n + 1)).sub (hmeasM n))).aestronglyMeasurable ?_
-    filter_upwards [hbdd n, hΔ n] with ω hb1 hb2
-    simp only [Pi.mul_apply, Pi.sub_apply, abs_mul]
-    exact mul_le_mul hb1 hb2 (abs_nonneg _) (mul_nonneg (Nat.cast_nonneg n) hc)
   -- increment second moment `≤ c² μ(univ)`.
   refine isBigOpOne_martingale_div_sqrt hM hM2 hM0 ((μ Set.univ).toReal * c ^ 2)
-    (mul_nonneg ENNReal.toReal_nonneg (sq_nonneg c)) hd2 hprod (fun n ↦ ?_)
+    (mul_nonneg ENNReal.toReal_nonneg (sq_nonneg c)) (fun n ↦ ?_)
   have hb : (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) ≤ᵐ[μ] fun _ ↦ c ^ 2 := by
     filter_upwards [hΔ n] with ω h
     exact sq_le_sq' (neg_le_of_abs_le h) (le_of_abs_le h)
