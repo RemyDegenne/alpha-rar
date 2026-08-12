@@ -5,6 +5,7 @@ Authors: Rémy Degenne
 -/
 module
 
+public import AlphaRAR.Mathlib.CondExp
 public import Mathlib.MeasureTheory.Function.ConditionalExpectation.CondJensen
 public import Mathlib.MeasureTheory.Function.ConditionalExpectation.PullOut
 public import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
@@ -663,6 +664,32 @@ lemma measurable_d (n i : ℕ) : Measurable (A.d n i) :=
 lemma integrable_sq (n i : ℕ) :
     Integrable (fun ω ↦ (A.d n i ω) ^ 2) P := (A.memLp n i).integrable_sq
 
+/-! ### Characterization of the cell variance
+
+`condVar` is *defined* as `P[d n i ² | 𝓕 n i]`, a formula. What it *is* — and the only thing about
+it that could be wrong — is which variable is averaged and against which σ-algebra. `IsCondExp`
+says that without naming `condExp`: `condVar n i` is the `𝓕 n i`-measurable function with the same
+integrals as `d n i ²` over `𝓕 n i`-sets, and nothing else is, up to a.e. equality. Which variable
+and which σ-algebra is then said by the existence theorem's statement, where it is checked. -/
+
+attribute [characterization property condVar "the conditional second moment of the cell increment \
+given the cell's own past — which increment and which σ-algebra is the entire content of \
+`condVar`"] IsCondExp
+
+/-- **The cell variance averages the squared increment over the cell's past** — the existence half
+of the characterization. -/
+@[characterization existence]
+lemma isCondExp_condVar [IsFiniteMeasure P] (n i : ℕ) :
+    IsCondExp P (A.𝓕 n i) (fun ω ↦ (A.d n i ω) ^ 2) (A.condVar n i) :=
+  isCondExp_condExp ((A.𝓕 n).le i) (A.integrable_sq n i)
+
+/-- **Nothing else does** — the uniqueness half: any `𝓕 n i`-measurable function with the integrals
+of `d n i ²` agrees a.e. with `condVar n i`. -/
+@[characterization uniqueness]
+lemma _root_.AlphaRAR.IsCondExp.ae_eq_condVar [IsFiniteMeasure P] {n i : ℕ} {g : Ω → ℝ}
+    (hg : IsCondExp P (A.𝓕 n i) (fun ω ↦ (A.d n i ω) ^ 2) g) : g =ᵐ[P] A.condVar n i :=
+  hg.ae_eq_condExp ((A.𝓕 n).le i) (A.integrable_sq n i)
+
 /-- **Uniform smallness of the conditional variances** (blueprint `lem:clt_max_var`):
 each cell variance is controlled by `ε²` plus the whole Lindeberg sum. -/
 @[specifies lindeberg "what the Lindeberg quantity buys, and the reason it is the right \
@@ -1047,18 +1074,18 @@ lemma partialVar_le_of_predVar_le {B : ℝ} {n : ℕ} (hB : A.predVar n ≤ᵐ[P
   filter_upwards [A.partialVar_mono n hj, hB] with ω h1 h2
   exact le_trans h1 h2
 
-/-- With bounded predictable variation, each squared conditional variance is integrable
-(it is dominated by `B · v_{n,j}`). -/
-@[fun_prop]
-lemma integrable_condVar_sq {B : ℝ} {n j : ℕ}
+/-- With bounded predictable variation, each conditional variance is in `L²`: `0 ≤ v_{n,j} ≤ B`
+a.e., so `v_{n,j}²` is dominated by the integrable `B · v_{n,j}`. -/
+lemma memLp_condVar {B : ℝ} {n j : ℕ}
     (hB : A.predVar n ≤ᵐ[P] fun _ ↦ B) (hj : j < A.k n) :
-    Integrable (fun ω ↦ (A.condVar n j ω) ^ 2) P := by
+    MemLp (A.condVar n j) 2 P := by
   have hb : A.condVar n j ≤ᵐ[P] fun _ ↦ B := (A.condVar_le_predVar hj).trans hB
   have haesm : AEStronglyMeasurable (A.condVar n j) P :=
     ((A.stronglyMeasurable_condVar n j).mono ((A.𝓕 n).le j)).aestronglyMeasurable
   have hdom : Integrable (fun ω ↦ B * A.condVar n j ω) P := by
     have : Integrable (A.condVar n j) P := integrable_condExp
     exact this.const_mul B
+  refine (memLp_two_iff_integrable_sq haesm).mpr ?_
   refine Integrable.mono' hdom ((continuous_pow 2).comp_aestronglyMeasurable haesm) ?_
   filter_upwards [hb, A.condVar_nonneg n j] with ω hbω hnnω
   simp only [Pi.zero_apply] at hnnω
@@ -1132,7 +1159,7 @@ lemma norm_integral_Zproc_sub_one_le [IsProbabilityMeasure P] (t : ℝ) (n : ℕ
       Integrable (fun ω ↦ ‖(P[A.Zproc t n (j + 1) - A.Zproc t n j | A.𝓕 n j]) ω‖) P :=
     fun j _ ↦ integrable_condExp.norm
   have hv2sum_int : Integrable (fun ω ↦ ∑ j ∈ Finset.range (A.k n), (A.condVar n j ω) ^ 2) P :=
-    integrable_finsetSum _ fun j hj ↦ A.integrable_condVar_sq hB (Finset.mem_range.mp hj)
+    integrable_finsetSum _ fun j hj ↦ (A.memLp_condVar hB (Finset.mem_range.mp hj)).integrable_sq
   have hrsum_int : Integrable (fun ω ↦ ∑ j ∈ Finset.range (A.k n),
       (P[fun ω ↦ min (2 * t ^ 2 * (A.d n j ω) ^ 2) (|t| ^ 3 * |A.d n j ω| ^ 3)
         | A.𝓕 n j]) ω) P :=
@@ -1241,7 +1268,7 @@ lemma integral_sum_condVar_sq_le [IsProbabilityMeasure P] {B : ℝ} {n : ℕ}
     (∫ ω, ∑ j ∈ Finset.range (A.k n), (A.condVar n j ω) ^ 2 ∂P)
       ≤ B * (ε ^ 2 + ∫ ω, A.lindeberg n ε ω ∂P) := by
   have hv2_int : Integrable (fun ω ↦ ∑ j ∈ Finset.range (A.k n), (A.condVar n j ω) ^ 2) P :=
-    integrable_finsetSum _ fun j hj ↦ A.integrable_condVar_sq hB (Finset.mem_range.mp hj)
+    integrable_finsetSum _ fun j hj ↦ (A.memLp_condVar hB (Finset.mem_range.mp hj)).integrable_sq
   have hbound_int : Integrable (fun ω ↦ (ε ^ 2 + A.lindeberg n ε ω) * B) P :=
     (((integrable_const (ε ^ 2)).add (A.integrable_lindeberg n ε)).mul_const B)
   have hle : (fun ω ↦ ∑ j ∈ Finset.range (A.k n), (A.condVar n j ω) ^ 2)

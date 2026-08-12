@@ -6,6 +6,7 @@ Authors: Rémy Degenne
 module
 
 public import AlphaRAR.Mathlib.Filtration
+public import AlphaRAR.Mathlib.Process
 public import AlphaRAR.YDK2026.Deterministic
 public import Mathlib.Order.CompletePartialOrder
 public import Mathlib.Probability.Martingale.Centering
@@ -37,6 +38,9 @@ probability, and `M` is a martingale for `ℱ.shiftDown`. At `n = 0` there is no
 
 * `AlphaRAR.martingale_assignMart`: `M` is a martingale (blueprint `lem:M_martingale`).
 * `AlphaRAR.assignMart_succ_sub`: the increment `M (n+1) - M n = X n - μ[X n | ℱ (n-1)]`.
+* `AlphaRAR.IsAssignMart`: the property that characterizes `M` — an `ℱ.shiftDown`-martingale, null
+  at `0`, leaving a predictable remainder in the count — together with the two theorems saying `M`
+  has it and nothing else does, up to indistinguishability.
 -/
 
 @[expose] public section
@@ -53,20 +57,6 @@ decomposition with respect to the previous-history filtration `ℱ.shiftDown` (b
 Its increments are `X n - μ[X n | ℱ (n-1)]`. -/
 noncomputable def assignMart (X : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) : ℕ → Ω → ℝ :=
   martingalePart (count X) ℱ.shiftDown μ
-
-lemma stronglyAdapted_count (hX : StronglyAdapted ℱ X) :
-    StronglyAdapted ℱ.shiftDown (count X) := by
-  intro n
-  apply Finset.stronglyMeasurable_sum
-  intro i hi
-  rw [Finset.mem_range] at hi
-  obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, by omega⟩
-  exact (hX i).mono (ℱ.mono (by omega : i ≤ m))
-
-@[fun_prop]
-lemma integrable_count (hX : ∀ n, Integrable (X n) μ) (n : ℕ) :
-    Integrable (count X n) μ :=
-  integrable_finsetSum' _ fun i _ ↦ hX i
 
 /-- **The assignment process is a martingale** (blueprint `lem:M_martingale`).
 For an adapted, integrable assignment indicator `X`, the martingale part `M` of the count process

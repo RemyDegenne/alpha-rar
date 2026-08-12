@@ -21,6 +21,22 @@ indexing convention of Definition~\ref{def:rar}, $p_{m,k}$ is the $k$-th
 component of the vector used to draw $X_m$.
 \end{definition}
 
+\begin{lemma}[$p_{m,k}$ is the conditional probability]\label{lem:cond_prob_unique}
+\lean{AlphaRAR.IsCondExp, AlphaRAR.isCondExp_aRTSSelProb,
+AlphaRAR.IsCondExp.ae_eq_aRTSSelProb}\leanok
+\uses{def:cond_prob, def:filtration}
+$p_{m,k}$ is a \emph{version} of $\E[X_{m,k}\mid\filt_{m-1}]$: it is $\filt_{m-1}$-measurable,
+locally integrable, and has the same integral as $X_{m,k}$ over every $\filt_{m-1}$-measurable set
+of finite measure. Anything with those three properties is a.s.\ equal to it. The content is the
+index: conditioning on $\filt_m$ instead would return $X_{m,k}$ itself, the assignment being known
+by then, and $p_{m,k}$ would cease to be a probability of anything.
+\end{lemma}
+
+\begin{proof}\leanok
+Existence and a.s.\ uniqueness of the conditional expectation, the latter being the fact that a
+$\filt_{m-1}$-measurable function is determined a.s.\ by its integrals over $\filt_{m-1}$-sets.
+\end{proof}
+
 \begin{definition}[Assignment martingale]\label{def:M}
 \lean{AlphaRAR.assignMG}\leanok
 \uses{def:cond_prob}
@@ -41,6 +57,25 @@ $M_{0,k}=0$ and bounded increments $|\Delta M_{m,k}| \le 1$.
 \uses{def:cond_prob}
 $\E[\Delta M_{m,k}\mid\filt_{m-1}] = \E[X_{m,k}\mid\filt_{m-1}] - p_{m,k} = 0$
 by Definition~\ref{def:cond_prob}, and $X_{m,k},p_{m,k}\in[0,1]$.
+\end{proof}
+
+\begin{lemma}[$M$ is the unique compensator of the count]\label{lem:M_unique}
+\lean{AlphaRAR.IsAssignMart, AlphaRAR.isAssignMart_assignMart,
+AlphaRAR.IsAssignMart.indistinguishable_assignMart}\leanok
+\uses{def:M, def:counts, def:filtration}
+$M_{\cdot,k}$ is the Doob martingale part of the count $N_{\cdot,k}$ against $(\filt_{n-1})$: it is
+an $(\filt_{n-1})$-martingale, $M_{0,k}=0$, and what it removes from the count — the accumulated
+selection probabilities $N_{\cdot,k}-M_{\cdot,k}$ — is predictable. Any process with those three
+properties is indistinguishable from it. Predictability is what makes the martingale property pin
+$M$ down: without it, adding any martingale null at $0$ would give another candidate.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:M_martingale, def:cond_prob}
+Existence is Lemma~\ref{lem:M_martingale} together with predictability of the Doob predictable
+part. For uniqueness, $N = M + (N-M)$ exhibits the count as a martingale plus a predictable process
+null at $0$, and that decomposition is unique up to null sets, one per time; the index set is
+countable, so the exceptional sets union to a null set.
 \end{proof}
 
 \begin{lemma}[The assignment martingale is $O_p(\sqrt n)$]\label{lem:M_Op}
@@ -298,4 +333,22 @@ in particular, for an $\aRTS$ design with $m \ge Km_0$, $p_{m+1,k} \le \alpha\ha
 By maximality of $\ell_{n,k}$, no $m$ with $\ell_{n,k} < m \le n$ satisfies
 $N_{m,k}/m \le \hat{\rho}_{m,k}$. The second statement is the throttling
 condition \eqref{eq:throttle}.
+\end{proof}
+
+\begin{lemma}[The hitting time is the last such time]\label{lem:hitting_unique}
+\lean{AlphaRAR.IsHitting, AlphaRAR.isHitting_hitting, AlphaRAR.IsHitting.eq_hitting}\leanok
+\uses{def:hitting}
+Three properties characterize $\ell_{n,k}$: it is $\le n$; no $m$ with $\ell_{n,k}<m\le n$ is
+under-sampled; and $\ell_{n,k}$ is itself under-sampled unless it is $0$. No other number has all
+three. The last clause is the empty-set convention of the Lean remark above, stated rather than
+left implicit — it is what gives $\ell_{n,k}$ a value when arm $k$ is never under-sampled up to
+$n$, and what keeps that value from being arbitrary.
+\end{lemma}
+
+\begin{proof}\leanok
+\uses{lem:hitting_basic, lem:hitting_sign}
+Existence is Lemmas~\ref{lem:hitting_basic} and~\ref{lem:hitting_sign} together with the fact that
+the maximum is attained whenever the set is nonempty. For uniqueness, of two candidates the smaller
+one's maximality rules the larger one out, which forces the larger to be $0$ and hence not larger
+after all.
 \end{proof}

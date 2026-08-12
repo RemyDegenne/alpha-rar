@@ -111,25 +111,12 @@ variable {𝓐 : Type*} [Fintype 𝓐] [DecidableEq 𝓐] [MeasurableSpace 𝓐]
   [Nonempty 𝓐]
 
 omit [MeasurableSpace 𝓐] [MeasurableSingletonClass 𝓐] [Nonempty 𝓐] in
-/-- The history-level counts sum to the number `n + 1` of observed samples. -/
-lemma sum_pullCount' (n : ℕ) (h : Iic n → 𝓐 × ℝ) : ∑ a, pullCount' n h a = n + 1 := by
-  simp_rw [pullCount'_eq_sum]
-  rw [Finset.sum_comm]
-  have hcol : ∀ s : Iic n, ∑ a, (if (h s).1 = a then (1 : ℕ) else 0) = 1 := by
-    intro s
-    rw [Finset.sum_ite_eq univ (h s).1 (fun _ ↦ (1 : ℕ))]
-    simp
-  simp_rw [hcol]
-  simp [Nat.card_Iic]
-
-omit [MeasurableSpace 𝓐] [MeasurableSingletonClass 𝓐] [Nonempty 𝓐] in
 /-- The history-level plug-in target is a probability vector: it sums to `1` (as `T` is
 simplex-valued, `hTsum`). -/
 lemma sum_histTarget (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hTsum : ∀ z, ∑ k, T z k = 1)
     (n : ℕ) (h : Iic n → 𝓐 × ℝ) : ∑ k, histTarget θ₀ T k n h = 1 := by
   simp only [histTarget]
   exact hTsum _
-
 
 /-- The `Algorithm` whose policy at each step draws the next arm from the history-dependent
 probability vector `p n h`, and whose first action is an arbitrary point mass (the burn-in plays no

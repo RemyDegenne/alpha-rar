@@ -515,23 +515,6 @@ lemma aRTSFE_no_starvation [Finite 𝓐] [DecidableEq 𝓐] {hsched : ℕ → �
   exact no_starvation_pathwise ω hh hfeω k
 
 omit [IsProbabilityMeasure P] in
-/-- If arm `k`'s pull count diverges along a path, the arm is chosen infinitely often. (Were the
-hit set finite, the count would be bounded by its cardinality.) -/
-lemma infinite_setOf_eq_of_pullCount_atTop [DecidableEq 𝓐] {k : 𝓐} {ω : Ω}
-    (hN : Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop) :
-    {j | A j ω = k}.Infinite := by
-  intro hfin
-  have hbound : ∀ n, (pullCount A k n ω : ℝ) ≤ (hfin.toFinset.card : ℝ) := by
-    intro n
-    have hle : pullCount A k n ω ≤ hfin.toFinset.card := by
-      rw [pullCount]
-      refine Finset.card_le_card fun s hs ↦ ?_
-      rw [Finset.mem_filter] at hs
-      exact hfin.mem_toFinset.mpr hs.2
-    exact_mod_cast hle
-  obtain ⟨n, hn⟩ := (hN.eventually_gt_atTop (hfin.toFinset.card : ℝ)).exists
-  exact absurd (hbound n) (not_le.mpr hn)
-
 omit [IsProbabilityMeasure P] in
 /-- **Forced exploration switches itself off under Condition B** (pathwise). If every arm has a
 *positive* limiting proportion `N_{n,k}/n → v_k > 0` and the schedule is `o(n)`, then eventually no

@@ -5,6 +5,7 @@ Authors: Rémy Degenne
 -/
 module
 
+public import AlphaRAR.Mathlib.CondExp
 public import AlphaRAR.YDK2026.ConsistencyMatching
 public import AlphaRAR.YDK2026.ResponseConsistency
 public meta import LeanSpec
@@ -70,6 +71,36 @@ of assigning arm `k` to patient `n` given the previous history `ℱ.shiftDown n 
 noncomputable def aRTSSelProb (A : ℕ → Ω → 𝓐) (k : 𝓐) (𝔽 : Filtration ℕ mΩ) (P : Measure Ω)
     (n : ℕ) (ω : Ω) : ℝ :=
   (P[armIndicator A k n | 𝔽.shiftDown n]) ω
+
+/-! #### Characterization of the selection probability
+
+`aRTSSelProb` is *defined* as `P[𝟙{A n = k} | ℱ.shiftDown n]`, a formula. What could be wrong with
+it is not the formula but the two choices inside it — which variable is averaged, and against which
+σ-algebra — and it is the second that the design turns on: conditioning on the history *strictly
+before* patient `n` is what makes `p_{n,k}` the probability of assigning arm `k` to that patient
+rather than a statement about an assignment already made. `IsCondExp` says exactly that, without
+naming `condExp`, and the existence theorem's statement is where the two choices are recorded and
+checked. -/
+
+attribute [characterization property aRTSSelProb "the conditional probability of assigning arm `k` \
+to patient `n` given the history strictly before that patient — the `shiftDown` is the content, \
+since against `ℱ n` the indicator is already known and the conditional expectation is itself"]
+  IsCondExp
+
+/-- **The selection probability averages the arm indicator over the previous history** — the
+existence half of the characterization. -/
+@[characterization existence]
+lemma isCondExp_aRTSSelProb (hA : ∀ n, Measurable (A n)) (k : 𝓐) (𝔽 : Filtration ℕ mΩ) (n : ℕ) :
+    IsCondExp P (𝔽.shiftDown n) (armIndicator A k n) (aRTSSelProb A k 𝔽 P n) :=
+  isCondExp_condExp (𝔽.shiftDown.le n) (integrable_armIndicator hA P k n)
+
+/-- **Nothing else does** — the uniqueness half: any `ℱ_{n-1}`-measurable function with the
+integrals of `𝟙{A n = k}` agrees a.e. with `p_{n,k}`. -/
+@[characterization uniqueness]
+lemma IsCondExp.ae_eq_aRTSSelProb (hA : ∀ n, Measurable (A n)) {k : 𝓐} {𝔽 : Filtration ℕ mΩ}
+    {n : ℕ} {g : Ω → ℝ} (hg : IsCondExp P (𝔽.shiftDown n) (armIndicator A k n) g) :
+    g =ᵐ[P] aRTSSelProb A k 𝔽 P n :=
+  hg.ae_eq_condExp (𝔽.shiftDown.le n) (integrable_armIndicator hA P k n)
 
 /-- The under-sampling event of arm `k` at time `m`: `N_{m,k} ≤ m ρ̂_{m,k}`. -/
 def aRTSUnder (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)

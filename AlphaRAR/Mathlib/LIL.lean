@@ -97,14 +97,12 @@ lemma exp_le_one_add_add_half_mul_sq {δ : ℝ} (hδ : 0 < δ) :
 lemma condExp_exp_increment_le_refined [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     {c θ δ η : ℝ} (hη : ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2)
     (hθ : |θ| * c ≤ η) (i : ℕ) (hb : ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
-    (hd2 : Integrable (fun ω ↦ (M (i + 1) ω - M i ω) ^ 2) μ)
+    (hd2 : MemLp (fun ω ↦ M (i + 1) ω - M i ω) 2 μ)
     (hprod : Integrable (M i * (M (i + 1) - M i)) μ) :
     μ[fun ω ↦ exp (θ * (M (i + 1) ω - M i ω)) | ℱ i]
       ≤ᵐ[μ] fun ω ↦ 1 + (1 + δ) / 2 * θ ^ 2
         * (predQuadVar M ℱ μ (i + 1) ω - predQuadVar M ℱ μ i ω) := by
-  have haesm_d : AEStronglyMeasurable (fun ω ↦ M (i + 1) ω - M i ω) μ :=
-    (((hM.stronglyMeasurable (i + 1)).mono (ℱ.le _)).sub
-      ((hM.stronglyMeasurable i).mono (ℱ.le _))).aestronglyMeasurable
+  have haesm_d : AEStronglyMeasurable (fun ω ↦ M (i + 1) ω - M i ω) μ := hd2.aestronglyMeasurable
   -- Pointwise refined bound `exp(θ ΔM) ≤ 1 + θ ΔM + ½(1+δ)θ² ΔM²`.
   have hptwise : (fun ω ↦ exp (θ * (M (i + 1) ω - M i ω)))
       ≤ᵐ[μ] fun ω ↦ 1 + θ * (M (i + 1) ω - M i ω)
@@ -124,21 +122,14 @@ lemma condExp_exp_increment_le_refined [IsProbabilityMeasure μ] (hM : Martingal
     rw [abs_mul]
     exact le_trans (mul_le_mul_of_nonneg_left hbω (abs_nonneg _)) hθ
   have hint_lin : Integrable (fun ω ↦ (1 : ℝ) + θ * (M (i + 1) ω - M i ω)) μ :=
-    (integrable_const 1).add (((hM.integrable (i + 1)).sub (hM.integrable i)).const_mul θ)
+    (integrable_const 1).add ((hd2.integrable one_le_two).const_mul θ)
   have hint_quad : Integrable (fun ω ↦ (1 + δ) / 2 * θ ^ 2 * (M (i + 1) ω - M i ω) ^ 2) μ :=
-    hd2.const_mul _
+    hd2.integrable_sq.const_mul _
   have hint_q : Integrable (fun ω ↦ 1 + θ * (M (i + 1) ω - M i ω)
       + (1 + δ) / 2 * θ ^ 2 * (M (i + 1) ω - M i ω) ^ 2) μ := hint_lin.add hint_quad
   -- Conditional expectation of the increment is `0`.
-  have hd0 : μ[fun ω ↦ M (i + 1) ω - M i ω | ℱ i] =ᵐ[μ] 0 := by
-    have h3 : μ[M i | ℱ i] = M i :=
-      condExp_of_stronglyMeasurable (ℱ.le i) (hM.stronglyMeasurable i) (hM.integrable i)
-    have h1 : μ[fun ω ↦ M (i + 1) ω - M i ω | ℱ i] =ᵐ[μ] μ[M (i + 1) | ℱ i] - μ[M i | ℱ i] :=
-      condExp_sub (hM.integrable (i + 1)) (hM.integrable i) _
-    rw [h3] at h1
-    have h2 : μ[M (i + 1) | ℱ i] =ᵐ[μ] M i := hM.condExp_ae_eq (Nat.le_succ i)
-    filter_upwards [h1, h2] with ω e1 e2
-    simp only [Pi.sub_apply, Pi.zero_apply, e1, e2, sub_self]
+  have hd0 : μ[fun ω ↦ M (i + 1) ω - M i ω | ℱ i] =ᵐ[μ] 0 :=
+    hM.condExp_sub_ae_eq_zero (Nat.le_succ i)
   -- Conditional expectation of the squared increment is `⟨M⟩_{i+1} - ⟨M⟩_i`.
   have hd2eq : μ[fun ω ↦ (M (i + 1) ω - M i ω) ^ 2 | ℱ i]
       =ᵐ[μ] fun ω ↦ predQuadVar M ℱ μ (i + 1) ω - predQuadVar M ℱ μ i ω :=
@@ -197,17 +188,12 @@ lemma supermartingale_expProcessRefined [IsProbabilityMeasure μ] (hM : Martinga
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
     Supermartingale (expProcessRefined M ℱ μ δ θ) ℱ μ := by
   classical
-  have : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
+  have hd2 : ∀ i, MemLp (fun ω ↦ M (i + 1) ω - M i ω) 2 μ := fun i ↦
+    memLp_increment (hM2 i) (hM2 (i + 1))
   have haesm_d : ∀ i, AEStronglyMeasurable (fun ω ↦ M (i + 1) ω - M i ω) μ := fun i ↦
-    (((hM.stronglyMeasurable (i + 1)).mono (ℱ.le _)).sub
-      ((hM.stronglyMeasurable i).mono (ℱ.le _))).aestronglyMeasurable
-  have hdmem : ∀ i, MemLp (fun ω ↦ M (i + 1) ω - M i ω) 2 μ := fun i ↦
-    MemLp.of_bound (haesm_d i) c (by filter_upwards [hb i] with ω h; rwa [Real.norm_eq_abs])
-  have hMmem : ∀ n, MemLp (M n) 2 μ := hM2
-  have hd2 : ∀ i, Integrable (fun ω ↦ (M (i + 1) ω - M i ω) ^ 2) μ :=
-    fun i ↦ (hdmem i).integrable_sq
+    (hd2 i).aestronglyMeasurable
   have hprod : ∀ i, Integrable (M i * (M (i + 1) - M i)) μ := fun i ↦
-    (hMmem i).integrable_mul ((hMmem (i + 1)).sub (hMmem i))
+    integrable_mul_increment (hM2 i) (hM2 (i + 1))
   have hMn : ∀ n, ∀ᵐ ω ∂μ, |M n ω| ≤ n * c := by
     intro n
     filter_upwards [ae_all_iff.mpr hb, hM0] with ω hball h0
@@ -310,7 +296,7 @@ martingale property `μ[ΔM_i | ℱ_i] = 0`, and `μ[(ΔM_i)² | ℱ_i] = ⟨M�
 (`predQuadVar_succ_sub_eq`). -/
 lemma condExp_exp_increment_le [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ) {c θ : ℝ}
     (hθ : |θ| * c ≤ 1) (i : ℕ) (hb : ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
-    (hd2 : Integrable (fun ω ↦ (M (i + 1) ω - M i ω) ^ 2) μ)
+    (hd2 : MemLp (fun ω ↦ M (i + 1) ω - M i ω) 2 μ)
     (hprod : Integrable (M i * (M (i + 1) - M i)) μ) :
     μ[fun ω ↦ Real.exp (θ * (M (i + 1) ω - M i ω)) | ℱ i]
       ≤ᵐ[μ] fun ω ↦ 1 + θ ^ 2 * (predQuadVar M ℱ μ (i + 1) ω - predQuadVar M ℱ μ i ω) := by
@@ -779,19 +765,8 @@ lemma ae_eventually_le_sqrt_nat_mul_log [IsProbabilityMeasure μ] (hM : Martinga
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
     ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop, M n ω ≤ C * √(n * Real.log n) := by
-  have : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
-  have haesm_d : ∀ i, AEStronglyMeasurable (fun ω ↦ M (i + 1) ω - M i ω) μ := fun i ↦
-    (((hM.stronglyMeasurable (i + 1)).mono (ℱ.le _)).sub
-      ((hM.stronglyMeasurable i).mono (ℱ.le _))).aestronglyMeasurable
-  have hdmem : ∀ i, MemLp (fun ω ↦ M (i + 1) ω - M i ω) 2 μ := fun i ↦
-    MemLp.of_bound (haesm_d i) c (by filter_upwards [hb i] with ω h; rwa [Real.norm_eq_abs])
-  have hMmem : ∀ n, MemLp (M n) 2 μ := hM2
-  have hd2 : ∀ i, Integrable (fun ω ↦ (M (i + 1) ω - M i ω) ^ 2) μ :=
-    fun i ↦ (hdmem i).integrable_sq
-  have hprod : ∀ i, Integrable (M i * (M (i + 1) - M i)) μ := fun i ↦
-    (hMmem i).integrable_mul ((hMmem (i + 1)).sub (hMmem i))
   filter_upwards [ae_eventually_le_sqrt_predQuadVar_mul_log hM hM0 hM2 hc hb hV,
-    predQuadVar_le_of_bound hM hd2 hprod hb, hV] with ω hCex hle hVω
+    predQuadVar_le_of_bound hM hb, hV] with ω hCex hle hVω
   obtain ⟨C, hC⟩ := hCex
   refine ⟨|C| * √(2 * c ^ 2), ?_⟩
   filter_upwards [hC, hVω.eventually_ge_atTop 1,

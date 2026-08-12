@@ -174,33 +174,18 @@ lemma martingale_genRespMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
   filter_upwards [hadd, hincr] with ω ha hin
   rw [ha, Pi.add_apply, congrFun hself ω, hin, Pi.zero_apply, add_zero]
 
-omit [IsMarkovKernel ν] [IsProbabilityMeasure P] in
-/-- The squared general-functional increment is integrable. -/
-@[fun_prop]
-lemma integrable_genRespMart_increment_sq {m : ℕ} (k : 𝓐) (hAmeas : Measurable (A m)) {g : ℝ → ℝ}
-    (hcent2 : Integrable (fun ω ↦ (g (Y m ω) - (ν k)[g]) ^ 2) P) :
-    Integrable (fun ω ↦ (armIndicator A k m ω
-      * (g (Y m ω) - (ν k)[g])) ^ 2) P := by
-  have heq : (fun ω ↦ (armIndicator A k m ω
-        * (g (Y m ω) - (ν k)[g])) ^ 2)
-      = {ω | A m ω = k}.indicator (fun ω ↦ (g (Y m ω) - (ν k)[g]) ^ 2) := by
-    funext ω
-    by_cases hω : ω ∈ {ω | A m ω = k}
-    · simp [armIndicator, Set.indicator_of_mem hω]
-    · simp [armIndicator, Set.indicator_of_notMem hω]
-  rw [heq]
-  exact hcent2.indicator (hAmeas (measurableSet_singleton k))
-
 /-- **Conditional second moment of the general-functional increment.** Conditioning on
 `filtrationAction i`, `(𝟙{A i = k}(g (Y i) - (ν k)[g]))²` has conditional expectation
 `𝟙{A i = k} · variance g (ν k)`: the indicator squares to itself and pulls out, and on `{A i = k}`
 the conditional second central moment of `g` is `∫ (g - (ν k)[g])² ∂(ν k) = variance g (ν k)`. -/
 lemma condExp_genRespMart_increment_sq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (i : ℕ) {g : ℝ → ℝ} (hg : StronglyMeasurable g)
-    (hcent2 : Integrable (fun ω ↦ (g (Y i ω) - (ν k)[g]) ^ 2) P) :
+    (hcent2 : MemLp (fun ω ↦ g (Y i ω)) 2 P) :
     P[fun ω ↦ (armIndicator A k i ω * (g (Y i ω) - (ν k)[g])) ^ 2
         | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]
       =ᵐ[P] fun ω ↦ armIndicator A k i ω * variance g (ν k) := by
+  have hcent2' : Integrable (fun ω ↦ (g (Y i ω) - (ν k)[g]) ^ 2) P :=
+    (hcent2.sub (memLp_const _)).integrable_sq
   let hA := h.measurable_action
   let hY := h.measurable_feedback
   let G := IsAlgEnvSeq.filtrationAction hA hY i
@@ -222,12 +207,12 @@ lemma condExp_genRespMart_increment_sq (h : IsAlgEnvSeq A Y alg (stationaryEnv �
       simp only [hc_def, armIndicator, Set.indicator]
       by_cases hω : ω ∈ {ω | A i ω = k} <;> simp [hω]
     rw [hform]
-    exact hcent2.indicator (hA i (measurableSet_singleton k))
+    exact hcent2'.indicator (hA i (measurableSet_singleton k))
   have hcondg : P[gg | G] =ᵐ[P] fun ω ↦ ∫ x, (g x - (ν k)[g]) ^ 2 ∂(ν (A i ω)) := by
     have hg2 : StronglyMeasurable (fun x : ℝ ↦ (g x - (ν k)[g]) ^ 2) :=
       (hg.sub stronglyMeasurable_const).pow 2
-    exact h.condExp_feedback_comp i hg2 hcent2
-  have hpull := condExp_mul_of_stronglyMeasurable_left hcG hcgint hcent2
+    exact h.condExp_feedback_comp i hg2 hcent2'
+  have hpull := condExp_mul_of_stronglyMeasurable_left hcG hcgint hcent2'
   filter_upwards [hpull, hcondg] with ω hp hcg
   change P[c * gg | G] ω = _
   rw [hp, Pi.mul_apply, hcg]
@@ -275,22 +260,19 @@ lemma predQuadVar_genRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
       =ᵐ[P] fun ω ↦ ∑ i ∈ Finset.range n,
         variance (g i) (ν k) * armIndicator A k i ω := by
   have hint : ∀ n, Integrable (fun ω ↦ g n (Y n ω)) P := fun n ↦ (hg2 n).integrable one_le_two
-  have hcent2 : ∀ n, Integrable (fun ω ↦ (g n (Y n ω) - (ν k)[g n]) ^ 2) P :=
-    fun n ↦ ((hg2 n).sub (memLp_const _)).integrable_sq
+  have hQ2 : ∀ n, MemLp (genRespMart ν A Y k g n) 2 P :=
+    memLp_genRespMart h.measurable_action hg2 k
   have hprod : ∀ n, Integrable (genRespMart ν A Y k g n
       * (genRespMart ν A Y k g (n + 1) - genRespMart ν A Y k g n)) P := fun n ↦
-    (memLp_genRespMart h.measurable_action hg2 k n).integrable_mul
-      ((memLp_genRespMart h.measurable_action hg2 k (n + 1)).sub
-        (memLp_genRespMart h.measurable_action hg2 k n))
+    integrable_mul_increment (hQ2 n) (hQ2 (n + 1))
+  have hd2 : ∀ m, MemLp
+      (fun ω ↦ genRespMart ν A Y k g (m + 1) ω - genRespMart ν A Y k g m ω) 2 P :=
+    fun m ↦ memLp_increment (hQ2 m) (hQ2 (m + 1))
   have hM := martingale_genRespMart h hg hint k
   have hdiff : ∀ m, (fun ω ↦ (genRespMart ν A Y k g (m + 1) ω - genRespMart ν A Y k g m ω) ^ 2)
       = fun ω ↦ (armIndicator A k m ω
         * (g m (Y m ω) - (ν k)[g m])) ^ 2 := by
     intro m; funext ω; rw [genRespMart_succ]; simp only [Pi.add_apply]; ring
-  have hd2 : ∀ m, Integrable
-      (fun ω ↦ (genRespMart ν A Y k g (m + 1) ω - genRespMart ν A Y k g m ω) ^ 2) P := by
-    intro m; rw [hdiff m]
-    exact integrable_genRespMart_increment_sq k (h.measurable_action m) (hcent2 m)
   have hkey : ∀ m, predQuadVar (genRespMart ν A Y k g)
           (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P (m + 1)
         - predQuadVar (genRespMart ν A Y k g)
@@ -300,7 +282,7 @@ lemma predQuadVar_genRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
     have h1 := predQuadVar_succ_sub_eq hM m (hd2 m) (hprod m)
     rw [hdiff m] at h1
     refine h1.trans ?_
-    refine (condExp_genRespMart_increment_sq h k m (hg m) (hcent2 m)).trans ?_
+    refine (condExp_genRespMart_increment_sq h k m (hg m) (hg2 m)).trans ?_
     filter_upwards with ω; ring
   induction n with
   | zero => filter_upwards with ω; simp [predQuadVar_zero]
@@ -840,9 +822,7 @@ lemma measure_action_and_tail_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
 lemma tsum_measure_action_and_tail_ne_top (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) :
     (∑' n : ℕ, P {ω | A n ω = k ∧ √n ≤ |Y n ω - (ν k)[id]|}) ≠ ∞ := by
-  have hint2 : Integrable (fun x ↦ (x - (ν k)[id]) ^ 2) (ν k) :=
-    (hν2.sub (memLp_const _)).integrable_sq
-  refine ne_top_of_le_ne_top (tsum_measure_abs_sub_ge_sqrt_ne_top ((ν k)[id]) hint2) ?_
+  refine ne_top_of_le_ne_top (tsum_measure_abs_sub_ge_sqrt_ne_top ((ν k)[id]) hν2) ?_
   exact ENNReal.tsum_le_tsum fun n ↦ measure_action_and_tail_le h k n
 
 /-- **The tail remainder is eventually constant** (blueprint `lem:trunc_tail_const`, sampled form).

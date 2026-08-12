@@ -154,11 +154,9 @@ lemma ae_eventually_abs_le_sqrt_of_identDistrib [IsProbabilityMeasure μ]
     ∀ᵐ ω ∂μ, ∀ᶠ j in atTop, |Y j ω| ≤ √(j : ℝ) := by
   set ρ : Measure ℝ := μ.map (Y 0) with hρ
   haveI : IsFiniteMeasure ρ := by rw [hρ]; infer_instance
-  have hρ2 : Integrable (fun x ↦ (x - 0) ^ 2) ρ := by
-    simp only [sub_zero]
-    rw [hρ, integrable_map_measure (g := fun x : ℝ ↦ x ^ 2) (by fun_prop)
-      (hmeas 0).aemeasurable]
-    exact hint2.integrable_sq
+  have hρ2 : MemLp (fun x ↦ x) 2 ρ := by
+    rw [hρ, memLp_map_measure_iff (by fun_prop) (hmeas 0).aemeasurable]
+    exact hint2
   have hfin : (∑' j : ℕ, μ {ω | √(j : ℝ) < |Y j ω|}) ≠ ∞ := by
     have hkey : ∀ j : ℕ, μ {ω | √(j : ℝ) < |Y j ω|} = ρ {x | √(j : ℝ) < |x - 0|} := by
       intro j
@@ -198,6 +196,49 @@ lemma stronglyMeasurable_natFiltLT {Y : ℕ → Ω → ℝ} (hY : ∀ i, Strongl
     StronglyMeasurable[(natFiltLT Y hY : Filtration ℕ m0) n] (Y i) :=
   (comap_measurable (Y i)).stronglyMeasurable.mono
     (le_iSup₂ (f := fun k (_ : k ∈ {j | j < n}) ↦ MeasurableSpace.comap (Y k) inferInstance) i hin)
+
+/-- **`natFiltLT` is the smallest such filtration.** Any filtration that already sees every
+strictly earlier variable contains it, since each `σ(Y j)` with `j < n` is below its level `n` and
+`natFiltLT` is the supremum of exactly those. -/
+lemma natFiltLT_le {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i)) {𝒢 : Filtration ℕ m0}
+    (h𝒢 : ∀ i n, i < n → StronglyMeasurable[𝒢 n] (Y i)) : (natFiltLT Y hY : Filtration ℕ m0) ≤ 𝒢 :=
+  fun n ↦ iSup₂_le fun j hj ↦ (h𝒢 j n hj).measurable.comap_le
+
+/-! #### Characterization
+
+The two `@[specifies]` claims above are the two halves of a single description, and together they
+are the whole of it: `natFiltLT Y hY` is the **least** filtration that sees every strictly earlier
+variable. Large enough is `stronglyMeasurable_natFiltLT`; not too large is `natFiltLT_le`, and it
+is minimality that carries the off-by-one — the filtrations seeing `Y i` for `i ≤ n` also see it
+for `i < n`, and it is only by being least that `natFiltLT` excludes `Y n` from level `n`. -/
+
+/-- **`𝒢` is the natural filtration strictly before `n`**: it sees every variable of strictly
+earlier index, and it is the smallest filtration that does. -/
+@[characterization property natFiltLT "the least filtration seeing every strictly earlier \
+variable — `Y i` is known at level `n` exactly when `i < n`"]
+structure IsNatFiltLT (Y : ℕ → Ω → ℝ) (𝒢 : Filtration ℕ m0) : Prop where
+  /-- `𝒢` is large enough: every strictly earlier variable is measurable at level `n`. This is
+  what makes the partial sums `S n = ∑_{j<n} Y j` adapted. -/
+  stronglyMeasurable : ∀ i n, i < n → StronglyMeasurable[𝒢 n] (Y i)
+  /-- `𝒢` is not too large: it is below every filtration with the previous property. Without
+  this the field above is satisfied by `Filtration.natural` too, and by `⊤`. -/
+  le : ∀ 𝒢' : Filtration ℕ m0, (∀ i n, i < n → StronglyMeasurable[𝒢' n] (Y i)) → 𝒢 ≤ 𝒢'
+
+/-- **`natFiltLT` sees the strict past and no more** — the existence half of the
+characterization. -/
+@[characterization existence]
+lemma isNatFiltLT_natFiltLT {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i)) :
+    IsNatFiltLT Y (natFiltLT Y hY : Filtration ℕ m0) where
+  stronglyMeasurable _ _ hin := stronglyMeasurable_natFiltLT hY hin
+  le _ h𝒢 := natFiltLT_le hY h𝒢
+
+/-- **Nothing else does** — the uniqueness half: a least element of an order is unique, so any
+filtration with the property *is* `natFiltLT Y hY`, on the nose rather than up to anything. -/
+@[characterization uniqueness]
+lemma IsNatFiltLT.eq_natFiltLT {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i))
+    {𝒢 : Filtration ℕ m0} (h𝒢 : IsNatFiltLT Y 𝒢) : 𝒢 = natFiltLT Y hY :=
+  le_antisymm (h𝒢.le _ fun _ _ hin ↦ stronglyMeasurable_natFiltLT hY hin)
+    (natFiltLT_le hY h𝒢.stronglyMeasurable)
 
 /-- The σ-algebra `σ(Y_n)` is independent of the past `𝒢_n = σ(Y_0,…,Y_{n-1})`, from the
 independence of `Y`. This is the disjoint-index instance of `indep_iSup_of_disjoint`. -/
@@ -270,15 +311,13 @@ lemma predQuadVar_iidSum_succ_sub [IsProbabilityMeasure μ] {Y : ℕ → Ω → 
       =ᵐ[μ] fun _ ↦ ∫ ω, Y n ω ^ 2 ∂μ := by
   have hint : ∀ i, Integrable (Y i) μ := fun i ↦ (hint2 i).integrable one_le_two
   set S : ℕ → Ω → ℝ := fun m ↦ ∑ j ∈ Finset.range m, Y j with hS
-  have hmemLp : ∀ i, MemLp (Y i) 2 μ := hint2
+  have hS2 : ∀ m, MemLp (S m) 2 μ := fun m ↦ memLp_finsetSum' _ fun j _ ↦ hint2 j
   have hM : Martingale S (natFiltLT Y hY) μ := martingale_iidSum hY hindep hint hcent
   have hΔ : ∀ ω, S (n + 1) ω - S n ω = Y n ω := fun ω ↦ by
     simp only [hS, Finset.sum_apply, Finset.sum_range_succ]; ring
-  have hd2 : Integrable (fun ω ↦ (S (n + 1) ω - S n ω) ^ 2) μ :=
-    (hint2 n).integrable_sq.congr (Filter.Eventually.of_forall fun ω ↦ by simp only [hΔ ω])
-  have hprod : Integrable (S n * (S (n + 1) - S n)) μ := by
-    rw [show S (n + 1) - S n = Y n from funext fun ω ↦ hΔ ω]
-    exact MemLp.integrable_mul (memLp_finsetSum' _ fun j _ ↦ hmemLp j) (hmemLp n)
+  have hd2 : MemLp (fun ω ↦ S (n + 1) ω - S n ω) 2 μ := by simpa only [hΔ] using hint2 n
+  have hprod : Integrable (S n * (S (n + 1) - S n)) μ :=
+    integrable_mul_increment (hS2 n) (hS2 (n + 1))
   refine (predQuadVar_succ_sub_eq hM n hd2 hprod).trans ?_
   rw [show (fun ω ↦ (S (n + 1) ω - S n ω) ^ 2) = fun ω ↦ Y n ω ^ 2 from
     funext fun ω ↦ by rw [hΔ ω]]
@@ -1107,13 +1146,10 @@ lemma ae_medium_div_weight_tendsto_zero [IsProbabilityMeasure μ] {Y : ℕ → �
       (∑ j ∈ Finset.range m, (mediumTrunc j (Y j ω) - ∫ x, mediumTrunc j (Y j x) ∂μ))
         / √(2 * ((m : ℝ) + 3) * log (log ((m : ℝ) + 3)))) atTop (𝓝 0) := by
   classical
-  have hHolder : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 :=
-    ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
   set M : ℕ → Ω → ℝ := fun n ↦ ∑ j ∈ Finset.range n,
     fun ω ↦ mediumTrunc j (Y j ω) - ∫ x, mediumTrunc j (Y j x) ∂μ with hMdef
   set 𝒢 : Filtration ℕ m0 := natFiltLT _ (stronglyMeasurable_centeredMedium (μ := μ) hY) with h𝒢
   have hM : Martingale M 𝒢 μ := martingale_centeredMedium hY hindep
-  have hM0 : M 0 =ᵐ[μ] 0 := by simp [hMdef]
   -- The weight `a m = √(2(m+3) log log(m+3))`.
   have hll : ∀ m : ℕ, 0 < log (log ((m : ℝ) + 3)) := fun m ↦ by
     refine Real.log_pos ?_
@@ -1227,7 +1263,7 @@ lemma ae_medium_div_weight_tendsto_zero [IsProbabilityMeasure μ] {Y : ℕ → �
       _ ≤ ∑' k, variance (fun ω ↦ mediumTrunc k (Y k ω)) μ / a (k + 1) ^ 2 :=
           hsummable.sum_le_tsum (Finset.range n)
             fun k _ ↦ div_nonneg (variance_nonneg _ _) (sq_nonneg _)
-  filter_upwards [martingale_div_weight_ae_tendsto_zero hM hM0 ha_pos ha_mono ha_top hSmem hbdd]
+  filter_upwards [martingale_div_weight_ae_tendsto_zero hM ha_pos ha_mono ha_top hSmem hbdd]
     with ω hω
   refine hω.congr (fun m ↦ ?_)
   simp only [hMdef, hadef, Finset.sum_apply]

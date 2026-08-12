@@ -6,6 +6,7 @@ Authors: Rémy Degenne
 module
 
 public import AlphaRAR.Mathlib.Convergence
+public import AlphaRAR.YDK2026.Count
 public import Mathlib.Algebra.BigOperators.Field
 public import Mathlib.Algebra.Order.Star.Real
 public import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
@@ -47,16 +48,6 @@ namespace AlphaRAR
 
 variable (X p ρ : ℕ → ℝ) (α : ℝ)
 
-/-- Allocation count of a fixed arm, `N n = ∑_{j<n} X j` (blueprint `def:counts`). Stated for a
-general `AddCommMonoid` so it serves both the deterministic per-path counts (`X : ℕ → ℝ`) and the
-process-level count (`X : ℕ → Ω → ℝ`, the assignment count process of `Assignment.lean`). -/
-def count {M : Type*} [AddCommMonoid M] (X : ℕ → M) (n : ℕ) : M := ∑ j ∈ range n, X j
-
-@[simp, specifies count "fixes the base of the count; with `count_succ` it determines every value, \
-and it records the 0-indexing convention: nothing has been counted before patient `0`"]
-lemma count_zero {M : Type*} [AddCommMonoid M] (X : ℕ → M) : count X 0 = 0 := by
-  simp [count]
-
 /-- Assignment martingale of a fixed arm, `M n = ∑_{j<n} (X j - p j)`
 (blueprint `def:M`). -/
 def assignMG (n : ℕ) : ℝ := ∑ j ∈ range n, (X j - p j)
@@ -69,14 +60,6 @@ of the count"]
 lemma count_eq (n : ℕ) : count X n = (∑ m ∈ range n, p m) + assignMG X p n := by
   simp only [count, assignMG, Finset.sum_sub_distrib]
   grind
-
-/-- Increment of the count: `N (n+1) = N n + X n`. -/
-@[specifies count "the step `n → n+1` adds patient `n`, so `count X n` covers patients \
-`0, …, n-1` — the half-open convention every index computation in the development relies on"]
-lemma count_succ {M : Type*} [AddCommMonoid M] (X : ℕ → M) (n : ℕ) :
-    count X (n + 1) = count X n + X n := by
-  unfold count
-  rw [Finset.sum_range_succ]
 
 /-- Increment of the assignment martingale: `M (n+1) = M n + (X n - p n)`. -/
 @[specifies assignMG "the increment pairs the indicator `X n` with the selection probability `p n` \
@@ -288,22 +271,6 @@ lemma diff_U_decomp {v : ℝ} (hρ : Tendsto ρ atTop (𝓝 v)) {ℓ : ℕ → �
         mul_le_mul_of_nonneg_left (by linarith [hfactor]) hdnn
     _ = ε * ((n : ℝ) - ℓ n) := by ring
 
-/-- **Counts sum to time** (blueprint `lem:counts_sum`).
-If the assignment vector sums to one at each time, then the arm counts sum to the
-time index. -/
-lemma counts_sum {ι : Type*} [Fintype ι] (Y : ℕ → ι → ℝ) (hY : ∀ j, ∑ k, Y j k = 1) (n : ℕ) :
-    (∑ k, count (fun j ↦ Y j k) n) = n := by
-  simp only [count]
-  rw [Finset.sum_comm]
-  simp only [hY, Finset.sum_const, Finset.card_range, nsmul_eq_mul, mul_one]
-
-/-- **Deviation simplex identity** (backbone of the `lem:prop_dev` reverse step). If the assignment
-vector and the target vector each sum to one, then the deviations `N_{n,k} - n r_k` sum to zero. -/
-lemma sum_count_sub_smul_eq_zero {ι : Type*} [Fintype ι] (Y : ℕ → ι → ℝ) (r : ι → ℝ)
-    (hY : ∀ j, ∑ k, Y j k = 1) (hr : ∑ k, r k = 1) (n : ℕ) :
-    ∑ k, (count (fun j ↦ Y j k) n - (n : ℝ) * r k) = 0 := by
-  rw [Finset.sum_sub_distrib, counts_sum Y hY n, ← Finset.mul_sum, hr, mul_one, sub_self]
-
 /-- Last under-sampling time (blueprint `def:hitting`): the largest `m ≤ n` at
 which the arm is under-sampled, encoded via `Nat.findGreatest` (which returns `0`
 when no such `m` exists, matching the blueprint's convention). -/
@@ -325,6 +292,54 @@ such time: nothing in `(hitting P n, n]` satisfies `P`"]
 lemma hitting_sign (P : ℕ → Prop) [DecidablePred P] {n m : ℕ}
     (hlt : hitting P n < m) (hle : m ≤ n) : ¬ P m :=
   Nat.findGreatest_is_greatest hlt hle
+
+/-! ### Characterization of the hitting time
+
+The two `@[specifies]` claims above are the halves of one description: `hitting P n` is the
+**greatest** `m ≤ n` satisfying `P`, and `0` when there is none. `IsHitting` states that, including
+the fallback, and it pins the value down exactly — a greatest element is unique, and the fallback
+branch is what settles the empty case rather than leaving it free. -/
+
+/-- **`m` is the last time up to `n` at which `P` holds**: `m ≤ n`, nothing in `(m, n]` satisfies
+`P`, and `m` itself satisfies `P` unless it is the fallback `0`. -/
+@[characterization property hitting "the greatest `m ≤ n` with `P m`, and `0` when there is none \
+— including the fallback, which is the convention a reader has to be told"]
+structure IsHitting (P : ℕ → Prop) (n m : ℕ) : Prop where
+  /-- `m` does not look past the horizon. -/
+  le : m ≤ n
+  /-- `m` is the *last* such time: nothing strictly after it, up to `n`, satisfies `P`. -/
+  greatest : ∀ j, m < j → j ≤ n → ¬ P j
+  /-- `m` is itself such a time, unless it is the fallback. Both branches are needed: without the
+  left one every non-hit would qualify, and without the right one there would be no value at all
+  when `P` fails throughout `[0, n]`. -/
+  hit_or_zero : P m ∨ m = 0
+
+/-- **The hitting time is the last such time** — the existence half of the characterization. -/
+@[characterization existence]
+lemma isHitting_hitting (P : ℕ → Prop) [DecidablePred P] (n : ℕ) : IsHitting P n (hitting P n) where
+  le := Nat.findGreatest_le n
+  greatest _ hlt hle := hitting_sign P hlt hle
+  hit_or_zero := by
+    rcases Nat.eq_zero_or_pos (hitting P n) with h | h
+    · exact Or.inr h
+    · obtain ⟨j, _, hjn, hj⟩ := Nat.findGreatest_pos.mp h
+      exact Or.inl (Nat.findGreatest_spec hjn hj)
+
+/-- **Nothing else is** — the uniqueness half: of two candidates the smaller one's maximality
+rules the larger out, which forces the larger to be the fallback `0` and hence not larger at all. -/
+@[characterization uniqueness]
+lemma IsHitting.eq_hitting {P : ℕ → Prop} [DecidablePred P] {n m : ℕ} (hm : IsHitting P n m) :
+    m = hitting P n := by
+  have hh := isHitting_hitting P n
+  by_contra hne
+  rcases Nat.lt_or_ge m (hitting P n) with hlt | hge
+  · rcases hh.hit_or_zero with hP | hz
+    · exact hm.greatest _ hlt hh.le hP
+    · omega
+  · have hlt : hitting P n < m := lt_of_le_of_ne hge (Ne.symm hne)
+    rcases hm.hit_or_zero with hP | hz
+    · exact hh.greatest _ hlt hm.le hP
+    · omega
 
 /-- **Key inequality** (blueprint `lem:preliminary_ineq`).
 

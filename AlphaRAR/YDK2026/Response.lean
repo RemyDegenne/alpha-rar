@@ -123,11 +123,13 @@ lemma condExp_respMart_increment (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
 `{A i = k}` the response's conditional second central moment is exactly the arm variance.
 Retaining the (`𝒢`-measurable) indicator is what turns the summed second moments into
 `V_k N_{n,k}`. -/
-lemma condExp_respMart_increment_sq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (i : ℕ)
-    (hint : Integrable (fun ω ↦ (Y i ω - (ν k)[id]) ^ 2) P) :
+lemma condExp_respMart_increment_sq [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (k : 𝓐) (i : ℕ) (hνk : ∀ a, MemLp id 2 (ν a)) :
     P[fun ω ↦ (armIndicator A k i ω * (Y i ω - (ν k)[id])) ^ 2
         | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]
       =ᵐ[P] fun ω ↦ armIndicator A k i ω * Var[id; ν k] := by
+  have hint2 : Integrable (fun ω ↦ (Y i ω - (ν k)[id]) ^ 2) P :=
+    ((h.memLp_feedback hνk i).sub (memLp_const _)).integrable_sq
   let hA := h.measurable_action
   let hY := h.measurable_feedback
   let G := IsAlgEnvSeq.filtrationAction hA hY i
@@ -151,14 +153,14 @@ lemma condExp_respMart_increment_sq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) 
       simp only [hc_def, armIndicator, Set.indicator]
       by_cases hω : ω ∈ {ω | A i ω = k} <;> simp [hω]
     rw [hform]
-    exact hint.indicator (hA i (measurableSet_singleton k))
+    exact hint2.indicator (hA i (measurableSet_singleton k))
   -- Conditional expectation of `g = (Y - θ_k)²` given `G` is the arm's second central moment.
   have hcondg : P[g | G] =ᵐ[P] fun ω ↦ ∫ x, (x - (ν k)[id]) ^ 2 ∂(ν (A i ω)) := by
     have hg2 : StronglyMeasurable (fun x : ℝ ↦ (x - (ν k)[id]) ^ 2) :=
       ((continuous_id.sub continuous_const).pow 2).stronglyMeasurable
-    exact h.condExp_feedback_comp i hg2 hint
+    exact h.condExp_feedback_comp i hg2 hint2
   -- Pull out the `G`-measurable indicator `c`, then evaluate on the arm event.
-  have hpull := condExp_mul_of_stronglyMeasurable_left hcG hcgint hint
+  have hpull := condExp_mul_of_stronglyMeasurable_left hcG hcgint hint2
   filter_upwards [hpull, hcondg] with ω hp hcg
   change P[c * g | G] ω = _
   rw [hp, Pi.mul_apply, hcg]
@@ -265,22 +267,6 @@ increment `V_k X_{n,k}` keeps the indicator because the current arm `A n` is `�
 (`condExp_respMart_increment_sq`).
 -/
 
-omit [IsMarkovKernel ν] [IsProbabilityMeasure P] in
-/-- The squared response-martingale increment is integrable (indicator bounded × integrable
-centered square). -/
-@[fun_prop]
-lemma integrable_respMart_increment_sq {m : ℕ} (k : 𝓐) (hAmeas : Measurable (A m))
-    (hcent2 : Integrable (fun ω ↦ (Y m ω - (ν k)[id]) ^ 2) P) :
-    Integrable (fun ω ↦ (armIndicator A k m ω * (Y m ω - (ν k)[id])) ^ 2) P := by
-  have heq : (fun ω ↦ (armIndicator A k m ω * (Y m ω - (ν k)[id])) ^ 2)
-      = {ω | A m ω = k}.indicator (fun ω ↦ (Y m ω - (ν k)[id]) ^ 2) := by
-    funext ω
-    by_cases hω : ω ∈ {ω | A m ω = k}
-    · simp [armIndicator, Set.indicator_of_mem hω]
-    · simp [armIndicator, Set.indicator_of_notMem hω]
-  rw [heq]
-  exact hcent2.indicator (hAmeas (measurableSet_singleton k))
-
 omit [IsMarkovKernel ν] in
 /-- Each response-martingale increment is in `L²` when the response is (Condition **A**): a
 bounded indicator times the `L²` centered response. -/
@@ -322,23 +308,18 @@ lemma predQuadVar_respMart_eq [DecidableEq 𝓐] [Finite 𝓐]
       =ᵐ[P] fun ω ↦ Var[id; ν k] * (pullCount A k n ω : ℝ) := by
   have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
   have hint : ∀ n, Integrable (Y n) P := fun n ↦ (hY2 n).integrable one_le_two
-  have hcent2 : ∀ n, Integrable (fun ω ↦ (Y n ω - (ν k)[id]) ^ 2) P :=
-    fun n ↦ ((hY2 n).sub (memLp_const _)).integrable_sq
+  have hQ2 : ∀ n, MemLp (respMart ν A Y k n) 2 P := memLp_respMart h.measurable_action hY2 k
   have hprod : ∀ n, Integrable (respMart ν A Y k n
       * (respMart ν A Y k (n + 1) - respMart ν A Y k n)) P := fun n ↦
-    (memLp_respMart h.measurable_action hY2 k n).integrable_mul
-      ((memLp_respMart h.measurable_action hY2 k (n + 1)).sub
-        (memLp_respMart h.measurable_action hY2 k n))
+    integrable_mul_increment (hQ2 n) (hQ2 (n + 1))
+  have hd2 : ∀ m, MemLp (fun ω ↦ respMart ν A Y k (m + 1) ω - respMart ν A Y k m ω) 2 P :=
+    fun m ↦ memLp_increment (hQ2 m) (hQ2 (m + 1))
   have hM := martingale_respMart h hint k
   -- The martingale increment `ΔQ` squares to the squared centered response.
   have hdiff : ∀ m, (fun ω ↦ (respMart ν A Y k (m + 1) ω - respMart ν A Y k m ω) ^ 2)
       = fun ω ↦ (armIndicator A k m ω
         * (Y m ω - (ν k)[id])) ^ 2 := by
     intro m; funext ω; rw [respMart_succ]; simp only [Pi.add_apply]; ring
-  have hd2 : ∀ m, Integrable
-      (fun ω ↦ (respMart ν A Y k (m + 1) ω - respMart ν A Y k m ω) ^ 2) P := by
-    intro m; rw [hdiff m]
-    exact integrable_respMart_increment_sq k (h.measurable_action m) (hcent2 m)
   -- Each compensator increment is `V_k · X_{m,k}`.
   have hkey : ∀ m, predQuadVar (respMart ν A Y k)
           (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P (m + 1)
@@ -349,7 +330,7 @@ lemma predQuadVar_respMart_eq [DecidableEq 𝓐] [Finite 𝓐]
     have h1 := predQuadVar_succ_sub_eq hM m (hd2 m) (hprod m)
     rw [hdiff m] at h1
     refine h1.trans ?_
-    refine (condExp_respMart_increment_sq h k m (hcent2 m)).trans ?_
+    refine (condExp_respMart_increment_sq h k m hνk).trans ?_
     filter_upwards with ω; ring
   induction n with
   | zero => filter_upwards with ω; simp [predQuadVar_zero]
@@ -429,11 +410,11 @@ lemma martingale_respMart_mul [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationary
 (`condExp_respMart_increment_sq`), so by the tower property the integral is `V_k` times the
 probability of assigning arm `k`, which is `≤ 1`. This is the increment bound feeding `cor:mart_Op`
 (`isBigOpOne_respMart_div_sqrt`). -/
-lemma integral_respMart_increment_sq_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
-    (n : ℕ) (hY2 : MemLp (Y n) 2 P) :
+lemma integral_respMart_increment_sq_le [Finite 𝓐]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ)
+    (hνk : ∀ a, MemLp id 2 (ν a)) :
     ∫ ω, (respMart ν A Y k (n + 1) ω - respMart ν A Y k n ω) ^ 2 ∂P ≤ Var[id; ν k] := by
-  have hcent2 : Integrable (fun ω ↦ (Y n ω - (ν k)[id]) ^ 2) P :=
-    (hY2.sub (memLp_const _)).integrable_sq
+  have hY2 : MemLp (Y n) 2 P := h.memLp_feedback hνk n
   have hdiff : (fun ω ↦ (respMart ν A Y k (n + 1) ω - respMart ν A Y k n ω) ^ 2)
       = fun ω ↦ (armIndicator A k n ω * (Y n ω - (ν k)[id])) ^ 2 := by
     funext ω; rw [respMart_succ]; simp only [Pi.add_apply]; ring
@@ -444,7 +425,7 @@ lemma integral_respMart_increment_sq_le (h : IsAlgEnvSeq A Y alg (stationaryEnv 
     h.measurable_action n (measurableSet_singleton k)
   have hσ2 : (0 : ℝ) ≤ Var[id; ν k] := variance_nonneg _ _
   rw [hdiff, ← integral_condExp hGle,
-    integral_congr_ae (condExp_respMart_increment_sq h k n hcent2),
+    integral_congr_ae (condExp_respMart_increment_sq h k n hνk),
     integral_mul_const (Var[id; ν k])]
   simp only [armIndicator]
   rw [integral_indicator_const (1 : ℝ) hset, smul_eq_mul, mul_one]
@@ -466,8 +447,6 @@ lemma isBigOpOne_respMart_div_sqrt [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stati
     IsBigOpOne P (fun n ω ↦ respMart ν A Y k n ω / √n) := by
   have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
   have hint : ∀ n, Integrable (Y n) P := fun n ↦ (hY2 n).integrable one_le_two
-  have hcent2 : ∀ n, Integrable (fun ω ↦ (Y n ω - (ν k)[id]) ^ 2) P :=
-    fun n ↦ ((hY2 n).sub (memLp_const _)).integrable_sq
   -- The martingale increment `ΔQ` squares to the squared centered response.
   have hdiff : ∀ m, (fun ω ↦ (respMart ν A Y k (m + 1) ω - respMart ν A Y k m ω) ^ 2)
       = fun ω ↦ (armIndicator A k m ω
@@ -479,7 +458,7 @@ lemma isBigOpOne_respMart_div_sqrt [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stati
   have hM0 : respMart ν A Y k 0 =ᵐ[P] 0 := by filter_upwards with ω; simp [respMart]
   have hσ2 : (0 : ℝ) ≤ Var[id; ν k] := variance_nonneg _ _
   have hinc : ∀ n, ∫ ω, (respMart ν A Y k (n + 1) ω - respMart ν A Y k n ω) ^ 2 ∂P
-      ≤ Var[id; ν k] := fun n ↦ integral_respMart_increment_sq_le h k n (hY2 n)
+      ≤ Var[id; ν k] := fun n ↦ integral_respMart_increment_sq_le h k n hνk
   exact isBigOpOne_martingale_div_sqrt hM hM2 hM0 (Var[id; ν k]) hσ2 hinc
 
 end AlphaRAR

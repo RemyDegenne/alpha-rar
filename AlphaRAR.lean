@@ -3,7 +3,9 @@ module  -- shake: keep-all --deprecated_module: ignore
 public import AlphaRAR.LeanMachineLearning.ArmIndicator
 public import AlphaRAR.LeanMachineLearning.Filtration
 public import AlphaRAR.LeanMachineLearning.IsAlgEnvSeq
+public import AlphaRAR.LeanMachineLearning.PullCount
 public import AlphaRAR.Mathlib.AnscombeCLT
+public import AlphaRAR.Mathlib.CondExp
 public import AlphaRAR.Mathlib.Convergence
 public import AlphaRAR.Mathlib.CramerWold
 public import AlphaRAR.Mathlib.DeviationBound
@@ -22,6 +24,7 @@ public import AlphaRAR.Mathlib.MartingaleMaximal
 public import AlphaRAR.Mathlib.MartingaleRate
 public import AlphaRAR.Mathlib.MartingaleSLLN
 public import AlphaRAR.Mathlib.MultivariateGaussianMap
+public import AlphaRAR.Mathlib.Process
 public import AlphaRAR.Mathlib.Projection
 public import AlphaRAR.Mathlib.PropDev
 public import AlphaRAR.Mathlib.QuadraticVariation
@@ -41,6 +44,7 @@ public import AlphaRAR.YDK2026.ARTSRates
 public import AlphaRAR.YDK2026.Assignment
 public import AlphaRAR.YDK2026.AssignmentRate
 public import AlphaRAR.YDK2026.ConsistencyMatching
+public import AlphaRAR.YDK2026.Count
 public import AlphaRAR.YDK2026.Deterministic
 public import AlphaRAR.YDK2026.ForcedExploration
 public import AlphaRAR.YDK2026.JointCLT

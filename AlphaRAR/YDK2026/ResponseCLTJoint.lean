@@ -215,8 +215,8 @@ lemma condExp_sq_wIncr [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν)
       = ∑ a, (fun ω ↦ w a ^ 2 * (respIncr ν A Y a i ω) ^ 2) := by
     funext ω; rw [sq_wIncr, Finset.sum_apply]
   have hint : ∀ a, Integrable (fun ω ↦ w a ^ 2 * (respIncr ν A Y a i ω) ^ 2) P := fun a ↦
-    (integrable_respMart_increment_sq a (h.measurable_action i)
-      (((hY2 i).sub (memLp_const _)).integrable_sq)).const_mul (w a ^ 2)
+    ((memLp_respMart_increment a (h.measurable_action i) (hY2 i)).integrable_sq).const_mul
+      (w a ^ 2)
   have hcs := condExp_finsetSum (μ := P) (s := (Finset.univ : Finset 𝓐))
     (f := fun a ω ↦ w a ^ 2 * (respIncr ν A Y a i ω) ^ 2) (fun a _ ↦ hint a)
     (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i)
@@ -226,7 +226,7 @@ lemma condExp_sq_wIncr [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν)
     filter_upwards [condExp_const_mul (P := P)
       (m := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i)
       (w a ^ 2) (fun ω ↦ (respIncr ν A Y a i ω) ^ 2),
-      condExp_respMart_increment_sq h a i (((hY2 i).sub (memLp_const _)).integrable_sq)]
+      condExp_respMart_increment_sq h a i hνk]
       with ω h1 h2
     rw [h1, show (P[fun ω ↦ (respIncr ν A Y a i ω) ^ 2
       | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]) ω

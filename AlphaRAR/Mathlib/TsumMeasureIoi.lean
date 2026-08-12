@@ -5,6 +5,7 @@ Authors: Rémy Degenne
 -/
 module
 
+public import Mathlib.MeasureTheory.Function.L2Space
 public import Mathlib.MeasureTheory.Integral.Bochner.Basic
 
 /-!
@@ -77,19 +78,20 @@ lemma tsum_measure_Ioi_ne_top {Ω : Type*} {mΩ : MeasurableSpace Ω} {μ : Meas
   exact ENNReal.add_ne_top.mpr ⟨ENNReal.ofReal_ne_top, measure_ne_top _ _⟩
 
 /-- **Summable truncation tail** at the law level (blueprint `lem:trunc_tail_summable`).
-For a finite measure `ρ` on `ℝ` with finite second central moment `∫ (x-θ)² ∂ρ < ∞`,
+For a finite measure `ρ` on `ℝ` with finite second moment,
 `∑' i, ρ {x : √i < |x - θ|} < ∞`. Since `√i < |x-θ| ⟺ i < (x-θ)²`, this is
 `tsum_measure_Ioi_ne_top` for `X = (· - θ)²`. Applied to a reward law `ρ = ν k` (with
 `θ = θ_k`) this bounds `∑_i ν_k(|· - θ_k| > √i)`. -/
 lemma tsum_measure_abs_sub_gt_sqrt_ne_top {ρ : Measure ℝ} [IsFiniteMeasure ρ] (θ : ℝ)
-    (hρ2 : Integrable (fun x ↦ (x - θ) ^ 2) ρ) :
+    (hρ2 : MemLp (fun x ↦ x) 2 ρ) :
     (∑' i : ℕ, ρ {x | √i < |x - θ|}) ≠ ∞ := by
   have hset : ∀ i : ℕ, {x | √i < |x - θ|} = {x | (i : ℝ) < (x - θ) ^ 2} := fun i ↦ by
     ext x
     rw [Set.mem_ofPred_eq, Set.mem_ofPred_eq, ← Real.sqrt_sq_eq_abs,
       Real.sqrt_lt_sqrt_iff (Nat.cast_nonneg i)]
   simp_rw [hset]
-  exact tsum_measure_Ioi_ne_top (by fun_prop) hρ2 fun x ↦ sq_nonneg _
+  exact tsum_measure_Ioi_ne_top (by fun_prop) ((hρ2.sub (memLp_const _)).integrable_sq)
+    fun x ↦ sq_nonneg _
 
 /-- **Summable truncation tail with the closed window.** The `≤` variant of
 `tsum_measure_abs_sub_gt_sqrt_ne_top`: `∑' i, ρ {x : √i ≤ |x - θ|} < ∞`. This is what is needed for
@@ -98,7 +100,7 @@ left-open window `Ioc (-A) A`, so a value *equal* to `√i` in absolute value ca
 window. Derived from the strict version by shifting the index: for `i ≥ 1`,
 `√i ≤ |x-θ| ⟹ √(i-1) < |x-θ|`, and the `i = 0` term is `ρ` of a set, hence finite. -/
 lemma tsum_measure_abs_sub_ge_sqrt_ne_top {ρ : Measure ℝ} [IsFiniteMeasure ρ] (θ : ℝ)
-    (hρ2 : Integrable (fun x ↦ (x - θ) ^ 2) ρ) :
+    (hρ2 : MemLp (fun x ↦ x) 2 ρ) :
     (∑' i : ℕ, ρ {x | √i ≤ |x - θ|}) ≠ ∞ := by
   have hbound : ∀ i : ℕ,
       ρ {x | √(↑(i + 1)) ≤ |x - θ|} ≤ ρ {x | √i < |x - θ|} := by

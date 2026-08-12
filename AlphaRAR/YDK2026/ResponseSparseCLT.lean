@@ -38,13 +38,6 @@ variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
   {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
   {P : Measure Ω} [IsProbabilityMeasure P]
 
-/-- The pull count `N_{n,k} = #\{s<n : A_s = k\}` is measurable. -/
-lemma measurable_pullCount (hA : ∀ s, Measurable (A s)) (k : 𝓐) (n : ℕ) :
-    Measurable (fun ω ↦ pullCount A k n ω) := by
-  simp only [pullCount, Finset.card_filter]
-  exact Finset.measurable_sum _ fun s _ ↦
-    Measurable.ite ((measurableSet_singleton k).preimage (hA s)) measurable_const measurable_const
-
 /-- The self-normalized response martingale `ω ↦ (√N_{n,k})⁻¹ Q_{n,k}` is measurable. -/
 lemma measurable_respSelfNorm (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
     Measurable (fun ω ↦ (√(pullCount A k n ω : ℝ))⁻¹ * respMart ν A Y k n ω) :=

@@ -102,13 +102,6 @@ lemma histTarget_eq (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     pullCount_add_one_eq_pullCount' (R' := Y)
   rw [estimator_eq, hsr, hpc]
 
-/-- The process count `N_{n+1,k}` equals the history-level count on the history up to time `n`. -/
-lemma histCount_eq (k : 𝓐) (n : ℕ) (ω : Ω) :
-    count (fun j ↦ armIndicator A k j ω) (n + 1) = (pullCount' n (history A Y n ω) k : ℝ) := by
-  have hpc : pullCount A k (n + 1) ω = pullCount' n (history A Y n ω) k :=
-    pullCount_add_one_eq_pullCount' (R' := Y)
-  rw [count_indicator_eq_pullCount, hpc]
-
 /-! ### The selection probability is the policy evaluated on the history -/
 
 omit [DecidableEq 𝓐] in

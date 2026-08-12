@@ -54,13 +54,6 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
 
 /-! ### Bridge lemmas: deterministic estimator core ↔ probabilistic objects -/
 
-/-- The deterministic count of the assignment-indicator sequence `𝟙{A · = k}` at a fixed
-path `ω` equals the (real cast of the) pull count `N_{n,k}` of arm `k`. -/
-lemma count_indicator_eq_pullCount (k : 𝓐) (n : ℕ) (ω : Ω) :
-    count (fun j ↦ armIndicator A k j ω) n
-      = (pullCount A k n ω : ℝ) :=
-  sum_range_armIndicator_eq_pullCount A k n ω
-
 omit [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] [IsMarkovKernel ν] in
 /-- The deterministic response martingale `respMG` of the assignment-indicator sequence
 `𝟙{A · = k}` and response `Y · ω`, centered at the arm mean `(ν k)[id]`, equals the
@@ -106,9 +99,8 @@ lemma respMart_div_pullCount_ae_tendsto_zero [Finite 𝓐]
     exact tendsto_const_nhds
   · -- Nondegenerate case `V_k > 0`: transport the bracket SLLN through `⟨Q_k⟩ = V_k N`.
     have hM := martingale_respMart h hint k
-    have hM0 : respMart ν A Y k 0 =ᵐ[P] 0 := by filter_upwards with ω; simp [respMart]
     have hM2 : ∀ n, MemLp (respMart ν A Y k n) 2 P := memLp_respMart h.measurable_action hY2 k
-    have hbracket := martingale_div_predQuadVar_ae_tendsto_zero hM hM0 hM2
+    have hbracket := martingale_div_predQuadVar_ae_tendsto_zero hM hM2
     have hqv := ae_all_iff.mpr (fun n ↦ predQuadVar_respMart_eq h k hνk n)
     filter_upwards [hbracket, hqv] with ω hbω hqvω hN
     have hVne : Var[id; ν k] ≠ 0 := hVpos.ne'

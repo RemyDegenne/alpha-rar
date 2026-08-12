@@ -42,7 +42,7 @@ probability space `‖·‖₁ ≤ ‖·‖₂`, so the uniform `L²` bound give
 `Submartingale.exists_ae_tendsto_of_bdd` applies. -/
 lemma martingale_ae_tendsto_of_eLpNorm_two_le [IsProbabilityMeasure μ]
     (hS : Martingale S ℱ μ) {C : ℝ≥0} (hbdd : ∀ n, eLpNorm (S n) 2 μ ≤ C) :
-    ∀ᵐ ω ∂μ, ∃ c, Tendsto (fun n ↦ S n ω) atTop (𝓝 c) :=
+    ∀ᵐ ω ∂μ, ∃ c, Tendsto (S · ω) atTop (𝓝 c) :=
   hS.submartingale.exists_ae_tendsto_of_bdd (R := C) fun n ↦
     le_trans (eLpNorm_le_eLpNorm_of_exponent_le (p := 1) (q := 2) one_le_two
       ((hS.stronglyMeasurable n).mono (ℱ.le n)).aestronglyMeasurable) (hbdd n)
@@ -53,7 +53,7 @@ gives `eLpNorm (S n) 2 μ ≤ √C`, so `martingale_ae_tendsto_of_eLpNorm_two_le
 lemma martingale_ae_tendsto_of_integral_sq_le [IsProbabilityMeasure μ]
     (hS : Martingale S ℱ μ) (hS2 : ∀ n, MemLp (S n) 2 μ)
     {C : ℝ} (hbdd : ∀ n, ∫ ω, (S n ω) ^ 2 ∂μ ≤ C) :
-    ∀ᵐ ω ∂μ, ∃ c, Tendsto (fun n ↦ S n ω) atTop (𝓝 c) := by
+    ∀ᵐ ω ∂μ, ∃ c, Tendsto (S · ω) atTop (𝓝 c) := by
   have hCnn : 0 ≤ C := le_trans (integral_nonneg fun ω ↦ sq_nonneg _) (hbdd 0)
   refine martingale_ae_tendsto_of_eLpNorm_two_le hS (C := (√C).toNNReal) fun n ↦ ?_
   have hmem : MemLp (S n) 2 μ := hS2 n
@@ -109,25 +109,30 @@ modulo the identity `∫ (S n)² = ∑_{k<n} 𝔼[(ΔM_k)²]/(k+1)²` (which tur
 into the bound `hbdd` below). By `martingale_weightedSeries` and
 `martingale_ae_tendsto_of_integral_sq_le`, `S n` converges a.e.; Kronecker's lemma
 (`AlphaRAR.kronecker'`, applied pathwise with `x_k = ΔM_k/(k+1)`) then gives `M n / n → 0`, since
-`∑_{k<n} (k+1)·x_k = ∑_{k<n} ΔM_k = M n` (using `M 0 = 0`). -/
+`∑_{k<n} (k+1)·x_k = ∑_{k<n} ΔM_k = M n - M 0` and the initial value is washed out by `n → ∞`. -/
 theorem martingale_div_atTop_ae_tendsto_zero [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0)
+    (hM : Martingale M ℱ μ)
     (hS2 : ∀ n, MemLp (fun ω ↦ ∑ k ∈ range n, (M (k + 1) ω - M k ω) / ((k : ℝ) + 1)) 2 μ)
     {C : ℝ} (hbdd : ∀ n, ∫ ω, (∑ k ∈ range n, (M (k + 1) ω - M k ω) / ((k : ℝ) + 1)) ^ 2 ∂μ ≤ C) :
     ∀ᵐ ω ∂μ, Tendsto (fun n ↦ M n ω / n) atTop (𝓝 0) := by
   have hconv := martingale_ae_tendsto_of_integral_sq_le
     (martingale_weightedSeries hM (fun k ↦ (k : ℝ) + 1)) hS2 hbdd
-  filter_upwards [hconv, hM0] with ω hcω h0
+  filter_upwards [hconv] with ω hcω
   obtain ⟨c, hc⟩ := hcω
-  refine (kronecker' hc).congr' (Eventually.of_forall fun n ↦ ?_)
-  have hterm : ∀ k ∈ range n, ((k : ℝ) + 1) * ((M (k + 1) ω - M k ω) / ((k : ℝ) + 1))
-      = (fun j ↦ M j ω) (k + 1) - (fun j ↦ M j ω) k := fun k _ ↦ by
-    rw [mul_div_cancel₀ _ (by positivity)]
-  rw [Finset.sum_congr rfl hterm, Finset.sum_range_sub (fun j ↦ M j ω) n, h0, Pi.zero_apply,
-    sub_zero]
-  simp only [div_eq_inv_mul]
+  have hstep0 : Tendsto (fun n ↦ (M n ω - M 0 ω) / n) atTop (𝓝 0) := by
+    refine (kronecker' hc).congr' (Eventually.of_forall fun n ↦ ?_)
+    have hterm : ∀ k ∈ range n, ((k : ℝ) + 1) * ((M (k + 1) ω - M k ω) / ((k : ℝ) + 1))
+        = (fun j ↦ M j ω) (k + 1) - (fun j ↦ M j ω) k := fun k _ ↦ by
+      rw [mul_div_cancel₀ _ (by positivity)]
+    rw [Finset.sum_congr rfl hterm, Finset.sum_range_sub (fun j ↦ M j ω) n]
+    simp only [div_eq_inv_mul]
+  have h0 : Tendsto (fun n : ℕ ↦ M 0 ω / n) atTop (𝓝 0) :=
+    tendsto_const_nhds.div_atTop tendsto_natCast_atTop_atTop
+  have hsum := hstep0.add h0
+  rw [add_zero] at hsum
+  exact hsum.congr fun n ↦ by ring
 
-/-- **General-weight martingale SLLN.** For a martingale `M` with `M 0 = 0` and a positive,
+/-- **General-weight martingale SLLN.** For a martingale `M` and a positive,
 monotone, unbounded weight `a` (`a n ↑ ∞`), if the weighted increment series
 `S n = ∑_{k<n} (M (k+1) − M k)/a (k+1)` has a uniform second-moment bound, then `M n / a n → 0`
 almost everywhere. `martingale_weightedSeries` (general weight) gives the martingale,
@@ -136,25 +141,30 @@ almost everywhere. `martingale_weightedSeries` (general weight) gives the martin
 This is the `a n = n` case (`martingale_div_atTop_ae_tendsto_zero`) with a general normalizer, used
 for the loglog-scale weight `a n = √(2 n log log n)` of the Hartman–Wintner medium part. -/
 lemma martingale_div_weight_ae_tendsto_zero [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) {a : ℕ → ℝ}
+    (hM : Martingale M ℱ μ) {a : ℕ → ℝ}
     (ha_pos : ∀ n, 0 < a n) (ha_mono : Monotone a) (ha_top : Tendsto a atTop atTop)
     (hS2 : ∀ n, MemLp (fun ω ↦ ∑ k ∈ range n, (M (k + 1) ω - M k ω) / a (k + 1)) 2 μ)
     {C : ℝ} (hbdd : ∀ n, ∫ ω, (∑ k ∈ range n, (M (k + 1) ω - M k ω) / a (k + 1)) ^ 2 ∂μ ≤ C) :
     ∀ᵐ ω ∂μ, Tendsto (fun n ↦ M n ω / a n) atTop (𝓝 0) := by
   have hconv := martingale_ae_tendsto_of_integral_sq_le
     (martingale_weightedSeries hM (fun k ↦ a (k + 1))) hS2 hbdd
-  filter_upwards [hconv, hM0] with ω hcω h0
+  filter_upwards [hconv] with ω hcω
   obtain ⟨c, hc⟩ := hcω
-  refine (kronecker_general ha_pos ha_mono ha_top hc).congr' (Eventually.of_forall fun n ↦ ?_)
-  have hterm : ∀ k ∈ range n, a (k + 1) * ((M (k + 1) ω - M k ω) / a (k + 1))
-      = (fun j ↦ M j ω) (k + 1) - (fun j ↦ M j ω) k := fun k _ ↦ by
-    rw [mul_div_cancel₀ _ (ha_pos (k + 1)).ne']
-  rw [Finset.sum_congr rfl hterm, Finset.sum_range_sub (fun j ↦ M j ω) n, h0, Pi.zero_apply,
-    sub_zero]
-  simp only [div_eq_inv_mul]
+  have hstep0 : Tendsto (fun n ↦ (M n ω - M 0 ω) / a n) atTop (𝓝 0) := by
+    refine (kronecker_general ha_pos ha_mono ha_top hc).congr' (Eventually.of_forall fun n ↦ ?_)
+    have hterm : ∀ k ∈ range n, a (k + 1) * ((M (k + 1) ω - M k ω) / a (k + 1))
+        = (fun j ↦ M j ω) (k + 1) - (fun j ↦ M j ω) k := fun k _ ↦ by
+      rw [mul_div_cancel₀ _ (ha_pos (k + 1)).ne']
+    rw [Finset.sum_congr rfl hterm, Finset.sum_range_sub (fun j ↦ M j ω) n]
+    simp only [div_eq_inv_mul]
+  have h0 : Tendsto (fun n ↦ M 0 ω / a n) atTop (𝓝 0) :=
+    tendsto_const_nhds.div_atTop ha_top
+  have hsum := hstep0.add h0
+  rw [add_zero] at hsum
+  exact hsum.congr fun n ↦ by ring
 
 /-- **Martingale SLLN for bounded increments** (blueprint `cor:mart_slln_bounded`). If `M` is a
-martingale with `M 0 = 0` and a.e. uniformly bounded increments `|M (k+1) − M k| ≤ c`, then
+martingale with a.e. uniformly bounded increments `|M (k+1) − M k| ≤ c`, then
 `M n / n → 0` almost everywhere.
 
 The bounded increments make everything square-integrable, and give the orthogonality bound
@@ -163,7 +173,7 @@ on the weighted increment series `S`, via the discrete Itô isometry
 (`integral_sq_eq_integral_predQuadVar`) and the telescoping of its predictable quadratic variation
 (`integral_predQuadVar_succ_sub`). `martingale_div_atTop_ae_tendsto_zero` then applies. -/
 lemma martingale_div_atTop_ae_tendsto_zero_of_bdd [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) {c : ℝ}
+    (hM : Martingale M ℱ μ) {c : ℝ}
     (hb : ∀ k, ∀ᵐ ω ∂μ, |M (k + 1) ω - M k ω| ≤ c) :
     ∀ᵐ ω ∂μ, Tendsto (fun n ↦ M n ω / n) atTop (𝓝 0) := by
   classical
@@ -173,11 +183,9 @@ lemma martingale_div_atTop_ae_tendsto_zero_of_bdd [IsProbabilityMeasure μ]
   have hSmart : Martingale S ℱ μ := martingale_weightedSeries hM (fun k ↦ (k : ℝ) + 1)
   have hS0 : S 0 =ᵐ[μ] 0 := by filter_upwards with ω; simp [hSdef]
   -- Each increment `ΔM_k` is square-integrable (bounded on a probability space).
-  have haesm : ∀ k, AEStronglyMeasurable (fun ω ↦ M (k + 1) ω - M k ω) μ := fun k ↦
-    (((hM.stronglyMeasurable (k + 1)).mono (ℱ.le _)).sub
-      ((hM.stronglyMeasurable k).mono (ℱ.le _))).aestronglyMeasurable
   have hdmem : ∀ k, MemLp (fun ω ↦ M (k + 1) ω - M k ω) 2 μ := fun k ↦
-    MemLp.of_bound (haesm k) c (by filter_upwards [hb k] with ω h; rwa [Real.norm_eq_abs])
+    memLp_increment_of_bound (hM.integrable k).aestronglyMeasurable
+      (hM.integrable (k + 1)).aestronglyMeasurable (hb k)
   -- The scaled increments `ΔS_k = ΔM_k / (k+1)`, the series `S n`, and its increments are `L²`.
   have hDmem : ∀ k, MemLp (fun ω ↦ (M (k + 1) ω - M k ω) / ((k : ℝ) + 1)) 2 μ := fun k ↦ by
     simpa only [div_eq_inv_mul] using (hdmem k).const_mul ((k : ℝ) + 1)⁻¹
@@ -231,7 +239,7 @@ lemma martingale_div_atTop_ae_tendsto_zero_of_bdd [IsProbabilityMeasure μ]
       _ ≤ c ^ 2 * ∑' k : ℕ, 1 / ((k : ℝ) + 1) ^ 2 := by
           gcongr
           exact hsummable.sum_le_tsum (Finset.range n) fun i _ ↦ by positivity
-  exact martingale_div_atTop_ae_tendsto_zero hM hM0 hSmem hbdd
+  exact martingale_div_atTop_ae_tendsto_zero hM hSmem hbdd
 
 /-! ### Bracket-normalized strong law -/
 
@@ -255,10 +263,10 @@ lemma martingale_bracketSeries [IsProbabilityMeasure μ] (hM : Martingale M ℱ 
     Martingale (bracketSeries M ℱ μ) ℱ μ := by
   have : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
   have hint : ∀ n, Integrable (M n) μ := hM.integrable
-  have hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ := fun n ↦
-    ((hM2 (n + 1)).sub (hM2 n)).integrable_sq
+  have hd2 : ∀ n, MemLp (fun ω ↦ M (n + 1) ω - M n ω) 2 μ := fun n ↦
+    memLp_increment (hM2 n) (hM2 (n + 1))
   have hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ := fun n ↦
-    (hM2 n).integrable_mul ((hM2 (n + 1)).sub (hM2 n))
+    integrable_mul_increment (hM2 n) (hM2 (n + 1))
   -- The weight `1 + ⟨M⟩_{k+1}` is `ℱ_k`-measurable (predictability of `⟨M⟩`).
   have hqvmeas : ∀ k, StronglyMeasurable[ℱ k] (predQuadVar M ℱ μ (k + 1)) :=
     fun k ↦ stronglyAdapted_predictablePart (f := fun n ↦ M n ^ 2) k
@@ -330,10 +338,10 @@ lemma memLp_bracketSeries_term [IsProbabilityMeasure μ] (hM : Martingale M ℱ 
     (hM2 : ∀ n, MemLp (M n) 2 μ) (k : ℕ) :
     MemLp (fun ω ↦ (M (k + 1) ω - M k ω) / (1 + predQuadVar M ℱ μ (k + 1) ω)) 2 μ := by
   have : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
-  have hd2 : ∀ n, Integrable (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2) μ := fun n ↦
-    ((hM2 (n + 1)).sub (hM2 n)).integrable_sq
+  have hd2 : ∀ n, MemLp (fun ω ↦ M (n + 1) ω - M n ω) 2 μ := fun n ↦
+    memLp_increment (hM2 n) (hM2 (n + 1))
   have hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ := fun n ↦
-    (hM2 n).integrable_mul ((hM2 (n + 1)).sub (hM2 n))
+    integrable_mul_increment (hM2 n) (hM2 (n + 1))
   have haesm : AEStronglyMeasurable
       (fun ω ↦ (M (k + 1) ω - M k ω) / (1 + predQuadVar M ℱ μ (k + 1) ω)) μ :=
     ((((hM.stronglyMeasurable (k + 1)).mono (ℱ.le _)).sub
@@ -364,17 +372,18 @@ lemma predQuadVar_bracketSeries_le_one [IsProbabilityMeasure μ] (hM : Martingal
     predQuadVar (bracketSeries M ℱ μ) ℱ μ n ≤ᵐ[μ] 1 := by
   have : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
   have hTmart : Martingale (bracketSeries M ℱ μ) ℱ μ := martingale_bracketSeries hM hM2
-  have hd2 : ∀ k, Integrable (fun ω ↦ (M (k + 1) ω - M k ω) ^ 2) μ := fun k ↦
-    ((hM2 (k + 1)).sub (hM2 k)).integrable_sq
+  have hd2 : ∀ k, MemLp (fun ω ↦ M (k + 1) ω - M k ω) 2 μ := fun k ↦
+    memLp_increment (hM2 k) (hM2 (k + 1))
   have hprod : ∀ k, Integrable (M k * (M (k + 1) - M k)) μ := fun k ↦
-    (hM2 k).integrable_mul ((hM2 (k + 1)).sub (hM2 k))
+    integrable_mul_increment (hM2 k) (hM2 (k + 1))
   have hTmem : ∀ k, MemLp (bracketSeries M ℱ μ k) 2 μ := memLp_bracketSeries hM hM2
-  have hd2T : ∀ k, Integrable (fun ω ↦ (bracketSeries M ℱ μ (k + 1) ω
-      - bracketSeries M ℱ μ k ω) ^ 2) μ := fun k ↦
-    ((hTmem (k + 1)).sub (hTmem k)).integrable_sq
+  have hd2T : ∀ k, MemLp (fun ω ↦ bracketSeries M ℱ μ (k + 1) ω
+      - bracketSeries M ℱ μ k ω) 2 μ := fun k ↦ memLp_increment (hTmem k) (hTmem (k + 1))
+  have hd2T' : ∀ k, Integrable (fun ω ↦ (bracketSeries M ℱ μ (k + 1) ω
+      - bracketSeries M ℱ μ k ω) ^ 2) μ := fun k ↦ (hd2T k).integrable_sq
   have hprodT : ∀ k, Integrable (bracketSeries M ℱ μ k
       * (bracketSeries M ℱ μ (k + 1) - bracketSeries M ℱ μ k)) μ := fun k ↦
-    (hTmem k).integrable_mul ((hTmem (k + 1)).sub (hTmem k))
+    integrable_mul_increment (hTmem k) (hTmem (k + 1))
   have hw2meas : ∀ k, StronglyMeasurable[ℱ k] (fun ω ↦ ((1 + predQuadVar M ℱ μ (k + 1) ω)⁻¹) ^ 2) :=
     fun k ↦ (((stronglyMeasurable_const.add
       (stronglyAdapted_predictablePart (f := fun n ↦ M n ^ 2) k)).measurable.inv).pow_const
@@ -390,7 +399,8 @@ lemma predQuadVar_bracketSeries_le_one [IsProbabilityMeasure μ] (hM : Martingal
       funext ω; simp only [Pi.mul_apply]; rw [bracketSeries_succ_sub]; ring
     have h1 := predQuadVar_succ_sub_eq hTmart k (hd2T k) (hprodT k)
     rw [heq] at h1
-    have h2 := condExp_mul_of_stronglyMeasurable_left (hw2meas k) (heq ▸ hd2T k) (hd2 k)
+    have h2 := condExp_mul_of_stronglyMeasurable_left (hw2meas k) (heq ▸ hd2T' k)
+      (hd2 k).integrable_sq
     have h3 := (predQuadVar_succ_sub_eq hM k (hd2 k) (hprod k)).symm
     filter_upwards [h1, h2, h3, predQuadVar_nonneg hM hd2 hprod k,
       predQuadVar_le_succ hM k (hd2 k) (hprod k)] with ω e1 e2 e3 hnn hle
@@ -431,20 +441,20 @@ lemma predQuadVar_bracketSeries_le_one [IsProbabilityMeasure μ] (hM : Martingal
         linarith
 
 /-- **Bracket-normalized martingale SLLN** (blueprint `thm:mart_slln_bracket`). For a
-square-integrable martingale `M` with `M 0 = 0`, almost surely on the event
-`{⟨M⟩_n → ∞}` one has `M_n / ⟨M⟩_n → 0`.
+square-integrable martingale `M`, almost surely on the event `{⟨M⟩_n → ∞}` one has
+`M_n / ⟨M⟩_n → 0`.
 
 The bracket transform `T` is `L²`-bounded (`∫ (T n)² = ∫ ⟨T⟩_n ≤ 1`), so it converges a.s.; the
 general Kronecker lemma applied pathwise with weights `b_k = 1 + ⟨M⟩_k` turns this into
 `M_n/(1+⟨M⟩_n) → 0`, and since `(1+⟨M⟩_n)/⟨M⟩_n → 1` on the event, `M_n/⟨M⟩_n → 0`. -/
 theorem martingale_div_predQuadVar_ae_tendsto_zero [IsProbabilityMeasure μ]
-    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) :
+    (hM : Martingale M ℱ μ) (hM2 : ∀ n, MemLp (M n) 2 μ) :
     ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop →
       Tendsto (fun n ↦ M n ω / predQuadVar M ℱ μ n ω) atTop (𝓝 0) := by
-  have hd2 : ∀ k, Integrable (fun ω ↦ (M (k + 1) ω - M k ω) ^ 2) μ := fun k ↦
-    ((hM2 (k + 1)).sub (hM2 k)).integrable_sq
+  have hd2 : ∀ k, MemLp (fun ω ↦ M (k + 1) ω - M k ω) 2 μ := fun k ↦
+    memLp_increment (hM2 k) (hM2 (k + 1))
   have hprod : ∀ k, Integrable (M k * (M (k + 1) - M k)) μ := fun k ↦
-    (hM2 k).integrable_mul ((hM2 (k + 1)).sub (hM2 k))
+    integrable_mul_increment (hM2 k) (hM2 (k + 1))
   have hTmart : Martingale (bracketSeries M ℱ μ) ℱ μ := martingale_bracketSeries hM hM2
   have hT0 : bracketSeries M ℱ μ 0 =ᵐ[μ] 0 :=
     Eventually.of_forall fun ω ↦ by simp [bracketSeries]
@@ -458,11 +468,11 @@ theorem martingale_div_predQuadVar_ae_tendsto_zero [IsProbabilityMeasure μ]
           (predQuadVar_bracketSeries_le_one hM hM2 n)
       _ = 1 := by simp
   have hconv := martingale_ae_tendsto_of_integral_sq_le hTmart hT2 hbdd
-  filter_upwards [hconv, hM0, predQuadVar_mono hM hd2 hprod,
-    ae_all_iff.mpr fun n ↦ predQuadVar_nonneg hM hd2 hprod n] with ω hcω h0 hmono hnn
+  filter_upwards [hconv, predQuadVar_mono hM hd2 hprod,
+    ae_all_iff.mpr fun n ↦ predQuadVar_nonneg hM hd2 hprod n] with ω hcω hmono hnn
   intro hinf
   obtain ⟨c, hc⟩ := hcω
-  simp only [Pi.zero_apply] at hnn h0
+  simp only [Pi.zero_apply] at hnn
   -- Kronecker with weights `b_k = 1 + ⟨M⟩_k ω`.
   have hb_pos : ∀ n, 0 < 1 + predQuadVar M ℱ μ n ω := fun n ↦ by have := hnn n; linarith
   have hb_mono : Monotone fun n ↦ 1 + predQuadVar M ℱ μ n ω := hmono.const_add 1
@@ -476,12 +486,12 @@ theorem martingale_div_predQuadVar_ae_tendsto_zero [IsProbabilityMeasure μ]
     rw [Finset.sum_range_sub (fun k ↦ bracketSeries M ℱ μ k ω),
       show bracketSeries M ℱ μ 0 ω = 0 by simp [bracketSeries], sub_zero]
   have hkron := kronecker_general hb_pos hb_mono hb_top hy
-  -- `(1/(1+⟨M⟩_n)) ∑ (1+⟨M⟩_{k+1})·ΔT_k = M_n/(1+⟨M⟩_n)`.
-  have hstep : Tendsto (fun n ↦ M n ω / (1 + predQuadVar M ℱ μ n ω)) atTop (𝓝 0) := by
+  -- `(1/(1+⟨M⟩_n)) ∑ (1+⟨M⟩_{k+1})·ΔT_k = (M_n - M_0)/(1+⟨M⟩_n)`.
+  have hstep0 : Tendsto (fun n ↦ (M n ω - M 0 ω) / (1 + predQuadVar M ℱ μ n ω)) atTop (𝓝 0) := by
     refine hkron.congr' (Eventually.of_forall fun n ↦ ?_)
     change (1 + predQuadVar M ℱ μ n ω)⁻¹ * ∑ k ∈ range n, (1 + predQuadVar M ℱ μ (k + 1) ω)
         * (bracketSeries M ℱ μ (k + 1) ω - bracketSeries M ℱ μ k ω)
-      = M n ω / (1 + predQuadVar M ℱ μ n ω)
+      = (M n ω - M 0 ω) / (1 + predQuadVar M ℱ μ n ω)
     rw [div_eq_inv_mul]
     congr 1
     have hterm : ∀ k, (1 + predQuadVar M ℱ μ (k + 1) ω)
@@ -489,7 +499,14 @@ theorem martingale_div_predQuadVar_ae_tendsto_zero [IsProbabilityMeasure μ]
       intro k
       have hne : (1 + predQuadVar M ℱ μ (k + 1) ω) ≠ 0 := (hb_pos (k + 1)).ne'
       rw [bracketSeries_succ_sub]; field_simp
-    rw [Finset.sum_congr rfl fun k _ ↦ hterm k, Finset.sum_range_sub (fun k ↦ M k ω), h0, sub_zero]
+    rw [Finset.sum_congr rfl fun k _ ↦ hterm k, Finset.sum_range_sub (fun k ↦ M k ω)]
+  -- the initial value is washed out: `M_0/(1+⟨M⟩_n) → 0` since the denominator diverges.
+  have hstep : Tendsto (fun n ↦ M n ω / (1 + predQuadVar M ℱ μ n ω)) atTop (𝓝 0) := by
+    have hM0 : Tendsto (fun n ↦ M 0 ω / (1 + predQuadVar M ℱ μ n ω)) atTop (𝓝 0) :=
+      tendsto_const_nhds.div_atTop hb_top
+    have hsum := hstep0.add hM0
+    rw [add_zero] at hsum
+    exact hsum.congr fun n ↦ by ring
   -- `(1+⟨M⟩_n)/⟨M⟩_n → 1`, so `M_n/⟨M⟩_n = (M_n/(1+⟨M⟩_n))·((1+⟨M⟩_n)/⟨M⟩_n) → 0`.
   have hinv : Tendsto (fun n ↦ (predQuadVar M ℱ μ n ω)⁻¹) atTop (𝓝 0) :=
     tendsto_inv_atTop_zero.comp hinf

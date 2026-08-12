@@ -112,11 +112,6 @@ lemma exists_bound_natCast_div {N : ℕ → ℝ} {v : ℝ} (hv : 0 < v) (hN : �
     rw [div_le_div_iff₀ hNpos hv]
     nlinarith [hgt]
 
-/-- Count of a fixed arm is nonnegative. -/
-lemma count_armIndicator_nonneg (A : ℕ → Ω → 𝓐) (k'' : 𝓐) (m : ℕ) (ω : Ω) :
-    0 ≤ count (fun j ↦ armIndicator A k'' j ω) m :=
-  Finset.sum_nonneg fun j _ ↦ armIndicator_nonneg A k'' j ω
-
 /-- Measurability of `ω ↦ (hitting (Q ω) n : ℝ)` for a measurable-level-set predicate `Q`. -/
 lemma measurable_hitting_cast {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (Q ω)]
     (hQmeas : ∀ m, MeasurableSet {ω | Q ω m}) (n : ℕ) :
@@ -216,7 +211,7 @@ lemma g_littleOp_of_hitting [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEn
       (fun n ↦ memLp_respMart h.measurable_action hY2 k'' n)
       (ae_of_all _ fun ω ↦ by simp [respMart, Finset.range_zero]) (Var[id; ν k''])
       (variance_nonneg _ _)
-      (fun n ↦ integral_respMart_increment_sq_le h k'' n (hY2 n))
+      (fun n ↦ integral_respMart_increment_sq_le h k'' n hνk)
   have hSseqnn : ∀ n ω, 0 ≤ Sseq n ω := fun n ω ↦ by
     rw [hSseq]
     exact le_trans (abs_nonneg (respMart ν A Y k'' 0 ω))

@@ -198,32 +198,6 @@ lemma abs_respMart_le_sqrt_nat_mul_loglog
   rw [Finset.sum_neg_distrib] at hn_lo
   exact abs_le.mpr ⟨by linarith [hn_lo], hn_up⟩
 
-/-- **A positive pull proportion forces infinitely many pulls** (blueprint `lem:all_arms_infinite`,
-pathwise). If `N_{n,k}/n → v > 0` then arm `k` is pulled infinitely often, i.e. `{j | A j ω = k}` is
-infinite. Indeed `N_{n,k} = (N_{n,k}/n)·n → ∞`, while a finite pull set would cap the count at its
-cardinality. -/
-lemma infinite_setOf_eq_of_tendsto_div {k : 𝓐} {ω : Ω} {v : ℝ} (hv : 0 < v)
-    (hN : Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 v)) :
-    {j | A j ω = k}.Infinite := by
-  have hRinf : Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop := by
-    have hmul := hN.pos_mul_atTop hv (tendsto_natCast_atTop_atTop (R := ℝ))
-    refine hmul.congr' ?_
-    filter_upwards [eventually_ge_atTop 1] with n hn
-    have hne : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
-    rw [div_mul_cancel₀ _ hne]
-  intro hfin
-  have hbound : ∀ n, (pullCount A k n ω : ℝ) ≤ (hfin.toFinset.card : ℝ) := by
-    intro n
-    have hle : pullCount A k n ω ≤ hfin.toFinset.card := by
-      rw [pullCount]
-      refine Finset.card_le_card ?_
-      intro s hs
-      rw [Finset.mem_filter] at hs
-      exact hfin.mem_toFinset.mpr hs.2
-    exact_mod_cast hle
-  obtain ⟨n, hn⟩ := (hRinf.eventually_gt_atTop (hfin.toFinset.card : ℝ)).exists
-  exact absurd (hbound n) (not_le.mpr hn)
-
 /-- **Response martingale is `O(√(n log log n))` end-to-end** (blueprint `cor:subsampled_lil`,
 `n`-indexed form). Discharging the `hQ` input of
 `ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog` with the subsampled loglog LIL

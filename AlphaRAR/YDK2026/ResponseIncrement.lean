@@ -54,7 +54,7 @@ lemma qm_increments_resp (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
   have harmnn : ∀ k, 0 ≤ Var[id; ν k] := fun k ↦ variance_nonneg _ _
   have hC₀ : 0 ≤ ∑ k, Var[id; ν k] := Finset.sum_nonneg (fun k _ ↦ harmnn k)
   have hincfam : ∀ k n, ∫ ω, (respMart ν A Y k (n + 1) ω - respMart ν A Y k n ω) ^ 2 ∂P
-      ≤ ∑ k, Var[id; ν k] := fun k n ↦ (integral_respMart_increment_sq_le h k n (hY2 n)).trans
+      ≤ ∑ k, Var[id; ν k] := fun k n ↦ (integral_respMart_increment_sq_le h k n hνk).trans
     (Finset.single_le_sum (fun k' _ ↦ harmnn k') (Finset.mem_univ k))
   exact ⟨isLittleOpOne_vmaxSeq (M := fun k ↦ respMart ν A Y k)
       hMfam hM2fam hC₀ hincfam,

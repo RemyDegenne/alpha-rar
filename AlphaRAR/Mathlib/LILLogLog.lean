@@ -268,19 +268,8 @@ lemma ae_eventually_le_sqrt_nat_mul_loglog [IsProbabilityMeasure μ] (hM : Marti
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
     ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop, M n ω ≤ C * √((n : ℝ) * log (log n)) := by
-  have : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
-  have haesm_d : ∀ i, AEStronglyMeasurable (fun ω ↦ M (i + 1) ω - M i ω) μ := fun i ↦
-    (((hM.stronglyMeasurable (i + 1)).mono (ℱ.le _)).sub
-      ((hM.stronglyMeasurable i).mono (ℱ.le _))).aestronglyMeasurable
-  have hdmem : ∀ i, MemLp (fun ω ↦ M (i + 1) ω - M i ω) 2 μ := fun i ↦
-    MemLp.of_bound (haesm_d i) c (by filter_upwards [hb i] with ω h; rwa [norm_eq_abs])
-  have hMmem : ∀ n, MemLp (M n) 2 μ := hM2
-  have hd2 : ∀ i, Integrable (fun ω ↦ (M (i + 1) ω - M i ω) ^ 2) μ :=
-    fun i ↦ (hdmem i).integrable_sq
-  have hprod : ∀ i, Integrable (M i * (M (i + 1) - M i)) μ := fun i ↦
-    (hMmem i).integrable_mul ((hMmem (i + 1)).sub (hMmem i))
   filter_upwards [ae_eventually_le_sqrt_predQuadVar_mul_loglog hM hM0 hM2 hc hb hV,
-    predQuadVar_le_of_bound hM hd2 hprod hb, hV] with ω hCex hle hVω
+    predQuadVar_le_of_bound hM hb, hV] with ω hCex hle hVω
   obtain ⟨C, hC⟩ := hCex
   refine ⟨|C| * √(2 * c ^ 2), ?_⟩
   filter_upwards [hC, hVω.eventually_ge_atTop (exp 1),
@@ -602,8 +591,6 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd [IsProbabilityMeasure μ]
     (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0)
     {c : ℝ} (hc : 0 < c) (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
     ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop, |M n ω| ≤ C * √((n : ℝ) * log (log n)) := by
-  have hHolder : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 :=
-    ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
   have hmeasM : ∀ n, AEMeasurable (M n) μ := fun n ↦
     ((hM.stronglyMeasurable n).mono (ℱ.le n)).measurable.aemeasurable
   -- Telescoping bound `|M_n| ≤ n c` a.e., whence `M_n` is square-integrable.
@@ -618,23 +605,10 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd [IsProbabilityMeasure μ]
       _ ≤ ∑ k ∈ Finset.range n, c := Finset.sum_le_sum fun k _ ↦ hbω k
       _ = n * c := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
   have hM2 : ∀ n, MemLp (M n) 2 μ := fun n ↦
-    (memLp_two_iff_integrable_sq (hmeasM n).aestronglyMeasurable).mpr
-      ((integrable_const (((n : ℝ) * c) ^ 2)).mono' ((hmeasM n).pow_const 2).aestronglyMeasurable
-        (by filter_upwards [hbdd n] with ω hb'
-            rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]
-            exact sq_le_sq' (neg_le_of_abs_le hb') (le_of_abs_le hb')))
-  have haesm_d : ∀ i, AEStronglyMeasurable (fun ω ↦ M (i + 1) ω - M i ω) μ := fun i ↦
-    (((hM.stronglyMeasurable (i + 1)).mono (ℱ.le _)).sub
-      ((hM.stronglyMeasurable i).mono (ℱ.le _))).aestronglyMeasurable
-  have hdmem : ∀ i, MemLp (fun ω ↦ M (i + 1) ω - M i ω) 2 μ := fun i ↦
-    MemLp.of_bound (haesm_d i) c (by filter_upwards [hb i] with ω h; rwa [norm_eq_abs])
-  have hd2 : ∀ i, Integrable (fun ω ↦ (M (i + 1) ω - M i ω) ^ 2) μ :=
-    fun i ↦ (hdmem i).integrable_sq
-  have hMmem : ∀ n, MemLp (M n) 2 μ := hM2
-  have hprod : ∀ i, Integrable (M i * (M (i + 1) - M i)) μ := fun i ↦
-    (hMmem i).integrable_mul ((hMmem (i + 1)).sub (hMmem i))
+    .of_bound (hmeasM n).aestronglyMeasurable ((n : ℝ) * c)
+      (by filter_upwards [hbdd n] with ω h; rwa [Real.norm_eq_abs])
   have hqv : ∀ᵐ ω ∂μ, ∀ n, predQuadVar M ℱ μ n ω ≤ c ^ 2 * (n : ℝ) :=
-    predQuadVar_le_of_bound hM hd2 hprod hb
+    predQuadVar_le_of_bound hM hb
   refine ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growing (α := 1 / c) (C := 3 * c) (v := c ^ 2)
     hM hM0 hM2 (by positivity) (fun _ ↦ c) (fun _ ↦ hc.le) ?_ ?_ (fun j i _ ↦ hb i)
     (by positivity) hqv

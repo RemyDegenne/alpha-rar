@@ -152,7 +152,7 @@ lemma predVar_respArray_ae [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv
   have hcondsq : ∀ i, P[fun ω ↦ (respIncr ν A Y k i ω) ^ 2
         | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i] =ᵐ[P]
       fun ω ↦ armIndicator A k i ω * Var[id; ν k] :=
-    fun i ↦ condExp_respMart_increment_sq h k i (((hY2 i).sub (memLp_const _)).integrable_sq)
+    fun i ↦ condExp_respMart_increment_sq h k i hνk
   unfold respArray
   filter_upwards [h1, ae_all_iff.mpr hcondsq] with ω hω hcs
   rw [hω]
