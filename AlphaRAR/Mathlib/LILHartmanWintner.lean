@@ -153,7 +153,7 @@ lemma ae_eventually_abs_le_sqrt_of_identDistrib [IsProbabilityMeasure μ]
     (hint2 : MemLp (Y 0) 2 μ) :
     ∀ᵐ ω ∂μ, ∀ᶠ j in atTop, |Y j ω| ≤ √(j : ℝ) := by
   set ρ : Measure ℝ := μ.map (Y 0) with hρ
-  haveI : IsFiniteMeasure ρ := by rw [hρ]; infer_instance
+  have : IsFiniteMeasure ρ := by rw [hρ]; infer_instance
   have hρ2 : MemLp (fun x ↦ x) 2 ρ := by
     rw [hρ, memLp_map_measure_iff (by fun_prop) (hmeas 0).aemeasurable]
     exact hint2

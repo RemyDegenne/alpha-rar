@@ -49,7 +49,7 @@ lemma memLp_feedback [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P
     (hνk : ∀ a, MemLp (fun x : ℝ ↦ x) 2 (ν a)) (n : ℕ) :
     MemLp (Y n) 2 P := by
   classical
-  letI := Fintype.ofFinite 𝓐
+  let := Fintype.ofFinite 𝓐
   -- A uniform bound on the arms' second moments.
   set C : ℝ≥0∞ := ∑ a : 𝓐, ∫⁻ y, ‖y‖ₑ ^ 2 ∂(ν a) with hCdef
   have hone : ∀ a : 𝓐, ∫⁻ y, ‖y‖ₑ ^ 2 ∂(ν a) ≠ ⊤ := by

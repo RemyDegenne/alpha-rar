@@ -604,7 +604,7 @@ lemma iIndepFun_sampledResponse {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y al
     (k : 𝓐) (hk_inf : ∀ᵐ ω ∂μ, {j | A j ω = k}.Infinite) :
     iIndepFun (sampledSeq Y (armIndicator A k)) μ := by
   set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with h𝒢
-  haveI : IsProbabilityMeasure (ν k) := IsMarkovKernel.isProbabilityMeasure k
+  have : IsProbabilityMeasure (ν k) := IsMarkovKernel.isProbabilityMeasure k
   have hDinf : ∀ᵐ ω ∂μ, {j | armIndicator A k j ω = 1}.Infinite := by
     filter_upwards [hk_inf] with ω hω
     rwa [Set.ext (fun j ↦ armIndicator_eq_one_iff)]
@@ -626,7 +626,7 @@ lemma map_sampledResponse_eq {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (
     (k : 𝓐) (hk_inf : ∀ᵐ ω ∂μ, {j | A j ω = k}.Infinite) (m : ℕ) :
     μ.map (sampledSeq Y (armIndicator A k) m) = ν k := by
   set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with h𝒢
-  haveI : IsProbabilityMeasure (ν k) := IsMarkovKernel.isProbabilityMeasure k
+  have : IsProbabilityMeasure (ν k) := IsMarkovKernel.isProbabilityMeasure k
   have hDinf : ∀ᵐ ω ∂μ, {j | armIndicator A k j ω = 1}.Infinite := by
     filter_upwards [hk_inf] with ω hω
     rwa [Set.ext (fun j ↦ armIndicator_eq_one_iff)]

@@ -460,7 +460,7 @@ lemma no_starvation_pathwise [Finite 𝓐] [DecidableEq 𝓐] (ω : Ω) {hsched 
         ∀ j, (pullCount A j m ω : ℝ) ≤ hsched m →
           pullCount A (A m ω) m ω ≤ pullCount A j m ω) (k : 𝓐) :
     Tendsto (fun n ↦ pullCount A k n ω) atTop atTop := by
-  letI : Fintype 𝓐 := Fintype.ofFinite 𝓐
+  let : Fintype 𝓐 := Fintype.ofFinite 𝓐
   refine tendsto_atTop_atTop_of_monotone (monotone_pullCount k ω) fun B ↦ ?_
   by_contra hcon
   simp only [not_exists, not_le] at hcon
@@ -1285,7 +1285,7 @@ lemma exists_rate_loglog_of_pullCount_ge [Finite 𝓐] [DecidableEq 𝓐] (ω : 
       |estimator (fun i ↦ armIndicator A j i ω) (fun i ↦ Y i ω) (θ₀ j) m - (ν j)[id]|
         ≤ C * √(Real.log (Real.log m) / L m) := by
   classical
-  letI := Fintype.ofFinite 𝓐
+  let := Fintype.ofFinite 𝓐
   choose C' hC' using hC
   refine ⟨∑ i, |C' i|, fun j ↦ ?_⟩
   have hCnn : (0 : ℝ) ≤ ∑ i, |C' i| := Finset.sum_nonneg fun i _ ↦ abs_nonneg _

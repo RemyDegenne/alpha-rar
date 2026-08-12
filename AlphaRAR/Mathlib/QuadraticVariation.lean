@@ -109,7 +109,7 @@ the increment of `M`: `⟨M⟩ (n+1) - ⟨M⟩ n = μ[(M (n+1) - M n)² | ℱ n]
 @[specifies predQuadVar "the textbook increment formula `Δ⟨M⟩ₙ = μ[(ΔMₙ)²|ℱₙ]`, which is what \
 \"predictable quadratic variation\" means; the definition itself is the Doob predictable part of \
 `M²`, and this is the identification a referee needs"]
-lemma predQuadVar_succ_sub_eq [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (n : ℕ)
+lemma predQuadVar_succ_sub_eq (hM : Martingale M ℱ μ) (n : ℕ)
     (hd2 : MemLp (fun ω ↦ M (n + 1) ω - M n ω) 2 μ)
     (hprod : Integrable (M n * (M (n + 1) - M n)) μ) :
     predQuadVar M ℱ μ (n + 1) - predQuadVar M ℱ μ n
@@ -136,7 +136,7 @@ lemma predQuadVar_succ_sub_eq [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (n
 /-- **`⟨M⟩` is non-decreasing** (blueprint `lem:qv_incr`, monotonicity part).
 The quadratic variation of a martingale increases, since its increment is a
 conditional second moment, hence nonnegative. -/
-lemma predQuadVar_le_succ [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (n : ℕ)
+lemma predQuadVar_le_succ (hM : Martingale M ℱ μ) (n : ℕ)
     (hd2 : MemLp (fun ω ↦ M (n + 1) ω - M n ω) 2 μ)
     (hprod : Integrable (M n * (M (n + 1) - M n)) μ) :
     predQuadVar M ℱ μ n ≤ᵐ[μ] predQuadVar M ℱ μ (n + 1) := by
@@ -152,7 +152,7 @@ lemma predQuadVar_le_succ [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (n : �
 /-- **`⟨M⟩` is monotone** (blueprint `lem:qv_incr`, monotonicity part). Almost surely the whole
 path `n ↦ ⟨M⟩ n ω` is nondecreasing, since each increment is a conditional second moment (hence
 nonnegative, `predQuadVar_le_succ`). -/
-lemma predQuadVar_mono [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
+lemma predQuadVar_mono (hM : Martingale M ℱ μ)
     (hd2 : ∀ n, MemLp (fun ω ↦ M (n + 1) ω - M n ω) 2 μ)
     (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ) :
     ∀ᵐ ω ∂μ, Monotone (predQuadVar M ℱ μ · ω) := by
@@ -161,7 +161,7 @@ lemma predQuadVar_mono [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
 
 /-- **The predictable quadratic variation is nonnegative.** Since `⟨M⟩ 0 = 0` and `⟨M⟩` is
 nondecreasing (`predQuadVar_mono`), `0 ≤ ⟨M⟩ n` a.e. -/
-lemma predQuadVar_nonneg [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
+lemma predQuadVar_nonneg (hM : Martingale M ℱ μ)
     (hd2 : ∀ n, MemLp (fun ω ↦ M (n + 1) ω - M n ω) 2 μ)
     (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ) (n : ℕ) :
     0 ≤ᵐ[μ] predQuadVar M ℱ μ n := by

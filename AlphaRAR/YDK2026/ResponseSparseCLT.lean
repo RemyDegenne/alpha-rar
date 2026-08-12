@@ -61,7 +61,7 @@ lemma respMart_selfNorm_anscombe_tendsto
         Measure.isProbabilityMeasure_map
           (measurable_respSelfNorm h k n).aemeasurable⟩ : ProbabilityMeasure ℝ)) atTop
       (𝓝 (⟨gaussianReal 0 (Var[id; ν k]).toNNReal, inferInstance⟩ : ProbabilityMeasure ℝ)) := by
-  haveI : IsProbabilityMeasure (ν k) := IsMarkovKernel.isProbabilityMeasure k
+  have : IsProbabilityMeasure (ν k) := IsMarkovKernel.isProbabilityMeasure k
   have hint_id : Integrable (fun x : ℝ ↦ x) (ν k) := hνk.integrable (by norm_num)
   have hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k) := hνk.integrable_sq
   set D := armIndicator A k with hDdef

@@ -334,7 +334,7 @@ lemma bracketSeries_succ_sub (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) 
 
 /-- Each bracket-series increment `(M(k+1) − M k)/(1+⟨M⟩_{k+1})` is in `L²`, being dominated by
 `|M(k+1) − M k| ∈ L²` (the weight is in `(0,1]`). -/
-lemma memLp_bracketSeries_term [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma memLp_bracketSeries_term (hM : Martingale M ℱ μ)
     (hM2 : ∀ n, MemLp (M n) 2 μ) (k : ℕ) :
     MemLp (fun ω ↦ (M (k + 1) ω - M k ω) / (1 + predQuadVar M ℱ μ (k + 1) ω)) 2 μ := by
   have : ENNReal.HolderTriple (2 : ℝ≥0∞) 2 1 := ⟨by rw [inv_one, ENNReal.inv_two_add_inv_two]⟩
@@ -356,7 +356,7 @@ lemma memLp_bracketSeries_term [IsProbabilityMeasure μ] (hM : Martingale M ℱ 
   nlinarith [abs_nonneg (M (k + 1) ω - M k ω), hqv]
 
 /-- The bracket series `T n` is in `L²`, being a finite sum of `L²` increments. -/
-lemma memLp_bracketSeries [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+lemma memLp_bracketSeries (hM : Martingale M ℱ μ)
     (hM2 : ∀ n, MemLp (M n) 2 μ) (n : ℕ) : MemLp (bracketSeries M ℱ μ n) 2 μ :=
   memLp_finsetSum _ fun k _ ↦ memLp_bracketSeries_term hM hM2 k
 

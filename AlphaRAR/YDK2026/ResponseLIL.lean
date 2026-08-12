@@ -108,7 +108,7 @@ lemma abs_respMart_le_sqrt_nat_mul_loglog
   have hint_id : Integrable (fun x : ℝ ↦ x) (ν k) := hνk.integrable (by norm_num)
   have hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k) := hνk.integrable_sq
   simp only [← hitCount_armIndicator_eq_pullCount]
-  haveI : IsProbabilityMeasure (ν k) := IsMarkovKernel.isProbabilityMeasure k
+  have : IsProbabilityMeasure (ν k) := IsMarkovKernel.isProbabilityMeasure k
   set D := armIndicator A k with hDdef
   set θ := (ν k)[id] with hθdef
   set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with h𝒢
