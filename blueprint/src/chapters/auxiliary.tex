@@ -60,8 +60,6 @@ by Definition~\ref{def:cond_prob}, and $X_{m,k},p_{m,k}\in[0,1]$.
 \end{proof}
 
 \begin{lemma}[$M$ is the unique compensator of the count]\label{lem:M_unique}
-\lean{AlphaRAR.IsAssignMart, AlphaRAR.isAssignMart_assignMart,
-AlphaRAR.IsAssignMart.indistinguishable_assignMart}\leanok
 \uses{def:M, def:counts, def:filtration}
 $M_{\cdot,k}$ is the Doob martingale part of the count $N_{\cdot,k}$ against $(\filt_{n-1})$: it is
 an $(\filt_{n-1})$-martingale, $M_{0,k}=0$, and what it removes from the count — the accumulated
@@ -70,7 +68,7 @@ properties is indistinguishable from it. Predictability is what makes the martin
 $M$ down: without it, adding any martingale null at $0$ would give another candidate.
 \end{lemma}
 
-\begin{proof}\leanok
+\begin{proof}
 \uses{lem:M_martingale, def:cond_prob}
 Existence is Lemma~\ref{lem:M_martingale} together with predictability of the Doob predictable
 part. For uniqueness, $N = M + (N-M)$ exhibits the count as a martingale plus a predictable process

@@ -38,9 +38,6 @@ probability, and `M` is a martingale for `ℱ.shiftDown`. At `n = 0` there is no
 
 * `AlphaRAR.martingale_assignMart`: `M` is a martingale (blueprint `lem:M_martingale`).
 * `AlphaRAR.assignMart_succ_sub`: the increment `M (n+1) - M n = X n - μ[X n | ℱ (n-1)]`.
-* `AlphaRAR.IsAssignMart`: the property that characterizes `M` — an `ℱ.shiftDown`-martingale, null
-  at `0`, leaving a predictable remainder in the count — together with the two theorems saying `M`
-  has it and nothing else does, up to indistinguishability.
 -/
 
 @[expose] public section
