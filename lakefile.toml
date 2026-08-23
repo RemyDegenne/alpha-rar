@@ -37,11 +37,7 @@ leanOptions = { weak.linter.mathlibStandardSet = false }
 globs = [
   "Comparator",
   "Solution",
-  "ChallengeVendor_Algorithm",
-  "ChallengeVendor_StationaryEnv",
-  "ChallengeVendor_FiniteActions",
   "Challenge_aRTS_LLN",
-  "Challenge_aRTS_clt_joint_Defs",
   "Challenge_aRTS_clt_joint",
   "Challenge_aRTS_prop_dev",
   "Challenge_aRTS_prop_dev_ae",
