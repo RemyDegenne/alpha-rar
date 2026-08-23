@@ -81,7 +81,7 @@ lemma memLp_increment_of_bound [IsFiniteMeasure μ] {n : ℕ} {c : ℝ} {p : ℝ
 /-- The **predictable quadratic variation** `⟨M⟩` of a process `M`, defined as the
 predictable part of `M²` in its Doob decomposition (blueprint `def:pred_qv`). -/
 noncomputable def predQuadVar (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) : ℕ → Ω → ℝ :=
-  predictablePart (fun n ↦ M n ^ 2) ℱ μ
+  predictablePart (M · ^ 2) ℱ μ
 
 @[simp, specifies predQuadVar "fixes the additive constant, which the increment formula \
 `predQuadVar_succ_sub_eq` alone leaves free; the two together give `⟨M⟩ₙ = ∑_{i<n} μ[(ΔMᵢ)²|ℱᵢ]`"]
@@ -468,19 +468,19 @@ lemma predQuadVar_add_of_martingale_mul {N : ℕ → Ω → ℝ}
     (hmart : Martingale (fun n ↦ M n * N n) ℱ μ) (n : ℕ) :
     predQuadVar (fun k ↦ M k + N k) ℱ μ n =ᵐ[μ] predQuadVar M ℱ μ n + predQuadVar N ℱ μ n := by
   have hproc : (fun k ↦ (M k + N k) ^ 2)
-      = (fun k ↦ M k ^ 2) + (fun k ↦ N k ^ 2) + (2 : ℝ) • (fun k ↦ M k * N k) := by
+      = (M · ^ 2) + (N · ^ 2) + (2 : ℝ) • (fun k ↦ M k * N k) := by
     ext; simp; ring
-  have hMint : ∀ k, Integrable ((fun k ↦ M k ^ 2) k) μ := fun k ↦ (hM2 k).integrable_sq
-  have hNint : ∀ k, Integrable ((fun k ↦ N k ^ 2) k) μ := fun k ↦ (hN2 k).integrable_sq
+  have hMint : ∀ k, Integrable ((M · ^ 2) k) μ := fun k ↦ (hM2 k).integrable_sq
+  have hNint : ∀ k, Integrable ((N · ^ 2) k) μ := fun k ↦ (hN2 k).integrable_sq
   have hMNint : ∀ k, Integrable (((2 : ℝ) • fun k ↦ M k * N k) k) μ := fun k ↦ by
     simpa using ((hM2 k).integrable_mul (hN2 k)).smul (2 : ℝ)
   -- Split `⟨M+N⟩` by linearity of the predictable part.
   have h1 : predQuadVar (fun k ↦ M k + N k) ℱ μ n
-      =ᵐ[μ] predictablePart ((fun k ↦ M k ^ 2) + fun k ↦ N k ^ 2) ℱ μ n
+      =ᵐ[μ] predictablePart ((M · ^ 2) + fun k ↦ N k ^ 2) ℱ μ n
         + predictablePart ((2 : ℝ) • fun k ↦ M k * N k) ℱ μ n := by
     rw [predQuadVar, hproc]
     exact predictablePart_add (fun k ↦ (hMint k).add (hNint k)) hMNint n
-  have h2 : predictablePart ((fun k ↦ M k ^ 2) + fun k ↦ N k ^ 2) ℱ μ n
+  have h2 : predictablePart ((M · ^ 2) + fun k ↦ N k ^ 2) ℱ μ n
       =ᵐ[μ] predQuadVar M ℱ μ n + predQuadVar N ℱ μ n := by
     simpa only [predQuadVar] using predictablePart_add hMint hNint n
   have h3 : predictablePart ((2 : ℝ) • fun k ↦ M k * N k) ℱ μ n =ᵐ[μ] 0 := by

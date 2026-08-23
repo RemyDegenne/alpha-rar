@@ -164,7 +164,7 @@ omit [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] [IsMarkovKernel ν] [IsP
 exactly one term survives, so the increment is the single weighted centred response of the arm \
 actually pulled. This disjointness is what makes the array's variance diagonal"]
 lemma wIncr_eq_single {a : 𝓐} {i : ℕ} {ω : Ω} (ha : A i ω = a) (w : 𝓐 → ℝ) :
-    wIncr ν A Y w i ω = w a * (Y i ω - (ν a)[id]) := by
+    wIncr ν A Y w i ω = w a * (Y i ω - ν.means a) := by
   rw [wIncr, Finset.sum_eq_single a]
   · rw [respIncr]
     simp only [armIndicator]
@@ -302,7 +302,7 @@ lemma tendstoInMeasure_predVar_wArray [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (st
 `(wn n)_a² (x-θ_a)² 𝟙{|(wn n)_a||x-θ_a| > ε}`, as a function of the response `x`. -/
 noncomputable def lindTrunc (ν : Kernel 𝓐 ℝ) (wn : ℕ → 𝓐 → ℝ) (ε : ℝ) (n : ℕ) (a : 𝓐) : ℝ → ℝ :=
   fun y ↦ wn n a ^ 2
-    * {y' | ε < |wn n a| * |y' - (ν a)[id]|}.indicator (fun y' ↦ (y' - (ν a)[id]) ^ 2) y
+    * {y' | ε < |wn n a| * |y' - ν.means a|}.indicator (fun y' ↦ (y' - ν.means a) ^ 2) y
 
 omit [MeasurableSingletonClass 𝓐] [Fintype 𝓐] [DecidableEq 𝓐] [IsMarkovKernel ν]
   [IsProbabilityMeasure P] in
@@ -322,15 +322,15 @@ lemma integrable_lindTrunc_comp [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationa
   have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
   have hcomp : (fun ω ↦ lindTrunc ν wn ε n a (Y i ω))
       = fun ω ↦ wn n a ^ 2
-        * ((Y i ⁻¹' {y' | ε < |wn n a| * |y' - (ν a)[id]|}).indicator
-          (fun ω ↦ (Y i ω - (ν a)[id]) ^ 2) ω) := by
+        * ((Y i ⁻¹' {y' | ε < |wn n a| * |y' - ν.means a|}).indicator
+          (fun ω ↦ (Y i ω - ν.means a) ^ 2) ω) := by
     funext ω
     simp only [lindTrunc]
-    by_cases hmem : Y i ω ∈ {y' | ε < |wn n a| * |y' - (ν a)[id]|}
+    by_cases hmem : Y i ω ∈ {y' | ε < |wn n a| * |y' - ν.means a|}
     · rw [Set.indicator_of_mem hmem, Set.indicator_of_mem
-        (show ω ∈ (Y i) ⁻¹' {y' | ε < |wn n a| * |y' - (ν a)[id]|} from hmem)]
+        (show ω ∈ (Y i) ⁻¹' {y' | ε < |wn n a| * |y' - ν.means a|} from hmem)]
     · rw [Set.indicator_of_notMem hmem, Set.indicator_of_notMem
-        (show ω ∉ (Y i) ⁻¹' {y' | ε < |wn n a| * |y' - (ν a)[id]|} from hmem)]
+        (show ω ∉ (Y i) ⁻¹' {y' | ε < |wn n a| * |y' - ν.means a|} from hmem)]
   rw [hcomp]
   exact ((((hY2 i).sub (memLp_const _)).integrable_sq).indicator
     ((h.measurable_feedback i) (measurableSet_lt measurable_const
@@ -343,8 +343,8 @@ omit [MeasurableSingletonClass 𝓐] [Fintype 𝓐] [DecidableEq 𝓐] [IsMarkov
 note the threshold is tested on the *weighted* deviation, which is what makes it shrink with `w`"]
 lemma integral_lindTrunc (wn : ℕ → 𝓐 → ℝ) (ε : ℝ) (n : ℕ) (a : 𝓐) :
     ∫ y, lindTrunc ν wn ε n a y ∂(ν a)
-      = wn n a ^ 2 * ∫ x, {x | ε < |wn n a| * |x - (ν a)[id]|}.indicator
-          (fun x ↦ (x - (ν a)[id]) ^ 2) x ∂(ν a) := by
+      = wn n a ^ 2 * ∫ x, {x | ε < |wn n a| * |x - ν.means a|}.indicator
+          (fun x ↦ (x - ν.means a) ^ 2) x ∂(ν a) := by
   simp only [lindTrunc]
   rw [integral_const_mul]
 
@@ -358,15 +358,15 @@ lemma lindeberg_wArray_ae [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv 
     (hνk : ∀ a, MemLp id 2 (ν a)) (wn : ℕ → 𝓐 → ℝ) (ε : ℝ) (n : ℕ) :
     (wArray h hνk wn).lindeberg n ε =ᵐ[P]
       fun ω ↦ ∑ a, wn n a ^ 2
-        * (∫ x, {x | ε < |wn n a| * |x - (ν a)[id]|}.indicator
-            (fun x ↦ (x - (ν a)[id]) ^ 2) x ∂(ν a))
+        * (∫ x, {x | ε < |wn n a| * |x - ν.means a|}.indicator
+            (fun x ↦ (x - ν.means a) ^ 2) x ∂(ν a))
         * count (fun j ↦ armIndicator A a j ω) n := by
   have hFi : ∀ i, {ω | ε < |(wArray h hνk wn).d n i ω|}.indicator
         (fun ω ↦ ((wArray h hνk wn).d n i ω) ^ 2)
       = fun ω ↦ ∑ a, armIndicator A a i ω * lindTrunc ν wn ε n a (Y i ω) := by
     intro i
     funext ω
-    have hd : (wArray h hνk wn).d n i ω = wn n (A i ω) * (Y i ω - (ν (A i ω))[id]) := by
+    have hd : (wArray h hνk wn).d n i ω = wn n (A i ω) * (Y i ω - ν.means (A i ω)) := by
       simp only [wArray_d]; rw [wIncr_eq_single rfl (wn n)]
     rw [Finset.sum_eq_single (A i ω) (fun b _ hb ↦ ?_)
       (fun hh ↦ absurd (Finset.mem_univ _) hh)]
@@ -375,16 +375,16 @@ lemma lindeberg_wArray_ae [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv 
         rw [Set.indicator_of_mem (show ω ∈ {ω' | A i ω' = A i ω} from rfl)]
       rw [harm, one_mul]
       have hcond : (ε < |(wArray h hνk wn).d n i ω|)
-          ↔ (ε < |wn n (A i ω)| * |Y i ω - (ν (A i ω))[id]|) := by
+          ↔ (ε < |wn n (A i ω)| * |Y i ω - ν.means (A i ω)|) := by
         rw [hd, abs_mul]
       rw [Set.indicator_apply]
-      by_cases hc : ε < |wn n (A i ω)| * |Y i ω - (ν (A i ω))[id]|
-      · rw [if_pos (show ω ∈ {ω | ε < |(wArray h hνk wn).d n i ω|} from hcond.mpr hc), hd,
+      by_cases hc : ε < |wn n (A i ω)| * |Y i ω - ν.means (A i ω)|
+      · rw [ite_eq_left (show ω ∈ {ω | ε < |(wArray h hνk wn).d n i ω|} from hcond.mpr hc), hd,
           lindTrunc, Set.indicator_of_mem
-            (show Y i ω ∈ {y' | ε < |wn n (A i ω)| * |y' - (ν (A i ω))[id]|} from hc), mul_pow]
-      · rw [if_neg (show ω ∉ {ω | ε < |(wArray h hνk wn).d n i ω|} from
+            (show Y i ω ∈ {y' | ε < |wn n (A i ω)| * |y' - ν.means (A i ω)|} from hc), mul_pow]
+      · rw [ite_eq_right (show ω ∉ {ω | ε < |(wArray h hνk wn).d n i ω|} from
           fun hmem ↦ hc (hcond.mp hmem)), lindTrunc, Set.indicator_of_notMem
-            (show Y i ω ∉ {y' | ε < |wn n (A i ω)| * |y' - (ν (A i ω))[id]|} from hc),
+            (show Y i ω ∉ {y' | ε < |wn n (A i ω)| * |y' - ν.means (A i ω)|} from hc),
           mul_zero]
     · have hb0 : armIndicator A b i ω = 0 := by
         simp only [armIndicator, Set.indicator_of_notMem
@@ -426,7 +426,6 @@ lemma lindeberg_wArray_ae [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv 
   refine Finset.sum_congr rfl fun a _ ↦ ?_
   rw [← Finset.sum_mul, show (∑ i ∈ Finset.range n, armIndicator A a i ω)
     = count (fun j ↦ armIndicator A a j ω) n from rfl, integral_lindTrunc]
-  simp only [id_eq]
   ring
 
 omit [DecidableEq 𝓐] in
@@ -445,15 +444,15 @@ lemma tendstoInMeasure_lindeberg_wArray [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (
       (fun n ↦ (wArray h hνk (fun n a ↦ w a / √(c a n))).lindeberg n ε) atTop 0 := by
   intro ε hε
   obtain ⟨G, hG⟩ : ∃ G : ℕ → 𝓐 → ℝ, ∀ n a, G n a
-      = ∫ x, {x | ε < |w a / √(c a n)| * |x - (ν a)[id]|}.indicator
-          (fun x ↦ (x - (ν a)[id]) ^ 2) x ∂(ν a) := ⟨_, fun n a ↦ rfl⟩
+      = ∫ x, {x | ε < |w a / √(c a n)| * |x - ν.means a|}.indicator
+          (fun x ↦ (x - ν.means a) ^ 2) x ∂(ν a) := ⟨_, fun n a ↦ rfl⟩
   -- Each truncated moment vanishes: the truncation threshold `ε√(c_{a,n})/|w_a| → ∞`.
   have hGtail : ∀ a, Tendsto (fun n : ℕ ↦ G n a) atTop (𝓝 0) := by
     intro a
     rcases eq_or_ne (w a) 0 with hwa | hwa
     · have hz : ∀ n, G n a = 0 := fun n ↦ by
         rw [hG]
-        have hset : {x : ℝ | ε < |w a / √(c a n)| * |x - (ν a)[id]|} = ∅ := by
+        have hset : {x : ℝ | ε < |w a / √(c a n)| * |x - ν.means a|} = ∅ := by
           ext x
           simp only [hwa, zero_div, abs_zero, zero_mul, Set.mem_ofPred_eq,
             Set.mem_empty_iff_false, iff_false, not_lt]
@@ -462,8 +461,8 @@ lemma tendstoInMeasure_lindeberg_wArray [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (
         simp
       simp only [hz]
       exact tendsto_const_nhds
-    · have hcent2νa : MemLp (fun x ↦ x - (ν a)[id]) 2 (ν a) := (hνk a).sub (memLp_const _)
-      have hDCTa := tendsto_integral_sq_indicator_gt (P := ν a) (Z := fun x ↦ x - (ν a)[id])
+    · have hcent2νa : MemLp (fun x ↦ x - ν.means a) 2 (ν a) := (hνk a).sub (memLp_const _)
+      have hDCTa := tendsto_integral_sq_indicator_gt (P := ν a) (Z := fun x ↦ x - ν.means a)
         (measurable_id.sub_const _) hcent2νa
       have hwapos : (0 : ℝ) < |w a| := abs_pos.mpr hwa
       have hca : Tendsto (fun n : ℕ ↦ ε * √(c a n) / |w a|) atTop atTop :=
@@ -472,12 +471,12 @@ lemma tendstoInMeasure_lindeberg_wArray [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (
       refine Tendsto.congr' ?_ (by simpa only [Function.comp_def] using hDCTa.comp hca)
       filter_upwards [(hc_atTop a).eventually_gt_atTop 0] with n hn
       have hsc : (0 : ℝ) < √(c a n) := Real.sqrt_pos.mpr hn
-      have hset : {x : ℝ | ε * √(c a n) / |w a| < |x - (ν a)[id]|}
-          = {x : ℝ | ε < |w a / √(c a n)| * |x - (ν a)[id]|} := by
+      have hset : {x : ℝ | ε * √(c a n) / |w a| < |x - ν.means a|}
+          = {x : ℝ | ε < |w a / √(c a n)| * |x - ν.means a|} := by
         ext x
         simp only [Set.mem_ofPred_eq, abs_div, abs_of_nonneg (Real.sqrt_nonneg (c a n))]
         rw [div_lt_iff₀ hwapos, div_mul_eq_mul_div, lt_div_iff₀ hsc,
-          mul_comm (|w a|) (|x - (ν a)[id]|)]
+          mul_comm (|w a|) (|x - ν.means a|)]
       rw [hG, hset]
   -- Closed form with the scaled weights: `L_n(ε) = ∑_a w_a² G_n(a) (N_{n,a}/c_{a,n})`.
   have hlin' : ∀ n, (wArray h hνk (fun n a ↦ w a / √(c a n))).lindeberg n ε =ᵐ[P]
@@ -824,7 +823,7 @@ lemma measurable_estimatorErrorVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P
     (n : ℕ) :
     Measurable (fun ω ↦ (WithLp.toLp 2 (fun k ↦
       √(count (fun j ↦ armIndicator A k j ω) n)
-        * (estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) (θ₀ k) n - (ν k)[id]))
+        * (estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
           : EuclideanSpace ℝ 𝓐)) := by
   refine (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (measurable_pi_lambda _ fun k ↦ ?_)
   have harm : ∀ j, Measurable (fun ω ↦ armIndicator A k j ω) := fun j ↦
@@ -864,7 +863,7 @@ lemma estimatorError_joint_tendsto_multivariateGaussian
     Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
       (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (WithLp.toLp 2 (fun k ↦
           √(count (fun j ↦ armIndicator A k j ω) n)
-            * (estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) (θ₀ k) n - (ν k)[id]))
+            * (estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
               : EuclideanSpace ℝ 𝓐)),
         Measure.isProbabilityMeasure_map (measurable_estimatorErrorVec h θ₀ n).aemeasurable⟩
           : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)))
@@ -880,7 +879,7 @@ lemma estimatorError_joint_tendsto_multivariateGaussian
   set Rn : ℕ → Ω → EuclideanSpace ℝ 𝓐 × EuclideanSpace ℝ 𝓐 := fun n ω ↦
     (WithLp.toLp 2 (fun k ↦ count (fun j ↦ armIndicator A k j ω) n
         / (count (fun j ↦ armIndicator A k j ω) n + 1)),
-     WithLp.toLp 2 (fun k ↦ (θ₀ k - (ν k)[id]) * √(count (fun j ↦ armIndicator A k j ω) n)
+     WithLp.toLp 2 (fun k ↦ (θ₀ k - ν.means k) * √(count (fun j ↦ armIndicator A k j ω) n)
         / (count (fun j ↦ armIndicator A k j ω) n + 1))) with hRn
   clear_value g Rn c
   have hcnn : ∀ k n ω, (0 : ℝ) ≤ count (fun j ↦ armIndicator A k j ω) n := fun k n ω ↦
@@ -937,7 +936,7 @@ lemma estimatorError_joint_tendsto_multivariateGaussian
           rw [Real.norm_of_nonneg (div_nonneg (Real.sqrt_nonneg _) hne.le), div_le_iff₀ hne,
             inv_mul_eq_div, le_div_iff₀ (Real.sqrt_pos.mpr hpos)]
           nlinarith [Real.mul_self_sqrt (hcnn k n ω)]
-      have hc2 := hsq.const_mul (θ₀ k - (ν k)[id])
+      have hc2 := hsq.const_mul (θ₀ k - ν.means k)
       rw [mul_zero] at hc2
       exact hc2.congr fun n ↦ (mul_div_assoc _ _ _).symm
   -- Apply multivariate Slutsky; identify source (Bahadur) and limit (`g(·,c)=id`).
@@ -958,11 +957,11 @@ lemma estimatorError_joint_tendsto_multivariateGaussian
   funext ω
   simp only [hg_def, hRn]
   refine congrArg (WithLp.toLp 2) (funext fun k ↦ ?_)
-  have hbr : respMG (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) ((ν k)[id]) n
+  have hbr : respMG (fun j ↦ armIndicator A k j ω) (Y · ω) (ν.means k) n
       = respMart ν A Y k n ω := respMG_indicator_eq_respMart k n ω
   have hne : (0 : ℝ) < count (fun j ↦ armIndicator A k j ω) n + 1 := by
     have := hcnn k n ω; linarith
-  rw [estimator_sub_eq _ _ ((ν k)[id]) (θ₀ k) n hne.ne', hbr]
+  rw [estimator_sub_eq _ _ (ν.means k) (θ₀ k) n hne.ne', hbr]
   rcases eq_or_ne (count (fun j ↦ armIndicator A k j ω) n) 0 with hN0 | hN0
   · rw [hN0]; simp
   · have hNpos : (0 : ℝ) < count (fun j ↦ armIndicator A k j ω) n :=
@@ -990,7 +989,7 @@ omit [Fintype 𝓐] [DecidableEq 𝓐] in
 lemma measurable_estimatorSqrtNVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (n : ℕ) :
     Measurable (fun ω ↦ (WithLp.toLp 2 (fun k ↦ √n
-      * (estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) (θ₀ k) n - (ν k)[id]))
+      * (estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
         : EuclideanSpace ℝ 𝓐)) := by
   refine (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (measurable_pi_lambda _ fun k ↦ ?_)
   refine Measurable.const_mul ?_ (√n)
@@ -1016,7 +1015,7 @@ lemma estimator_sqrtN_joint_tendsto_multivariateGaussian
       atTop (𝓝 (v a))) :
     Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
       (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (WithLp.toLp 2 (fun k ↦ √n
-          * (estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) (θ₀ k) n - (ν k)[id]))
+          * (estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
               : EuclideanSpace ℝ 𝓐)),
         Measure.isProbabilityMeasure_map (measurable_estimatorSqrtNVec h θ₀ n).aemeasurable⟩
           : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)))
@@ -1032,7 +1031,7 @@ lemma estimator_sqrtN_joint_tendsto_multivariateGaussian
   set Rn : ℕ → Ω → EuclideanSpace ℝ 𝓐 × EuclideanSpace ℝ 𝓐 := fun n ω ↦
     (WithLp.toLp 2 (fun k ↦ √n * √(count (fun j ↦ armIndicator A k j ω) n)
         / (count (fun j ↦ armIndicator A k j ω) n + 1)),
-     WithLp.toLp 2 (fun k ↦ (θ₀ k - (ν k)[id]) * √n
+     WithLp.toLp 2 (fun k ↦ (θ₀ k - ν.means k) * √n
         / (count (fun j ↦ armIndicator A k j ω) n + 1))) with hRn
   clear_value g Rn c
   have hcnn : ∀ k n ω, (0 : ℝ) ≤ count (fun j ↦ armIndicator A k j ω) n := fun k n ω ↦
@@ -1107,7 +1106,7 @@ lemma estimator_sqrtN_joint_tendsto_multivariateGaussian
         have hsnpos : (0 : ℝ) < sn := Real.sqrt_pos.mpr hnpos
         have hnn : (n : ℝ) = sn ^ 2 := (Real.sq_sqrt hnpos.le).symm
         rw [hnn]; field_simp
-      have hc2 := hU.const_mul (θ₀ k - (ν k)[id])
+      have hc2 := hU.const_mul (θ₀ k - ν.means k)
       rw [mul_zero] at hc2
       exact hc2.congr fun n ↦ (mul_div_assoc _ _ _).symm
   have hX := respMart_joint_selfNorm_tendsto_multivariateGaussian h hνk
@@ -1138,11 +1137,11 @@ lemma estimator_sqrtN_joint_tendsto_multivariateGaussian
   funext ω
   simp only [hg_def, hRn]
   refine congrArg (WithLp.toLp 2) (funext fun k ↦ ?_)
-  have hbr : respMG (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) ((ν k)[id]) n
+  have hbr : respMG (fun j ↦ armIndicator A k j ω) (Y · ω) (ν.means k) n
       = respMart ν A Y k n ω := respMG_indicator_eq_respMart k n ω
   have hne : (0 : ℝ) < count (fun j ↦ armIndicator A k j ω) n + 1 := by
     have := hcnn k n ω; linarith
-  rw [estimator_sub_eq _ _ ((ν k)[id]) (θ₀ k) n hne.ne', hbr]
+  rw [estimator_sub_eq _ _ (ν.means k) (θ₀ k) n hne.ne', hbr]
   rcases eq_or_ne (count (fun j ↦ armIndicator A k j ω) n) 0 with hN0 | hN0
   · rw [respMart_eq_zero_of_count_zero k n ω hN0]; simp only [hN0, Real.sqrt_zero]; ring
   · have hNpos : (0 : ℝ) < count (fun j ↦ armIndicator A k j ω) n :=

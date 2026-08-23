@@ -9,6 +9,7 @@ public import AlphaRAR.Mathlib.CondExp
 public import Mathlib.MeasureTheory.Function.ConditionalExpectation.CondJensen
 public import Mathlib.MeasureTheory.Function.ConditionalExpectation.PullOut
 public import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
+public import Mathlib.MeasureTheory.Order.Group.Lattice
 public import Mathlib.MeasureTheory.Measure.LevyConvergence
 public import Mathlib.Probability.CondVar
 public import Mathlib.Probability.Distributions.Gaussian.Real
@@ -893,7 +894,7 @@ lemma sum_indicator_le {v : ℕ → ℝ} (hv : ∀ i, 0 ≤ v i) {B : ℝ} (hB :
   | succ j ih =>
     rw [Finset.sum_range_succ]
     by_cases h : ∑ l ∈ Finset.range (j + 1), v l ≤ B
-    · rw [if_pos h]
+    · rw [ite_eq_left h]
       have hWV : ∑ i ∈ Finset.range j, (if ∑ l ∈ Finset.range (i + 1), v l ≤ B then v i else 0)
           ≤ ∑ i ∈ Finset.range j, v i := by
         refine Finset.sum_le_sum fun i _ ↦ ?_
@@ -902,7 +903,7 @@ lemma sum_indicator_le {v : ℕ → ℝ} (hv : ∀ i, 0 ≤ v i) {B : ℝ} (hB :
         · exact hv i
       have hsucc := Finset.sum_range_succ v j
       linarith [hWV, h, hsucc]
-    · rw [if_neg h, add_zero]; exact ih
+    · rw [ite_eq_right h, add_zero]; exact ih
 
 lemma measurableSet_truncSet_filt (B : ℝ) (n i : ℕ) :
     MeasurableSet[A.𝓕 n i] {ω | A.partialVar n (i + 1) ω ≤ B} :=
@@ -1420,12 +1421,12 @@ variance/remainder integral bounds and bounded convergence in probability; the f
 sends `n → ∞` (so `∫ L_n(ε) → 0`) then `ε → 0`. -/
 lemma clt_Z_expectation [IsProbabilityMeasure P] (t : ℝ) {B : ℝ} (hB0 : 0 ≤ B)
     (hB : ∀ n, A.predVar n ≤ᵐ[P] fun _ ↦ B)
-    (hLindeberg : ∀ ε, 0 < ε → TendstoInMeasure P (fun n ↦ A.lindeberg n ε) atTop 0) :
+    (hLindeberg : ∀ ε, 0 < ε → TendstoInMeasure P (A.lindeberg · ε) atTop 0) :
     Tendsto (fun n ↦ ∫ ω, A.Zproc t n (A.k n) ω ∂P) atTop (𝓝 1) := by
   have hEL : ∀ ε, 0 < ε → Tendsto (fun n ↦ ∫ ω, A.lindeberg n ε ω ∂P) atTop (𝓝 0) := by
     intro ε hε
     refine tendsto_integral_of_tendstoInMeasure_zero (C := B)
-      (fun n ↦ A.stronglyMeasurable_lindeberg n ε) (fun n ↦ ?_) (hLindeberg ε hε)
+      (A.stronglyMeasurable_lindeberg · ε) (fun n ↦ ?_) (hLindeberg ε hε)
     filter_upwards [A.lindeberg_nonneg n ε, A.lindeberg_le_predVar n ε, hB n] with ω h0 h1 h2
     simp only [Pi.zero_apply] at h0
     rw [Real.norm_of_nonneg h0]
@@ -1492,7 +1493,7 @@ With `V_n ≤ B` a.e., `V_n → σ²` in probability and the conditional Lindebe
 lemma clt_charFun_bounded [IsProbabilityMeasure P] (t : ℝ) {B σ2 : ℝ} (hB0 : 0 ≤ B)
     (hσ2 : 0 ≤ σ2) (hB : ∀ n, A.predVar n ≤ᵐ[P] fun _ ↦ B)
     (hV : TendstoInMeasure P (fun n ↦ A.predVar n) atTop (fun _ ↦ σ2))
-    (hLindeberg : ∀ ε, 0 < ε → TendstoInMeasure P (fun n ↦ A.lindeberg n ε) atTop 0) :
+    (hLindeberg : ∀ ε, 0 < ε → TendstoInMeasure P (A.lindeberg · ε) atTop 0) :
     Tendsto (fun n ↦ ∫ ω, Complex.exp (((t * A.rowSum n ω : ℝ) : ℂ) * I) ∂P) atTop
       (𝓝 (Complex.exp ((-(t ^ 2 / 2 * σ2) : ℝ) : ℂ))) := by
   rcases eq_or_ne t 0 with rfl | ht0
@@ -1561,7 +1562,7 @@ conditional Lindeberg condition holds, then the laws of the row sums converge we
 lemma mart_clt_bounded [IsProbabilityMeasure P] {B σ2 : ℝ} (hB0 : 0 ≤ B) (hσ2 : 0 ≤ σ2)
     (hB : ∀ n, A.predVar n ≤ᵐ[P] fun _ ↦ B)
     (hV : TendstoInMeasure P (fun n ↦ A.predVar n) atTop (fun _ ↦ σ2))
-    (hLindeberg : ∀ ε, 0 < ε → TendstoInMeasure P (fun n ↦ A.lindeberg n ε) atTop 0) :
+    (hLindeberg : ∀ ε, 0 < ε → TendstoInMeasure P (A.lindeberg · ε) atTop 0) :
     Tendsto (β := ProbabilityMeasure ℝ) (fun n ↦ ⟨P.map (A.rowSum n),
         Measure.isProbabilityMeasure_map (A.measurable_rowSum n).aemeasurable⟩) atTop
       (𝓝 ⟨gaussianReal 0 σ2.toNNReal, inferInstance⟩) := by
@@ -1693,7 +1694,7 @@ lemma tendstoInMeasure_predVar_trunc [IsFiniteMeasure P] {σ2 B : ℝ} (hσB : �
 open Filter in
 /-- The truncated array still satisfies the conditional Lindeberg condition. -/
 lemma tendstoInMeasure_lindeberg_trunc [IsFiniteMeasure P] (B : ℝ) (ε : ℝ)
-    (hL : TendstoInMeasure P (fun n ↦ A.lindeberg n ε) atTop 0) :
+    (hL : TendstoInMeasure P (A.lindeberg · ε) atTop 0) :
     TendstoInMeasure P (fun n ↦ (A.trunc B).lindeberg n ε) atTop 0 :=
   tendstoInMeasure_zero_of_le (fun n ↦ (A.trunc B).lindeberg_nonneg n ε)
     (fun n ↦ A.lindeberg_trunc_le B n ε) hL
@@ -1731,7 +1732,7 @@ and the conditional Lindeberg condition, `E[e^{itS_n}] → e^{-σ²t²/2}`. The 
 truncated at level `B = σ² + 1` to reduce to the bounded case `clt_charFun_bounded`. -/
 lemma clt_charFun [IsProbabilityMeasure P] (t : ℝ) {σ2 : ℝ} (hσ2 : 0 ≤ σ2)
     (hV : TendstoInMeasure P (fun n ↦ A.predVar n) atTop (fun _ ↦ σ2))
-    (hLindeberg : ∀ ε, 0 < ε → TendstoInMeasure P (fun n ↦ A.lindeberg n ε) atTop 0) :
+    (hLindeberg : ∀ ε, 0 < ε → TendstoInMeasure P (A.lindeberg · ε) atTop 0) :
     Tendsto (fun n ↦ ∫ ω, Complex.exp (((t * A.rowSum n ω : ℝ) : ℂ) * I) ∂P) atTop
       (𝓝 (Complex.exp ((-(t ^ 2 / 2 * σ2) : ℝ) : ℂ))) := by
   set B := σ2 + 1 with hBdef
@@ -1771,7 +1772,7 @@ Hall–Heyde martingale CLT runs on: nothing beyond square-integrability, the \
 martingale-difference property and the `𝓕 (i+1)`-adaptedness is needed to reach the Gaussian limit"]
 theorem mart_clt [IsProbabilityMeasure P] {σ2 : ℝ} (hσ2 : 0 ≤ σ2)
     (hV : TendstoInMeasure P (fun n ↦ A.predVar n) atTop (fun _ ↦ σ2))
-    (hLindeberg : ∀ ε, 0 < ε → TendstoInMeasure P (fun n ↦ A.lindeberg n ε) atTop 0) :
+    (hLindeberg : ∀ ε, 0 < ε → TendstoInMeasure P (A.lindeberg · ε) atTop 0) :
     Tendsto (β := ProbabilityMeasure ℝ) (fun n ↦ ⟨P.map (A.rowSum n),
         Measure.isProbabilityMeasure_map (A.measurable_rowSum n).aemeasurable⟩) atTop
       (𝓝 ⟨gaussianReal 0 σ2.toNNReal, inferInstance⟩) := by

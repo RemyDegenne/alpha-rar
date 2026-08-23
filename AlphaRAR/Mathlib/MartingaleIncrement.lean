@@ -64,7 +64,7 @@ lemma isLittleOpOne_of_lintegral_le_tendsto {Y : ℕ → Ω → ℝ}
           meas_ge_le_lintegral_div hmeasf (ENNReal.ofReal_ne_zero_iff.mpr hε) ENNReal.ofReal_ne_top
       _ ≤ ENNReal.ofReal (b n) / ENNReal.ofReal ε := ENNReal.div_le_div_right hbn _
   have htend : Tendsto (fun n ↦ ENNReal.ofReal (b n) / ENNReal.ofReal ε) atTop (𝓝 0) := by
-    have h1 : Tendsto (fun n ↦ b n / ε) atTop (𝓝 0) := by simpa using hbtend.div_const ε
+    have h1 : Tendsto (b · / ε) atTop (𝓝 0) := by simpa using hbtend.div_const ε
     have h2 : Tendsto (fun n ↦ ENNReal.ofReal (b n / ε)) atTop (𝓝 0) := by
       have hc := (ENNReal.continuous_ofReal.tendsto (0 : ℝ)).comp h1
       rwa [ENNReal.ofReal_zero] at hc
@@ -127,7 +127,7 @@ rest of the development uses"]
 lemma norm_increment_le_vmaxSeq_wmaxSeq (n : ℕ) (hn : 2 ≤ n) {ℓ : ℕ} (hℓ : ℓ ≤ n) (ω : Ω) :
     √(∑ k, (M k n ω - M k ℓ ω) ^ 2)
       ≤ ((n - ℓ : ℕ) : ℝ) * vmaxSeq M n ω + wmaxSeq M n ω := by
-  set Q : ℕ → EuclideanSpace ℝ ι := fun j ↦ WithLp.toLp 2 (fun k ↦ M k j ω) with hQdef
+  set Q : ℕ → EuclideanSpace ℝ ι := fun j ↦ WithLp.toLp 2 (M · j ω) with hQdef
   have hbridge : ∀ a b, ‖Q a - Q b‖ = √(∑ k, (M k a ω - M k b ω) ^ 2) := by
     intro a b
     rw [hQdef, ← WithLp.toLp_sub, norm_toLp_eq_sqrt]
@@ -337,7 +337,7 @@ lemma qm_increments_of_bdd (hN : Martingale N ℱ μ) (hN0 : N 0 =ᵐ[μ] 0) {c 
     filter_upwards [ae_all_iff.mpr hΔ, hN0] with ω hΔω hN0ω
     simp only [Pi.zero_apply] at hN0ω
     have htel : (∑ k ∈ Finset.range n, (N (k + 1) ω - N k ω)) = N n ω := by
-      rw [Finset.sum_range_sub (fun k ↦ N k ω) n, hN0ω, sub_zero]
+      rw [Finset.sum_range_sub (N · ω) n, hN0ω, sub_zero]
     calc |N n ω| = |∑ k ∈ Finset.range n, (N (k + 1) ω - N k ω)| := by rw [htel]
       _ ≤ ∑ k ∈ Finset.range n, |N (k + 1) ω - N k ω| := Finset.abs_sum_le_sum_abs _ _
       _ ≤ ∑ k ∈ Finset.range n, c := Finset.sum_le_sum fun k _ ↦ hΔω k

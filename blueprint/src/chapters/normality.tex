@@ -213,12 +213,13 @@ the assignment-martingale LIL
 combines the key inequality \eqref{eq:generic_ineq}, the smallness $\le 0$
 (\texttt{preliminary\_small}), and the $U$-increment decomposition \texttt{diff\_U\_decomp} with
 $\varepsilon=(1-\alpha)v_k/2$ (so the drift is $\le0$): the $M$- and $\rho$-differences at the random
-time $\ell_{n,k}\le n$ are controlled uniformly by \texttt{AlphaRAR.exists\_forall\_le\_mul\_logLogRate}
+time $\ell_{n,k}\le n$ are controlled uniformly by
+\texttt{AlphaRAR.exists\_forall\_le\_mul\_sqrt\_mul\_log\_log}
 (``$O(\sqrt{m\log\log m})$ at every $m\le n$ is $O(\sqrt{n\log\log n})$''), giving a one-sided
 $N_{n,k}-n\hat\rho_{n,k}\le O(\sqrt{n\log\log n})$; the reverse step
 \texttt{AlphaRAR.isBigO\_of\_forall\_upper\_of\_sum\_zero} (using $\sum_k \mathrm{Dev}_k=0$) upgrades it
 to the two-sided bound, and $N_{n,k}-nv_k$ adds $n(\hat\rho_{n,k}-v_k)$ via
-\texttt{AlphaRAR.isBigO\_natMul\_logLogRate}.
+\texttt{AlphaRAR.isBigO\_natMul\_sqrt\_mul\_log\_log}.
 \end{lemma}
 
 \begin{proof}

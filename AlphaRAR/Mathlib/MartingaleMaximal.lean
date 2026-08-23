@@ -93,7 +93,7 @@ lemma lintegral_sup'_abs_le_two_mul_sqrt (hM : Martingale M ℱ μ)
     have hcast : ((t ^ 2).toNNReal : ℝ) = t ^ 2 := Real.coe_toNNReal _ (sq_nonneg t)
     have hset : {ω | t ≤ Y ω}
         = {ω | ((t ^ 2).toNNReal : ℝ)
-            ≤ (range (N + 1)).sup' nonempty_range_add_one (fun k ↦ M k ω ^ 2)} := by
+            ≤ (range (N + 1)).sup' nonempty_range_add_one (M · ω ^ 2)} := by
       ext ω
       simp only [Set.mem_ofPred_eq, hYdef, hcast, Finset.le_sup'_iff]
       constructor
@@ -106,19 +106,19 @@ lemma lintegral_sup'_abs_le_two_mul_sqrt (hM : Martingale M ℱ μ)
     rw [hset]
     have hmax := maximal_ineq hsub hnn (ε := (t ^ 2).toNNReal) N
     have hle2 : (∫ ω in {ω | ((t ^ 2).toNNReal : ℝ)
-        ≤ (range (N + 1)).sup' nonempty_range_add_one (fun k ↦ M k ω ^ 2)}, M N ω ^ 2 ∂μ) ≤ B :=
+        ≤ (range (N + 1)).sup' nonempty_range_add_one (M · ω ^ 2)}, M N ω ^ 2 ∂μ) ≤ B :=
       setIntegral_le_integral ((hM2 N).integrable_sq) (ae_of_all _ fun ω ↦ sq_nonneg _)
     rw [ENNReal.ofReal_div_of_pos (by positivity : (0 : ℝ) < t ^ 2),
       ENNReal.le_div_iff_mul_le (Or.inl (by simpa using ht.ne')) (Or.inl ENNReal.ofReal_ne_top),
       mul_comm]
     calc ENNReal.ofReal (t ^ 2)
           * μ {ω | ((t ^ 2).toNNReal : ℝ)
-              ≤ (range (N + 1)).sup' nonempty_range_add_one (fun k ↦ M k ω ^ 2)}
+              ≤ (range (N + 1)).sup' nonempty_range_add_one (M · ω ^ 2)}
         = (↑(t ^ 2).toNNReal)
             * μ {ω | ((t ^ 2).toNNReal : ℝ)
-              ≤ (range (N + 1)).sup' nonempty_range_add_one (fun k ↦ M k ω ^ 2)} := rfl
+              ≤ (range (N + 1)).sup' nonempty_range_add_one (M · ω ^ 2)} := rfl
       _ ≤ ENNReal.ofReal (∫ ω in {ω | ((t ^ 2).toNNReal : ℝ)
-              ≤ (range (N + 1)).sup' nonempty_range_add_one (fun k ↦ M k ω ^ 2)}, M N ω ^ 2 ∂μ) :=
+              ≤ (range (N + 1)).sup' nonempty_range_add_one (M · ω ^ 2)}, M N ω ^ 2 ∂μ) :=
           hmax
       _ ≤ ENNReal.ofReal B := ENNReal.ofReal_le_ofReal hle2
   exact lintegral_le_two_mul_sqrt_of_meas_ge_le hYnn hYmeas.aemeasurable hBnn htail

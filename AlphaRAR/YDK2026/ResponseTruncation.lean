@@ -23,7 +23,7 @@ parametrised by a sequence of functions `g : ℕ → ℝ → ℝ`. The martingal
 `𝟙{A i = k}((ν (A i))[g i] - (ν k)[g i]) = 0` on `{A i = k}`.
 
 The **truncated response martingale** is the instance
-`g i = truncation (· - (ν k)[id]) (√i)` (blueprint `lem:trunc_mart`, the centred truncated
+`g i = truncation (· - ν.means k) (√i)` (blueprint `lem:trunc_mart`, the centred truncated
 increments `ξ̃_i = truncation(ξ_i, √i) - m_i`).
 
 ## Main results
@@ -301,7 +301,7 @@ lemma predQuadVar_genRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
 with `m_i = (ν k)[truncation(· - θ_k, √i)]` (blueprint `lem:trunc_mart`). -/
 noncomputable def truncRespMart (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (k : 𝓐) :
     ℕ → Ω → ℝ :=
-  genRespMart ν A Y k (fun i ↦ truncation (fun y ↦ y - (ν k)[id]) (√i))
+  genRespMart ν A Y k (fun i ↦ truncation (fun y ↦ y - ν.means k) (√i))
 
 /-- `truncation (· - θ) A` is strongly measurable. -/
 @[fun_prop]
@@ -349,7 +349,7 @@ lemma martingale_truncRespMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
 `v_i = variance (truncation(· - θ_k, √i)) (ν k)`, the variance of the truncated centred response
 `ξ̃_i` under the arm-`k` reward law. -/
 noncomputable def truncVar (ν : Kernel 𝓐 ℝ) (k : 𝓐) (i : ℕ) : ℝ :=
-  variance (truncation (fun y ↦ y - (ν k)[id]) (√i)) (ν k)
+  variance (truncation (fun y ↦ y - ν.means k) (√i)) (ν k)
 
 omit [MeasurableSingletonClass 𝓐] in
 /-- **The truncated variance is at most the arm variance**: `v_i ≤ V_k`. Truncation reduces
@@ -360,9 +360,9 @@ second moment. Gives the upper bound `⟨M̃⟩ ≤ V_k N` needed for the LIL bl
 lemma truncVar_le_variance (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) (i : ℕ) :
     truncVar ν k i ≤ Var[id; ν k] := by
   have : IsProbabilityMeasure (ν k) := inferInstance
-  have hgSM : StronglyMeasurable (truncation (fun y ↦ y - (ν k)[id]) (√i)) :=
+  have hgSM : StronglyMeasurable (truncation (fun y ↦ y - ν.means k) (√i)) :=
     stronglyMeasurable_truncation_sub_const _ _
-  have hgmem : MemLp (truncation (fun y ↦ y - (ν k)[id]) (√i)) 2 (ν k) :=
+  have hgmem : MemLp (truncation (fun y ↦ y - ν.means k) (√i)) 2 (ν k) :=
     MemLp.of_bound hgSM.aestronglyMeasurable (√i) (by
       filter_upwards with x; rw [Real.norm_eq_abs]
       exact (abs_truncation_le_bound _ _ _).trans (le_of_eq (abs_of_nonneg (sqrt_nonneg _))))
@@ -371,12 +371,12 @@ lemma truncVar_le_variance (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)
   rw [variance_id_eq_integral]
   refine integral_mono hgmem.integrable_sq (hν2.sub (memLp_const _)).integrable_sq (fun x ↦ ?_)
   simp only [Pi.pow_apply]
-  calc (truncation (fun y ↦ y - (ν k)[id]) (√i) x) ^ 2
-      = |truncation (fun y ↦ y - (ν k)[id]) (√i) x| ^ 2 := (sq_abs _).symm
-    _ ≤ |x - (ν k)[id]| ^ 2 := by
+  calc (truncation (fun y ↦ y - ν.means k) (√i) x) ^ 2
+      = |truncation (fun y ↦ y - ν.means k) (√i) x| ^ 2 := (sq_abs _).symm
+    _ ≤ |x - ν.means k| ^ 2 := by
         rw [pow_two, pow_two]
         exact mul_self_le_mul_self (abs_nonneg _) (abs_truncation_le_abs_self _ _ _)
-    _ = (x - (ν k)[id]) ^ 2 := sq_abs _
+    _ = (x - ν.means k) ^ 2 := sq_abs _
 
 /-- **The quadratic variation of the truncated response martingale** (blueprint `lem:trunc_qv`):
 `⟨M̃⟩_n = ∑_{i<n} v_i 𝟙{A i = k}`, with `v_i = truncVar ν k i`. Instance of
@@ -410,12 +410,12 @@ lemma predQuadVar_truncRespMart_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P
 /-- The truncated mean `m_i = (ν k)[truncation(· - θ_k, √i)] = ∫ truncation(x - θ_k, √i) ∂(ν k)`,
 the deterministic centering of the truncated increment. -/
 noncomputable def truncMean (ν : Kernel 𝓐 ℝ) (k : 𝓐) (i : ℕ) : ℝ :=
-  ∫ x, truncation (fun y ↦ y - (ν k)[id]) (√i) x ∂(ν k)
+  ∫ x, truncation (fun y ↦ y - ν.means k) (√i) x ∂(ν k)
 
 omit [MeasurableSingletonClass 𝓐] in
 /-- **Bound on the truncated mean** in the LML framework: `|m_i| ≤ V_k/√i`. Instance of the
 abstract `abs_integral_truncation_le` applied to the centred reward `x - θ_k` under `ν_k`
-(centred since `θ_k = (ν k)[id]`, with `∫ (x-θ_k)² ∂ν_k = V_k = Var[id; ν k]`). -/
+(centred since `θ_k = ν.means k`, with `∫ (x-θ_k)² ∂ν_k = V_k = Var[id; ν k]`). -/
 @[specifies truncMean "the bias truncation introduces is `O(1/√i)`, not `O(1)`: truncating an \
 already-centred variable leaves a mean that decays. This is the estimate that makes the \
 accumulated drift negligible"]
@@ -424,14 +424,14 @@ lemma abs_truncMean_le (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) (i
   rcases Nat.eq_zero_or_pos i with hi | hi
   · subst hi; simp [truncMean, sqrt_zero, truncation_zero]
   · have hipos : (0 : ℝ) < √i := sqrt_pos.mpr (by exact_mod_cast hi)
-    have hintX : Integrable (fun x ↦ x - (ν k)[id]) (ν k) :=
+    have hintX : Integrable (fun x ↦ x - ν.means k) (ν k) :=
       (hν2.integrable one_le_two).sub (integrable_const _)
-    have hX2 : MemLp (fun x ↦ x - (ν k)[id]) 2 (ν k) := hν2.sub (memLp_const _)
-    have hX0 : ∫ x, (x - (ν k)[id]) ∂(ν k) = 0 := by
+    have hX2 : MemLp (fun x ↦ x - ν.means k) 2 (ν k) := hν2.sub (memLp_const _)
+    have hX0 : ∫ x, (x - ν.means k) ∂(ν k) = 0 := by
       rw [integral_sub (hν2.integrable one_le_two) (integrable_const _), integral_const]
-      simp
+      simp [Kernel.means_apply]
     have h := abs_integral_truncation_le hX2 hX0 hipos
-    rwa [← variance_id_eq_integral] at h
+    rwa [Kernel.means_apply, ← variance_id_eq_integral] at h
 
 /-- The truncated **drift** process `Dr_n = ∑_{i<n} m_i 𝟙{A i = k}` (blueprint `lem:trunc_drift`),
 the accumulated centering. Deterministic coefficients `m_i` times the arm-`k` indicators. -/
@@ -484,15 +484,15 @@ too. Unlike the sharper `abs_truncMean_le` (`V_k/√i`, used for the drift), thi
 what controls the martingale increments in the block LIL. -/
 lemma abs_truncMean_le_sqrt (k : 𝓐) (i : ℕ) : |truncMean ν k i| ≤ √i := by
   have : IsProbabilityMeasure (ν k) := inferInstance
-  have hbound : ∀ x : ℝ, |truncation (fun y ↦ y - (ν k)[id]) (√i) x| ≤ √i :=
+  have hbound : ∀ x : ℝ, |truncation (fun y ↦ y - ν.means k) (√i) x| ≤ √i :=
     fun x ↦ (abs_truncation_le_bound _ _ _).trans (le_of_eq (abs_of_nonneg (sqrt_nonneg _)))
-  have hgint : Integrable (truncation (fun y ↦ y - (ν k)[id]) (√i)) (ν k) :=
+  have hgint : Integrable (truncation (fun y ↦ y - ν.means k) (√i)) (ν k) :=
     Integrable.mono' (integrable_const (√i))
       (stronglyMeasurable_truncation_sub_const _ _).aestronglyMeasurable
       (Filter.Eventually.of_forall fun x ↦ by rw [Real.norm_eq_abs]; exact hbound x)
   rw [truncMean]
-  calc |∫ x, truncation (fun y ↦ y - (ν k)[id]) (√i) x ∂(ν k)|
-      ≤ ∫ x, |truncation (fun y ↦ y - (ν k)[id]) (√i) x| ∂(ν k) :=
+  calc |∫ x, truncation (fun y ↦ y - ν.means k) (√i) x ∂(ν k)|
+      ≤ ∫ x, |truncation (fun y ↦ y - ν.means k) (√i) x| ∂(ν k) :=
         abs_integral_le_integral_abs
     _ ≤ ∫ _x, √i ∂(ν k) := integral_mono hgint.abs (integrable_const _) hbound
     _ = √i := by rw [integral_const]; simp
@@ -509,10 +509,10 @@ uniform"]
 lemma abs_truncRespMart_increment_le (k : 𝓐) (i : ℕ) (ω : Ω) :
     |truncRespMart ν A Y k (i + 1) ω - truncRespMart ν A Y k i ω| ≤ 2 * √i := by
   have hsucc := congrFun (genRespMart_succ (ν := ν) (A := A) (Y := Y) k
-    (fun j ↦ truncation (fun y ↦ y - (ν k)[id]) (√j)) i) ω
+    (fun j ↦ truncation (fun y ↦ y - ν.means k) (√j)) i) ω
   have hincr : truncRespMart ν A Y k (i + 1) ω - truncRespMart ν A Y k i ω
       = armIndicator A k i ω
-        * (truncation (fun y ↦ y - (ν k)[id]) (√i) (Y i ω) - truncMean ν k i) := by
+        * (truncation (fun y ↦ y - ν.means k) (√i) (Y i ω) - truncMean ν k i) := by
     simp only [truncRespMart, Pi.add_apply] at hsucc ⊢
     rw [hsucc, add_sub_cancel_left]; rfl
   rw [hincr, abs_mul]
@@ -520,19 +520,19 @@ lemma abs_truncRespMart_increment_le (k : 𝓐) (i : ℕ) (ω : Ω) :
     by_cases hω : ω ∈ {ω | A i ω = k}
     · rw [armIndicator, Set.indicator_of_mem hω]; norm_num
     · rw [armIndicator, Set.indicator_of_notMem hω]; norm_num
-  have habs : |truncation (fun y ↦ y - (ν k)[id]) (√i) (Y i ω) - truncMean ν k i|
+  have habs : |truncation (fun y ↦ y - ν.means k) (√i) (Y i ω) - truncMean ν k i|
       ≤ √i + √i := by
-    calc |truncation (fun y ↦ y - (ν k)[id]) (√i) (Y i ω) - truncMean ν k i|
-        = |truncation (fun y ↦ y - (ν k)[id]) (√i) (Y i ω) + -truncMean ν k i| := by
+    calc |truncation (fun y ↦ y - ν.means k) (√i) (Y i ω) - truncMean ν k i|
+        = |truncation (fun y ↦ y - ν.means k) (√i) (Y i ω) + -truncMean ν k i| := by
           rw [sub_eq_add_neg]
-      _ ≤ |truncation (fun y ↦ y - (ν k)[id]) (√i) (Y i ω)| + |-truncMean ν k i| :=
+      _ ≤ |truncation (fun y ↦ y - ν.means k) (√i) (Y i ω)| + |-truncMean ν k i| :=
           abs_add_le _ _
       _ ≤ √i + √i := by
           rw [abs_neg]
           exact add_le_add ((abs_truncation_le_bound _ _ _).trans
             (le_of_eq (abs_of_nonneg (sqrt_nonneg _)))) (abs_truncMean_le_sqrt k i)
   calc |armIndicator A k i ω|
-        * |truncation (fun y ↦ y - (ν k)[id]) (√i) (Y i ω) - truncMean ν k i|
+        * |truncation (fun y ↦ y - ν.means k) (√i) (Y i ω) - truncMean ν k i|
       ≤ 1 * (√i + √i) :=
         mul_le_mul hind habs (abs_nonneg _) zero_le_one
     _ = 2 * √i := by ring
@@ -555,8 +555,8 @@ lemma truncRespMart_zero_ae (k : 𝓐) : truncRespMart ν A Y k 0 =ᵐ[P] 0 := b
 lemma integrable_truncRespMart_sq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) (n : ℕ) :
     MemLp (truncRespMart ν A Y k n) 2 P :=
-  memLp_genRespMart (g := fun i ↦ truncation (fun y ↦ y - (ν k)[id]) (√i))
-    h.measurable_action (fun m ↦ memLp_truncation_comp hint ((ν k)[id]) m) k n
+  memLp_genRespMart (g := fun i ↦ truncation (fun y ↦ y - ν.means k) (√i))
+    h.measurable_action (fun m ↦ memLp_truncation_comp hint (ν.means k) m) k n
 
 omit [MeasurableSingletonClass 𝓐] [IsProbabilityMeasure P] in
 /-- The truncated increments obey the `√i`-growing bound `|ΔM̃_i| ≤ 2√i` a.e.
@@ -688,9 +688,9 @@ omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] in
 lemma truncRespMart_succ_sub (k : 𝓐) (n : ℕ) (ω : Ω) :
     truncRespMart ν A Y k (n + 1) ω - truncRespMart ν A Y k n ω
       = armIndicator A k n ω
-        * (truncation (fun y ↦ y - (ν k)[id]) (√n) (Y n ω) - truncMean ν k n) := by
+        * (truncation (fun y ↦ y - ν.means k) (√n) (Y n ω) - truncMean ν k n) := by
   have hsucc := congrFun (genRespMart_succ (ν := ν) (A := A) (Y := Y) k
-    (fun j ↦ truncation (fun y ↦ y - (ν k)[id]) (√j)) n) ω
+    (fun j ↦ truncation (fun y ↦ y - ν.means k) (√j)) n) ω
   simp only [truncRespMart, Pi.add_apply] at hsucc ⊢
   rw [hsucc, add_sub_cancel_left]; rfl
 
@@ -726,14 +726,14 @@ martingale and the drift and leaving no extra term"]
 lemma tailRespPart_succ_sub (k : 𝓐) (n : ℕ) (ω : Ω) :
     tailRespPart ν A Y k (n + 1) ω - tailRespPart ν A Y k n ω
       = armIndicator A k n ω
-        * ((Y n ω - (ν k)[id]) - truncation (fun y ↦ y - (ν k)[id]) (√n) (Y n ω)) := by
+        * ((Y n ω - ν.means k) - truncation (fun y ↦ y - ν.means k) (√n) (Y n ω)) := by
   simp only [tailRespPart, Pi.sub_apply]
   rw [show respMart ν A Y k (n + 1) ω = respMart ν A Y k n ω
-        + armIndicator A k n ω * (Y n ω - (ν k)[id]) from
+        + armIndicator A k n ω * (Y n ω - ν.means k) from
       by rw [← respMart_succ_sub]; ring,
     show truncRespMart ν A Y k (n + 1) ω = truncRespMart ν A Y k n ω
         + armIndicator A k n ω
-          * (truncation (fun y ↦ y - (ν k)[id]) (√n) (Y n ω) - truncMean ν k n) from
+          * (truncation (fun y ↦ y - ν.means k) (√n) (Y n ω) - truncMean ν k n) from
       by rw [← truncRespMart_succ_sub]; ring,
     show truncDrift ν A k (n + 1) ω = truncDrift ν A k n ω
         + truncMean ν k n * armIndicator A k n ω from
@@ -745,9 +745,9 @@ step `n` *and* its response lands in the tail `√n ≤ |Y n - θ_k|` is at most
 `ν_k(√n ≤ |· - θ_k|)`. Conditioning on `𝒢 n` replaces the sampled response's tail indicator by its
 `ν(A n)`-integral (`condExp_feedback_comp`), which on `{A n = k}` is `ν_k`, and `P{A n = k} ≤ 1`. -/
 lemma measure_action_and_tail_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
-    P {ω | A n ω = k ∧ √n ≤ |Y n ω - (ν k)[id]|}
-      ≤ (ν k) {x | √n ≤ |x - (ν k)[id]|} := by
-  let θ := (ν k)[id]
+    P {ω | A n ω = k ∧ √n ≤ |Y n ω - ν.means k|}
+      ≤ (ν k) {x | √n ≤ |x - ν.means k|} := by
+  let θ := ν.means k
   let S : Set ℝ := {x | √n ≤ |x - θ|}
   have hSmeas : MeasurableSet S := measurableSet_le measurable_const (by fun_prop)
   set g : ℝ → ℝ := S.indicator (fun _ ↦ 1) with hg_def
@@ -821,8 +821,8 @@ lemma measure_action_and_tail_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
 (`tsum_measure_abs_sub_ge_sqrt_ne_top`). -/
 lemma tsum_measure_action_and_tail_ne_top (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) :
-    (∑' n : ℕ, P {ω | A n ω = k ∧ √n ≤ |Y n ω - (ν k)[id]|}) ≠ ∞ := by
-  refine ne_top_of_le_ne_top (tsum_measure_abs_sub_ge_sqrt_ne_top ((ν k)[id]) hν2) ?_
+    (∑' n : ℕ, P {ω | A n ω = k ∧ √n ≤ |Y n ω - ν.means k|}) ≠ ∞ := by
+  refine ne_top_of_le_ne_top (tsum_measure_abs_sub_ge_sqrt_ne_top (ν.means k) hν2) ?_
   exact ENNReal.tsum_le_tsum fun n ↦ measure_action_and_tail_le h k n
 
 /-- **The tail remainder is eventually constant** (blueprint `lem:trunc_tail_const`, sampled form).
@@ -837,8 +837,8 @@ lemma ae_eventually_tailRespPart_const (h : IsAlgEnvSeq A Y alg (stationaryEnv �
   filter_upwards [hω] with n hn
   rw [← sub_eq_zero, tailRespPart_succ_sub]
   by_cases hak : A n ω = k
-  · have htail : (Y n ω - (ν k)[id])
-        - truncation (fun y ↦ y - (ν k)[id]) (√n) (Y n ω) = 0 := by
+  · have htail : (Y n ω - ν.means k)
+        - truncation (fun y ↦ y - ν.means k) (√n) (Y n ω) = 0 := by
       by_contra hne
       exact hn ⟨hak, le_abs_of_truncation_sub_ne (sub_ne_zero.mp hne).symm⟩
     rw [htail, mul_zero]

@@ -24,8 +24,8 @@ the *feedback* `Y n` is the observed response. In a **stationary environment** w
 per-arm reward kernel `ν : Kernel 𝓐 ℝ`, the response of a patient assigned to arm
 `a` is drawn from `ν a`, independently of the past given the arm.
 
-The mean of arm `a` is `(ν a)[id] = ∫ x, x ∂(ν a)`. The centered response martingale
-of arm `k` is `Q k n = ∑_{m < n} 𝟙{A (m+1) = k} (Y (m+1) - (ν k)[id])`.
+The mean of arm `a` is `ν.means a = ∫ x, x ∂(ν a)`. The centered response martingale
+of arm `k` is `Q k n = ∑_{m < n} 𝟙{A (m+1) = k} (Y (m+1) - ν.means k)`.
 
 This resolves the filtration-convention issue behind blueprint `lem:Q_martingale`:
 `M` (the assignment martingale) is a martingale because the *assignment* `A (n+1)`
@@ -37,7 +37,7 @@ information at each step, made rigorous here by the tower property through
 
 ## Main results
 
-* `AlphaRAR.condExp_feedback`: `𝔼[Y n | filtrationAction n] = (ν (A n))[id]`.
+* `AlphaRAR.condExp_feedback`: `𝔼[Y n | filtrationAction n] = ν.means (A n)`.
 * `AlphaRAR.memLp_feedback`: `Y n ∈ L²(P)` as soon as every arm's reward distribution is in `L²`.
 -/
 
@@ -56,11 +56,11 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
   {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
 /-- The centered **response martingale** of arm `k`:
-`Q k n = ∑_{m < n} 𝟙{A m = k} (Y m - (ν k)[id])`, summing over patients `0, …, n-1`. Its
+`Q k n = ∑_{m < n} 𝟙{A m = k} (Y m - ν.means k)`, summing over patients `0, …, n-1`. Its
 increments are the mean-centered responses of the patients assigned to arm `k`. -/
 noncomputable def respMart (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (k : 𝓐) (n : ℕ)
     (ω : Ω) : ℝ :=
-    ∑ m ∈ Finset.range n, armIndicator A k m ω * (Y m ω - (ν k)[id])
+    ∑ m ∈ Finset.range n, armIndicator A k m ω * (Y m ω - ν.means k)
 
 omit [IsMarkovKernel ν] in
 /-- Each response-martingale increment is integrable (the indicator is bounded and the
@@ -68,9 +68,9 @@ centered response is integrable). -/
 @[fun_prop]
 lemma integrable_respMart_increment {m : ℕ} (hAmeas : Measurable (A m))
     (hint : Integrable (Y m) P) (k : 𝓐) :
-    Integrable (fun ω ↦ armIndicator A k m ω * (Y m ω - (ν k)[id])) P := by
-  have heq : (fun ω ↦ armIndicator A k m ω * (Y m ω - (ν k)[id]))
-      = {ω | A m ω = k}.indicator (fun ω ↦ Y m ω - (ν k)[id]) := by
+    Integrable (fun ω ↦ armIndicator A k m ω * (Y m ω - ν.means k)) P := by
+  have heq : (fun ω ↦ armIndicator A k m ω * (Y m ω - ν.means k))
+      = {ω | A m ω = k}.indicator (fun ω ↦ Y m ω - ν.means k) := by
     funext ω
     simp only [armIndicator, Set.indicator]
     by_cases hω : ω ∈ {ω | A m ω = k} <;> simp [hω]
@@ -79,20 +79,20 @@ lemma integrable_respMart_increment {m : ℕ} (hAmeas : Measurable (A m))
 
 /-- **The response martingale increment has zero conditional expectation given `𝒢`.**
 Conditioning on the action-augmented filtration `𝒢 i = filtrationAction i` (the history up to
-`i-1` *and* the current assignment `A i`), the increment `𝟙{A i = k}(Y i - (ν k)[id])` vanishes
+`i-1` *and* the current assignment `A i`), the increment `𝟙{A i = k}(Y i - ν.means k)` vanishes
 in conditional mean: the indicator is `𝒢 i`-measurable and pulls out, and the response's
-conditional mean is the arm mean `(ν (A i))[id]`, which cancels `(ν k)[id]` on `{A i = k}`. This is
+conditional mean is the arm mean `ν.means (A i)`, which cancels `ν.means k` on `{A i = k}`. This is
 the fact that makes `Q` a martingale for `filtrationAction`. -/
 lemma condExp_respMart_increment (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (i : ℕ)
     (hint : Integrable (Y i) P) :
-    P[fun ω ↦ armIndicator A k i ω * (Y i ω - (ν k)[id])
+    P[fun ω ↦ armIndicator A k i ω * (Y i ω - ν.means k)
         | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]
       =ᵐ[P] 0 := by
   let hA := h.measurable_action
   let hY := h.measurable_feedback
   let G := IsAlgEnvSeq.filtrationAction hA hY i
   set c : Ω → ℝ := armIndicator A k i with hc_def
-  let g : Ω → ℝ := fun ω ↦ Y i ω - (ν k)[id]
+  let g : Ω → ℝ := fun ω ↦ Y i ω - ν.means k
   have hGle : G ≤ mΩ := (IsAlgEnvSeq.filtrationAction hA hY).le i
   -- `A i` and the indicator `c` are `G`-measurable.
   have hAG : Measurable[G] (A i) :=
@@ -102,7 +102,7 @@ lemma condExp_respMart_increment (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
   have hgint : Integrable g P := hint.sub (integrable_const _)
   have hcint : Integrable (fun ω ↦ c ω * g ω) P :=
     integrable_respMart_increment (hA i) hint k
-  have hcondg : P[g | G] =ᵐ[P] fun ω ↦ (ν (A i ω))[id] - (ν k)[id] := by
+  have hcondg : P[g | G] =ᵐ[P] fun ω ↦ ν.means (A i ω) - ν.means k := by
     refine (condExp_sub hint (integrable_const _) _).trans ?_
     rw [condExp_const hGle]
     exact (h.condExp_feedback i hint).sub (EventuallyEq.refl _ _)
@@ -125,21 +125,21 @@ Retaining the (`𝒢`-measurable) indicator is what turns the summed second mome
 `V_k N_{n,k}`. -/
 lemma condExp_respMart_increment_sq [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (k : 𝓐) (i : ℕ) (hνk : ∀ a, MemLp id 2 (ν a)) :
-    P[fun ω ↦ (armIndicator A k i ω * (Y i ω - (ν k)[id])) ^ 2
+    P[fun ω ↦ (armIndicator A k i ω * (Y i ω - ν.means k)) ^ 2
         | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]
       =ᵐ[P] fun ω ↦ armIndicator A k i ω * Var[id; ν k] := by
-  have hint2 : Integrable (fun ω ↦ (Y i ω - (ν k)[id]) ^ 2) P :=
+  have hint2 : Integrable (fun ω ↦ (Y i ω - ν.means k) ^ 2) P :=
     ((h.memLp_feedback hνk i).sub (memLp_const _)).integrable_sq
   let hA := h.measurable_action
   let hY := h.measurable_feedback
   let G := IsAlgEnvSeq.filtrationAction hA hY i
   set c : Ω → ℝ := armIndicator A k i with hc_def
-  set g : Ω → ℝ := fun ω ↦ (Y i ω - (ν k)[id]) ^ 2 with hg_def
+  set g : Ω → ℝ := fun ω ↦ (Y i ω - ν.means k) ^ 2 with hg_def
   have hcG : StronglyMeasurable[G] c :=
     stronglyMeasurable_const.indicator
       ((IsAlgEnvSeq.measurable_action_filtrationAction' hA hY i) (measurableSet_singleton k))
   -- The squared increment equals `c · g` (the indicator squares to itself).
-  have hsq : (fun ω ↦ (c ω * (Y i ω - (ν k)[id])) ^ 2) = fun ω ↦ c ω * g ω := by
+  have hsq : (fun ω ↦ (c ω * (Y i ω - ν.means k)) ^ 2) = fun ω ↦ c ω * g ω := by
     funext ω
     simp only [hg_def]
     by_cases hω : ω ∈ {ω | A i ω = k}
@@ -155,8 +155,8 @@ lemma condExp_respMart_increment_sq [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stat
     rw [hform]
     exact hint2.indicator (hA i (measurableSet_singleton k))
   -- Conditional expectation of `g = (Y - θ_k)²` given `G` is the arm's second central moment.
-  have hcondg : P[g | G] =ᵐ[P] fun ω ↦ ∫ x, (x - (ν k)[id]) ^ 2 ∂(ν (A i ω)) := by
-    have hg2 : StronglyMeasurable (fun x : ℝ ↦ (x - (ν k)[id]) ^ 2) :=
+  have hcondg : P[g | G] =ᵐ[P] fun ω ↦ ∫ x, (x - ν.means k) ^ 2 ∂(ν (A i ω)) := by
+    have hg2 : StronglyMeasurable (fun x : ℝ ↦ (x - ν.means k) ^ 2) :=
       ((continuous_id.sub continuous_const).pow 2).stronglyMeasurable
     exact h.condExp_feedback_comp i hg2 hint2
   -- Pull out the `G`-measurable indicator `c`, then evaluate on the arm event.
@@ -165,23 +165,23 @@ lemma condExp_respMart_increment_sq [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stat
   change P[c * g | G] ω = _
   rw [hp, Pi.mul_apply, hcg]
   rcases eq_or_ne (A i ω) k with hak | hak
-  · rw [hak, variance_id_eq_integral]
+  · rw [hak, variance_id_eq_integral, Kernel.means_apply]
   · have hc0 : c ω = 0 := by rw [hc_def, armIndicator, Set.indicator_of_notMem (by simpa using hak)]
     rw [hc0, zero_mul, zero_mul]
 
 omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] in
-/-- Successor form: `Q k (n+1) = Q k n + 𝟙{A n = k}(Y n - (ν k)[id])`. -/
+/-- Successor form: `Q k (n+1) = Q k n + 𝟙{A n = k}(Y n - ν.means k)`. -/
 lemma respMart_succ (k : 𝓐) (n : ℕ) :
     respMart ν A Y k (n + 1) = respMart ν A Y k n +
-      fun ω ↦ armIndicator A k n ω * (Y n ω - (ν k)[id]) := by
+      fun ω ↦ armIndicator A k n ω * (Y n ω - ν.means k) := by
   funext ω
   simp only [respMart, Finset.sum_range_succ, Pi.add_apply]
 
 omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] in
-/-- The response-martingale increment: `Q k (n+1) - Q k n = 𝟙{A n=k}(Y n - (ν k)[id])`. -/
+/-- The response-martingale increment: `Q k (n+1) - Q k n = 𝟙{A n=k}(Y n - ν.means k)`. -/
 lemma respMart_succ_sub (k : 𝓐) (n : ℕ) (ω : Ω) :
     respMart ν A Y k (n + 1) ω - respMart ν A Y k n ω
-      = armIndicator A k n ω * (Y n ω - (ν k)[id]) := by
+      = armIndicator A k n ω * (Y n ω - ν.means k) := by
   rw [respMart_succ]; simp only [Pi.add_apply]; ring
 
 omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] in
@@ -231,13 +231,13 @@ lemma stronglyAdapted_respMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k
 /-- **The response martingale is a martingale** (blueprint `lem:Q_martingale`).
 For arm `k`, `Q k` is a martingale for the action-augmented filtration
 `𝒢 n = filtrationAction n = ℱ (n-1) ⊔ σ(A n)` — the history up to the previous patient together
-with the current assignment. The increment `𝟙{A i = k}(Y i - (ν k)[id])` has zero conditional
+with the current assignment. The increment `𝟙{A i = k}(Y i - ν.means k)` has zero conditional
 expectation given `𝒢 i` because the response `Y i` is fresh given the current arm
 (`condExp_respMart_increment`); this is the filtration for which the paper's response martingale
 is a genuine martingale difference (the assignment is known, the response is not). -/
 @[specifies respMart "names the filtration that makes `Q` a martingale: the *action-augmented* \
 `filtrationAction n = ℱ_{n-1} ⊔ σ(A n)`, where the assignment is already known and only the \
-response is fresh. Centring at the arm mean `(ν k)[id]` is exactly what this filtration requires"]
+response is fresh. Centring at the arm mean `ν.means k` is exactly what this filtration requires"]
 lemma martingale_respMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) :
     Martingale (respMart ν A Y k)
@@ -272,9 +272,9 @@ omit [IsMarkovKernel ν] in
 bounded indicator times the `L²` centered response. -/
 lemma memLp_respMart_increment {m : ℕ} (k : 𝓐) (hAmeas : Measurable (A m))
     (hY2 : MemLp (Y m) 2 P) :
-    MemLp (fun ω ↦ armIndicator A k m ω * (Y m ω - (ν k)[id])) 2 P := by
-  have heq : (fun ω ↦ armIndicator A k m ω * (Y m ω - (ν k)[id]))
-      = {ω | A m ω = k}.indicator (fun ω ↦ Y m ω - (ν k)[id]) := by
+    MemLp (fun ω ↦ armIndicator A k m ω * (Y m ω - ν.means k)) 2 P := by
+  have heq : (fun ω ↦ armIndicator A k m ω * (Y m ω - ν.means k))
+      = {ω | A m ω = k}.indicator (fun ω ↦ Y m ω - ν.means k) := by
     funext ω
     by_cases hω : ω ∈ {ω | A m ω = k}
     · simp [armIndicator, Set.indicator_of_mem hω]
@@ -318,7 +318,7 @@ lemma predQuadVar_respMart_eq [DecidableEq 𝓐] [Finite 𝓐]
   -- The martingale increment `ΔQ` squares to the squared centered response.
   have hdiff : ∀ m, (fun ω ↦ (respMart ν A Y k (m + 1) ω - respMart ν A Y k m ω) ^ 2)
       = fun ω ↦ (armIndicator A k m ω
-        * (Y m ω - (ν k)[id])) ^ 2 := by
+        * (Y m ω - ν.means k)) ^ 2 := by
     intro m; funext ω; rw [respMart_succ]; simp only [Pi.add_apply]; ring
   -- Each compensator increment is `V_k · X_{m,k}`.
   have hkey : ∀ m, predQuadVar (respMart ν A Y k)
@@ -342,9 +342,10 @@ lemma predQuadVar_respMart_eq [DecidableEq 𝓐] [Finite 𝓐]
         = (pullCount A k n ω : ℝ) + armIndicator A k n ω := by
       rw [pullCount_add_one]
       by_cases hak : A n ω = k
-      · rw [if_pos hak, armIndicator, Set.indicator_of_mem (show ω ∈ {ω | A n ω = k} from hak)]
+      · rw [ite_eq_left hak, armIndicator, Set.indicator_of_mem (show ω ∈ {ω | A n ω = k} from hak)]
         push_cast; ring
-      · rw [if_neg hak, armIndicator, Set.indicator_of_notMem (show ω ∉ {ω | A n ω = k} from hak)]
+      · rw [ite_eq_right hak, armIndicator,
+          Set.indicator_of_notMem (show ω ∉ {ω | A n ω = k} from hak)]
         push_cast; ring
     change predQuadVar (respMart ν A Y k)
         (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback)
@@ -416,7 +417,7 @@ lemma integral_respMart_increment_sq_le [Finite 𝓐]
     ∫ ω, (respMart ν A Y k (n + 1) ω - respMart ν A Y k n ω) ^ 2 ∂P ≤ Var[id; ν k] := by
   have hY2 : MemLp (Y n) 2 P := h.memLp_feedback hνk n
   have hdiff : (fun ω ↦ (respMart ν A Y k (n + 1) ω - respMart ν A Y k n ω) ^ 2)
-      = fun ω ↦ (armIndicator A k n ω * (Y n ω - (ν k)[id])) ^ 2 := by
+      = fun ω ↦ (armIndicator A k n ω * (Y n ω - ν.means k)) ^ 2 := by
     funext ω; rw [respMart_succ]; simp only [Pi.add_apply]; ring
   have hGle : IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback n
       ≤ mΩ :=
@@ -450,7 +451,7 @@ lemma isBigOpOne_respMart_div_sqrt [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stati
   -- The martingale increment `ΔQ` squares to the squared centered response.
   have hdiff : ∀ m, (fun ω ↦ (respMart ν A Y k (m + 1) ω - respMart ν A Y k m ω) ^ 2)
       = fun ω ↦ (armIndicator A k m ω
-        * (Y m ω - (ν k)[id])) ^ 2 := by
+        * (Y m ω - ν.means k)) ^ 2 := by
     intro m; funext ω; rw [respMart_succ]; simp only [Pi.add_apply]; ring
   have hM := martingale_respMart h hint k
   have hM2 : ∀ n, MemLp (respMart ν A Y k n) 2 P :=

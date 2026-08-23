@@ -49,7 +49,7 @@ lemma qm_increments_resp (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
   have hMfam : ∀ k, Martingale (respMart ν A Y k) ℱ P := fun k ↦ martingale_respMart h hint k
   have hM2fam : ∀ k n, MemLp (respMart ν A Y k n) 2 P :=
     fun k n ↦ memLp_respMart h.measurable_action hY2 k n
-  have hcent2 : ∀ k n, Integrable (fun ω ↦ (Y n ω - (ν k)[id]) ^ 2) P :=
+  have hcent2 : ∀ k n, Integrable (fun ω ↦ (Y n ω - ν.means k) ^ 2) P :=
     fun k n ↦ ((hY2 n).sub (memLp_const _)).integrable_sq
   have harmnn : ∀ k, 0 ≤ Var[id; ν k] := fun k ↦ variance_nonneg _ _
   have hC₀ : 0 ≤ ∑ k, Var[id; ν k] := Finset.sum_nonneg (fun k _ ↦ harmnn k)

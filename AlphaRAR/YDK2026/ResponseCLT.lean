@@ -51,10 +51,10 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
   {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
 /-- The `i`-th centered response-martingale increment of arm `k`:
-`respIncr ν A Y k i ω = 𝟙{A i ω = k}(Y i ω - (ν k)[id])`. This is `Q_{k}(i+1) - Q_k i`. -/
+`respIncr ν A Y k i ω = 𝟙{A i ω = k}(Y i ω - ν.means k)`. This is `Q_{k}(i+1) - Q_k i`. -/
 noncomputable def respIncr (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (k : 𝓐) (i : ℕ) :
     Ω → ℝ :=
-  fun ω ↦ armIndicator A k i ω * (Y i ω - (ν k)[id])
+  fun ω ↦ armIndicator A k i ω * (Y i ω - ν.means k)
 
 omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] [IsProbabilityMeasure P] in
 /-- The partial sums of the increments are the response martingale:
@@ -209,8 +209,8 @@ lemma lindeberg_respArray_ae [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryE
     (ε : ℝ) (hε : 0 < ε) (n : ℕ) :
     (respArray h hνk k vk).lindeberg n ε =ᵐ[P]
       fun ω ↦ (Var[id; ν k] * vk * n)⁻¹
-        * (∫ x, {x | ε * √(Var[id; ν k] * vk * n) < |x - (ν k)[id]|}.indicator
-            (fun x ↦ (x - (ν k)[id]) ^ 2) x ∂(ν k))
+        * (∫ x, {x | ε * √(Var[id; ν k] * vk * n) < |x - ν.means k|}.indicator
+            (fun x ↦ (x - ν.means k) ^ 2) x ∂(ν k))
         * count (fun j ↦ armIndicator A k j ω) n := by
   have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
   rcases Nat.eq_zero_or_pos n with hn0 | hn0
@@ -222,7 +222,7 @@ lemma lindeberg_respArray_ae [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryE
     have hspos : 0 < √(Var[id; ν k] * vk * (n : ℝ)) := Real.sqrt_pos.mpr han
     have hs2 : √(Var[id; ν k] * vk * (n : ℝ)) ^ 2 = Var[id; ν k] * vk * (n : ℝ) :=
       Real.sq_sqrt han.le
-    set θ := (ν k)[id] with hθ
+    set θ := ν.means k with hθ
     set s := √(Var[id; ν k] * vk * (n : ℝ)) with hs
     set φ : ℝ → ℝ := {x | ε * s < |x - θ|}.indicator (fun x ↦ (x - θ) ^ 2) with hφ
     have hφsm : StronglyMeasurable φ :=
@@ -249,11 +249,11 @@ lemma lindeberg_respArray_ae [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryE
             rw [abs_mul, abs_of_nonneg (inv_nonneg.mpr hspos.le), inv_mul_eq_div, lt_div_iff₀ hspos]
           rw [Set.indicator_apply]
           by_cases hc : ε * s < |Y i ω - θ|
-          · rw [if_pos (show ω ∈ {ω | ε < |s⁻¹ * respIncr ν A Y k i ω|} by
+          · rw [ite_eq_left (show ω ∈ {ω | ε < |s⁻¹ * respIncr ν A Y k i ω|} by
                 rw [Set.mem_ofPred_eq, hri]; exact hcond.mpr hc), hri, harm, one_mul, hφ,
               Set.indicator_of_mem (show Y i ω ∈ {x | ε * s < |x - θ|} from hc),
               mul_pow, inv_pow, hs2]
-          · rw [if_neg (show ω ∉ {ω | ε < |s⁻¹ * respIncr ν A Y k i ω|} by
+          · rw [ite_eq_right (show ω ∉ {ω | ε < |s⁻¹ * respIncr ν A Y k i ω|} by
                 rw [Set.mem_ofPred_eq, hri]; exact fun hh ↦ hc (hcond.mp hh)), harm, one_mul, hφ,
               Set.indicator_of_notMem (show Y i ω ∉ {x | ε * s < |x - θ|} from hc)]
             ring
@@ -306,23 +306,23 @@ lemma tendstoInMeasure_lindeberg_respArray [Finite 𝓐] (h : IsAlgEnvSeq A Y al
   intro ε hε
   have ha_nn : ∀ n : ℕ, (0 : ℝ) ≤ Var[id; ν k] * vk * (n : ℝ) := fun n ↦
     mul_nonneg (mul_nonneg hVk.le hvk.le) (Nat.cast_nonneg n)
-  have hcent2ν : MemLp (fun x ↦ x - (ν k)[id]) 2 (ν k) := (hνk k).sub (memLp_const _)
+  have hcent2ν : MemLp (fun x ↦ x - ν.means k) 2 (ν k) := (hνk k).sub (memLp_const _)
   have hc : Tendsto (fun n : ℕ ↦ ε * √(Var[id; ν k] * vk * (n : ℝ))) atTop atTop :=
     Tendsto.const_mul_atTop hε
       (Real.tendsto_sqrt_atTop.comp (Tendsto.const_mul_atTop (mul_pos hVk hvk)
         tendsto_natCast_atTop_atTop))
   -- Abbreviate the deterministic tail `T n = h_n(ε)`; `hT` is a definitional equality that lets us
   -- avoid comparing the (beta-unreduced) `∫` produced by `hDCT.comp` against the reduced form,
-  -- which would loop the defeq checker on the Bochner integral `(ν k)[id]`.
+  -- which would loop the defeq checker on the Bochner integral `ν.means k`.
   obtain ⟨T, hT⟩ : ∃ T : ℕ → ℝ, ∀ n, T n = ∫ x,
-      {x | ε * √(Var[id; ν k] * vk * (n : ℝ)) < |x - (ν k)[id]|}.indicator
-        (fun x ↦ (x - (ν k)[id]) ^ 2) x ∂(ν k) := ⟨_, fun n ↦ rfl⟩
+      {x | ε * √(Var[id; ν k] * vk * (n : ℝ)) < |x - ν.means k|}.indicator
+        (fun x ↦ (x - ν.means k) ^ 2) x ∂(ν k) := ⟨_, fun n ↦ rfl⟩
   have htail : Tendsto T atTop (𝓝 0) := by
-    have hDCT := tendsto_integral_sq_indicator_gt (P := ν k) (Z := fun x ↦ x - (ν k)[id])
+    have hDCT := tendsto_integral_sq_indicator_gt (P := ν k) (Z := fun x ↦ x - ν.means k)
       (measurable_id.sub_const _) hcent2ν
     have h0 : Tendsto (fun n : ℕ ↦ ∫ x,
-      {x | ε * √(Var[id; ν k] * vk * (n : ℝ)) < |x - (ν k)[id]|}.indicator
-        (fun x ↦ (x - (ν k)[id]) ^ 2) x ∂(ν k)) atTop (𝓝 0) := by
+      {x | ε * √(Var[id; ν k] * vk * (n : ℝ)) < |x - ν.means k|}.indicator
+        (fun x ↦ (x - ν.means k) ^ 2) x ∂(ν k)) atTop (𝓝 0) := by
       simpa only [Function.comp_def] using hDCT.comp hc
     exact Tendsto.congr (fun n ↦ (hT n).symm) h0
   have htail_nn : ∀ n : ℕ, (0 : ℝ) ≤ T n := fun n ↦ by

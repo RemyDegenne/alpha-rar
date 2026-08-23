@@ -5,6 +5,7 @@ Authors: Rémy Degenne
 -/
 module
 
+public import AlphaRAR.LeanMachineLearning.Means
 public import AlphaRAR.Mathlib.HasCondDistrib
 public import LeanMachineLearning.SequentialLearning.FiniteActions
 public import LeanMachineLearning.SequentialLearning.StationaryEnv
@@ -117,12 +118,12 @@ lemma condExp_feedback_comp (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (n : 
 /-- **Conditional expectation of the feedback is the mean of the arm's reward kernel.**
 Under a stationary environment with per-arm reward kernel `ν`, the conditional expectation of
 the response `Y n` given the action-augmented filtration `filtrationAction n` is the mean
-`(ν (A n))[id]` of the chosen arm's reward distribution. This is the `g = id` case of
+`ν.means (A n)` of the chosen arm's reward distribution. This is the `g = id` case of
 `condExp_feedback_comp`. -/
 lemma condExp_feedback (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (n : ℕ)
     (hint : Integrable (Y n) P) :
     P[Y n | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback n]
-      =ᵐ[P] fun ω ↦ (ν (A n ω))[id] :=
+      =ᵐ[P] fun ω ↦ ν.means (A n ω) :=
   condExp_feedback_comp h n stronglyMeasurable_id hint
 
 end Learning.IsAlgEnvSeq

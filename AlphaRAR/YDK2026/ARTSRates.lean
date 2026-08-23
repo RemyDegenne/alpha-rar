@@ -60,23 +60,22 @@ lemma count_proportion_pos_of_hitting
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) (k : 𝓐) :
     ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n
       / (n : ℝ)) atTop (𝓝 uk) := by
-  have hmem : ∀ k', (ν k')[id] ∈ attainableSet A Y (θ₀ k') k' := by
+  have hmem : ∀ k', ν.means k' ∈ attainableSet A Y (θ₀ k') k' := by
     obtain ⟨ω, hω⟩ :=
       (theta_consistent_of_hitting h hνk θ₀ T hT hTnn hTsum α hα Q hthrottle hgs hTpos).exists
     exact fun k' ↦ estimator_limit_mem_attainableSet k' (θ₀ k') (tendsto_pi_nhds.mp hω k')
-  have hposk : 0 < T (fun k ↦ (ν k)[id]) k := hTpos (fun k ↦ (ν k)[id]) hmem k
+  have hposk : 0 < T ν.means k := hTpos ν.means hmem k
   filter_upwards [consistency_of_hitting h hνk θ₀ T hT hTnn hTsum α hα Q hthrottle hgs,
     theta_consistent_of_hitting h hνk θ₀ T hT hTnn hTsum α hα Q hthrottle hgs hTpos] with ω hjω hθω
   obtain ⟨u, hu⟩ := hjω
   have hrho : Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop
-      (𝓝 (T (fun k ↦ (ν k)[id]) k)) := tendsto_pi_nhds.mp ((hT.tendsto _).comp hθω) k
-  have huk : u k = T (fun k ↦ (ν k)[id]) k := tendsto_nhds_unique (hu k).2 hrho
+      (𝓝 (T ν.means k)) := tendsto_pi_nhds.mp ((hT.tendsto _).comp hθω) k
+  have huk : u k = T ν.means k := tendsto_nhds_unique (hu k).2 hrho
   exact ⟨u k, huk.symm ▸ hposk, (hu k).1⟩
 
 /-- **Positive allocation proportion for an aRTS design** (count form, per-arm). The `aRTS`
 instantiation of `count_proportion_pos_of_hitting` at the last under-sampling time. -/
-lemma aRTS_count_proportion_pos
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma aRTS_count_proportion_pos (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
@@ -96,8 +95,7 @@ omit [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐] in
 the estimator consistency `theta_consistent_of_hitting` and the per-arm loglog estimator rate
 (via the positive proportion `count_proportion_pos_of_hitting`) through the delta-method rate
 `rho_rate`. -/
-lemma rho_rate_of_hitting
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma rho_rate_of_hitting (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1)
@@ -109,10 +107,10 @@ lemma rho_rate_of_hitting
       (count (fun j ↦ armIndicator A k j ω) (hitting (Q k ω) n)
           - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k) / (n : ℝ) < δ)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
-    (hT_diff : DifferentiableAt ℝ T (fun k ↦ (ν k)[id])) (k : 𝓐) :
+    (hT_diff : DifferentiableAt ℝ T ν.means) (k : 𝓐) :
     ∀ᵐ ω ∂P, (fun n ↦ T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-      (fun j ↦ Y j ω) (θ₀ k') n) k - T (fun k ↦ (ν k)[id]) k)
-        =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) := by
+      (Y · ω) (θ₀ k') n) k - T ν.means k)
+        =O[atTop] (fun n ↦ √(n * log (log n)) / (n : ℝ)) := by
   refine rho_rate hT_diff
     (theta_consistent_of_hitting h hνk θ₀ T hT hTnn hTsum α hα Q hthrottle hgs hTpos)
     (fun k' ↦ ?_) k
@@ -128,15 +126,14 @@ lemma rho_rate_of_hitting
 /-- **Loglog rate of the plug-in target for an aRTS design** (blueprint `lem:rho_rate`, `thm:LLN`
 third conclusion). The `aRTS` instantiation of `rho_rate_of_hitting`:
 `ρ̂_{n,k} - v_k = O(√(log log n / n))` a.s. -/
-lemma aRTS_rho_rate
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma aRTS_rho_rate (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
-    (hT_diff : DifferentiableAt ℝ T (fun k ↦ (ν k)[id])) (k : 𝓐) :
+    (hT_diff : DifferentiableAt ℝ T ν.means) (k : 𝓐) :
     ∀ᵐ ω ∂P, (fun n ↦ T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-      (fun j ↦ Y j ω) (θ₀ k') n) k - T (fun k ↦ (ν k)[id]) k)
+      (Y · ω) (θ₀ k') n) k - T ν.means k)
         =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) :=
   rho_rate_of_hitting h hνk hT hTnn hTsum hα (aRTSUnder A Y θ₀ T)
     (fun k ↦ throttle_of_isARTS h hARTS k)
@@ -151,25 +148,19 @@ conditions `hTnn`, `hTsum`) an `α`-throttled aRTS design satisfies, almost sure
 the allocation proportion converges to the target `N_{n,k}/n → v_k = T(θ)_k`; the estimator is
 consistent `θ̂_{n,k} → θ_k`; and the plug-in target achieves the loglog rate
 `ρ̂_{n,k} - v_k = O(√(log log n / n))`. Bundles `aRTS_proportion_tendsto`, `aRTS_theta_consistent`,
-`aRTS_rho_rate`.
-
-Condition **A** appears in its paper form: the single hypothesis `hνk` — every arm's reward law is
-in `L²(ν a)`, i.e. `E|ξ_{1,k}|² < ∞` — replaces the three moment hypotheses the component lemmas
-take separately (`Y n ∈ L²(P)` via `IsAlgEnvSeq.memLp_feedback`, and the two `ν`-integrabilities),
-as in `aRTSFE_sparse_clt_of_contDiffAt`. -/
-theorem aRTS_LLN
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+`aRTS_rho_rate`. -/
+theorem aRTS_LLN (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
-    (hT_diff : DifferentiableAt ℝ T (fun k ↦ (ν k)[id])) (k : 𝓐) :
+    (hT_diff : DifferentiableAt ℝ T ν.means) (k : 𝓐) :
     ∀ᵐ ω ∂P,
-      Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (T (fun k ↦ (ν k)[id]) k)) ∧
+      Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (T ν.means k)) ∧
       Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
-        (fun j ↦ Y j ω) (θ₀ k) n) atTop (𝓝 ((ν k)[id])) ∧
+        (Y · ω) (θ₀ k) n) atTop (𝓝 (ν.means k)) ∧
       (fun n ↦ T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-        (fun j ↦ Y j ω) (θ₀ k') n) k - T (fun k ↦ (ν k)[id]) k)
+        (Y · ω) (θ₀ k') n) k - T ν.means k)
           =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) := by
   filter_upwards [aRTS_proportion_tendsto h hνk hT hTnn hTsum hα hARTS hTpos k,
     aRTS_theta_consistent h hνk hT hTnn hTsum hα hARTS hTpos,

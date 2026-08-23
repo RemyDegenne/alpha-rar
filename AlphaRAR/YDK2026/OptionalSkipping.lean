@@ -67,11 +67,11 @@ variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
 `Nat.nth`. When there are infinitely many hits this is the strictly increasing enumeration of
 `{j | D j ω = 1}`. -/
 noncomputable def sampleTime (D : ℕ → Ω → ℝ) (m : ℕ) (ω : Ω) : ℕ :=
-  Nat.nth (fun j ↦ D j ω = 1) m
+  Nat.nth (D · ω = 1) m
 
 /-- The number of hits strictly before time `j`: `#{ i < j : D i ω = 1}`. -/
 noncomputable def hitCount (D : ℕ → Ω → ℝ) (j : ℕ) (ω : Ω) : ℕ :=
-  Nat.count (fun i ↦ D i ω = 1) j
+  Nat.count (D · ω = 1) j
 
 /-- The sampled sequence `Z m ω = Y_{τ_m ω} ω`, the value of `Y` at the `m`-th hit time. -/
 noncomputable def sampledSeq (Y D : ℕ → Ω → ℝ) (m : ℕ) (ω : Ω) : ℝ :=
@@ -161,7 +161,7 @@ lemma hitCount_mono (D : ℕ → Ω → ℝ) (ω : Ω) : Monotone (fun j ↦ hit
 /-- When time `j` is a hit, the count jumps by one. -/
 lemma hitCount_succ_of_hit {D : ℕ → Ω → ℝ} {j : ℕ} {ω : Ω} (h : D j ω = 1) :
     hitCount D (j + 1) ω = hitCount D j ω + 1 := by
-  rw [hitCount, hitCount, Nat.count_succ, if_pos h]
+  rw [hitCount, hitCount, Nat.count_succ, ite_eq_left h]
 
 /-- **Hit events of a lower rank vanish against a later higher-rank event.** For `i < N` and
 `j ≤ k`, `hitEvent D k i ∩ hitEvent D j N = ∅`: at rank-`N` time `j` the count is already `N`, so at
@@ -452,8 +452,8 @@ lemma measure_iInter_sampledSeq_preimage_finset
   set E' : ℕ → Set ℝ := fun i ↦ if i ∈ S then sets i else Set.univ with hE'
   have hE'meas : ∀ i, MeasurableSet (E' i) := by
     intro i; by_cases hi : i ∈ S
-    · simpa only [hE', if_pos hi] using hsets i hi
-    · simp only [hE', if_neg hi]; exact MeasurableSet.univ
+    · simpa only [hE', ite_eq_left hi] using hsets i hi
+    · simp only [hE', ite_eq_right hi]; exact MeasurableSet.univ
   have hset_eq : (⋂ i ∈ S, sampledSeq Y D i ⁻¹' sets i)
       = ⋂ i ∈ Finset.range N, sampledSeq Y D i ⁻¹' E' i := by
     ext ω
@@ -462,10 +462,11 @@ lemma measure_iInter_sampledSeq_preimage_finset
     · intro h i hi; split_ifs with hiS
       · exact h i hiS
       · exact Set.mem_univ _
-    · intro h i hiS; have := h i (hSsub hiS); rwa [if_pos hiS] at this
+    · intro h i hiS; have := h i (hSsub hiS); rwa [ite_eq_left hiS] at this
   have hprod_eq : ∏ i ∈ Finset.range N, ρ (E' i) = ∏ i ∈ S, ρ (sets i) := by
-    rw [← Finset.prod_subset hSsub (fun i _ hiS ↦ by simp only [hE', if_neg hiS, measure_univ])]
-    exact Finset.prod_congr rfl (fun i hi ↦ by simp only [hE', if_pos hi])
+    rw [← Finset.prod_subset hSsub
+      (fun i _ hiS ↦ by simp only [hE', ite_eq_right hiS, measure_univ])]
+    exact Finset.prod_congr rfl (fun i hi ↦ by simp only [hE', ite_eq_left hi])
   rw [hset_eq, measure_iInter_sampledSeq_preimage hYmeas hYlt hD ρ hfact hDinf E' hE'meas N,
     hprod_eq]
 

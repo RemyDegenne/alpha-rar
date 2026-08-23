@@ -8,6 +8,7 @@ module
 public import Mathlib.Algebra.BigOperators.Module
 public import Mathlib.Analysis.Normed.Group.Continuity
 public import Mathlib.Analysis.Normed.Ring.Basic
+public import Mathlib.Order.Filter.AtTopBot.Archimedean
 
 /-!
 # Kronecker's lemma

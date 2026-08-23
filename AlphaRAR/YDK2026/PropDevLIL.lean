@@ -28,7 +28,7 @@ the simplex identity `sum_count_sub_smul_eq_zero` for the reverse step.
 
 ## Main results
 
-* `AlphaRAR.logLogRate` (the `√(n log log n)` rate) and its analytic lemmas.
+* Analytic lemmas about the `√(n log log n)` rate (`sqrt_mul_log_log` in lemma names).
 * `AlphaRAR.aRTS_prop_dev_ae`, `AlphaRAR.aRTS_count_sub_smul_ae`.
 -/
 
@@ -39,58 +39,47 @@ open scoped Topology ENNReal NNReal
 
 namespace AlphaRAR
 
-/-- The loglog-LIL rate `√(n · log log n)`. -/
-noncomputable def logLogRate (n : ℕ) : ℝ := √((n : ℝ) * Real.log (Real.log n))
-
-@[specifies logLogRate "nonnegative, so it can be used as a bound on an absolute value without a \
-side condition"]
-lemma logLogRate_nonneg (n : ℕ) : 0 ≤ logLogRate n := Real.sqrt_nonneg _
-
-@[specifies logLogRate "the defining formula, stated so that a reader never has to unfold the \
-definition to know what the rate is"]
-lemma logLogRate_eq (n : ℕ) : logLogRate n = √((n : ℝ) * Real.log (Real.log n)) := rfl
-
-/-- The rate diverges: `√(n log log n) → ∞`. -/
-@[specifies logLogRate "the rate genuinely grows, so an `O(logLogRate)` bound is a statement about \
-a diverging scale rather than a disguised constant"]
-lemma tendsto_logLogRate_atTop : Tendsto logLogRate atTop atTop := by
-  have hll : Tendsto (fun n : ℕ ↦ Real.log (Real.log n)) atTop atTop :=
-    Real.tendsto_log_atTop.comp (Real.tendsto_log_atTop.comp tendsto_natCast_atTop_atTop)
-  have hprod : Tendsto (fun n : ℕ ↦ (n : ℝ) * Real.log (Real.log n)) atTop atTop :=
+/-- The loglog-LIL rate `√(n log log n)` diverges, so an `O(√(n log log n))` bound is a statement
+about a diverging scale rather than a disguised constant. -/
+lemma tendsto_sqrt_mul_log_log_atTop :
+    Tendsto (fun n : ℕ ↦ √(n * log (log n))) atTop atTop := by
+  have hll : Tendsto (fun n : ℕ ↦ log (log n)) atTop atTop :=
+    tendsto_log_atTop.comp (tendsto_log_atTop.comp tendsto_natCast_atTop_atTop)
+  have hprod : Tendsto (fun n : ℕ ↦ (n : ℝ) * log (log n)) atTop atTop :=
     Tendsto.atTop_mul_atTop₀ tendsto_natCast_atTop_atTop hll
-  exact Real.tendsto_sqrt_atTop.comp hprod
+  exact tendsto_sqrt_atTop.comp hprod
 
 /-- Eventually `1 ≤ √(n log log n)`. -/
-lemma eventually_one_le_logLogRate : ∀ᶠ n in atTop, 1 ≤ logLogRate n :=
-  tendsto_logLogRate_atTop.eventually_ge_atTop 1
+lemma eventually_one_le_sqrt_mul_log_log : ∀ᶠ n : ℕ in atTop, 1 ≤ √(n * log (log n)) :=
+  tendsto_sqrt_mul_log_log_atTop.eventually_ge_atTop 1
 
 /-- `√(n log log n)` is nondecreasing once `3 ≤ n`: on `[3, ∞)` the argument `n log log n` is
-nondecreasing (`log log` is nonnegative and nondecreasing there). -/
-@[specifies logLogRate "monotone from 3 on, which is what lets the rate at a random time `ℓ ≤ n` \
-be replaced by the rate at `n`"]
-lemma logLogRate_le_of_le {m n : ℕ} (hm : 3 ≤ m) (hmn : m ≤ n) : logLogRate m ≤ logLogRate n := by
+nondecreasing (`log log` is nonnegative and nondecreasing there). This is what lets the rate at a
+random time `ℓ ≤ n` be replaced by the rate at `n`. -/
+lemma sqrt_mul_log_log_le_of_le {m n : ℕ} (hm : 3 ≤ m) (hmn : m ≤ n) :
+    √(m * log (log m)) ≤ √(n * log (log n)) := by
   have hmR : (3 : ℝ) ≤ m := by exact_mod_cast hm
   have hnR : (3 : ℝ) ≤ n := le_trans hmR (by exact_mod_cast hmn)
-  have hexp3 : Real.exp 1 ≤ 3 := (Real.exp_one_lt_d9.le).trans (by norm_num)
-  have hlogm1 : 1 ≤ Real.log m := (Real.le_log_iff_exp_le (by linarith)).mpr (by linarith)
-  have hlogn1 : 1 ≤ Real.log n := (Real.le_log_iff_exp_le (by linarith)).mpr (by linarith)
-  have hllm : 0 ≤ Real.log (Real.log m) := Real.log_nonneg hlogm1
-  have hlln : 0 ≤ Real.log (Real.log n) := Real.log_nonneg hlogn1
-  have hloglog : Real.log (Real.log m) ≤ Real.log (Real.log n) :=
-    Real.log_le_log (by linarith) (Real.log_le_log (by linarith) (by exact_mod_cast hmn))
-  refine Real.sqrt_le_sqrt ?_
-  calc (m : ℝ) * Real.log (Real.log m) ≤ (m : ℝ) * Real.log (Real.log n) :=
+  have hexp3 : exp 1 ≤ 3 := (exp_one_lt_d9.le).trans (by norm_num)
+  have hlogm1 : 1 ≤ log m := (le_log_iff_exp_le (by linarith)).mpr (by linarith)
+  have hlogn1 : 1 ≤ log n := (le_log_iff_exp_le (by linarith)).mpr (by linarith)
+  have hllm : 0 ≤ log (log m) := log_nonneg hlogm1
+  have hlln : 0 ≤ log (log n) := log_nonneg hlogn1
+  have hloglog : log (log m) ≤ log (log n) :=
+    log_le_log (by linarith) (log_le_log (by linarith) (by exact_mod_cast hmn))
+  refine sqrt_le_sqrt ?_
+  calc (m : ℝ) * log (log m) ≤ (m : ℝ) * log (log n) :=
         mul_le_mul_of_nonneg_left hloglog (by linarith)
-    _ ≤ (n : ℝ) * Real.log (Real.log n) :=
+    _ ≤ (n : ℝ) * log (log n) :=
         mul_le_mul_of_nonneg_right (by exact_mod_cast hmn) hlln
 
 /-- **Uniform loglog bound over a bounded random time.** If `g ≥ 0` is `O(√(m log log m))` (bounded
-by `C · logLogRate m` eventually), then eventually in `n`, *every* `g m` with `m ≤ n` is bounded by
-a single multiple of `logLogRate n`. This lets one bound `g` at a random time `ℓ_n ≤ n` (which may
-stay bounded or diverge) uniformly by `C' · logLogRate n`. -/
-lemma exists_forall_le_mul_logLogRate {g : ℕ → ℝ} (hg_nonneg : ∀ m, 0 ≤ g m)
-    {C : ℝ} (hg : ∀ᶠ m in atTop, g m ≤ C * logLogRate m) :
-    ∃ C', ∀ᶠ n in atTop, ∀ m, m ≤ n → g m ≤ C' * logLogRate n := by
+by `C · √(m * log (log m))` eventually), then eventually in `n`, *every* `g m` with `m ≤ n` is
+bounded by a single multiple of `√(n * log (log n))`. This lets one bound `g` at a random time
+`ℓ_n ≤ n` (which may stay bounded or diverge) uniformly by `C' · √(n * log (log n))`. -/
+lemma exists_forall_le_mul_sqrt_mul_log_log {g : ℕ → ℝ} (hg_nonneg : ∀ m, 0 ≤ g m)
+    {C : ℝ} (hg : ∀ᶠ m in atTop, g m ≤ C * √(m * log (log m))) :
+    ∃ C', ∀ᶠ n in atTop, ∀ m, m ≤ n → g m ≤ C' * √(n * log (log n)) := by
   rw [eventually_atTop] at hg
   obtain ⟨N, hN⟩ := hg
   set N₀ : ℕ := max N 3 with hN₀
@@ -100,8 +89,8 @@ lemma exists_forall_le_mul_logLogRate {g : ℕ → ℝ} (hg_nonneg : ∀ m, 0 �
     (Finset.le_sup' g (Finset.mem_range.mpr (Nat.succ_pos N₀)))
   have hCnn : 0 ≤ max C 0 := le_max_right _ _
   refine ⟨max C 0 + B, ?_⟩
-  filter_upwards [eventually_ge_atTop N₀, eventually_one_le_logLogRate] with n hnN₀ hrn m hmn
-  have hstep : (max C 0 + B) * 1 ≤ (max C 0 + B) * logLogRate n :=
+  filter_upwards [eventually_ge_atTop N₀, eventually_one_le_sqrt_mul_log_log] with n hnN₀ hrn m hmn
+  have hstep : (max C 0 + B) * 1 ≤ (max C 0 + B) * √(n * log (log n)) :=
     mul_le_mul_of_nonneg_left hrn (add_nonneg hCnn hBnn)
   rw [mul_one] at hstep
   rcases lt_or_ge m N₀ with hmlt | hmge
@@ -111,87 +100,88 @@ lemma exists_forall_le_mul_logLogRate {g : ℕ → ℝ} (hg_nonneg : ∀ m, 0 �
   · -- `N₀ ≤ m ≤ n`: use the tail bound and monotonicity of the rate.
     have hm3 : 3 ≤ m := le_trans (le_max_right N 3) hmge
     have hmN : N ≤ m := le_trans (le_max_left N 3) hmge
-    have h1 : g m ≤ max C 0 * logLogRate m :=
-      le_trans (hN m hmN) (mul_le_mul_of_nonneg_right (le_max_left C 0) (logLogRate_nonneg m))
-    have h2 : max C 0 * logLogRate m ≤ max C 0 * logLogRate n :=
-      mul_le_mul_of_nonneg_left (logLogRate_le_of_le hm3 hmn) hCnn
-    have h3 : max C 0 * logLogRate n ≤ (max C 0 + B) * logLogRate n :=
-      mul_le_mul_of_nonneg_right (by linarith) (logLogRate_nonneg n)
+    have h1 : g m ≤ max C 0 * √(m * log (log m)) :=
+      le_trans (hN m hmN) (mul_le_mul_of_nonneg_right (le_max_left C 0) (sqrt_nonneg _))
+    have h2 : max C 0 * √(m * log (log m)) ≤ max C 0 * √(n * log (log n)) :=
+      mul_le_mul_of_nonneg_left (sqrt_mul_log_log_le_of_le hm3 hmn) hCnn
+    have h3 : max C 0 * √(n * log (log n)) ≤ (max C 0 + B) * √(n * log (log n)) :=
+      mul_le_mul_of_nonneg_right (by linarith) (sqrt_nonneg _)
     linarith
 
-/-- A sum of two one-sided `O(logLogRate)` upper bounds is `O(logLogRate)`. -/
+/-- A sum of two one-sided `O(√(n log log n))` upper bounds is `O(√(n log log n))`. -/
 lemma bigOUpper_add {f g : ℕ → ℝ} {Cf Cg : ℝ}
-    (hf : ∀ᶠ n in atTop, f n ≤ Cf * logLogRate n) (hg : ∀ᶠ n in atTop, g n ≤ Cg * logLogRate n) :
-    ∀ᶠ n in atTop, f n + g n ≤ (Cf + Cg) * logLogRate n := by
+    (hf : ∀ᶠ n in atTop, f n ≤ Cf * √(n * log (log n)))
+    (hg : ∀ᶠ n in atTop, g n ≤ Cg * √(n * log (log n))) :
+    ∀ᶠ n in atTop, f n + g n ≤ (Cf + Cg) * √(n * log (log n)) := by
   filter_upwards [hf, hg] with n hfn hgn
   rw [add_mul]; linarith
 
-/-- An eventually-bounded sequence is `O(logLogRate)` (since `logLogRate → ∞`). -/
+/-- An eventually-bounded sequence is `O(√(n log log n))` (since the rate tends to `∞`). -/
 lemma bigOUpper_of_eventually_le {f : ℕ → ℝ} {B : ℝ} (hf : ∀ᶠ n in atTop, f n ≤ B) :
-    ∃ C, ∀ᶠ n in atTop, f n ≤ C * logLogRate n := by
+    ∃ C, ∀ᶠ n in atTop, f n ≤ C * √(n * log (log n)) := by
   refine ⟨max B 0, ?_⟩
-  filter_upwards [hf, eventually_one_le_logLogRate] with n hfn hrn
-  have hstep : max B 0 * 1 ≤ max B 0 * logLogRate n :=
+  filter_upwards [hf, eventually_one_le_sqrt_mul_log_log] with n hfn hrn
+  have hstep : max B 0 * 1 ≤ max B 0 * √(n * log (log n)) :=
     mul_le_mul_of_nonneg_left hrn (le_max_right _ _)
   rw [mul_one] at hstep
   linarith [le_max_left B 0]
 
 /-- **Reverse step: two-sided from one-sided upper bounds via a simplex identity.** For a finite
-family `Dev` with `∑_k Dev_k = 0`, if each `Dev_k` is `O(logLogRate)` from above, then each is
-`O(logLogRate)` two-sided (i.e. `=O[atTop] logLogRate`). -/
+family `Dev` with `∑_k Dev_k = 0`, if each `Dev_k` is `O(√(n log log n))` from above, then each is
+`O(√(n log log n))` two-sided (a genuine `=O[atTop]` bound). -/
 lemma isBigO_of_forall_upper_of_sum_zero {ι : Type*} [Fintype ι] {Dev : ι → ℕ → ℝ}
     (hsum : ∀ n, ∑ k, Dev k n = 0)
-    (hfwd : ∀ k, ∃ C, ∀ᶠ n in atTop, Dev k n ≤ C * logLogRate n) (k : ι) :
-    (fun n ↦ Dev k n) =O[atTop] logLogRate := by
+    (hfwd : ∀ k, ∃ C, ∀ᶠ n in atTop, Dev k n ≤ C * √(n * log (log n))) (k : ι) :
+    (fun n ↦ Dev k n) =O[atTop] fun n ↦ √(n * log (log n)) := by
   classical
   choose C hC using hfwd
-  have hall : ∀ᶠ n in atTop, ∀ j, Dev j n ≤ C j * logLogRate n := eventually_all.mpr hC
+  have hall : ∀ᶠ n in atTop, ∀ j, Dev j n ≤ C j * √(n * log (log n)) := eventually_all.mpr hC
   rw [Asymptotics.isBigO_iff]
   refine ⟨max (C k) (∑ j, |C j|), ?_⟩
   filter_upwards [hall] with n hn
-  have hrn : 0 ≤ logLogRate n := logLogRate_nonneg n
+  have hrn : 0 ≤ √(n * log (log n)) := sqrt_nonneg _
   -- Upper bound: `Dev_k ≤ C_k · rate`.
-  have hupper : Dev k n ≤ max (C k) (∑ j, |C j|) * logLogRate n :=
+  have hupper : Dev k n ≤ max (C k) (∑ j, |C j|) * √(n * log (log n)) :=
     le_trans (hn k) (by gcongr; exact le_max_left _ _)
   -- Lower bound: `-Dev_k = ∑_{j≠k} Dev_j ≤ (∑_{j≠k} C_j) rate ≤ (∑ |C_j|) rate`.
   have hneg : -(Dev k n) = ∑ j ∈ Finset.univ.erase k, Dev j n := by
     have key : Dev k n + ∑ j ∈ Finset.univ.erase k, Dev j n = ∑ j, Dev j n :=
-      Finset.add_sum_erase Finset.univ (fun j ↦ Dev j n) (Finset.mem_univ k)
+      Finset.add_sum_erase Finset.univ (Dev · n) (Finset.mem_univ k)
     have hz := hsum n
     linarith
-  have hlower : -(Dev k n) ≤ max (C k) (∑ j, |C j|) * logLogRate n := by
+  have hlower : -(Dev k n) ≤ max (C k) (∑ j, |C j|) * √(n * log (log n)) := by
     rw [hneg]
     calc ∑ j ∈ Finset.univ.erase k, Dev j n
-        ≤ ∑ j ∈ Finset.univ.erase k, C j * logLogRate n :=
+        ≤ ∑ j ∈ Finset.univ.erase k, C j * √(n * log (log n)) :=
           Finset.sum_le_sum fun j _ ↦ hn j
-      _ = (∑ j ∈ Finset.univ.erase k, C j) * logLogRate n := by rw [Finset.sum_mul]
-      _ ≤ (∑ j, |C j|) * logLogRate n := by
+      _ = (∑ j ∈ Finset.univ.erase k, C j) * √(n * log (log n)) := by rw [Finset.sum_mul]
+      _ ≤ (∑ j, |C j|) * √(n * log (log n)) := by
           gcongr
           calc ∑ j ∈ Finset.univ.erase k, C j ≤ ∑ j ∈ Finset.univ.erase k, |C j| :=
                 Finset.sum_le_sum fun j _ ↦ le_abs_self _
             _ ≤ ∑ j, |C j| := Finset.sum_le_sum_of_subset_of_nonneg
                 (Finset.erase_subset _ _) fun j _ _ ↦ abs_nonneg _
-      _ ≤ max (C k) (∑ j, |C j|) * logLogRate n := by gcongr; exact le_max_right _ _
-  rw [Real.norm_eq_abs, Real.norm_eq_abs, abs_of_nonneg hrn]
+      _ ≤ max (C k) (∑ j, |C j|) * √(n * log (log n)) := by gcongr; exact le_max_right _ _
+  rw [norm_eq_abs, norm_eq_abs, abs_of_nonneg hrn]
   rw [abs_le]
   exact ⟨by linarith, hupper⟩
 
-/-- If `f = O(logLogRate / n)` then `n · f = O(logLogRate)`. Turns the plug-in-target rate
+/-- If `f = O(√(n log log n)/n)` then `n · f = O(√(n log log n))`. Turns the plug-in-target rate
 `ρ̂_n - v = O(√(n log log n)/n)` into `n(ρ̂_n - v) = O(√(n log log n))`. -/
-lemma isBigO_natMul_logLogRate {f : ℕ → ℝ}
-    (hf : f =O[atTop] fun n ↦ logLogRate n / (n : ℝ)) :
-    (fun n : ℕ ↦ (n : ℝ) * f n) =O[atTop] logLogRate := by
+lemma isBigO_natMul_sqrt_mul_log_log {f : ℕ → ℝ}
+    (hf : f =O[atTop] fun n ↦ √(n * log (log n)) / (n : ℝ)) :
+    (fun n : ℕ ↦ (n : ℝ) * f n) =O[atTop] fun n ↦ √(n * log (log n)) := by
   rw [Asymptotics.isBigO_iff] at hf ⊢
   obtain ⟨C, hC⟩ := hf
   refine ⟨C, ?_⟩
   filter_upwards [hC, eventually_gt_atTop 0] with n hn hn0
   have hnR : (0 : ℝ) < n := by exact_mod_cast hn0
   have hnne : (n : ℝ) ≠ 0 := hnR.ne'
-  simp only [Real.norm_eq_abs] at hn ⊢
-  rw [abs_div, abs_of_nonneg (logLogRate_nonneg n), abs_of_nonneg hnR.le] at hn
-  rw [abs_mul, Nat.abs_cast, abs_of_nonneg (logLogRate_nonneg n)]
+  simp only [norm_eq_abs] at hn ⊢
+  rw [abs_div, abs_of_nonneg (sqrt_nonneg _), abs_of_nonneg hnR.le] at hn
+  rw [abs_mul, Nat.abs_cast, abs_of_nonneg (sqrt_nonneg _)]
   have hm := mul_le_mul_of_nonneg_left hn hnR.le
-  rwa [show (n : ℝ) * (C * (logLogRate n / n)) = C * logLogRate n by field_simp] at hm
+  rwa [show (n : ℝ) * (C * (√(n * log (log n)) / n)) = C * √(n * log (log n)) by field_simp] at hm
 
 section ARTS
 
@@ -209,8 +199,8 @@ is `≤ C · √(n log log n)` eventually. The chain: `generic_ineq_of_hitting` 
 `Dev ≤ 1 + small + Uincr`; the `U`-increment decomposes (`diff_U_decomp`, `ε = (1-α)v/2`) as
 `Uincr ≤ (drift ≤ 0) + (M_n - M_ℓ) + ℓ(ρ̂_ℓ - ρ̂_n)`; the `M`-difference is bounded by the
 assignment-martingale LIL and the `ρ̂`-difference by the loglog rate, both lifted over the random
-time `ℓ ≤ n` via `exists_forall_le_mul_logLogRate`. Everything but `hsmall_upper` and the throttle
-is design-independent. -/
+time `ℓ ≤ n` via `exists_forall_le_mul_sqrt_mul_log_log`. Everything but `hsmall_upper` and the
+throttle is design-independent. -/
 lemma dev_upper_of_hitting
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
@@ -218,28 +208,28 @@ lemma dev_upper_of_hitting
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
-      (fun j ↦ Y j ω) (θ₀ k'') n) atTop (𝓝 (fun k ↦ (ν k)[id])))
+      (Y · ω) (θ₀ k'') n) atTop (𝓝 ν.means))
     (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
       aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k) (k' : 𝓐)
     (hρrate : ∀ᵐ ω ∂P, (fun n ↦ T (fun k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
-      (fun j ↦ Y j ω) (θ₀ k'') n) k' - T (fun k ↦ (ν k)[id]) k')
-        =O[atTop] (fun n ↦ √((n : ℝ) * Real.log (Real.log (n : ℝ))) / (n : ℝ)))
+      (Y · ω) (θ₀ k'') n) k' - T ν.means k')
+        =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)))
     (hsmall_upper : ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
       (count (fun j ↦ armIndicator A k' j ω) (hitting (Q k' ω) n)
         - (hitting (Q k' ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k')
-          ≤ C * logLogRate n) :
+          ≤ C * √(n * log (log n))) :
     ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
       (count (fun j ↦ armIndicator A k' j ω) n
-        - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k') ≤ C * logLogRate n := by
+        - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k') ≤ C * √(n * log (log n)) := by
   classical
-  set v : ℝ := T (fun k'' ↦ (ν k'')[id]) k' with hvdef
+  set v : ℝ := T ν.means k' with hvdef
   set ℱ := IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback with hℱ
   -- Non-sparsity `v > 0` and the consistency `ρ̂ → v` from the estimator consistency.
   have hvpos : 0 < v := by
     obtain ⟨ω, hω⟩ := hθconv.exists
-    exact hTpos (fun k'' ↦ (ν k'')[id])
+    exact hTpos ν.means
       (fun k'' ↦ estimator_limit_mem_attainableSet k'' (θ₀ k'') (tendsto_pi_nhds.mp hω k'')) k'
   set ε : ℝ := (1 - α) * v / 2 with hεdef
   have hεpos : 0 < ε := by
@@ -247,7 +237,7 @@ lemma dev_upper_of_hitting
     rw [hεdef]; linarith
   have hρconv : ∀ᵐ ω ∂P, Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k') atTop (𝓝 v) := by
     filter_upwards [hθconv] with ω hω
-    exact ((continuous_apply k').tendsto _).comp ((hT.tendsto (fun k'' ↦ (ν k'')[id])).comp hω)
+    exact ((continuous_apply k').tendsto _).comp ((hT.tendsto ν.means).comp hω)
   have hp1 : ∀ᵐ ω ∂P, ∀ m, aRTSSelProb A k' ℱ P m ω ≤ 1 := by
     rw [ae_all_iff]; intro m
     have hmono := condExp_mono (m := ℱ.shiftDown m)
@@ -256,14 +246,14 @@ lemma dev_upper_of_hitting
     rw [condExp_const (ℱ.shiftDown.le m)] at hmono
     filter_upwards [hmono] with ω hω; exact hω
   have hMLIL : ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      |assignMart (fun j ↦ armIndicator A k' j) ℱ P n ω| ≤ C * logLogRate n :=
+      |assignMart (fun j ↦ armIndicator A k' j) ℱ P n ω| ≤ C * √(n * log (log n)) :=
     ae_eventually_abs_assignMart_le_sqrt_nat_mul_loglog
       (stronglyAdapted_armIndicator h.measurable_action h.measurable_feedback k')
       (integrable_armIndicator h.measurable_action P k')
       (fun n ↦ ae_of_all _ fun ω ↦ armIndicator_nonneg A k' n ω)
       (fun n ↦ ae_of_all _ fun ω ↦ armIndicator_le_one A k' n ω)
   have hρratebd : ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      ((n : ℕ) : ℝ) * |aRTSTarget A Y θ₀ T n ω k' - v| ≤ C * logLogRate n := by
+      ((n : ℕ) : ℝ) * |aRTSTarget A Y θ₀ T n ω k' - v| ≤ C * √(n * log (log n)) := by
     filter_upwards [hρrate] with ω hbigO
     rw [Asymptotics.isBigO_iff] at hbigO
     obtain ⟨C, hC⟩ := hbigO
@@ -271,12 +261,11 @@ lemma dev_upper_of_hitting
     filter_upwards [hC, eventually_gt_atTop 0] with n hn hn0
     have hnR : (0 : ℝ) < n := by exact_mod_cast hn0
     have hnne : (n : ℝ) ≠ 0 := hnR.ne'
-    rw [Real.norm_eq_abs, Real.norm_eq_abs, abs_div, abs_of_nonneg (Real.sqrt_nonneg _),
+    rw [norm_eq_abs, norm_eq_abs, abs_div, abs_of_nonneg (sqrt_nonneg _),
       abs_of_nonneg hnR.le] at hn
-    rw [logLogRate_eq]
     have hmul := mul_le_mul_of_nonneg_left hn hnR.le
-    rw [show (n : ℝ) * (C * (√((n : ℝ) * Real.log (Real.log n)) / n))
-      = C * √((n : ℝ) * Real.log (Real.log n)) by field_simp] at hmul
+    rw [show (n : ℝ) * (C * (√((n : ℝ) * log (log n)) / n))
+      = C * √((n : ℝ) * log (log n)) by field_simp] at hmul
     exact hmul
   -- The seam `assignMG (…, aRTSSelProb) = assignMart`.
   filter_upwards [hρconv, hthrottle k', hp1, hMLIL, hρratebd, hsmall_upper]
@@ -284,10 +273,10 @@ lemma dev_upper_of_hitting
   obtain ⟨CM, hCM⟩ := hMlilω
   obtain ⟨Cρ, hCρ⟩ := hρrω
   obtain ⟨Cs, hCs⟩ := hsuω
-  obtain ⟨CM', hCM'⟩ := exists_forall_le_mul_logLogRate
+  obtain ⟨CM', hCM'⟩ := exists_forall_le_mul_sqrt_mul_log_log
     (g := fun m ↦ |assignMart (fun j ↦ armIndicator A k' j) ℱ P m ω|)
     (fun m ↦ abs_nonneg _) hCM
-  obtain ⟨Cρ', hCρ'⟩ := exists_forall_le_mul_logLogRate
+  obtain ⟨Cρ', hCρ'⟩ := exists_forall_le_mul_sqrt_mul_log_log
     (g := fun m ↦ (m : ℝ) * |aRTSTarget A Y θ₀ T m ω k' - v|)
     (fun m ↦ mul_nonneg (Nat.cast_nonneg _) (abs_nonneg _)) hCρ
   have hseam : ∀ m, assignMG (fun j ↦ armIndicator A k' j ω)
@@ -298,7 +287,7 @@ lemma dev_upper_of_hitting
     (p := fun j ↦ aRTSSelProb A k' ℱ P j ω) (ρ := fun m ↦ aRTSTarget A Y θ₀ T m ω k') (α := α)
     hρc (ℓ := fun n ↦ hitting (Q k' ω) n) (fun n ↦ Nat.findGreatest_le n) hεpos
   refine ⟨1 + (2 * CM' + (Cρ' + Cρ) + Cs), ?_⟩
-  filter_upwards [hdU, hCM', hCρ', hCρ, hCs, eventually_one_le_logLogRate]
+  filter_upwards [hdU, hCM', hCρ', hCρ, hCs, eventually_one_le_sqrt_mul_log_log]
     with n hdUn hCM'n hCρ'n hCρn hCsn hrn
   set ℓn : ℕ := hitting (Q k' ω) n with hℓndef
   have hℓle : ℓn ≤ n := Nat.findGreatest_le n
@@ -330,37 +319,38 @@ lemma dev_upper_of_hitting
     linarith
   -- `M`-difference bound.
   have hMbound : assignMart (fun j ↦ armIndicator A k' j) ℱ P n ω
-        - assignMart (fun j ↦ armIndicator A k' j) ℱ P ℓn ω ≤ 2 * CM' * logLogRate n := by
+        - assignMart (fun j ↦ armIndicator A k' j) ℱ P ℓn ω ≤ 2 * CM' * √(n * log (log n)) := by
     have hMn := hCM'n n (le_refl n)
     have hMℓ := hCM'n ℓn hℓle
-    have h1 : assignMart (fun j ↦ armIndicator A k' j) ℱ P n ω ≤ CM' * logLogRate n :=
+    have h1 : assignMart (fun j ↦ armIndicator A k' j) ℱ P n ω ≤ CM' * √(n * log (log n)) :=
       le_trans (le_abs_self _) hMn
-    have h2 : -assignMart (fun j ↦ armIndicator A k' j) ℱ P ℓn ω ≤ CM' * logLogRate n :=
+    have h2 : -assignMart (fun j ↦ armIndicator A k' j) ℱ P ℓn ω ≤ CM' * √(n * log (log n)) :=
       le_trans (neg_le_abs _) hMℓ
     linarith
   -- `ρ̂`-difference bound.
   have hρbound : (ℓn : ℝ) * (aRTSTarget A Y θ₀ T ℓn ω k' - aRTSTarget A Y θ₀ T n ω k')
-      ≤ (Cρ' + Cρ) * logLogRate n := by
+      ≤ (Cρ' + Cρ) * √(n * log (log n)) := by
     have hℓv := hCρ'n ℓn hℓle
     have hnv := hCρn
     have hsplit : (ℓn : ℝ) * (aRTSTarget A Y θ₀ T ℓn ω k' - aRTSTarget A Y θ₀ T n ω k')
         = (ℓn : ℝ) * (aRTSTarget A Y θ₀ T ℓn ω k' - v)
           - (ℓn : ℝ) * (aRTSTarget A Y θ₀ T n ω k' - v) := by ring
-    have h1 : (ℓn : ℝ) * (aRTSTarget A Y θ₀ T ℓn ω k' - v) ≤ Cρ' * logLogRate n :=
+    have h1 : (ℓn : ℝ) * (aRTSTarget A Y θ₀ T ℓn ω k' - v) ≤ Cρ' * √(n * log (log n)) :=
       le_trans (le_trans (le_abs_self _) (by rw [abs_mul, Nat.abs_cast])) hℓv
-    have h2 : -((ℓn : ℝ) * (aRTSTarget A Y θ₀ T n ω k' - v)) ≤ Cρ * logLogRate n := by
+    have h2 : -((ℓn : ℝ) * (aRTSTarget A Y θ₀ T n ω k' - v)) ≤ Cρ * √(n * log (log n)) := by
       refine le_trans (le_trans (neg_le_abs _) ?_) hnv
       rw [abs_mul, Nat.abs_cast]
       exact mul_le_mul_of_nonneg_right (by exact_mod_cast hℓle) (abs_nonneg _)
     rw [hsplit]; linarith
   -- Assemble: `Dev ≤ 1 + small_ℓ + Uincr ≤ 1 + (Cs + 2CM' + Cρ' + Cρ) rate ≤ C rate`.
   have hDev : count (fun j ↦ armIndicator A k' j ω) n - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k'
-      ≤ 1 + (2 * CM' * logLogRate n + (Cρ' + Cρ) * logLogRate n + Cs * logLogRate n) := by
+      ≤ 1 + (2 * CM' * √(n * log (log n)) + (Cρ' + Cρ) * √(n * log (log n))
+        + Cs * √(n * log (log n))) := by
     have := hgen
     simp only [hℓndef] at this hCsn hUle
     linarith [hUle, hdrift, hMbound, hρbound, hCsn]
-  have hone : (1 : ℝ) ≤ logLogRate n := hrn
-  nlinarith [hDev, hone, logLogRate_nonneg n]
+  have hone : (1 : ℝ) ≤ √(n * log (log n)) := hrn
+  nlinarith [hDev, hone, sqrt_nonneg ((n : ℝ) * log (log n))]
 
 /-- **Per-arm one-sided a.s. loglog deviation bound for the aRTS design.** The `aRTS`
 instantiation of `dev_upper_of_hitting` at the last under-sampling time: the estimator consistency,
@@ -374,10 +364,10 @@ lemma aRTS_dev_upper [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1) (hARTS : IsARTS alg θ₀ T α)
     {K : ℝ≥0} (hlip : LipschitzWith K T)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
-    (hT_diff : DifferentiableAt ℝ T (fun k ↦ (ν k)[id])) (k' : 𝓐) :
+    (hT_diff : DifferentiableAt ℝ T ν.means) (k' : 𝓐) :
     ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
       (count (fun j ↦ armIndicator A k' j ω) n
-        - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k') ≤ C * logLogRate n :=
+        - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k') ≤ C * √(n * log (log n)) :=
   dev_upper_of_hitting h θ₀ T hlip.continuous hTnn α hα hα1 hTpos
     (aRTS_theta_consistent h hνk hlip.continuous hTnn hTsum hα hARTS hTpos)
     (aRTSUnder A Y θ₀ T) (fun k ↦ throttle_of_isARTS h hARTS k) k'
@@ -401,24 +391,24 @@ lemma prop_dev_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
-      (fun j ↦ Y j ω) (θ₀ k'') n) atTop (𝓝 (fun k ↦ (ν k)[id])))
+      (Y · ω) (θ₀ k'') n) atTop (𝓝 ν.means))
     (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
       aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hρrate : ∀ k', ∀ᵐ ω ∂P, (fun n ↦ T (fun k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
-      (fun j ↦ Y j ω) (θ₀ k'') n) k' - T (fun k ↦ (ν k)[id]) k')
-        =O[atTop] (fun n ↦ √((n : ℝ) * Real.log (Real.log (n : ℝ))) / (n : ℝ)))
+      (Y · ω) (θ₀ k'') n) k' - T ν.means k')
+        =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)))
     (hsmall_upper : ∀ k', ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
       (count (fun j ↦ armIndicator A k' j ω) (hitting (Q k' ω) n)
         - (hitting (Q k' ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k')
-          ≤ C * logLogRate n) (k : 𝓐) :
+          ≤ C * √(n * log (log n))) (k : 𝓐) :
     ∀ᵐ ω ∂P, (fun n ↦ (pullCount A k n ω : ℝ) - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k)
-      =O[atTop] logLogRate := by
+      =O[atTop] fun n ↦ √(n * log (log n)) := by
   classical
   have hupper : ∀ k', ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
       count (fun j ↦ armIndicator A k' j ω) n
-        - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k' ≤ C * logLogRate n := fun k' ↦
+        - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k' ≤ C * √(n * log (log n)) := fun k' ↦
     dev_upper_of_hitting h θ₀ T hT hTnn α hα hα1 hTpos hθconv Q hthrottle k'
       (hρrate k') (hsmall_upper k')
   filter_upwards [ae_all_iff.mpr hupper] with ω hω
@@ -445,9 +435,9 @@ lemma aRTS_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace �
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1) (hARTS : IsARTS alg θ₀ T α)
     {K : ℝ≥0} (hlip : LipschitzWith K T)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
-    (hT_diff : DifferentiableAt ℝ T (fun k ↦ (ν k)[id])) (k : 𝓐) :
+    (hT_diff : DifferentiableAt ℝ T ν.means) (k : 𝓐) :
     ∀ᵐ ω ∂P, (fun n ↦ (pullCount A k n ω : ℝ) - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k)
-      =O[atTop] logLogRate :=
+      =O[atTop] fun n ↦ √(n * log (log n)) :=
   prop_dev_ae_of_hitting h θ₀ T hlip.continuous hTnn hTsum α hα hα1 hTpos
     (aRTS_theta_consistent h hνk hlip.continuous hTnn hTsum hα hARTS hTpos)
     (aRTSUnder A Y θ₀ T) (fun k ↦ throttle_of_isARTS h hARTS k)
@@ -462,7 +452,7 @@ time** (blueprint `lem:prop_dev`, `thm:normality` part (i), last line, generic f
 `k`, almost surely `N_{n,k} - n v_k = O(√(n log log n))`. Writing
 `N_{n,k} - n v_k = (N_{n,k} - n ρ̂_{n,k}) + n(ρ̂_{n,k} - v_k)`, the first term is
 `prop_dev_ae_of_hitting` and the second is `n · O(√(n log log n)/n) = O(√(n log log n))` by the
-loglog rate `hρrate` and `isBigO_natMul_logLogRate`. -/
+loglog rate `hρrate` and `isBigO_natMul_sqrt_mul_log_log`. -/
 lemma count_sub_smul_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
@@ -470,31 +460,31 @@ lemma count_sub_smul_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
-      (fun j ↦ Y j ω) (θ₀ k'') n) atTop (𝓝 (fun k ↦ (ν k)[id])))
+      (Y · ω) (θ₀ k'') n) atTop (𝓝 ν.means))
     (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
       aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hρrate : ∀ k', ∀ᵐ ω ∂P, (fun n ↦ T (fun k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
-      (fun j ↦ Y j ω) (θ₀ k'') n) k' - T (fun k ↦ (ν k)[id]) k')
-        =O[atTop] (fun n ↦ √((n : ℝ) * Real.log (Real.log (n : ℝ))) / (n : ℝ)))
+      (Y · ω) (θ₀ k'') n) k' - T ν.means k')
+        =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)))
     (hsmall_upper : ∀ k', ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
       (count (fun j ↦ armIndicator A k' j ω) (hitting (Q k' ω) n)
         - (hitting (Q k' ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k')
-          ≤ C * logLogRate n) (k : 𝓐) :
-    ∀ᵐ ω ∂P, (fun n ↦ (pullCount A k n ω : ℝ) - (n : ℝ) * T (fun k' ↦ (ν k')[id]) k)
-      =O[atTop] logLogRate := by
+          ≤ C * √(n * log (log n))) (k : 𝓐) :
+    ∀ᵐ ω ∂P, (fun n ↦ (pullCount A k n ω : ℝ) - (n : ℝ) * T ν.means k)
+      =O[atTop] fun n ↦ √(n * log (log n)) := by
   filter_upwards [prop_dev_ae_of_hitting h θ₀ T hT hTnn hTsum α hα hα1 hTpos hθconv Q hthrottle
     hρrate hsmall_upper k, hρrate k] with ω hdev hrate
-  have hrate2 : (fun n : ℕ ↦ (n : ℝ) * (aRTSTarget A Y θ₀ T n ω k - T (fun k' ↦ (ν k')[id]) k))
-      =O[atTop] logLogRate := isBigO_natMul_logLogRate hrate
+  have hrate2 : (fun n : ℕ ↦ (n : ℝ) * (aRTSTarget A Y θ₀ T n ω k - T ν.means k))
+      =O[atTop] fun n ↦ √(n * log (log n)) := isBigO_natMul_sqrt_mul_log_log hrate
   have hsum := hdev.add hrate2
   refine hsum.congr' (Eventually.of_forall fun n ↦ ?_) (Eventually.of_forall fun n ↦ rfl)
   simp only [aRTSTarget]; ring
 
 /-- **A.s. loglog deviation between the count and the target proportion for the aRTS design**
 (blueprint `lem:prop_dev`, `thm:normality` part (i), last line). For every arm `k`, almost surely
-`N_{n,k} - n v_k = O(√(n log log n))`, where `v_k = T((ν_k)[id])_k` is the limiting proportion.
+`N_{n,k} - n v_k = O(√(n log log n))`, where `v_k = T ν.means k` is the limiting proportion.
 The `aRTS` instantiation of `count_sub_smul_ae_of_hitting`. -/
 lemma aRTS_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
@@ -503,9 +493,9 @@ lemma aRTS_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpa
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1) (hARTS : IsARTS alg θ₀ T α)
     {K : ℝ≥0} (hlip : LipschitzWith K T)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
-    (hT_diff : DifferentiableAt ℝ T (fun k ↦ (ν k)[id])) (k : 𝓐) :
-    ∀ᵐ ω ∂P, (fun n ↦ (pullCount A k n ω : ℝ) - (n : ℝ) * T (fun k' ↦ (ν k')[id]) k)
-      =O[atTop] logLogRate :=
+    (hT_diff : DifferentiableAt ℝ T ν.means) (k : 𝓐) :
+    ∀ᵐ ω ∂P, (fun n ↦ (pullCount A k n ω : ℝ) - (n : ℝ) * T ν.means k)
+      =O[atTop] fun n ↦ √(n * log (log n)) :=
   count_sub_smul_ae_of_hitting h θ₀ T hlip.continuous hTnn hTsum α hα hα1 hTpos
     (aRTS_theta_consistent h hνk hlip.continuous hTnn hTsum hα hARTS hTpos)
     (aRTSUnder A Y θ₀ T) (fun k ↦ throttle_of_isARTS h hARTS k)

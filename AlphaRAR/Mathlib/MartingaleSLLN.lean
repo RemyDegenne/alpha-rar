@@ -122,9 +122,9 @@ theorem martingale_div_atTop_ae_tendsto_zero [IsProbabilityMeasure μ]
   have hstep0 : Tendsto (fun n ↦ (M n ω - M 0 ω) / n) atTop (𝓝 0) := by
     refine (kronecker' hc).congr' (Eventually.of_forall fun n ↦ ?_)
     have hterm : ∀ k ∈ range n, ((k : ℝ) + 1) * ((M (k + 1) ω - M k ω) / ((k : ℝ) + 1))
-        = (fun j ↦ M j ω) (k + 1) - (fun j ↦ M j ω) k := fun k _ ↦ by
+        = (M · ω) (k + 1) - (M · ω) k := fun k _ ↦ by
       rw [mul_div_cancel₀ _ (by positivity)]
-    rw [Finset.sum_congr rfl hterm, Finset.sum_range_sub (fun j ↦ M j ω) n]
+    rw [Finset.sum_congr rfl hterm, Finset.sum_range_sub (M · ω) n]
     simp only [div_eq_inv_mul]
   have h0 : Tendsto (fun n : ℕ ↦ M 0 ω / n) atTop (𝓝 0) :=
     tendsto_const_nhds.div_atTop tendsto_natCast_atTop_atTop
@@ -153,9 +153,9 @@ lemma martingale_div_weight_ae_tendsto_zero [IsProbabilityMeasure μ]
   have hstep0 : Tendsto (fun n ↦ (M n ω - M 0 ω) / a n) atTop (𝓝 0) := by
     refine (kronecker_general ha_pos ha_mono ha_top hc).congr' (Eventually.of_forall fun n ↦ ?_)
     have hterm : ∀ k ∈ range n, a (k + 1) * ((M (k + 1) ω - M k ω) / a (k + 1))
-        = (fun j ↦ M j ω) (k + 1) - (fun j ↦ M j ω) k := fun k _ ↦ by
+        = (M · ω) (k + 1) - (M · ω) k := fun k _ ↦ by
       rw [mul_div_cancel₀ _ (ha_pos (k + 1)).ne']
-    rw [Finset.sum_congr rfl hterm, Finset.sum_range_sub (fun j ↦ M j ω) n]
+    rw [Finset.sum_congr rfl hterm, Finset.sum_range_sub (M · ω) n]
     simp only [div_eq_inv_mul]
   have h0 : Tendsto (fun n ↦ M 0 ω / a n) atTop (𝓝 0) :=
     tendsto_const_nhds.div_atTop ha_top
@@ -499,7 +499,7 @@ theorem martingale_div_predQuadVar_ae_tendsto_zero [IsProbabilityMeasure μ]
       intro k
       have hne : (1 + predQuadVar M ℱ μ (k + 1) ω) ≠ 0 := (hb_pos (k + 1)).ne'
       rw [bracketSeries_succ_sub]; field_simp
-    rw [Finset.sum_congr rfl fun k _ ↦ hterm k, Finset.sum_range_sub (fun k ↦ M k ω)]
+    rw [Finset.sum_congr rfl fun k _ ↦ hterm k, Finset.sum_range_sub (M · ω)]
   -- the initial value is washed out: `M_0/(1+⟨M⟩_n) → 0` since the denominator diverges.
   have hstep : Tendsto (fun n ↦ M n ω / (1 + predQuadVar M ℱ μ n ω)) atTop (𝓝 0) := by
     have hM0 : Tendsto (fun n ↦ M 0 ω / (1 + predQuadVar M ℱ μ n ω)) atTop (𝓝 0) :=

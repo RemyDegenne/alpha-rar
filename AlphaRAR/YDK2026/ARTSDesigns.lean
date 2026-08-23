@@ -259,7 +259,7 @@ lemma distanceProb_throttle (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 
     refine Finset.sum_pos' (fun i _ ↦ le_max_left _ _) ⟨j, Finset.mem_univ j, ?_⟩
     rw [lt_max_iff]; right; linarith
   refine le_of_eq ?_
-  simp only [distanceProb, if_neg hSpos.ne', hδk, zero_div, mul_zero, add_zero]
+  simp only [distanceProb, ite_eq_right hSpos.ne', hδk, zero_div, mul_zero, add_zero]
 
 /-- The **distance-based** aRTS design as an `Algorithm` (blueprint `def:distance_design`). -/
 noncomputable def distanceAlgorithm (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
@@ -325,11 +325,11 @@ lemma eradeProb_sum (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ}
     intro k
     simp only [eradeProb, ← hAdef, ← hTcdef]
     by_cases hover : histTarget θ₀ T k n h < histProp n h k
-    · rw [if_pos hover, if_pos hover, if_neg (not_lt.mpr hover.le)]; ring
-    · rw [if_neg hover, if_neg hover]
+    · rw [ite_eq_left hover, ite_eq_left hover, ite_eq_right (not_lt.mpr hover.le)]; ring
+    · rw [ite_eq_right hover, ite_eq_right hover]
       by_cases hunder : histProp n h k < histTarget θ₀ T k n h
-      · rw [if_pos hunder, if_pos hunder]; ring
-      · rw [if_neg hunder, if_neg hunder]; ring
+      · rw [ite_eq_left hunder, ite_eq_left hunder]; ring
+      · rw [ite_eq_right hunder, ite_eq_right hunder]; ring
   have hover_sum :
       (∑ k, if histTarget θ₀ T k n h < histProp n h k then (α - 1) * histTarget θ₀ T k n h else 0)
         = (α - 1) * A := by
@@ -353,7 +353,7 @@ lemma eradeProb_sum (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ}
         intro j
         by_contra hj
         have := hall j (mem_univ j)
-        rw [if_pos (not_le.mp hj)] at this
+        rw [ite_eq_left (not_le.mp hj)] at this
         exact one_ne_zero this
       have hzero : ∑ j, (histProp n h j - histTarget θ₀ T j n h) = 0 := by
         rw [Finset.sum_sub_distrib, sum_histProp, sum_histTarget θ₀ hTsum]; ring
@@ -363,7 +363,7 @@ lemma eradeProb_sum (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ}
             (0 : ℝ) ≤ histProp n h i - histTarget θ₀ T i n h := fun i _ ↦ by linarith [hge i]
         linarith [(Finset.sum_eq_zero_iff_of_nonneg hnn').mp hzero j (mem_univ j)]
       rw [hAdef]
-      exact Finset.sum_eq_zero fun j _ ↦ if_neg (by rw [heq j]; exact lt_irrefl _)
+      exact Finset.sum_eq_zero fun j _ ↦ ite_eq_right (by rw [heq j]; exact lt_irrefl _)
     rw [hTc0, hA0]; ring
   · rw [mul_comm Tc, div_mul_cancel₀ _ hTc0]; ring
 
@@ -401,7 +401,7 @@ lemma eradeProb_throttle (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 →
   have hlt : histTarget θ₀ T k n h < histProp n h k := by
     rw [histProp, lt_div_iff₀ hnp]; linarith
   refine le_of_eq ?_
-  simp only [eradeProb, if_pos hlt]
+  simp only [eradeProb, ite_eq_left hlt]
 
 /-- The **ERADE 2025** aRTS design as an `Algorithm` (blueprint `def:erade2025`). -/
 noncomputable def eradeAlgorithm (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
@@ -466,7 +466,7 @@ lemma dTrackingProb_sum (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → 
   simp only [dTrackingProb, Finset.sum_add_distrib, ← Finset.mul_sum,
     sum_histTarget θ₀ hTsum n h, mul_one]
   rw [Finset.sum_ite_eq' univ (_root_.argmax (fun a ↦ dtDeficit θ₀ T n h a)) (fun _ ↦ (1 : ℝ))]
-  simp only [mem_univ, if_true, mul_one]
+  simp only [mem_univ, ite_true, mul_one]
   ring
 
 omit [MeasurableSpace 𝓐] [MeasurableSingletonClass 𝓐] in
@@ -491,7 +491,7 @@ lemma dTrackingProb_throttle (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐
     exact le_trans hj (isMaxOn_argmax d j)
   have hne : k ≠ _root_.argmax d := fun heq ↦ absurd (heq ▸ hk_neg) (not_lt.mpr hMnn)
   refine le_of_eq ?_
-  simp only [dTrackingProb, ← hddef, if_neg hne, mul_zero, add_zero]
+  simp only [dTrackingProb, ← hddef, ite_eq_right hne, mul_zero, add_zero]
 
 /-- Measurability of the D-Tracking probability in the history. -/
 lemma measurable_dTrackingProb (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (α : ℝ)

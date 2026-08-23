@@ -113,9 +113,9 @@ theorem clt_joint
     {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (G : Matrix 𝓐 𝓐 ℝ)
     (hTderiv : HasFDerivAt
       (fun x : EuclideanSpace ℝ 𝓐 ↦ (WithLp.toLp 2 (T (WithLp.ofLp x)) : EuclideanSpace ℝ 𝓐))
-      (Matrix.toEuclideanCLM (𝕜 := ℝ) G) (WithLp.toLp 2 (fun k ↦ (ν k)[id])))
+      (Matrix.toEuclideanCLM (𝕜 := ℝ) G) (WithLp.toLp 2 ν.means))
     (hcons : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-      (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 (fun k ↦ (ν k)[id])))
+      (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means))
     (hprop : TendstoInMeasure P
       (fun n ω ↦ propSqrtNVec A v n ω - targetSqrtNVec ν A Y θ₀ T n ω) atTop (fun _ ↦ 0)) :
     Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ (𝓐 ⊕ 𝓐)))

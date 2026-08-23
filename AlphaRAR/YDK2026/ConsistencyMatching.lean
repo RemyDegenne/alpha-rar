@@ -17,7 +17,7 @@ sequence `X' : ℕ → ℝ`. The probabilistic assignment martingale `assignMart
 part of the 0-indexed count `count X`, compensated against the previous-history filtration
 `ℱ.shiftDown`) is the same object, read along a path:
 
-`assignMart X ℱ μ n ω = assignMG (fun j ↦ X j ω) (fun j ↦ μ[X j | ℱ.shiftDown j] ω) n`,
+`assignMart X ℱ μ n ω = assignMG (X · ω) (fun j ↦ μ[X j | ℱ.shiftDown j] ω) n`,
 
 i.e. the compensator uses the conditional selection probability `p_j = μ[X j | ℱ (j-1)]`.
 This file records that identification and the resulting a.s. statement
@@ -42,12 +42,12 @@ variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
 
 /-- **The probabilistic assignment martingale is the deterministic one along each path.**
 With the compensator's conditional selection probability `p_j = μ[X j | ℱ (j-1)]`,
-`assignMart X ℱ μ n ω = assignMG (fun j ↦ X j ω) (fun j ↦ μ[X j | ℱ.shiftDown j] ω) n`. Proved by
+`assignMart X ℱ μ n ω = assignMG (X · ω) (fun j ↦ μ[X j | ℱ.shiftDown j] ω) n`. Proved by
 telescoping `assignMart` (which starts at `0`) into its increments `X i - μ[X i | ℱ.shiftDown i]`
 (`assignMart_succ_sub`), the summand of the deterministic `assignMG`. -/
 lemma assignMart_eq_assignMG (n : ℕ) (ω : Ω) :
     assignMart X ℱ μ n ω
-      = assignMG (fun j ↦ X j ω) (fun j ↦ (μ[X j | ℱ.shiftDown j]) ω) n := by
+      = assignMG (X · ω) (fun j ↦ (μ[X j | ℱ.shiftDown j]) ω) n := by
   have h0 : assignMart X ℱ μ 0 ω = 0 := by
     have : assignMart X ℱ μ 0 = 0 := by rw [assignMart, martingalePart_zero, count_zero]
     rw [this]; rfl
@@ -62,12 +62,12 @@ lemma assignMart_eq_assignMG (n : ℕ) (ω : Ω) :
 
 /-- **The normalized assignment martingale vanishes, in path form** (blueprint `lem:M_lln`,
 per-path). For a `[0,1]`-valued adapted integrable assignment indicator `X`, almost surely
-`assignMG(path)_n / n → 0`, where `path = (fun j ↦ X j ω)` and the compensator uses
+`assignMG(path)_n / n → 0`, where `path = (X · ω)` and the compensator uses
 `p_j = μ[X j | ℱ (j-1)]`. This is exactly the `hM` hypothesis consumed by `pos_part_vanishes`. -/
 lemma assignMG_path_div_ae_tendsto_zero [IsProbabilityMeasure μ]
     (hX : StronglyAdapted ℱ X) (hX_int : ∀ n, Integrable (X n) μ)
     (h0X : ∀ n, 0 ≤ᵐ[μ] X n) (h1X : ∀ n, X n ≤ᵐ[μ] fun _ ↦ (1 : ℝ)) :
-    ∀ᵐ ω ∂μ, Tendsto (fun n ↦ assignMG (fun j ↦ X j ω)
+    ∀ᵐ ω ∂μ, Tendsto (fun n ↦ assignMG (X · ω)
       (fun j ↦ (μ[X j | ℱ.shiftDown j]) ω) n / (n : ℝ)) atTop (𝓝 0) := by
   filter_upwards [assignMart_div_atTop_ae_tendsto_zero hX hX_int h0X h1X] with ω hω
   exact hω.congr fun n ↦ by rw [assignMart_eq_assignMG]
@@ -83,19 +83,19 @@ a.s. Each is `filter_upwards` + the pathwise `pos_part_vanishes`. -/
 lemma pos_part_vanishes_ae {Xp pp ρp : ℕ → Ω → ℝ} {α C : ℝ} {ℓ : Ω → ℕ → ℕ} {u : Ω → ℝ}
     (hℓle : ∀ᵐ ω ∂μ, ∀ n, ℓ ω n ≤ n) (hα : α ∈ Set.Icc (0 : ℝ) 1)
     (hu : ∀ᵐ ω ∂μ, u ω ∈ Set.Icc (0 : ℝ) 1)
-    (hρ : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ ρp n ω) atTop (𝓝 (u ω)))
+    (hρ : ∀ᵐ ω ∂μ, Tendsto (ρp · ω) atTop (𝓝 (u ω)))
     (hM : ∀ᵐ ω ∂μ,
-      Tendsto (fun n ↦ assignMG (fun j ↦ Xp j ω) (fun j ↦ pp j ω) n / (n : ℝ)) atTop (𝓝 0))
-    (hgen : ∀ᵐ ω ∂μ, ∀ n, count (fun j ↦ Xp j ω) n - (n : ℝ) * ρp n ω
-      ≤ C + (count (fun j ↦ Xp j ω) (ℓ ω n) - (ℓ ω n : ℝ) * ρp (ℓ ω n) ω)
-        + (auxU (fun j ↦ Xp j ω) (fun j ↦ pp j ω) (fun j ↦ ρp j ω) α n
-          - auxU (fun j ↦ Xp j ω) (fun j ↦ pp j ω) (fun j ↦ ρp j ω) α (ℓ ω n)))
+      Tendsto (fun n ↦ assignMG (Xp · ω) (pp · ω) n / (n : ℝ)) atTop (𝓝 0))
+    (hgen : ∀ᵐ ω ∂μ, ∀ n, count (Xp · ω) n - (n : ℝ) * ρp n ω
+      ≤ C + (count (Xp · ω) (ℓ ω n) - (ℓ ω n : ℝ) * ρp (ℓ ω n) ω)
+        + (auxU (Xp · ω) (pp · ω) (ρp · ω) α n
+          - auxU (Xp · ω) (pp · ω) (ρp · ω) α (ℓ ω n)))
     (hgs : ∀ᵐ ω ∂μ, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
-      (count (fun j ↦ Xp j ω) (ℓ ω n) - (ℓ ω n : ℝ) * ρp (ℓ ω n) ω) / (n : ℝ) < δ) :
+      (count (Xp · ω) (ℓ ω n) - (ℓ ω n : ℝ) * ρp (ℓ ω n) ω) / (n : ℝ) < δ) :
     ∀ᵐ ω ∂μ,
-      Tendsto (fun n ↦ max (count (fun j ↦ Xp j ω) n / (n : ℝ) - ρp n ω) 0) atTop (𝓝 0) := by
+      Tendsto (fun n ↦ max (count (Xp · ω) n / (n : ℝ) - ρp n ω) 0) atTop (𝓝 0) := by
   filter_upwards [hℓle, hu, hρ, hM, hgen, hgs] with ω h1 h2 h3 h4 h5 h6
-  exact pos_part_vanishes (fun j ↦ Xp j ω) (fun j ↦ pp j ω) (fun j ↦ ρp j ω) α
+  exact pos_part_vanishes (Xp · ω) (pp · ω) (ρp · ω) α
     h1 hα h2 h3 h4 h5 h6
 
 /-! ### Almost-sure matching of proportions
@@ -103,7 +103,7 @@ lemma pos_part_vanishes_ae {Xp pp ρp : ℕ → Ω → ℝ} {α C : ℝ} {ℓ : 
 These are the a.s. forms of the deterministic matching lemmas: each is a `filter_upwards` over the
 a.s. hypotheses (the vanishing positive/negative parts and the plug-in-target limit, supplied by
 `pos_part_vanishes`/`neg_part_vanishes` and `rho_converges`) followed by the corresponding pathwise
-core. The proportion process is `count (fun i ↦ Y i ω k)` (`= N_{n,k}(ω)`), the plug-in target is
+core. The proportion process is `count (Y · ω k)` (`= N_{n,k}(ω)`), the plug-in target is
 `r n ω k` (`= ρ̂_{n,k}(ω)`), and the (random) limit is `u ω`. -/
 
 variable {ι : Type*}
@@ -112,32 +112,32 @@ variable {ι : Type*}
 lemma neg_part_vanishes_ae [Fintype ι] {Y r : ℕ → Ω → ι → ℝ}
     (hY : ∀ᵐ ω ∂μ, ∀ j, ∑ k, Y j ω k = 1) (hr : ∀ᵐ ω ∂μ, ∀ n, ∑ k, r n ω k = 1)
     (hpos : ∀ᵐ ω ∂μ, ∀ j : ι,
-      Tendsto (fun n ↦ max (count (fun i ↦ Y i ω j) n / (n : ℝ) - r n ω j) 0) atTop (𝓝 0))
+      Tendsto (fun n ↦ max (count (Y · ω j) n / (n : ℝ) - r n ω j) 0) atTop (𝓝 0))
     (k : ι) :
     ∀ᵐ ω ∂μ,
-      Tendsto (fun n ↦ max (r n ω k - count (fun i ↦ Y i ω k) n / (n : ℝ)) 0) atTop (𝓝 0) := by
+      Tendsto (fun n ↦ max (r n ω k - count (Y · ω k) n / (n : ℝ)) 0) atTop (𝓝 0) := by
   filter_upwards [hY, hr, hpos] with ω hYω hrω hposω
-  exact neg_part_vanishes (fun n ↦ Y n ω) (fun n ↦ r n ω) hYω hrω hposω k
+  exact neg_part_vanishes (Y · ω) (r · ω) hYω hrω hposω k
 
 /-- **Proportions match the plug-in target a.s.** (blueprint `lem:match`, a.s. form).
 Given the vanishing gaps and `ρ̂_{n,k} → u_k`, the proportion `N_{n,k}/n → u_k` a.s. -/
 lemma match_proportion_ae {Y r : ℕ → Ω → ι → ℝ} {u : Ω → ℝ} (k : ι)
     (hpos : ∀ᵐ ω ∂μ,
-      Tendsto (fun n ↦ max (count (fun i ↦ Y i ω k) n / (n : ℝ) - r n ω k) 0) atTop (𝓝 0))
+      Tendsto (fun n ↦ max (count (Y · ω k) n / (n : ℝ) - r n ω k) 0) atTop (𝓝 0))
     (hneg : ∀ᵐ ω ∂μ,
-      Tendsto (fun n ↦ max (r n ω k - count (fun i ↦ Y i ω k) n / (n : ℝ)) 0) atTop (𝓝 0))
-    (hr : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ r n ω k) atTop (𝓝 (u ω))) :
-    ∀ᵐ ω ∂μ, Tendsto (fun n ↦ count (fun i ↦ Y i ω k) n / (n : ℝ)) atTop (𝓝 (u ω)) := by
+      Tendsto (fun n ↦ max (r n ω k - count (Y · ω k) n / (n : ℝ)) 0) atTop (𝓝 0))
+    (hr : ∀ᵐ ω ∂μ, Tendsto (r · ω k) atTop (𝓝 (u ω))) :
+    ∀ᵐ ω ∂μ, Tendsto (fun n ↦ count (Y · ω k) n / (n : ℝ)) atTop (𝓝 (u ω)) := by
   filter_upwards [hpos, hneg, hr] with ω hp hn hrω
-  exact match_proportion (fun n ↦ Y n ω) (fun n ↦ r n ω) k hp hn hrω
+  exact match_proportion (Y · ω) (r · ω) k hp hn hrω
 
 /-- **All arms sampled infinitely often a.s.** (blueprint `lem:all_arms_infinite`, a.s. form).
 If the proportion converges to a positive (random) limit, the count diverges a.s. -/
 lemma all_arms_infinite_ae {Y : ℕ → Ω → ι → ℝ} {u : Ω → ℝ} (k : ι) (hu : ∀ᵐ ω ∂μ, 0 < u ω)
-    (hmatch : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ count (fun i ↦ Y i ω k) n / (n : ℝ)) atTop (𝓝 (u ω))) :
-    ∀ᵐ ω ∂μ, Tendsto (fun n ↦ count (fun i ↦ Y i ω k) n) atTop atTop := by
+    (hmatch : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ count (Y · ω k) n / (n : ℝ)) atTop (𝓝 (u ω))) :
+    ∀ᵐ ω ∂μ, Tendsto (fun n ↦ count (Y · ω k) n) atTop atTop := by
   filter_upwards [hu, hmatch] with ω huω hmω
-  exact all_arms_infinite (fun n ↦ Y n ω) k huω hmω
+  exact all_arms_infinite (Y · ω) k huω hmω
 
 /-- **A.s. consistency of the proportions** (blueprint `lem:consistency_matching`, the first
 conclusion of `thm:LLN`). Given the a.s. vanishing positive gaps for every arm (from
@@ -149,14 +149,14 @@ negative gaps vanish by `neg_part_vanishes_ae`, and `match_proportion_ae` then c
 lemma consistency_ae [Fintype ι] {Y r : ℕ → Ω → ι → ℝ} {u : Ω → ι → ℝ}
     (hY : ∀ᵐ ω ∂μ, ∀ j, ∑ k, Y j ω k = 1) (hr : ∀ᵐ ω ∂μ, ∀ n, ∑ k, r n ω k = 1)
     (hpos : ∀ k, ∀ᵐ ω ∂μ,
-      Tendsto (fun n ↦ max (count (fun i ↦ Y i ω k) n / (n : ℝ) - r n ω k) 0) atTop (𝓝 0))
-    (hru : ∀ k, ∀ᵐ ω ∂μ, Tendsto (fun n ↦ r n ω k) atTop (𝓝 (u ω k))) :
-    ∀ᵐ ω ∂μ, ∀ k, Tendsto (fun n ↦ count (fun i ↦ Y i ω k) n / (n : ℝ)) atTop (𝓝 (u ω k)) := by
+      Tendsto (fun n ↦ max (count (Y · ω k) n / (n : ℝ) - r n ω k) 0) atTop (𝓝 0))
+    (hru : ∀ k, ∀ᵐ ω ∂μ, Tendsto (r · ω k) atTop (𝓝 (u ω k))) :
+    ∀ᵐ ω ∂μ, ∀ k, Tendsto (fun n ↦ count (Y · ω k) n / (n : ℝ)) atTop (𝓝 (u ω k)) := by
   have hpos_all : ∀ᵐ ω ∂μ, ∀ j : ι,
-      Tendsto (fun n ↦ max (count (fun i ↦ Y i ω j) n / (n : ℝ) - r n ω j) 0) atTop (𝓝 0) :=
+      Tendsto (fun n ↦ max (count (Y · ω j) n / (n : ℝ) - r n ω j) 0) atTop (𝓝 0) :=
     ae_all_iff.mpr hpos
   have hmatch : ∀ k, ∀ᵐ ω ∂μ,
-      Tendsto (fun n ↦ count (fun i ↦ Y i ω k) n / (n : ℝ)) atTop (𝓝 (u ω k)) := fun k ↦
+      Tendsto (fun n ↦ count (Y · ω k) n / (n : ℝ)) atTop (𝓝 (u ω k)) := fun k ↦
     match_proportion_ae k (hpos k) (neg_part_vanishes_ae hY hr hpos_all k) (hru k)
   exact ae_all_iff.mpr hmatch
 
@@ -175,16 +175,16 @@ theorem consistency_of_generic_ae [Fintype ι] {Y pp r : ℕ → Ω → ι → �
     (hY : ∀ᵐ ω ∂μ, ∀ j, ∑ k, Y j ω k = 1) (hr : ∀ᵐ ω ∂μ, ∀ n, ∑ k, r n ω k = 1)
     (hℓle : ∀ k, ∀ᵐ ω ∂μ, ∀ n, ℓ k ω n ≤ n)
     (hu : ∀ k, ∀ᵐ ω ∂μ, u ω k ∈ Set.Icc (0 : ℝ) 1)
-    (hru : ∀ k, ∀ᵐ ω ∂μ, Tendsto (fun n ↦ r n ω k) atTop (𝓝 (u ω k)))
-    (hM : ∀ k, ∀ᵐ ω ∂μ, Tendsto (fun n ↦ assignMG (fun j ↦ Y j ω k) (fun j ↦ pp j ω k) n
+    (hru : ∀ k, ∀ᵐ ω ∂μ, Tendsto (r · ω k) atTop (𝓝 (u ω k)))
+    (hM : ∀ k, ∀ᵐ ω ∂μ, Tendsto (fun n ↦ assignMG (Y · ω k) (pp · ω k) n
       / (n : ℝ)) atTop (𝓝 0))
-    (hgen : ∀ k, ∀ᵐ ω ∂μ, ∀ n, count (fun j ↦ Y j ω k) n - (n : ℝ) * r n ω k
-      ≤ C + (count (fun j ↦ Y j ω k) (ℓ k ω n) - (ℓ k ω n : ℝ) * r (ℓ k ω n) ω k)
-        + (auxU (fun j ↦ Y j ω k) (fun j ↦ pp j ω k) (fun j ↦ r j ω k) α n
-          - auxU (fun j ↦ Y j ω k) (fun j ↦ pp j ω k) (fun j ↦ r j ω k) α (ℓ k ω n)))
+    (hgen : ∀ k, ∀ᵐ ω ∂μ, ∀ n, count (Y · ω k) n - (n : ℝ) * r n ω k
+      ≤ C + (count (Y · ω k) (ℓ k ω n) - (ℓ k ω n : ℝ) * r (ℓ k ω n) ω k)
+        + (auxU (Y · ω k) (pp · ω k) (r · ω k) α n
+          - auxU (Y · ω k) (pp · ω k) (r · ω k) α (ℓ k ω n)))
     (hgs : ∀ k, ∀ᵐ ω ∂μ, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
-      (count (fun j ↦ Y j ω k) (ℓ k ω n) - (ℓ k ω n : ℝ) * r (ℓ k ω n) ω k) / (n : ℝ) < δ) :
-    ∀ᵐ ω ∂μ, ∀ k, Tendsto (fun n ↦ count (fun i ↦ Y i ω k) n / (n : ℝ)) atTop (𝓝 (u ω k)) :=
+      (count (Y · ω k) (ℓ k ω n) - (ℓ k ω n : ℝ) * r (ℓ k ω n) ω k) / (n : ℝ) < δ) :
+    ∀ᵐ ω ∂μ, ∀ k, Tendsto (fun n ↦ count (Y · ω k) n / (n : ℝ)) atTop (𝓝 (u ω k)) :=
   consistency_ae hY hr
     (fun k ↦ pos_part_vanishes_ae (hℓle k) hα (hu k) (hru k) (hM k) (hgen k) (hgs k)) hru
 

@@ -31,7 +31,7 @@ example (a : ℝ) (h0 : Tendsto (fun k : ℕ ↦ ((k : ℝ) + 2) / 2 ^ k) atTop 
 
 -- `add_zero` reconciliation.
 example (X : ℕ → ℝ) (c : ℝ) (hX : Tendsto X atTop (𝓝 0)) :
-    Tendsto (fun n ↦ X n + c) atTop (𝓝 c) := by tendsto
+    Tendsto (X · + c) atTop (𝓝 c) := by tendsto
 
 -- Mixed sums and products with general limit values (`ResponseConsistency` `hslln'.mul hratio`).
 example (X Y : ℕ → ℝ) (a b : ℝ) (hX : Tendsto X atTop (𝓝 a)) (hY : Tendsto Y atTop (𝓝 b)) :
@@ -43,7 +43,7 @@ example (X Y : ℕ → ℝ) (a b : ℝ) (hX : Tendsto X atTop (𝓝 a)) (hY : Te
 
 -- Division by a constant.
 example (X : ℕ → ℝ) (a : ℝ) (hX : Tendsto X atTop (𝓝 a)) :
-    Tendsto (fun n ↦ X n / 3) atTop (𝓝 (a / 3)) := by tendsto
+    Tendsto (X · / 3) atTop (𝓝 (a / 3)) := by tendsto
 
 -- `zero_mul` cleanup (`ResponseConsistency` `hmul; rw [zero_mul]`).
 example (X Y : ℕ → ℝ) (b : ℝ) (hX : Tendsto X atTop (𝓝 0)) (hY : Tendsto Y atTop (𝓝 b)) :

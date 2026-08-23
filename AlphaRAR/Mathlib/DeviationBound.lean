@@ -152,7 +152,7 @@ lemma isLittleOpOne_dev_of_sum_zero {ι : Type*} [Fintype ι]
     have hneg : -(Dev k n ω / √n)
         = ∑ j ∈ Finset.univ.erase k, Dev j n ω / √n := by
       have key : Dev k n ω + ∑ j ∈ Finset.univ.erase k, Dev j n ω = ∑ j, Dev j n ω :=
-        Finset.add_sum_erase Finset.univ (fun j ↦ Dev j n ω) (Finset.mem_univ k)
+        Finset.add_sum_erase Finset.univ (Dev · n ω) (Finset.mem_univ k)
       have h2 : ∑ j ∈ Finset.univ.erase k, Dev j n ω = -(Dev k n ω) := by
         have hz := hsum n ω
         linarith [key, hz]

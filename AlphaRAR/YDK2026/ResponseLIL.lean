@@ -50,9 +50,9 @@ lemma hitCount_tendsto_atTop {D : ℕ → Ω → ℝ} {ω : Ω}
     (hinf : {j | D j ω = 1}.Infinite) :
     Tendsto (fun n ↦ hitCount D n ω) atTop atTop := by
   refine Monotone.tendsto_atTop_atTop (hitCount_mono D ω) (fun M ↦ ?_)
-  refine ⟨Nat.nth (fun j ↦ D j ω = 1) M + 1, ?_⟩
+  refine ⟨Nat.nth (D · ω = 1) M + 1, ?_⟩
   simp only [hitCount]
-  rw [Nat.count_succ, Nat.count_nth_of_infinite hinf, if_pos (Nat.nth_mem_of_infinite hinf M)]
+  rw [Nat.count_succ, Nat.count_nth_of_infinite hinf, ite_eq_left (Nat.nth_mem_of_infinite hinf M)]
   omega
 
 variable {𝓐 : Type*} {m𝓐 : MeasurableSpace 𝓐} [DecidableEq 𝓐]
@@ -67,7 +67,7 @@ the sample rank; a non-pull leaves both sides unchanged. -/
 lemma respMart_eq_sum_sampledSeq (k : 𝓐) (n : ℕ) (ω : Ω) :
     respMart ν A Y k n ω
       = ∑ i ∈ Finset.range (hitCount (armIndicator A k) n ω),
-          (sampledSeq Y (armIndicator A k) i ω - (ν k)[id]) := by
+          (sampledSeq Y (armIndicator A k) i ω - ν.means k) := by
   induction n with
   | zero => simp [respMart, hitCount]
   | succ n ih =>
@@ -79,7 +79,7 @@ lemma respMart_eq_sum_sampledSeq (k : 𝓐) (n : ℕ) (ω : Ω) :
       ring
     · have hD0 : armIndicator A k n ω ≠ 1 := fun h ↦ hp (armIndicator_eq_one_iff.mp h)
       have hcount : hitCount (armIndicator A k) (n + 1) ω = hitCount (armIndicator A k) n ω := by
-        unfold hitCount; rw [Nat.count_succ, if_neg hD0, Nat.add_zero]
+        unfold hitCount; rw [Nat.count_succ, ite_eq_right hD0, Nat.add_zero]
       rw [hcount, armIndicator, Set.indicator_of_notMem (show ω ∉ {ω | A n ω = k} from hp)]
       simp
 
@@ -110,7 +110,7 @@ lemma abs_respMart_le_sqrt_nat_mul_loglog
   simp only [← hitCount_armIndicator_eq_pullCount]
   have : IsProbabilityMeasure (ν k) := IsMarkovKernel.isProbabilityMeasure k
   set D := armIndicator A k with hDdef
-  set θ := (ν k)[id] with hθdef
+  set θ := ν.means k with hθdef
   set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with h𝒢
   set W : ℕ → Ω → ℝ := fun i ω ↦ sampledClean Y D i ω - θ with hWdef
   -- measurability of the arm selector and the clean samples
@@ -141,7 +141,7 @@ lemma abs_respMart_le_sqrt_nat_mul_loglog
       rw [hmapC 0]; exact hg.aestronglyMeasurable
     refine (integrable_map_measure hg' (hCmeas 0).aemeasurable).mp ?_
     rw [hmapC 0]; exact hg
-  have hθ' : θ = ∫ x, x ∂(ν k) := by rw [hθdef]; simp only [id_eq]
+  have hθ' : θ = ∫ x, x ∂(ν k) := by rw [hθdef, Kernel.means_apply]; simp only [id_eq]
   have hintC0 : Integrable (sampledClean Y D 0) P := hintcov (fun x ↦ x) hint_id
   have hmean : ∫ ω, sampledClean Y D 0 ω ∂P = θ := by
     rw [hθ']; exact hcov (fun x ↦ x) hint_id.aestronglyMeasurable
@@ -160,7 +160,8 @@ lemma abs_respMart_le_sqrt_nat_mul_loglog
       (hintcov (fun x ↦ (x - θ) ^ 2) hintCsq)
   have hVeq : ∫ ω, W 0 ω ^ 2 ∂P = Var[id; ν k] := by
     rw [show (fun ω ↦ W 0 ω ^ 2) = fun ω ↦ (fun x ↦ (x - θ) ^ 2) (sampledClean Y D 0 ω) from rfl,
-      hcov (fun x ↦ (x - θ) ^ 2) hintCsq.aestronglyMeasurable, variance_id_eq_integral]
+      hcov (fun x ↦ (x - θ) ^ 2) hintCsq.aestronglyMeasurable, variance_id_eq_integral,
+      hθdef, Kernel.means_apply]
   -- independence and identical distribution of the centred clean samples
   have hW_sm : ∀ i, StronglyMeasurable (W i) := fun i ↦ ((hCmeas i).sub_const θ).stronglyMeasurable
   have hindepW : iIndepFun W P := by
@@ -236,7 +237,7 @@ lemma abs_estimator_sub_le_rate_loglog_of_proportion
     (hN : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω))) :
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
       |estimator (fun j ↦ armIndicator A k j ω)
-          (fun j ↦ Y j ω) θ₀ n - (ν k)[id]|
+          (Y · ω) θ₀ n - ν.means k|
         ≤ C' * (√((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) :=
   abs_estimator_sub_le_rate_loglog_ae k θ₀ hv hN
     (ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog_of_proportion h k hνk hv hN)
@@ -257,7 +258,7 @@ lemma abs_estimator_sub_le_rate_loglog_of_pos_count
       / (n : ℝ)) atTop (𝓝 uk)) :
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
       |estimator (fun j ↦ armIndicator A k j ω)
-          (fun j ↦ Y j ω) θ₀ n - (ν k)[id]|
+          (Y · ω) θ₀ n - ν.means k|
         ≤ C' * (√((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) := by
   classical
   obtain ⟨v, hv, hN⟩ : ∃ v : Ω → ℝ, (∀ᵐ ω ∂P, 0 < v ω) ∧ ∀ᵐ ω ∂P,
@@ -265,10 +266,10 @@ lemma abs_estimator_sub_le_rate_loglog_of_pos_count
     refine ⟨fun ω ↦ if hω : ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ count
       (fun j ↦ armIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 uk) then hω.choose else 0, ?_, ?_⟩
     · filter_upwards [hpp] with ω hppω
-      rw [dif_pos hppω]
+      rw [dite_eq_left hppω]
       exact hppω.choose_spec.1
     · filter_upwards [hpp] with ω hppω
-      rw [dif_pos hppω]
+      rw [dite_eq_left hppω]
       exact (hppω.choose_spec.2).congr fun n ↦ by rw [count_indicator_eq_pullCount]
   exact abs_estimator_sub_le_rate_loglog_of_proportion h k θ₀ hνk hv hN
 

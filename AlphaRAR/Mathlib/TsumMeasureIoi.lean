@@ -60,13 +60,13 @@ lemma tsum_measure_Ioi_ne_top {Ω : Type*} {mΩ : MeasurableSpace Ω} {μ : Meas
       intro i
       by_cases hi : (i : ℝ) < X ω
       · rw [Set.indicator_of_mem (show ω ∈ {ω | (i : ℝ) < X ω} from hi), Pi.one_apply,
-          if_pos (Nat.lt_ceil.mpr hi)]
+          ite_eq_left (Nat.lt_ceil.mpr hi)]
       · rw [Set.indicator_of_notMem (show ω ∉ {ω | (i : ℝ) < X ω} from hi),
-          if_neg fun h ↦ hi (Nat.lt_ceil.mp h)]
+          ite_eq_right fun h ↦ hi (Nat.lt_ceil.mp h)]
     simp_rw [hindic]
     rw [tsum_eq_sum (s := Finset.range ⌈X ω⌉₊)
-      fun i hi ↦ if_neg (by rw [Finset.mem_range] at hi; omega)]
-    rw [Finset.sum_congr rfl fun i hi ↦ if_pos (Finset.mem_range.mp hi), Finset.sum_const,
+      fun i hi ↦ ite_eq_right (by rw [Finset.mem_range] at hi; omega)]
+    rw [Finset.sum_congr rfl fun i hi ↦ ite_eq_left (Finset.mem_range.mp hi), Finset.sum_const,
       Finset.card_range, nsmul_eq_mul, mul_one]
     calc (⌈X ω⌉₊ : ℝ≥0∞) = ENNReal.ofReal ⌈X ω⌉₊ := (ENNReal.ofReal_natCast _).symm
       _ ≤ ENNReal.ofReal (X ω + 1) := ENNReal.ofReal_le_ofReal (Nat.ceil_lt_add_one (hnn ω)).le

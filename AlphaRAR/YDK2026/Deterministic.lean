@@ -416,8 +416,8 @@ lemma generic_ineq_of_hitting (P : ℕ → Prop) [DecidablePred P]
       intro m hm
       rw [Finset.mem_Ico] at hm
       by_cases hm2 : m = ℓ
-      · rw [if_pos hm2]; linarith [hp1 m, hαρ m]
-      · rw [if_neg hm2]
+      · rw [ite_eq_left hm2]; linarith [hp1 m, hαρ m]
+      · rw [ite_eq_right hm2]
         have hnotP : ¬ P m := hitting_sign P (n := n) (by omega) hm.2.le
         linarith [hthrottle m hnotP]
     calc ∑ m ∈ Finset.Ico ℓ n, (p m - α * ρ m)
@@ -763,28 +763,28 @@ negative gap `(r_{·,k} - N_{·,k}/n)⁺` also vanishes. Indeed
 lemma neg_part_vanishes {ι : Type*} [Fintype ι] (Y r : ℕ → ι → ℝ)
     (hY : ∀ j, ∑ k, Y j k = 1) (hr : ∀ n, ∑ k, r n k = 1)
     (hpos : ∀ j : ι,
-      Tendsto (fun n ↦ max (count (fun i ↦ Y i j) n / (n : ℝ) - r n j) 0) atTop (𝓝 0))
+      Tendsto (fun n ↦ max (count (Y · j) n / (n : ℝ) - r n j) 0) atTop (𝓝 0))
     (k : ι) :
-    Tendsto (fun n ↦ max (r n k - count (fun i ↦ Y i k) n / (n : ℝ)) 0) atTop (𝓝 0) := by
+    Tendsto (fun n ↦ max (r n k - count (Y · k) n / (n : ℝ)) 0) atTop (𝓝 0) := by
   classical
   have hsum : Tendsto (fun n ↦ ∑ j ∈ Finset.univ.erase k,
-      max (count (fun i ↦ Y i j) n / (n : ℝ) - r n j) 0) atTop (𝓝 0) := by
+      max (count (Y · j) n / (n : ℝ) - r n j) 0) atTop (𝓝 0) := by
     have h := tendsto_finsetSum (Finset.univ.erase k) (fun j _ ↦ hpos j)
     simpa using h
   refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hsum
     (Eventually.of_forall fun n ↦ le_max_right _ _) ?_
   filter_upwards [eventually_ge_atTop 1] with n hn
   have hn0 : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
-  have h1 : (∑ j, count (fun i ↦ Y i j) n / (n : ℝ)) = 1 := by
+  have h1 : (∑ j, count (Y · j) n / (n : ℝ)) = 1 := by
     rw [← Finset.sum_div, counts_sum Y hY n, div_self (ne_of_gt hn0)]
-  have htot : (∑ j, (count (fun i ↦ Y i j) n / (n : ℝ) - r n j)) = 0 := by
+  have htot : (∑ j, (count (Y · j) n / (n : ℝ) - r n j)) = 0 := by
     rw [Finset.sum_sub_distrib, h1, hr n, sub_self]
   have hsplit := Finset.add_sum_erase Finset.univ
-    (fun j ↦ count (fun i ↦ Y i j) n / (n : ℝ) - r n j) (Finset.mem_univ k)
-  have hid2 : (∑ j ∈ Finset.univ.erase k, (count (fun i ↦ Y i j) n / (n : ℝ) - r n j))
-      = r n k - count (fun i ↦ Y i k) n / (n : ℝ) := by
-    have hz : (count (fun i ↦ Y i k) n / (n : ℝ) - r n k)
-        + ∑ j ∈ Finset.univ.erase k, (count (fun i ↦ Y i j) n / (n : ℝ) - r n j) = 0 := by
+    (fun j ↦ count (Y · j) n / (n : ℝ) - r n j) (Finset.mem_univ k)
+  have hid2 : (∑ j ∈ Finset.univ.erase k, (count (Y · j) n / (n : ℝ) - r n j))
+      = r n k - count (Y · k) n / (n : ℝ) := by
+    have hz : (count (Y · k) n / (n : ℝ) - r n k)
+        + ∑ j ∈ Finset.univ.erase k, (count (Y · j) n / (n : ℝ) - r n j) = 0 := by
       rw [hsplit]; exact htot
     linarith
   rw [← hid2]
@@ -798,21 +798,21 @@ vanish (from `pos_part_vanishes`, `neg_part_vanishes`), and the target converges
 the allocation proportion converges to the same limit, `N_k/n → u_k`. The gap itself vanishes
 because `x = x⁺ - (-x)⁺`, so `N_k/n - r_k = (N_k/n - r_k)⁺ - (r_k - N_k/n)⁺ → 0`. -/
 lemma match_proportion {ι : Type*} (Y r : ℕ → ι → ℝ) {uk : ℝ} (k : ι)
-    (hpos : Tendsto (fun n ↦ max (count (fun i ↦ Y i k) n / (n : ℝ) - r n k) 0) atTop (𝓝 0))
-    (hneg : Tendsto (fun n ↦ max (r n k - count (fun i ↦ Y i k) n / (n : ℝ)) 0) atTop (𝓝 0))
-    (hr : Tendsto (fun n ↦ r n k) atTop (𝓝 uk)) :
-    Tendsto (fun n ↦ count (fun i ↦ Y i k) n / (n : ℝ)) atTop (𝓝 uk) := by
+    (hpos : Tendsto (fun n ↦ max (count (Y · k) n / (n : ℝ) - r n k) 0) atTop (𝓝 0))
+    (hneg : Tendsto (fun n ↦ max (r n k - count (Y · k) n / (n : ℝ)) 0) atTop (𝓝 0))
+    (hr : Tendsto (r · k) atTop (𝓝 uk)) :
+    Tendsto (fun n ↦ count (Y · k) n / (n : ℝ)) atTop (𝓝 uk) := by
   have hid : ∀ x : ℝ, max x 0 - max (-x) 0 = x := by
     intro x
     rcases le_total 0 x with h | h
     · rw [max_eq_left h, max_eq_right (by linarith : -x ≤ 0), sub_zero]
     · rw [max_eq_right h, max_eq_left (by linarith : (0 : ℝ) ≤ -x), zero_sub, neg_neg]
-  have hdiff : Tendsto (fun n ↦ count (fun i ↦ Y i k) n / (n : ℝ) - r n k) atTop (𝓝 0) := by
+  have hdiff : Tendsto (fun n ↦ count (Y · k) n / (n : ℝ) - r n k) atTop (𝓝 0) := by
     have h := hpos.sub hneg
     rw [sub_zero] at h
     refine h.congr fun n ↦ ?_
-    rw [show r n k - count (fun i ↦ Y i k) n / (n : ℝ)
-        = -(count (fun i ↦ Y i k) n / (n : ℝ) - r n k) from by ring]
+    rw [show r n k - count (Y · k) n / (n : ℝ)
+        = -(count (Y · k) n / (n : ℝ) - r n k) from by ring]
     exact hid _
   have hlim := hdiff.add hr
   rw [zero_add] at hlim
@@ -825,9 +825,9 @@ If the allocation proportion converges to a positive limit, `N_k/n → u_k > 0` 
 `match_proportion`), then the count diverges, `N_k → ∞`. Writing `N_k = (N_k/n) · n`, the first
 factor tends to `u_k > 0` and the second to `∞`. -/
 lemma all_arms_infinite {ι : Type*} (Y : ℕ → ι → ℝ) {uk : ℝ} (k : ι) (huk : 0 < uk)
-    (hmatch : Tendsto (fun n ↦ count (fun i ↦ Y i k) n / (n : ℝ)) atTop (𝓝 uk)) :
-    Tendsto (fun n ↦ count (fun i ↦ Y i k) n) atTop atTop := by
-  have hmul : Tendsto (fun n : ℕ ↦ count (fun i ↦ Y i k) n / (n : ℝ) * (n : ℝ)) atTop atTop :=
+    (hmatch : Tendsto (fun n ↦ count (Y · k) n / (n : ℝ)) atTop (𝓝 uk)) :
+    Tendsto (fun n ↦ count (Y · k) n) atTop atTop := by
+  have hmul : Tendsto (fun n : ℕ ↦ count (Y · k) n / (n : ℝ) * (n : ℝ)) atTop atTop :=
     hmatch.pos_mul_atTop huk tendsto_natCast_atTop_atTop
   refine hmul.congr' ?_
   filter_upwards [eventually_ge_atTop 1] with n hn

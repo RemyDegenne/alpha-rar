@@ -73,7 +73,7 @@ lemma sum_armIndicator [Fintype 𝓐] (A : ℕ → Ω → 𝓐) (j : ℕ) (ω : 
     ∑ k, armIndicator A k j ω = 1 := by
   classical
   simp only [armIndicator, Set.indicator_apply, Set.mem_ofPred_eq, Finset.sum_ite_eq,
-    Finset.mem_univ, if_true]
+    Finset.mem_univ, ite_true]
 
 /-- **The partial sums of the arm indicator are the pull counts.** -/
 @[specifies armIndicator "pins every value of the indicator against the already-trusted \

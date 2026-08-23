@@ -43,7 +43,7 @@ sequence converging to `x₀`: if `g n → x₀` then `f (g n) - f x₀ = O(g n 
 lemma isBigO_sub_comp_of_differentiableAt {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
     [NormedAddCommGroup F] [NormedSpace ℝ F] {f : E → F} {x₀ : E} (hf : DifferentiableAt ℝ f x₀)
     {ι : Type*} {l : Filter ι} {g : ι → E} (hg : Tendsto g l (𝓝 x₀)) :
-    (fun n ↦ f (g n) - f x₀) =O[l] (fun n ↦ g n - x₀) :=
+    (fun n ↦ f (g n) - f x₀) =O[l] (g · - x₀) :=
   hf.isBigO_sub.comp_tendsto hg
 
 /-- **Coordinatewise delta-method rate.** If the vector-valued sequence `g n → x₀` has each
@@ -53,14 +53,14 @@ loglog rate. -/
 lemma isBigO_target_sub_of_tendsto {ι : Type*} [Finite ι] {κ : Type*} [Finite κ]
     {T : (ι → ℝ) → κ → ℝ} {θ : ι → ℝ} (hT : DifferentiableAt ℝ T θ)
     {g : ℕ → ι → ℝ} (hg : Tendsto g atTop (𝓝 θ))
-    {r : ℕ → ℝ} (hrate : ∀ i, (fun n ↦ g n i - θ i) =O[atTop] r) (k : κ) :
+    {r : ℕ → ℝ} (hrate : ∀ i, (g · i - θ i) =O[atTop] r) (k : κ) :
     (fun n ↦ T (g n) k - T θ k) =O[atTop] r := by
   cases nonempty_fintype ι
   cases nonempty_fintype κ
   -- the whole increment vector is `O(r n)`, coordinatewise
-  have hvec : (fun n ↦ g n - θ) =O[atTop] r := isBigO_pi.mpr fun i ↦ hrate i
+  have hvec : (g · - θ) =O[atTop] r := isBigO_pi.mpr fun i ↦ hrate i
   -- the delta method preserves the rate
-  have hdelta : (fun n ↦ T (g n) - T θ) =O[atTop] (fun n ↦ g n - θ) :=
+  have hdelta : (fun n ↦ T (g n) - T θ) =O[atTop] (g · - θ) :=
     isBigO_sub_comp_of_differentiableAt hT hg
   -- project onto coordinate `k`
   have hproj : (fun n ↦ T (g n) k - T θ k) =O[atTop] (fun n ↦ T (g n) - T θ) := by
@@ -84,11 +84,11 @@ same rate: `ρ̂_{n,k} - v_k = O(r_n)` a.s. for every arm `k`. -/
 lemma rho_rate {θ : 𝓐 → ℝ} {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : DifferentiableAt ℝ T θ)
     {r : ℕ → ℝ}
     (hconsist : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-      (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 θ))
+      (Y · ω) (θ₀ k') n) atTop (𝓝 θ))
     (hrate : ∀ k, ∀ᵐ ω ∂P, (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
-      (fun j ↦ Y j ω) (θ₀ k) n - θ k) =O[atTop] r) (k : 𝓐) :
+      (Y · ω) (θ₀ k) n - θ k) =O[atTop] r) (k : 𝓐) :
     ∀ᵐ ω ∂P, (fun n ↦ T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-      (fun j ↦ Y j ω) (θ₀ k') n) k - T θ k) =O[atTop] r := by
+      (Y · ω) (θ₀ k') n) k - T θ k) =O[atTop] r := by
   filter_upwards [hconsist, ae_all_iff.mpr hrate] with ω hcω hrω
   exact isBigO_target_sub_of_tendsto hT hcω hrω k
 

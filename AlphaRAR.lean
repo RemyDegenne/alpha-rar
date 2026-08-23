@@ -3,6 +3,7 @@ module  -- shake: keep-all --deprecated_module: ignore
 public import AlphaRAR.LeanMachineLearning.ArmIndicator
 public import AlphaRAR.LeanMachineLearning.Filtration
 public import AlphaRAR.LeanMachineLearning.IsAlgEnvSeq
+public import AlphaRAR.LeanMachineLearning.Means
 public import AlphaRAR.LeanMachineLearning.PullCount
 public import AlphaRAR.Mathlib.AnscombeCLT
 public import AlphaRAR.Mathlib.CondExp

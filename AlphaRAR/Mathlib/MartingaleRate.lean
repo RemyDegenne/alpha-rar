@@ -108,7 +108,7 @@ lemma isBigOpOne_of_bdd_increments [IsFiniteMeasure μ] (hM : Martingale M ℱ �
     filter_upwards [ae_all_iff.mpr hΔ, hM0] with ω hΔω hM0ω
     simp only [Pi.zero_apply] at hM0ω
     have htel : (∑ k ∈ Finset.range n, (M (k + 1) ω - M k ω)) = M n ω := by
-      rw [Finset.sum_range_sub (fun k ↦ M k ω) n, hM0ω, sub_zero]
+      rw [Finset.sum_range_sub (M · ω) n, hM0ω, sub_zero]
     calc |M n ω| = |∑ k ∈ Finset.range n, (M (k + 1) ω - M k ω)| := by rw [htel]
       _ ≤ ∑ k ∈ Finset.range n, |M (k + 1) ω - M k ω| := Finset.abs_sum_le_sum_abs _ _
       _ ≤ ∑ k ∈ Finset.range n, c := Finset.sum_le_sum fun k _ ↦ hΔω k

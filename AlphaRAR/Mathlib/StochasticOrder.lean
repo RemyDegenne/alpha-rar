@@ -129,7 +129,7 @@ lemma isLittleOpOne_of_tendsto_abs {Y : ℕ → Ω → ℝ}
 part). If `Y n → 0` almost everywhere on a finite measure, then `Y = o_p(1)`. -/
 lemma isLittleOpOne_of_tendsto_ae [IsFiniteMeasure μ] {Y : ℕ → Ω → ℝ}
     (hmeas : ∀ n, AEStronglyMeasurable (Y n) μ)
-    (h : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ Y n ω) atTop (𝓝 0)) :
+    (h : ∀ᵐ ω ∂μ, Tendsto (Y · ω) atTop (𝓝 0)) :
     IsLittleOpOne μ Y :=
   tendstoInMeasure_of_tendsto_ae hmeas h
 

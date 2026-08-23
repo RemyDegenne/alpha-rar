@@ -65,7 +65,7 @@ lemma respMart_selfNorm_anscombe_tendsto
   have hint_id : Integrable (fun x : ℝ ↦ x) (ν k) := hνk.integrable (by norm_num)
   have hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k) := hνk.integrable_sq
   set D := armIndicator A k with hDdef
-  set θ := (ν k)[id] with hθdef
+  set θ := ν.means k with hθdef
   -- Clean-sample setup (globally i.i.d.\ representative of the sampled responses of arm `k`).
   have hD𝒢 : ∀ i,
       Measurable[IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]
@@ -92,7 +92,7 @@ lemma respMart_selfNorm_anscombe_tendsto
       rw [hmapC 0]; exact hg.aestronglyMeasurable
     refine (integrable_map_measure hg' (hCmeas 0).aemeasurable).mp ?_
     rw [hmapC 0]; exact hg
-  have hθ' : θ = ∫ x, x ∂(ν k) := by rw [hθdef]; simp only [id_eq]
+  have hθ' : θ = ∫ x, x ∂(ν k) := by rw [hθdef, Kernel.means_apply]; simp only [id_eq]
   -- moments of the clean sample, expressed through the common law `ν k`
   have hμθ : ∫ ω, sampledClean Y D 0 ω ∂P = θ := by
     rw [hcov (fun x ↦ x) hint_id.aestronglyMeasurable, ← hθ']
@@ -108,7 +108,8 @@ lemma respMart_selfNorm_anscombe_tendsto
     rw [variance_eq_integral (hCmeas 0).aemeasurable, hμθ,
       show (fun ω ↦ (sampledClean Y D 0 ω - θ) ^ 2)
           = fun ω ↦ (fun x ↦ (x - θ) ^ 2) (sampledClean Y D 0 ω) from rfl,
-      hcov (fun x ↦ (x - θ) ^ 2) hintCsq.aestronglyMeasurable, variance_id_eq_integral]
+      hcov (fun x ↦ (x - θ) ^ 2) hintCsq.aestronglyMeasurable, variance_id_eq_integral,
+      hθdef, Kernel.means_apply]
   -- global i.i.d.\ and identical distribution of the clean samples
   have hindepC : iIndepFun (sampledClean Y D) P :=
     (iIndepFun_congr fun i ↦ sampledSeq_ae_eq_sampledClean hDinf i).mp
@@ -142,7 +143,7 @@ omit [DecidableEq 𝓐] in
 /-- The per-arm estimator `θ̂_{n,k}` is measurable. -/
 lemma measurable_estimator_arm (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
     (n : ℕ) :
-    Measurable (fun ω ↦ estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) θ₀ n) := by
+    Measurable (fun ω ↦ estimator (fun j ↦ armIndicator A k j ω) (Y · ω) θ₀ n) := by
   have harm : ∀ j, Measurable (fun ω ↦ armIndicator A k j ω) := fun j ↦
     (measurable_const (a := (1 : ℝ))).indicator
       ((measurableSet_singleton k).preimage (h.measurable_action j))
@@ -155,7 +156,7 @@ lemma measurable_estimator_arm (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k
 lemma measurable_estimatorSqrtN (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
     (n : ℕ) :
     Measurable (fun ω ↦ √(pullCount A k n ω : ℝ)
-      * (estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) θ₀ n - (ν k)[id])) :=
+      * (estimator (fun j ↦ armIndicator A k j ω) (Y · ω) θ₀ n - ν.means k)) :=
   (((measurable_of_countable _).comp (measurable_pullCount h.measurable_action k n)).sqrt).mul
     ((measurable_estimator_arm h k θ₀ n).sub_const _)
 
@@ -175,12 +176,12 @@ lemma estimator_sqrtN_anscombe_tendsto
     (hreg : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (c n : ℝ)) atTop (𝓝 1)) :
     Tendsto (β := ProbabilityMeasure ℝ)
       (fun n ↦ (⟨P.map (fun ω ↦ √(pullCount A k n ω : ℝ)
-          * (estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) θ₀ n - (ν k)[id])),
+          * (estimator (fun j ↦ armIndicator A k j ω) (Y · ω) θ₀ n - ν.means k)),
         Measure.isProbabilityMeasure_map
           (measurable_estimatorSqrtN h k θ₀ n).aemeasurable⟩ : ProbabilityMeasure ℝ))
       atTop
       (𝓝 (⟨gaussianReal 0 (Var[id; ν k]).toNNReal, inferInstance⟩ : ProbabilityMeasure ℝ)) := by
-  set θ := (ν k)[id] with hθdef
+  set θ := ν.means k with hθdef
   have hQ := respMart_selfNorm_anscombe_tendsto h k hk_inf hνk hc hreg
   -- pull count `→ ∞` a.e. (from infinitely many pulls)
   have hpcinf : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop := by
@@ -240,7 +241,7 @@ lemma estimator_sqrtN_anscombe_tendsto
   simp only [Pi.mul_apply, hRdef, hEdef]
   have hne : count (fun j ↦ armIndicator A k j ω) n + 1 ≠ 0 := by
     rw [count_indicator_eq_pullCount]; positivity
-  rw [estimator_sub_eq (X := fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) θ θ₀ n hne,
+  rw [estimator_sub_eq (X := fun j ↦ armIndicator A k j ω) (Y · ω) θ θ₀ n hne,
     respMG_indicator_eq_respMart, count_indicator_eq_pullCount]
   rcases eq_or_ne (√(pullCount A k n ω : ℝ)) 0 with hs | hs
   · simp [hs]

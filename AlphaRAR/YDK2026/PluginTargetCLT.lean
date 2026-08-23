@@ -49,14 +49,14 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
 noncomputable def targetSqrtNVec (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ)
     (T : (𝓐 → ℝ) → 𝓐 → ℝ) (n : ℕ) (ω : Ω) : EuclideanSpace ℝ 𝓐 :=
   WithLp.toLp 2 (fun k ↦ √n *
-    (T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω) (fun j ↦ Y j ω) (θ₀ k') n) k
-      - T (fun k' ↦ (ν k')[id]) k))
+    (T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω) (Y · ω) (θ₀ k') n) k
+      - T ν.means k))
 
 /-- The `√n`-scaled estimator error vector `√n(θ̂_n - θ) ∈ ℝ^𝓐` (the vector of `clt_theta`). -/
 noncomputable def estimatorSqrtNVec (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ)
     (n : ℕ) (ω : Ω) : EuclideanSpace ℝ 𝓐 :=
   WithLp.toLp 2 (fun k ↦ √n *
-    (estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) (θ₀ k) n - (ν k)[id]))
+    (estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
 
 omit [DecidableEq 𝓐] [Fintype 𝓐] in
 lemma measurable_estimatorSqrtNVec' (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
@@ -75,7 +75,7 @@ lemma measurable_estimatorSqrtNVec' (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) 
 `estimator_sqrtN_joint_tendsto_multivariateGaussian` read through `estimatorSqrtNVec`, which it
 matches definitionally. -/
 @[specifies estimatorSqrtNVec "the `√n` scaling and the centring at the true means \
-`θ_k = (ν k)[id]` are exactly what makes this vector converge to a nondegenerate Gaussian, with \
+`θ_k = ν.means k` are exactly what makes this vector converge to a nondegenerate Gaussian, with \
 the arm-`k` variance inflated by `1/v_k` because arm `k` is only pulled a fraction `v_k` of the \
 time"]
 lemma estimatorSqrtNVec_joint_tendsto_multivariateGaussian
@@ -95,7 +95,7 @@ omit [DecidableEq 𝓐] [Fintype 𝓐] in
 /-- Measurability of the estimator vector `ω ↦ (θ̂_{n,k}(ω))_k : 𝓐 → ℝ`. -/
 lemma measurable_estimatorVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ) (n : ℕ) :
     Measurable (fun ω ↦ (fun k ↦ estimator (fun j ↦ armIndicator A k j ω)
-      (fun j ↦ Y j ω) (θ₀ k) n : 𝓐 → ℝ)) := by
+      (Y · ω) (θ₀ k) n : 𝓐 → ℝ)) := by
   refine measurable_pi_lambda _ fun k ↦ ?_
   have harm : ∀ j, Measurable (fun ω ↦ armIndicator A k j ω) := fun j ↦
     (measurable_const (a := (1 : ℝ))).indicator ((measurableSet_singleton k).preimage
@@ -211,9 +211,9 @@ lemma clt_rho
     {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (G : Matrix 𝓐 𝓐 ℝ)
     (hTderiv : HasFDerivAt
       (fun x : EuclideanSpace ℝ 𝓐 ↦ (WithLp.toLp 2 (T (WithLp.ofLp x)) : EuclideanSpace ℝ 𝓐))
-      (Matrix.toEuclideanCLM (𝕜 := ℝ) G) (WithLp.toLp 2 (fun k ↦ (ν k)[id])))
+      (Matrix.toEuclideanCLM (𝕜 := ℝ) G) (WithLp.toLp 2 ν.means))
     (hcons : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-      (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 (fun k ↦ (ν k)[id]))) :
+      (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means)) :
     Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
       (fun n : ℕ ↦ (⟨P.map (targetSqrtNVec ν A Y θ₀ T n),
         Measure.isProbabilityMeasure_map (measurable_targetSqrtNVec h θ₀ hT n).aemeasurable⟩
@@ -223,13 +223,13 @@ lemma clt_rho
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / v a) * Gᵀ), inferInstance⟩) := by
   refine clt_rho_of_tendstoInMeasure h θ₀ hνk hv hNconv hT G ?_
   -- Notation for the un-scaled error vector `S`, base point `p`, derivative `L`, remainder `φ`.
-  set p : EuclideanSpace ℝ 𝓐 := WithLp.toLp 2 (fun k ↦ (ν k)[id]) with hpdef
+  set p : EuclideanSpace ℝ 𝓐 := WithLp.toLp 2 ν.means with hpdef
   set L : EuclideanSpace ℝ 𝓐 →L[ℝ] EuclideanSpace ℝ 𝓐 :=
     Matrix.toEuclideanCLM (𝕜 := ℝ) G with hLdef
   set Tv : EuclideanSpace ℝ 𝓐 → EuclideanSpace ℝ 𝓐 :=
     fun x ↦ WithLp.toLp 2 (T (WithLp.ofLp x)) with hTvdef
   set S : ℕ → Ω → EuclideanSpace ℝ 𝓐 := fun n ω ↦ WithLp.toLp 2
-    (fun k ↦ estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) (θ₀ k) n - (ν k)[id])
+    (fun k ↦ estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k)
     with hSdef
   set φ : EuclideanSpace ℝ 𝓐 → EuclideanSpace ℝ 𝓐 := fun hh ↦ Tv (p + hh) - Tv p - L hh with hφdef
   -- The remainder `φ` is `o(‖·‖)` at the origin.
@@ -268,9 +268,9 @@ lemma clt_rho
     refine tendstoInMeasure_of_tendsto_ae (fun n ↦ (hSmeas n).aestronglyMeasurable) ?_
     filter_upwards [hcons] with ω hω
     have hSeq : ∀ n, S n ω = WithLp.toLp 2 (fun k ↦ estimator (fun j ↦ armIndicator A k j ω)
-        (fun j ↦ Y j ω) (θ₀ k) n) - p := by
+        (Y · ω) (θ₀ k) n) - p := by
       intro n; simp only [hSdef, hpdef, ← WithLp.toLp_sub]; rfl
-    have hc := ((PiLp.continuous_toLp 2 (fun _ : 𝓐 ↦ ℝ)).tendsto (fun k ↦ (ν k)[id])).comp hω
+    have hc := ((PiLp.continuous_toLp 2 (fun _ : 𝓐 ↦ ℝ)).tendsto ν.means).comp hω
     have hc2 := hc.sub (tendsto_const_nhds (x := p))
     rw [← hpdef, sub_self] at hc2
     exact hc2.congr fun n ↦ (hSeq n).symm
@@ -285,14 +285,14 @@ lemma clt_rho
       = √n • φ (S n ω) := by
     intro n ω
     have e1 : Tv (p + S n ω) = WithLp.toLp 2 (T fun k ↦ estimator (fun j ↦ armIndicator A k j ω)
-        (fun j ↦ Y j ω) (θ₀ k) n) := by
+        (Y · ω) (θ₀ k) n) := by
       have hof : (WithLp.ofLp (p + S n ω) : 𝓐 → ℝ)
-          = fun k ↦ estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) (θ₀ k) n := by
+          = fun k ↦ estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) n := by
         funext k
         simp only [hpdef, hSdef, WithLp.ofLp_add, Pi.add_apply]
         ring
       simp only [hTvdef, hof]
-    have e2 : Tv p = WithLp.toLp 2 (T fun k ↦ (ν k)[id]) := by
+    have e2 : Tv p = WithLp.toLp 2 (T ν.means) := by
       simp only [hTvdef, hpdef]
     have e3 : L (S n ω) = WithLp.toLp 2 (G.mulVec (WithLp.ofLp (S n ω))) := by
       simp only [hLdef, hSdef, Matrix.toEuclideanCLM_toLp, WithLp.ofLp_toLp]

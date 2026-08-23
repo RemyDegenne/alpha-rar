@@ -78,7 +78,7 @@ structure IsARTS (alg : Algorithm 𝓐 ℝ) (θ₀ : 𝓐 → ℝ) (T : (𝓐 �
 /-- The deterministic regularized estimator of the assignment/response process equals the
 regularized empirical mean of arm `k`. -/
 lemma estimator_eq (θ₀ : 𝓐 → ℝ) (k : 𝓐) (t : ℕ) (ω : Ω) :
-    estimator (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) (θ₀ k) t
+    estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) t
       = (sumRewards A Y k t ω + θ₀ k) / ((pullCount A k t ω : ℝ) + 1) := by
   rw [estimator, sum_armIndicator_mul A Y]
   congr 2
@@ -219,7 +219,7 @@ lemma aRTS_pullCount_div_ae_tendsto [Fintype 𝓐] [StandardBorelSpace 𝓐] [No
 /-- **Estimator consistency for an aRTS algorithm** (blueprint `lem:theta_consistent`). Under
 Condition **B**'s non-sparsity — `hTpos`, i.e. `T` maps the product of the attainable sets
 (`attainableSet`) into the positive orthant — an aRTS design's sequential estimator converges a.s.
-to the true parameter: `θ̂_n → θ = ((ν k)[id])_k`. The aRTS consistency `aRTS_consistency_of_isARTS`
+to the true parameter: `θ̂_n → θ = (ν.means k)_k`. The aRTS consistency `aRTS_consistency_of_isARTS`
 supplies the joint limit `N_{n,k}/n → u_k` together with `ρ̂_{n,k} → u_k` (its plug-in target
 `aRTSTarget` is by definition `T(θ̂_n)`); `theta_consistent_pi_of_condB` then makes the shared limit
 `u` positive — so every arm is sampled infinitely often — and identifies each estimator limit as its
@@ -232,7 +232,7 @@ lemma aRTS_theta_consistent [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty �
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) :
     ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-      (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 (fun k ↦ (ν k)[id])) := by
+      (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means) := by
   refine theta_consistent_pi_of_condB h hνk θ₀ T hT hTpos ?_
   filter_upwards [aRTS_consistency_of_isARTS h hνk hT hTnn hTsum hα hARTS] with ω hω
   obtain ⟨u, hu⟩ := hω
@@ -250,14 +250,14 @@ lemma aRTS_proportion_tendsto [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) (k : 𝓐) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ))
-      atTop (𝓝 (T (fun k ↦ (ν k)[id]) k)) := by
+      atTop (𝓝 (T ν.means k)) := by
   filter_upwards [aRTS_consistency_of_isARTS h hνk hT hTnn hTsum hα hARTS,
     aRTS_theta_consistent h hνk hT hTnn hTsum hα hARTS hTpos] with ω hjω hθω
   obtain ⟨u, hu⟩ := hjω
   have hrho : Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop
-      (𝓝 (T (fun k ↦ (ν k)[id]) k)) :=
+      (𝓝 (T ν.means k)) :=
     tendsto_pi_nhds.mp ((hT.tendsto _).comp hθω) k
-  have huk : u k = T (fun k ↦ (ν k)[id]) k := tendsto_nhds_unique (hu k).2 hrho
+  have huk : u k = T ν.means k := tendsto_nhds_unique (hu k).2 hrho
   rw [← huk]
   exact ((hu k).1).congr fun n ↦ by rw [count_indicator_eq_pullCount]
 

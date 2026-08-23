@@ -64,7 +64,7 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
 vector of sequential estimators of the arm means. -/
 noncomputable def aRTSTarget (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ)
     (T : (𝓐 → ℝ) → 𝓐 → ℝ) (n : ℕ) (ω : Ω) (k : 𝓐) : ℝ :=
-  T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω) (fun j ↦ Y j ω) (θ₀ k') n) k
+  T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω) (Y · ω) (θ₀ k') n) k
 
 /-- The aRTS selection probability `p_{n,k} = P[𝟙{A n = k} | ℱ_{n-1}]`: the conditional probability
 of assigning arm `k` to patient `n` given the previous history `ℱ.shiftDown n = ℱ_{n-1}`. -/
@@ -222,7 +222,7 @@ lemma consistency_of_hitting [Fintype 𝓐]
 form). The abstract-hitting-time generalisation of `aRTS_theta_consistent`: from the joint
 consistency `consistency_of_hitting` (whose throttle `hthrottle` and smallness `hgs` are the
 design-specific inputs) and Condition **B**'s non-sparsity `hTpos`, the sequential estimator
-converges a.s. to the true parameter `θ̂_n → θ = ((ν k)[id])_k`, via the design-independent
+converges a.s. to the true parameter `θ̂_n → θ = (ν.means k)_k`, via the design-independent
 `theta_consistent_pi_of_condB`. -/
 lemma theta_consistent_of_hitting [Fintype 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
@@ -238,7 +238,7 @@ lemma theta_consistent_of_hitting [Fintype 𝓐]
           - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k) / (n : ℝ) < δ)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) :
     ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-      (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 (fun k ↦ (ν k)[id])) := by
+      (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means) := by
   classical
   refine theta_consistent_pi_of_condB h hνk θ₀ T hT hTpos ?_
   filter_upwards [consistency_of_hitting h hνk θ₀ T hT hTnn hTsum α hα Q hthrottle hgs] with ω hω
@@ -265,15 +265,15 @@ lemma proportion_tendsto_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
           - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k) / (n : ℝ) < δ)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) (k : 𝓐) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ))
-      atTop (𝓝 (T (fun k ↦ (ν k)[id]) k)) := by
+      atTop (𝓝 (T ν.means k)) := by
   filter_upwards [consistency_of_hitting h hνk θ₀ T hT hTnn hTsum α hα Q hthrottle hgs,
     theta_consistent_of_hitting h hνk θ₀ T hT hTnn hTsum α hα Q hthrottle hgs hTpos]
     with ω hjω hθω
   obtain ⟨u, hu⟩ := hjω
   have hrho : Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop
-      (𝓝 (T (fun k ↦ (ν k)[id]) k)) :=
+      (𝓝 (T ν.means k)) :=
     tendsto_pi_nhds.mp ((hT.tendsto _).comp hθω) k
-  have huk : u k = T (fun k ↦ (ν k)[id]) k := tendsto_nhds_unique (hu k).2 hrho
+  have huk : u k = T ν.means k := tendsto_nhds_unique (hu k).2 hrho
   rw [← huk]
   exact ((hu k).1).congr fun n ↦ by rw [count_indicator_eq_pullCount]
 

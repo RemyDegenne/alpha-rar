@@ -44,14 +44,14 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
 /-- **Measurability of a process evaluated at a measurable, bounded random time.** If each
 `ω ↦ H ω m` is measurable and `g : Ω → ℕ` is measurable with `g ω ≤ n`, then `ω ↦ H ω (g ω)` is
 measurable (finite-sum-of-indicators over `range (n+1)`). -/
-lemma measurable_eval_of_le {H : Ω → ℕ → ℝ} (hH : ∀ m, Measurable (fun ω ↦ H ω m))
+lemma measurable_eval_of_le {H : Ω → ℕ → ℝ} (hH : ∀ m, Measurable (H · m))
     {g : Ω → ℕ} (hg : Measurable g) {n : ℕ} (hgn : ∀ ω, g ω ≤ n) :
     Measurable (fun ω ↦ H ω (g ω)) := by
   have heq : (fun ω ↦ H ω (g ω))
       = fun ω ↦ ∑ m ∈ Finset.range (n + 1), if g ω = m then H ω m else 0 := by
     funext ω
     rw [Finset.sum_ite_eq (Finset.range (n + 1)) (g ω) (fun m ↦ H ω m),
-      if_pos (Finset.mem_range.mpr (Nat.lt_succ_of_le (hgn ω)))]
+      ite_eq_left (Finset.mem_range.mpr (Nat.lt_succ_of_le (hgn ω)))]
   rw [heq]
   exact Finset.measurable_sum _ fun m _ ↦
     Measurable.ite (hg (measurableSet_singleton m)) (hH m) measurable_const
@@ -182,7 +182,7 @@ lemma g_littleOp_of_hitting [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEn
     (hN : ∀ᵐ ω ∂P, Tendsto (fun m ↦ count (fun j ↦ armIndicator A k'' j ω) m / (m : ℝ))
       atTop (𝓝 v)) :
     IsLittleOpOne P (fun n ω ↦ (hitting (Q ω) n : ℝ)
-      * (|respMart ν A Y k'' (hitting (Q ω) n) ω| + |θ₀ k'' - (ν k'')[id]|)
+      * (|respMart ν A Y k'' (hitting (Q ω) n) ω| + |θ₀ k'' - ν.means k''|)
       / ((count (fun j ↦ armIndicator A k'' j ω) (hitting (Q ω) n) + 1)
         * (count (fun j ↦ armIndicator A k'' j ω) n + 1))) := by
   have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
@@ -190,7 +190,7 @@ lemma g_littleOp_of_hitting [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEn
   set ℓ : ℕ → Ω → ℕ := fun n ω ↦ hitting (Q ω) n with hℓ
   set Nc : ℕ → Ω → ℝ := fun n ω ↦ count (fun j ↦ armIndicator A k'' j ω) n with hNc
   have hNcnn : ∀ m ω, 0 ≤ Nc m ω := fun m ω ↦ count_armIndicator_nonneg A k'' m ω
-  set a : ℝ := |θ₀ k'' - (ν k'')[id]| with ha
+  set a : ℝ := |θ₀ k'' - ν.means k''| with ha
   -- F₁ = ℓ/(N_ℓ+1) is O_p (a.s. bounded).
   have hF1 : IsBigOpOne P (fun n ω ↦ (ℓ n ω : ℝ) / (Nc (ℓ n ω) ω + 1)) := by
     refine isBigOpOne_of_ae_bounded (fun n ↦ ?_) ?_
@@ -249,10 +249,10 @@ lemma g_littleOp_of_hitting [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEn
     gcongr
   -- g = F₁ · F₂.
   have hgeq : (fun n ω ↦ (ℓ n ω : ℝ)
-      * (|respMart ν A Y k'' (ℓ n ω) ω| + |θ₀ k'' - (ν k'')[id]|)
+      * (|respMart ν A Y k'' (ℓ n ω) ω| + |θ₀ k'' - ν.means k''|)
       / ((Nc (ℓ n ω) ω + 1) * (Nc n ω + 1)))
       = fun n ω ↦ ((ℓ n ω : ℝ) / (Nc (ℓ n ω) ω + 1))
-        * ((|respMart ν A Y k'' (ℓ n ω) ω| + |θ₀ k'' - (ν k'')[id]|) / (Nc n ω + 1)) := by
+        * ((|respMart ν A Y k'' (ℓ n ω) ω| + |θ₀ k'' - ν.means k''|) / (Nc n ω + 1)) := by
     funext n ω; rw [div_mul_div_comm]
   rw [hgeq]
   exact hF1.mul_littleOp hF2
@@ -276,9 +276,9 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     {K : ℝ≥0} (hlip : LipschitzWith K T)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-      (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 (fun k ↦ (ν k)[id])))
+      (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means))
     (hNconv : ∀ k', ∀ᵐ ω ∂P, Tendsto (fun n ↦ count (fun j ↦ armIndicator A k' j ω) n / (n : ℝ))
-      atTop (𝓝 (T (fun k'' ↦ (ν k'')[id]) k')))
+      atTop (𝓝 (T ν.means k')))
     (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
     (hQmeas : ∀ k m, MeasurableSet {ω | Q k ω m})
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
@@ -296,12 +296,12 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
   -- Continuity and the `ℓ¹`-form Lipschitz bound both follow from `LipschitzWith K T`.
   set L : ℝ := (K : ℝ) with hLdef
   have hT : Continuous T := hlip.continuous
-  -- The non-sparsity `0 < v_k` (the mean `(ν k)[id]` lies in every `attainableSet`, so `hTpos`
+  -- The non-sparsity `0 < v_k` (the mean `ν.means k` lies in every `attainableSet`, so `hTpos`
   -- applies), from the estimator consistency `hθconv`.
-  have hmem : ∀ k', (ν k')[id] ∈ attainableSet A Y (θ₀ k') k' := by
+  have hmem : ∀ k', ν.means k' ∈ attainableSet A Y (θ₀ k') k' := by
     obtain ⟨ω, hω⟩ := hθconv.exists
     exact fun k' ↦ estimator_limit_mem_attainableSet k' (θ₀ k') (tendsto_pi_nhds.mp hω k')
-  have hv : ∀ k, 0 < T (fun k' ↦ (ν k')[id]) k := fun k ↦ hTpos (fun k ↦ (ν k)[id]) hmem k
+  have hv : ∀ k, 0 < T ν.means k := fun k ↦ hTpos ν.means hmem k
   have hL : (0 : ℝ) ≤ L := K.coe_nonneg
   have hTlip : ∀ z z' : 𝓐 → ℝ, ∀ k, |T z k - T z' k| ≤ L * ∑ k', |z k' - z' k'| := by
     intro z z' k
@@ -336,7 +336,7 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     with hMdef
   set rhoterm : 𝓐 → ℕ → Ω → ℝ := fun k n ω ↦
     (ℓ k n ω : ℝ) * (aRTSTarget A Y θ₀ T (ℓ k n ω) ω k - aRTSTarget A Y θ₀ T n ω k) with hrhodef
-  set c : 𝓐 → ℝ := fun k ↦ (1 - α) * T (fun k' ↦ (ν k')[id]) k with hcdef
+  set c : 𝓐 → ℝ := fun k ↦ (1 - α) * T ν.means k with hcdef
   set pert : 𝓐 → ℕ → Ω → ℝ := fun k n ω ↦
     (Uincr k n ω - (-c k * d k n ω + Mincr k n ω + rhoterm k n ω)) / d k n ω with hpertdef
   -- M-increment control coefficients (assignment martingale, singleton family).
@@ -371,10 +371,10 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     obtain ⟨hQvop, hQwop⟩ := qm_increments_resp h hνk
     refine ell_rho_control (rhoterm := rhoterm k') (d := d k') (L := L)
       (θdiff := fun k'' n ω ↦ (ℓ k' n ω : ℝ)
-        * |estimator (fun j ↦ armIndicator A k'' j ω) (fun j ↦ Y j ω) (θ₀ k'') (ℓ k' n ω)
-          - estimator (fun j ↦ armIndicator A k'' j ω) (fun j ↦ Y j ω) (θ₀ k'') n|)
+        * |estimator (fun j ↦ armIndicator A k'' j ω) (Y · ω) (θ₀ k'') (ℓ k' n ω)
+          - estimator (fun j ↦ armIndicator A k'' j ω) (Y · ω) (θ₀ k'') n|)
       (g := fun k'' n ω ↦ (ℓ k' n ω : ℝ)
-        * (|respMart ν A Y k'' (ℓ k' n ω) ω| + |θ₀ k'' - (ν k'')[id]|)
+        * (|respMart ν A Y k'' (ℓ k' n ω) ω| + |θ₀ k'' - ν.means k''|)
         / ((count (fun j ↦ armIndicator A k'' j ω) (ℓ k' n ω) + 1)
           * (count (fun j ↦ armIndicator A k'' j ω) n + 1)))
       (h := fun k'' n ω ↦ (ℓ k' n ω : ℝ) / (count (fun j ↦ armIndicator A k'' j ω) n + 1))
@@ -388,9 +388,9 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
       have hℓnn : (0 : ℝ) ≤ (hitting (Q k' ω) n : ℝ) := Nat.cast_nonneg _
       have hTb : aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k'
             - aRTSTarget A Y θ₀ T n ω k'
-          ≤ L * ∑ k'', |estimator (fun j ↦ armIndicator A k'' j ω) (fun j ↦ Y j ω) (θ₀ k'')
+          ≤ L * ∑ k'', |estimator (fun j ↦ armIndicator A k'' j ω) (Y · ω) (θ₀ k'')
               (hitting (Q k' ω) n)
-            - estimator (fun j ↦ armIndicator A k'' j ω) (fun j ↦ Y j ω) (θ₀ k'') n| := by
+            - estimator (fun j ↦ armIndicator A k'' j ω) (Y · ω) (θ₀ k'') n| := by
         refine le_trans (le_abs_self _) ?_
         simp only [aRTSTarget]
         exact hTlip _ _ k'
@@ -398,21 +398,21 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
             * (aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k'
               - aRTSTarget A Y θ₀ T n ω k')
           ≤ (hitting (Q k' ω) n : ℝ)
-            * (L * ∑ k'', |estimator (fun j ↦ armIndicator A k'' j ω) (fun j ↦ Y j ω) (θ₀ k'')
+            * (L * ∑ k'', |estimator (fun j ↦ armIndicator A k'' j ω) (Y · ω) (θ₀ k'')
                 (hitting (Q k' ω) n)
-              - estimator (fun j ↦ armIndicator A k'' j ω) (fun j ↦ Y j ω) (θ₀ k'') n|) :=
+              - estimator (fun j ↦ armIndicator A k'' j ω) (Y · ω) (θ₀ k'') n|) :=
             mul_le_mul_of_nonneg_left hTb hℓnn
         _ = L * ∑ k'', (hitting (Q k' ω) n : ℝ)
-              * |estimator (fun j ↦ armIndicator A k'' j ω) (fun j ↦ Y j ω) (θ₀ k'')
+              * |estimator (fun j ↦ armIndicator A k'' j ω) (Y · ω) (θ₀ k'')
                 (hitting (Q k' ω) n)
-              - estimator (fun j ↦ armIndicator A k'' j ω) (fun j ↦ Y j ω) (θ₀ k'') n| := by
+              - estimator (fun j ↦ armIndicator A k'' j ω) (Y · ω) (θ₀ k'') n| := by
             rw [← Finset.mul_sum]; ring
     · -- hdiff: `abs_estimator_diff_le`, bridged from `respMG` to `respMart`.
       intro k'' n ω
       simp only [hddef, hℓdef]
       have hae := abs_estimator_diff_le (fun j ↦ armIndicator A k'' j ω)
         (fun j ↦ armIndicator_nonneg A k'' j ω)
-        (fun j ↦ armIndicator_le_one A k'' j ω) (fun j ↦ Y j ω) ((ν k'')[id]) (θ₀ k'')
+        (fun j ↦ armIndicator_le_one A k'' j ω) (Y · ω) (ν.means k'') (θ₀ k'')
         (ℓ := hitting (Q k' ω) n) (Nat.findGreatest_le n)
       simp only [respMG_indicator_eq_respMart] at hae
       exact hae
@@ -467,12 +467,12 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     exact hω
   -- Plug-in-target consistency `ρ̂_{n,k} → v_k` from estimator consistency `θ̂ → θ` and `hT`.
   have hρconv : ∀ k', ∀ᵐ ω ∂P, Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k') atTop
-      (𝓝 (T (fun k'' ↦ (ν k'')[id]) k')) := by
+      (𝓝 (T ν.means k')) := by
     intro k'
     filter_upwards [hθconv] with ω hω
     have hTtend : Tendsto (fun n ↦ T (fun k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
-        (fun j ↦ Y j ω) (θ₀ k'') n)) atTop (𝓝 (T (fun k'' ↦ (ν k'')[id]))) :=
-      (hT.tendsto (fun k'' ↦ (ν k'')[id])).comp hω
+        (Y · ω) (θ₀ k'') n)) atTop (𝓝 (T ν.means)) :=
+      (hT.tendsto ν.means).comp hω
     exact ((continuous_apply k').tendsto _).comp hTtend
   refine prop_dev (Dev := Dev) (small := small) (Uincr := Uincr) (Mincr := Mincr)
     (rhoterm := rhoterm) (pert := pert) (d := d) (c := c) (VM := VM) (WM := WM)
@@ -575,7 +575,7 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
               (fun j ↦ aRTSTarget A Y θ₀ T j ω k') α n
             - auxU (fun j ↦ armIndicator A k' j ω) (fun j ↦ aRTSSelProb A k' ℱ P j ω)
               (fun j ↦ aRTSTarget A Y θ₀ T j ω k') α (ℓ k' n ω)
-            - (((n : ℝ) - ℓ k' n ω) * (-(1 - α) * T (fun k'' ↦ (ν k'')[id]) k')
+            - (((n : ℝ) - ℓ k' n ω) * (-(1 - α) * T ν.means k')
               + (assignMG (fun j ↦ armIndicator A k' j ω)
                   (fun j ↦ aRTSSelProb A k' ℱ P j ω) n
                 - assignMG (fun j ↦ armIndicator A k' j ω)

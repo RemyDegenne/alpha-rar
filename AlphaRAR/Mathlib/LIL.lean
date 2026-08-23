@@ -199,7 +199,7 @@ lemma supermartingale_expProcessRefined [IsProbabilityMeasure μ] (hM : Martinga
     filter_upwards [ae_all_iff.mpr hb, hM0] with ω hball h0
     simp only [Pi.zero_apply] at h0
     have htel : (∑ j ∈ Finset.range n, (M (j + 1) ω - M j ω)) = M n ω := by
-      rw [Finset.sum_range_sub (fun j ↦ M j ω) n, h0, sub_zero]
+      rw [Finset.sum_range_sub (M · ω) n, h0, sub_zero]
     rw [← htel]
     calc |∑ j ∈ Finset.range n, (M (j + 1) ω - M j ω)|
         ≤ ∑ j ∈ Finset.range n, |M (j + 1) ω - M j ω| := Finset.abs_sum_le_sum_abs _ _
@@ -421,7 +421,7 @@ lemma measure_exists_ge_le_exp_refined [IsProbabilityMeasure μ] (hM : Martingal
       nlinarith [mul_le_mul_of_nonneg_left hMk hθ0.le,
         mul_le_mul_of_nonneg_left hqvk
           (mul_nonneg (show (0 : ℝ) ≤ (1 + δ) / 2 by linarith) (sq_nonneg θ))]
-    exact le_trans hZk (Finset.le_sup' (fun j ↦ Z j ω) (Finset.mem_range.mpr (by omega)))
+    exact le_trans hZk (Finset.le_sup' (Z · ω) (Finset.mem_range.mpr (by omega)))
   have hville := smul_measure_sup_le_integral_zero hZ_super hZ_nonneg (ε := a.toNNReal) n
   rw [hZ0, ENNReal.ofReal_one, ENNReal.smul_def, smul_eq_mul,
     Real.coe_toNNReal a ha_pos.le] at hville

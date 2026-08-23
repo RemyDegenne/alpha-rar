@@ -18,7 +18,7 @@ This file connects the bracket-normalized martingale strong law
 (`martingale_div_predQuadVar_ae_tendsto_zero`) to the sequential estimator of the
 response model. It formalizes the first branch of the blueprint dichotomy
 `lem:theta_limit_dichotomy`: **on the event that arm `k` is sampled infinitely
-often, the estimator `θ̂_{n,k}` converges a.s. to the arm mean `θ_k = (ν k)[id]`.**
+often, the estimator `θ̂_{n,k}` converges a.s. to the arm mean `θ_k = ν.means k`.**
 
 The argument is:
 
@@ -56,11 +56,11 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
 
 omit [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] [IsMarkovKernel ν] in
 /-- The deterministic response martingale `respMG` of the assignment-indicator sequence
-`𝟙{A · = k}` and response `Y · ω`, centered at the arm mean `(ν k)[id]`, equals the
+`𝟙{A · = k}` and response `Y · ω`, centered at the arm mean `ν.means k`, equals the
 probabilistic response martingale `respMart` evaluated at `ω`. -/
 lemma respMG_indicator_eq_respMart (k : 𝓐) (n : ℕ) (ω : Ω) :
     respMG (fun j ↦ armIndicator A k j ω)
-        (fun j ↦ Y j ω) ((ν k)[id]) n
+        (Y · ω) (ν.means k) n
       = respMart ν A Y k n ω := by
   simp only [respMG, respMart]
 
@@ -120,8 +120,8 @@ lemma respMart_div_pullCount_ae_tendsto_zero [Finite 𝓐]
 
 /-- **Estimator consistency on `{N_{n,k} → ∞}`** (branch 1 of `lem:theta_limit_dichotomy`).
 On the event that arm `k` is sampled infinitely often, the sequential estimator converges
-a.s. to the arm mean `θ_k = (ν k)[id]`:
-`θ̂_{n,k} = (∑_{j<n} 𝟙{A j = k} Y j + θ₀)/(N_{n,k}+1) → (ν k)[id]` a.s.
+a.s. to the arm mean `θ_k = ν.means k`:
+`θ̂_{n,k} = (∑_{j<n} 𝟙{A j = k} Y j + θ₀)/(N_{n,k}+1) → ν.means k` a.s.
 
 From the exact error identity `θ̂_{n,k} - θ_k = (Q_{n,k} + (θ₀-θ_k))/(N_{n,k}+1)`
 (`estimator_sub_eq`), both fractions vanish: `Q_{n,k}/(N_{n,k}+1) → 0` because
@@ -132,7 +132,7 @@ lemma estimator_ae_tendsto_of_pullCount_atTop [Finite 𝓐]
     (θ₀ : ℝ) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop →
       Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
-        (fun j ↦ Y j ω) θ₀ n) atTop (𝓝 ((ν k)[id])) := by
+        (Y · ω) θ₀ n) atTop (𝓝 (ν.means k)) := by
   filter_upwards [respMart_div_pullCount_ae_tendsto_zero h k hνk] with ω hslln hN
   have hslln' := hslln hN
   -- `N_{n,k} + 1 → ∞` and its inverse → 0.
@@ -160,30 +160,30 @@ lemma estimator_ae_tendsto_of_pullCount_atTop [Finite 𝓐]
     have hpc1' : (pullCount A k n ω : ℝ) + 1 ≠ 0 := by positivity
     field_simp
   -- Term B: constant offset `(θ₀-θ)/(N+1) → 0`.
-  have hB : Tendsto (fun n ↦ (θ₀ - (ν k)[id]) / ((pullCount A k n ω : ℝ) + 1)) atTop (𝓝 0) := by
-    have hb := hpcinv.const_mul (θ₀ - (ν k)[id])
+  have hB : Tendsto (fun n ↦ (θ₀ - ν.means k) / ((pullCount A k n ω : ℝ) + 1)) atTop (𝓝 0) := by
+    have hb := hpcinv.const_mul (θ₀ - ν.means k)
     rw [mul_zero] at hb
     simpa [div_eq_mul_inv] using hb
   -- Sum of the two fractions → 0, and it equals `θ̂ - θ`.
-  have hAB : Tendsto (fun n ↦ (respMart ν A Y k n ω + (θ₀ - (ν k)[id]))
+  have hAB : Tendsto (fun n ↦ (respMart ν A Y k n ω + (θ₀ - ν.means k))
       / ((pullCount A k n ω : ℝ) + 1)) atTop (𝓝 0) := by
     have hsum := hA.add hB
     rw [add_zero] at hsum
     refine hsum.congr' (Eventually.of_forall fun n ↦ ?_)
     simp only [add_div]
   have hsub : Tendsto (fun n ↦ estimator
-      (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) θ₀ n
-      - (ν k)[id]) atTop (𝓝 0) := by
+      (fun j ↦ armIndicator A k j ω) (Y · ω) θ₀ n
+      - ν.means k) atTop (𝓝 0) := by
     refine hAB.congr' (Eventually.of_forall fun n ↦ ?_)
     have hden_ne : count (fun j ↦ armIndicator A k j ω) n + 1 ≠ 0 := by
       rw [count_indicator_eq_pullCount]; positivity
     have key : estimator (fun j ↦ armIndicator A k j ω)
-          (fun j ↦ Y j ω) θ₀ n - (ν k)[id]
-        = (respMart ν A Y k n ω + (θ₀ - (ν k)[id])) / ((pullCount A k n ω : ℝ) + 1) := by
-      rw [estimator_sub_eq _ _ ((ν k)[id]) θ₀ n hden_ne]
+          (Y · ω) θ₀ n - ν.means k
+        = (respMart ν A Y k n ω + (θ₀ - ν.means k)) / ((pullCount A k n ω : ℝ) + 1) := by
+      rw [estimator_sub_eq _ _ (ν.means k) θ₀ n hden_ne]
       simp only [respMG_indicator_eq_respMart, count_indicator_eq_pullCount]
     exact key.symm
-  have hconst : Tendsto (fun _ : ℕ ↦ (ν k)[id]) atTop (𝓝 ((ν k)[id])) := tendsto_const_nhds
+  have hconst : Tendsto (fun _ : ℕ ↦ ν.means k) atTop (𝓝 (ν.means k)) := tendsto_const_nhds
   have hfinal := hconst.add hsub
   rw [add_zero] at hfinal
   exact hfinal.congr fun n ↦ by ring
@@ -202,7 +202,7 @@ denominator `N_{n,k}+1` are constant, and the estimator freezes. -/
 lemma exists_tendsto_estimator_of_not_pullCount_atTop (k : 𝓐) (θ₀ : ℝ) (ω : Ω)
     (hnot : ¬ Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop) :
     ∃ L, Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
-      (fun j ↦ Y j ω) θ₀ n) atTop (𝓝 L) := by
+      (Y · ω) θ₀ n) atTop (𝓝 L) := by
   -- The count (as a `ℕ`-valued sequence) does not tend to `∞` either, hence is bounded.
   have hnatnot : ¬ Tendsto (fun n ↦ pullCount A k n ω) atTop atTop :=
     fun hnat ↦ hnot (tendsto_natCast_atTop_atTop.comp hnat)
@@ -217,7 +217,7 @@ lemma exists_tendsto_estimator_of_not_pullCount_atTop (k : 𝓐) (θ₀ : ℝ) (
     le_antisymm (hle n) (monotone_pullCount k ω hn)
   -- For `n ≥ N₀` the estimator equals its value at `N₀`.
   refine ⟨estimator (fun j ↦ armIndicator A k j ω)
-    (fun j ↦ Y j ω) θ₀ N₀, tendsto_atTop_of_eventually_const (i₀ := N₀) fun n hn ↦ ?_⟩
+    (Y · ω) θ₀ N₀, tendsto_atTop_of_eventually_const (i₀ := N₀) fun n hn ↦ ?_⟩
   have hden : count (fun j ↦ armIndicator A k j ω) n
       = count (fun j ↦ armIndicator A k j ω) N₀ := by
     rw [count_indicator_eq_pullCount, count_indicator_eq_pullCount, hconst n hn]
@@ -233,7 +233,7 @@ lemma exists_tendsto_estimator_of_not_pullCount_atTop (k : 𝓐) (θ₀ : ℝ) (
       rw [hconst (j + 1) (by omega), hconst j hjN]
     have hAjk : A j ω ≠ k := by
       intro hEq
-      rw [pullCount_add_one, hEq, if_pos rfl] at hj1
+      rw [pullCount_add_one, hEq, ite_eq_left rfl] at hj1
       omega
     rw [armIndicator, Set.indicator_of_notMem (by simpa using hAjk), zero_mul]
   simp only [estimator, hden, hnum]
@@ -241,19 +241,19 @@ lemma exists_tendsto_estimator_of_not_pullCount_atTop (k : 𝓐) (θ₀ : ℝ) (
 omit [DecidableEq 𝓐] in
 /-- **The sequential estimator converges a.s.** (the convergence content of
 `lem:theta_limit_dichotomy`). For each arm `k`, `\hat\theta_{n,k}` converges almost surely: to
-the arm mean `θ_k = (ν k)[id]` on `\{N_{n,k}\to\infty\}` (Lemma
+the arm mean `θ_k = ν.means k` on `\{N_{n,k}\to\infty\}` (Lemma
 `estimator_ae_tendsto_of_pullCount_atTop`), and to an eventually-attained value on
 `\{\sup_n N_{n,k}<\infty\}` (Lemma `exists_tendsto_estimator_of_not_pullCount_atTop`). The
 dichotomy is exhaustive because `N_{n,k}` is monotone in `n`. -/
 lemma estimator_ae_tendsto [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : ℝ) :
     ∀ᵐ ω ∂P, ∃ L, Tendsto (fun n ↦ estimator
-      (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) θ₀ n)
+      (fun j ↦ armIndicator A k j ω) (Y · ω) θ₀ n)
       atTop (𝓝 L) := by
   classical
   filter_upwards [estimator_ae_tendsto_of_pullCount_atTop h k hνk θ₀] with ω hω
   by_cases hlim : Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop
-  · exact ⟨(ν k)[id], hω hlim⟩
+  · exact ⟨ν.means k, hω hlim⟩
   · exact exists_tendsto_estimator_of_not_pullCount_atTop k θ₀ ω hlim
 
 omit [DecidableEq 𝓐] in
@@ -265,7 +265,7 @@ into a single a.s. limit vector `z : 𝓐 → ℝ`: almost surely there is `z` w
 lemma estimator_ae_tendsto_pi [Finite 𝓐] [Countable 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) :
     ∀ᵐ ω ∂P, ∃ z : 𝓐 → ℝ, ∀ k, Tendsto (fun n ↦ estimator
-      (fun j ↦ armIndicator A k j ω) (fun j ↦ Y j ω) (θ₀ k) n)
+      (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) n)
       atTop (𝓝 (z k)) := by
   filter_upwards [ae_all_iff.mpr fun k ↦ estimator_ae_tendsto h k hνk (θ₀ k)] with ω hω
   choose z hz using hω
@@ -278,13 +278,13 @@ If the allocation proportion converges to a *positive* limit, `N_{n,k}/n → u_k
 positivity `u_k > 0` is the non-sparsity of Condition **B**, blueprint `lem:rho_converges`), then
 arm `k` is sampled infinitely often (`all_arms_infinite`), so the dichotomy's first branch
 (`estimator_ae_tendsto_of_pullCount_atTop`) identifies the estimator limit as the true arm mean:
-`θ̂_{n,k} → θ_k = (ν k)[id]` a.s. -/
+`θ̂_{n,k} → θ_k = ν.means k` a.s. -/
 lemma theta_consistent [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) {u : Ω → 𝓐 → ℝ}
     (hmatch : ∀ k, ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (u ω k)))
     (hpos : ∀ k, ∀ᵐ ω ∂P, 0 < u ω k) (k : 𝓐) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
-      (fun j ↦ Y j ω) (θ₀ k) n) atTop (𝓝 ((ν k)[id])) := by
+      (Y · ω) (θ₀ k) n) atTop (𝓝 (ν.means k)) := by
   filter_upwards [hmatch k, hpos k,
     estimator_ae_tendsto_of_pullCount_atTop h k hνk (θ₀ k)] with ω hmω hpω hestω
   refine hestω ?_
@@ -294,7 +294,7 @@ lemma theta_consistent [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν)
 
 /-- **Estimator vector consistency** (blueprint `lem:theta_consistent`, vector form). Under a
 positive allocation-proportion limit for every arm, the estimator vector converges a.s. to the true
-parameter: `θ̂_n → θ = ((ν k)[id])_k`. Bundles `theta_consistent` over the finitely many arms via
+parameter: `θ̂_n → θ = (ν.means k)_k`. Bundles `theta_consistent` over the finitely many arms via
 `ae_all_iff` and `tendsto_pi_nhds`. This is the a.s. consistency the delta-method rate `rho_rate`
 consumes. -/
 lemma theta_consistent_pi [Finite 𝓐] [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
@@ -302,7 +302,7 @@ lemma theta_consistent_pi [Finite 𝓐] [Countable 𝓐] (h : IsAlgEnvSeq A Y al
     (hmatch : ∀ k, ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (u ω k)))
     (hpos : ∀ k, ∀ᵐ ω ∂P, 0 < u ω k) :
     ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-      (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 (fun k ↦ (ν k)[id])) := by
+      (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means) := by
   filter_upwards [ae_all_iff.mpr fun k ↦ theta_consistent h hνk θ₀ hmatch hpos k] with ω hω
   exact tendsto_pi_nhds.mpr hω
 
@@ -312,7 +312,7 @@ Every pointwise limit of `θ̂_{·,k}` lies in it (`estimator_limit_mem_attainab
 **B**'s positivity requirement on this set transfers to the plug-in-target limit `u_k = T(z)_k`. -/
 def attainableSet (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : ℝ) (k : 𝓐) : Set ℝ :=
   closure (Set.range fun p : ℕ × Ω ↦
-    estimator (fun j ↦ armIndicator A k j p.2) (fun j ↦ Y j p.2) θ₀ p.1)
+    estimator (fun j ↦ armIndicator A k j p.2) (Y · p.2) θ₀ p.1)
 
 omit [DecidableEq 𝓐] in
 /-- Any pointwise limit of the sequential estimator lies in the attainable set: it is a limit of
@@ -322,7 +322,7 @@ takes a *closure* of the range rather than the range itself: limits of estimator
 belong to it, and they need not be attained at any finite time"]
 lemma estimator_limit_mem_attainableSet (k : 𝓐) (θ₀ : ℝ) {ω : Ω} {L : ℝ}
     (hL : Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
-      (fun j ↦ Y j ω) θ₀ n) atTop (𝓝 L)) :
+      (Y · ω) θ₀ n) atTop (𝓝 L)) :
     L ∈ attainableSet A Y θ₀ k :=
   mem_closure_of_tendsto hL (Eventually.of_forall fun n ↦ ⟨(n, ω), rfl⟩)
 
@@ -340,12 +340,12 @@ lemma rho_converges_pos [Finite 𝓐] [Countable 𝓐] (h : IsAlgEnvSeq A Y alg 
     (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, (∀ k, 0 < u k) ∧ ∀ k, Tendsto (fun n ↦ T (fun k' ↦ estimator
-      (fun j ↦ armIndicator A k' j ω) (fun j ↦ Y j ω) (θ₀ k') n) k) atTop (𝓝 (u k)) := by
+      (fun j ↦ armIndicator A k' j ω) (Y · ω) (θ₀ k') n) k) atTop (𝓝 (u k)) := by
   filter_upwards [estimator_ae_tendsto_pi h hνk θ₀] with ω hω
   obtain ⟨z, hz⟩ := hω
   refine ⟨T z, hTpos z (fun k ↦ estimator_limit_mem_attainableSet k (θ₀ k) (hz k)), fun k ↦ ?_⟩
   have hvec : Tendsto (fun n ↦ (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-      (fun j ↦ Y j ω) (θ₀ k') n)) atTop (𝓝 z) := tendsto_pi_nhds.mpr hz
+      (Y · ω) (θ₀ k') n)) atTop (𝓝 z) := tendsto_pi_nhds.mpr hz
   exact tendsto_pi_nhds.mp ((hT.tendsto z).comp hvec) k
 
 /-- **The allocation-proportion limit is positive** (the non-sparsity discharge). Given the *joint*
@@ -361,17 +361,17 @@ lemma proportion_pos_of_condB [Finite 𝓐] [Countable 𝓐] (h : IsAlgEnvSeq A 
     (hjoint : ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
       Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (u k)) ∧
       Tendsto (fun n ↦ T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-        (fun j ↦ Y j ω) (θ₀ k') n) k) atTop (𝓝 (u k))) :
+        (Y · ω) (θ₀ k') n) k) atTop (𝓝 (u k))) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, (∀ k, 0 < u k) ∧
       ∀ k, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (u k)) := by
   filter_upwards [hjoint, estimator_ae_tendsto_pi h hνk θ₀] with ω hjω hzω
   obtain ⟨u, hu⟩ := hjω
   obtain ⟨z, hz⟩ := hzω
   have hrho : ∀ k, Tendsto (fun n ↦ T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-      (fun j ↦ Y j ω) (θ₀ k') n) k) atTop (𝓝 (T z k)) := by
+      (Y · ω) (θ₀ k') n) k) atTop (𝓝 (T z k)) := by
     intro k
     have hvec : Tendsto (fun n ↦ (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-        (fun j ↦ Y j ω) (θ₀ k') n)) atTop (𝓝 z) := tendsto_pi_nhds.mpr hz
+        (Y · ω) (θ₀ k') n)) atTop (𝓝 z) := tendsto_pi_nhds.mpr hz
     exact tendsto_pi_nhds.mp ((hT.tendsto z).comp hvec) k
   have huz : ∀ k, u k = T z k := fun k ↦ tendsto_nhds_unique (hu k).2 (hrho k)
   refine ⟨u, fun k ↦ ?_, fun k ↦ (hu k).1⟩
@@ -387,7 +387,7 @@ lemma theta_consistent_of_pos [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationary
     (hpp : ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧
       Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 uk)) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
-      (fun j ↦ Y j ω) θ₀ n) atTop (𝓝 ((ν k)[id])) := by
+      (Y · ω) θ₀ n) atTop (𝓝 (ν.means k)) := by
   filter_upwards [hpp, estimator_ae_tendsto_of_pullCount_atTop h k hνk θ₀] with ω hppω hestω
   obtain ⟨uk, hukpos, hlim⟩ := hppω
   refine hestω ?_
@@ -397,7 +397,7 @@ lemma theta_consistent_of_pos [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationary
 
 /-- **Estimator vector consistency under Condition B** (`lem:theta_consistent`, vector form,
 discharged). From the joint consistency `hjoint` and Condition **B**, the estimator vector converges
-a.s. to the true parameter `θ̂_n → θ = ((ν k)[id])_k`: `proportion_pos_of_condB` makes the shared
+a.s. to the true parameter `θ̂_n → θ = (ν.means k)_k`: `proportion_pos_of_condB` makes the shared
 proportion limit positive, then `theta_consistent_of_pos` identifies each arm's limit as its
 mean. -/
 lemma theta_consistent_pi_of_condB [Finite 𝓐] [Countable 𝓐]
@@ -407,12 +407,12 @@ lemma theta_consistent_pi_of_condB [Finite 𝓐] [Countable 𝓐]
     (hjoint : ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
       Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (u k)) ∧
       Tendsto (fun n ↦ T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-        (fun j ↦ Y j ω) (θ₀ k') n) k) atTop (𝓝 (u k))) :
+        (Y · ω) (θ₀ k') n) k) atTop (𝓝 (u k))) :
     ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
-      (fun j ↦ Y j ω) (θ₀ k') n) atTop (𝓝 (fun k ↦ (ν k)[id])) := by
+      (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means) := by
   have hprop := proportion_pos_of_condB h hνk θ₀ T hT hTpos hjoint
   have hper : ∀ k, ∀ᵐ ω ∂P, Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
-      (fun j ↦ Y j ω) (θ₀ k) n) atTop (𝓝 ((ν k)[id])) := by
+      (Y · ω) (θ₀ k) n) atTop (𝓝 (ν.means k)) := by
     intro k
     refine theta_consistent_of_pos h hνk (θ₀ k) k ?_
     filter_upwards [hprop] with ω hpω
@@ -432,14 +432,14 @@ non-sparse refinement `u \in (0,1)^K` needs the rest of Condition **B** and is d
 lemma rho_converges [Finite 𝓐] [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k, Tendsto (fun n ↦ T (fun k' ↦ estimator
-      (fun j ↦ armIndicator A k' j ω) (fun j ↦ Y j ω) (θ₀ k') n) k)
+      (fun j ↦ armIndicator A k' j ω) (Y · ω) (θ₀ k') n) k)
       atTop (𝓝 (u k)) := by
   filter_upwards [estimator_ae_tendsto_pi h hνk θ₀] with ω hω
   obtain ⟨z, hz⟩ := hω
   refine ⟨T z, fun k ↦ ?_⟩
   have hvec : Tendsto (fun n ↦ (fun k' ↦ estimator
       (fun j ↦ armIndicator A k' j ω)
-        (fun j ↦ Y j ω) (θ₀ k') n)) atTop (𝓝 z) := tendsto_pi_nhds.mpr hz
+        (Y · ω) (θ₀ k') n)) atTop (𝓝 z) := tendsto_pi_nhds.mpr hz
   exact tendsto_pi_nhds.mp ((hT.tendsto z).comp hvec) k
 
 omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] [IsProbabilityMeasure P] in
@@ -457,7 +457,7 @@ lemma abs_estimator_sub_le_rate_ae (k : 𝓐) (θ₀ : ℝ) {v : Ω → ℝ}
       |respMart ν A Y k n ω| ≤ C * √((n : ℝ) * Real.log n)) :
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
       |estimator (fun j ↦ armIndicator A k j ω)
-          (fun j ↦ Y j ω) θ₀ n - (ν k)[id]|
+          (Y · ω) θ₀ n - ν.means k|
         ≤ C' * (√((n : ℝ) * Real.log n) / (n : ℝ)) := by
   filter_upwards [hv, hN, hQ] with ω hvω hNω hQω
   obtain ⟨C, hCbound⟩ := hQω
@@ -465,13 +465,13 @@ lemma abs_estimator_sub_le_rate_ae (k : 𝓐) (θ₀ : ℝ) {v : Ω → ℝ}
       atTop (𝓝 (v ω)) :=
     hNω.congr fun n ↦ by rw [count_indicator_eq_pullCount]
   have hQ' : ∀ᶠ n in atTop, |respMG (fun j ↦ armIndicator A k j ω)
-      (fun j ↦ Y j ω) ((ν k)[id]) n|
+      (Y · ω) (ν.means k) n|
       ≤ max C 0 * √((n : ℝ) * Real.log n) := by
     filter_upwards [hCbound] with n hn
     rw [respMG_indicator_eq_respMart]
     exact hn.trans (mul_le_mul_of_nonneg_right (le_max_left C 0) (Real.sqrt_nonneg _))
   exact abs_estimator_sub_le_rate (fun j ↦ armIndicator A k j ω)
-    (fun j ↦ Y j ω) ((ν k)[id]) θ₀ hvω hN' (le_max_right C 0) hQ'
+    (Y · ω) (ν.means k) θ₀ hvω hN' (le_max_right C 0) hQ'
 
 /-! ### The loglog rate for the estimator -/
 
@@ -589,7 +589,7 @@ lemma abs_estimator_sub_le_rate_loglog_ae (k : 𝓐) (θ₀ : ℝ) {v : Ω → �
       |respMart ν A Y k n ω| ≤ C * √((n : ℝ) * Real.log (Real.log (n : ℝ)))) :
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
       |estimator (fun j ↦ armIndicator A k j ω)
-          (fun j ↦ Y j ω) θ₀ n - (ν k)[id]|
+          (Y · ω) θ₀ n - ν.means k|
         ≤ C' * (√((n : ℝ) * Real.log (Real.log (n : ℝ))) / (n : ℝ)) := by
   have hr : ∀ᶠ (n : ℕ) in atTop, (1 : ℝ) ≤ √((n : ℝ) * Real.log (Real.log (n : ℝ))) := by
     have hloglogtop : Tendsto (fun n : ℕ ↦ Real.log (Real.log (n : ℝ))) atTop atTop :=
@@ -603,12 +603,12 @@ lemma abs_estimator_sub_le_rate_loglog_ae (k : 𝓐) (θ₀ : ℝ) {v : Ω → �
       atTop (𝓝 (v ω)) :=
     hNω.congr fun n ↦ by rw [count_indicator_eq_pullCount]
   have hQ' : ∀ᶠ n in atTop, |respMG (fun j ↦ armIndicator A k j ω)
-      (fun j ↦ Y j ω) ((ν k)[id]) n|
+      (Y · ω) (ν.means k) n|
       ≤ max C 0 * √((n : ℝ) * Real.log (Real.log (n : ℝ))) := by
     filter_upwards [hCbound] with n hn
     rw [respMG_indicator_eq_respMart]
     exact hn.trans (mul_le_mul_of_nonneg_right (le_max_left C 0) (Real.sqrt_nonneg _))
   exact abs_estimator_sub_le_rate_gen (fun j ↦ armIndicator A k j ω)
-    (fun j ↦ Y j ω) ((ν k)[id]) θ₀ hvω hN' (le_max_right C 0) hr hQ'
+    (Y · ω) (ν.means k) θ₀ hvω hN' (le_max_right C 0) hr hQ'
 
 end AlphaRAR

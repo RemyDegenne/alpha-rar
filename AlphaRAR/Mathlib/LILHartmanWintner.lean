@@ -906,10 +906,10 @@ lemma medium_variance_series_le {X : Ω → ℝ} (hX : Measurable X)
     ∃ C : ℝ, 0 ≤ C ∧
       Summable (fun j : ℕ ↦ if 3 ≤ j then
         (∫ ω, Set.indicator {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)}
-          (fun ω ↦ X ω ^ 2) ω ∂μ) / ((j : ℝ) * log (log (j : ℝ))) else 0) ∧
+          (X · ^ 2) ω ∂μ) / ((j : ℝ) * log (log (j : ℝ))) else 0) ∧
       ∑' j : ℕ, (if 3 ≤ j then
         (∫ ω, Set.indicator {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)}
-          (fun ω ↦ X ω ^ 2) ω ∂μ) / ((j : ℝ) * log (log (j : ℝ))) else 0)
+          (X · ^ 2) ω ∂μ) / ((j : ℝ) * log (log (j : ℝ))) else 0)
         ≤ C * ∫ ω, X ω ^ 2 ∂μ := by
   obtain ⟨C, hC0, hCbound⟩ := medium_inner_tsum_le
   have hloglogpos : ∀ j : ℕ, 3 ≤ j → 0 < log (log (j : ℝ)) := by
@@ -937,38 +937,38 @@ lemma medium_variance_series_le {X : Ω → ℝ} (hX : Measurable X)
     tauto
   set m : ℕ → Ω → ℝ := fun j ω ↦ if 3 ≤ j then
     Set.indicator {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)}
-      (fun ω ↦ X ω ^ 2) ω / ((j : ℝ) * log (log (j : ℝ))) else 0 with hm
+      (X · ^ 2) ω / ((j : ℝ) * log (log (j : ℝ))) else 0 with hm
   have hint_m : ∀ j, Integrable (m j) μ := fun j ↦ by
     simp only [hm]; by_cases hj3 : 3 ≤ j
-    · simp only [if_pos hj3]; exact (hX2.integrable_sq.indicator (hSmeas j)).div_const _
-    · simp only [if_neg hj3]; exact integrable_zero _ _ _
+    · simp only [ite_eq_left hj3]; exact (hX2.integrable_sq.indicator (hSmeas j)).div_const _
+    · simp only [ite_eq_right hj3]; exact integrable_zero _ _ _
   set F : ℕ → ℝ := fun j ↦ if 3 ≤ j then
     (∫ ω, Set.indicator {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)}
-      (fun ω ↦ X ω ^ 2) ω ∂μ) / ((j : ℝ) * log (log (j : ℝ))) else 0 with hF
+      (X · ^ 2) ω ∂μ) / ((j : ℝ) * log (log (j : ℝ))) else 0 with hF
   have hFm : ∀ j, F j = ∫ ω, m j ω ∂μ := by
     intro j; simp only [hF, hm]; by_cases hj3 : 3 ≤ j
-    · simp only [if_pos hj3]; rw [integral_div]
-    · simp only [if_neg hj3, integral_zero]
+    · simp only [ite_eq_left hj3]; rw [integral_div]
+    · simp only [ite_eq_right hj3, integral_zero]
   have hm_nn : ∀ j ω, 0 ≤ m j ω := by
     intro j ω; simp only [hm]; by_cases hj3 : 3 ≤ j
-    · simp only [if_pos hj3]
+    · simp only [ite_eq_left hj3]
       have hll := hloglogpos j hj3
       have hjpos : (0 : ℝ) < (j : ℝ) := by
         have : (3 : ℝ) ≤ (j : ℝ) := by exact_mod_cast hj3
         linarith
       exact div_nonneg (Set.indicator_nonneg (fun _ _ ↦ sq_nonneg _) _) (by positivity)
-    · simp [if_neg hj3]
+    · simp [ite_eq_right hj3]
   have hFnn : ∀ j, 0 ≤ F j := fun j ↦ by rw [hFm]; exact integral_nonneg (hm_nn j)
   have hptwise : ∀ (ω : Ω) (n : ℕ), ∑ j ∈ Finset.range n, m j ω ≤ C * X ω ^ 2 := by
     intro ω n
     have hfac : ∀ j : ℕ, m j ω = X ω ^ 2 * (if 3 ≤ j ∧ X ω ^ 2 ≤ (j : ℝ)
         ∧ (j : ℝ) < X ω ^ 2 * log ((j : ℝ) + 2) then 1 / ((j : ℝ) * log (log (j : ℝ))) else 0) := by
       intro j; simp only [hm]; by_cases hj3 : 3 ≤ j
-      · rw [if_pos hj3]
+      · rw [ite_eq_left hj3]
         by_cases hmem : ω ∈ {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)}
-        · rw [Set.indicator_of_mem hmem, if_pos ⟨hj3, (hSiff j ω).mp hmem⟩]; ring
-        · rw [Set.indicator_of_notMem hmem, if_neg (fun h ↦ hmem ((hSiff j ω).mpr h.2))]; ring
-      · rw [if_neg hj3, if_neg (fun h ↦ hj3 h.1)]; ring
+        · rw [Set.indicator_of_mem hmem, ite_eq_left ⟨hj3, (hSiff j ω).mp hmem⟩]; ring
+        · rw [Set.indicator_of_notMem hmem, ite_eq_right (fun h ↦ hmem ((hSiff j ω).mpr h.2))]; ring
+      · rw [ite_eq_right hj3, ite_eq_right (fun h ↦ hj3 h.1)]; ring
     calc ∑ j ∈ Finset.range n, m j ω
         = ∑ j ∈ Finset.range n, X ω ^ 2 * (if 3 ≤ j ∧ X ω ^ 2 ≤ (j : ℝ)
             ∧ (j : ℝ) < X ω ^ 2 * log ((j : ℝ) + 2)
@@ -988,7 +988,7 @@ lemma medium_variance_series_le {X : Ω → ℝ} (hX : Measurable X)
     rw [h1]
     have h2 : ∫ ω, ∑ j ∈ Finset.range n, m j ω ∂μ ≤ ∫ ω, C * X ω ^ 2 ∂μ :=
       integral_mono (integrable_finsetSum _ (fun j _ ↦ hint_m j)) (hX2.integrable_sq.const_mul C)
-        (fun ω ↦ hptwise ω n)
+        (hptwise · n)
     rwa [integral_const_mul] at h2
   exact ⟨C, hC0, summable_of_sum_range_le hFnn hbound, Real.tsum_le_of_sum_range_le hFnn hbound⟩
 
@@ -1017,14 +1017,14 @@ lemma medium_variance_summable [IsProbabilityMeasure μ] {X : Ω → ℝ} (hX : 
   have hVar_le : ∀ j : ℕ,
       variance (Set.indicator {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)} X) μ
         ≤ ∫ ω, Set.indicator {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)}
-            (fun ω ↦ X ω ^ 2) ω ∂μ := by
+            (X · ^ 2) ω ∂μ := by
     intro j
     calc variance (Set.indicator {ω | _ ∧ _} X) μ
         ≤ ∫ ω, (Set.indicator {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)}
             X ω) ^ 2 ∂μ :=
           variance_le_expectation_sq (hX.indicator (hSmeas j)).aestronglyMeasurable
       _ = ∫ ω, Set.indicator {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)}
-            (fun ω ↦ X ω ^ 2) ω ∂μ := by
+            (X · ^ 2) ω ∂μ := by
           refine integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ ?_)
           dsimp only
           by_cases h : ω ∈ {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)}
@@ -1237,7 +1237,7 @@ lemma ae_medium_div_weight_tendsto_zero [IsProbabilityMeasure μ] {Y : ℕ → �
       (fun n ↦ ?_)
       ((summable_nat_add_iff 3).mpr (medium_variance_summable_seq (fun i ↦ (hY i).measurable)
         hident hint2))
-    rw [if_pos (show 3 ≤ n + 3 by omega)]
+    rw [ite_eq_left (show 3 ≤ n + 3 by omega)]
     push_cast
     have hvnn : 0 ≤ variance (fun ω ↦ mediumTrunc (n + 3) (Y (n + 3) ω)) μ := variance_nonneg _ _
     have ha4_pos : (0 : ℝ) < a (n + 3 + 1) ^ 2 := by rw [ha_sq]; exact harg _
@@ -1381,7 +1381,7 @@ lemma lowMed_le {bj sj x : ℝ} (hb : 0 ≤ bj) (hbs : bj ≤ sj) :
       apply Set.indicator_of_notMem; rw [Set.mem_Ioc]; rintro ⟨hxa, hxb⟩
       have : |x| ≤ sj := abs_le.mpr ⟨by linarith, hxb⟩; linarith
     have e4 : (if x = -bj then bj else 0) = 0 := by
-      rw [if_neg]; intro h; rw [h, abs_neg, abs_of_nonneg hb] at hR; linarith
+      rw [ite_eq_right]; intro h; rw [h, abs_neg, abs_of_nonneg hb] at hR; linarith
     rw [e1, e2, e3, e4]
   · rw [not_lt] at hR
     by_cases hM : bj < |x|
@@ -1391,7 +1391,7 @@ lemma lowMed_le {bj sj x : ℝ} (hb : 0 ≤ bj) (hbs : bj ≤ sj) :
       have e2 : ({y : ℝ | bj < |y| ∧ |y| ≤ sj}).indicator id x = x :=
         Set.indicator_of_mem (by rw [Set.mem_ofPred_eq]; exact ⟨hM, hR⟩) id
       have e4 : (if x = -bj then bj else 0) = 0 := by
-        rw [if_neg]; intro h; rw [h, abs_neg, abs_of_nonneg hb] at hM; linarith
+        rw [ite_eq_right]; intro h; rw [h, abs_neg, abs_of_nonneg hb] at hM; linarith
       rw [e1, e2, e4, zero_add, add_zero]
       by_cases hmem : x ∈ Set.Ioc (-sj) sj
       · rw [Set.indicator_of_mem hmem]; exact le_rfl
@@ -1419,7 +1419,7 @@ lemma lowMed_le {bj sj x : ℝ} (hb : 0 ≤ bj) (hbs : bj ≤ sj) :
           rcases hbmem with h | h
           · linarith [hxabs.1]
           · linarith [hxabs.2]
-        rw [if_pos hxeq]
+        rw [ite_eq_left hxeq]
         by_cases hmem : x ∈ Set.Ioc (-sj) sj
         · rw [Set.indicator_of_mem hmem, hxeq]; simp
         · rw [Set.indicator_of_notMem hmem]; simpa using hb
