@@ -93,7 +93,25 @@ jobs:
         with:
           build: true
           lint: true
-          mk_all-check: true
+          # Restricted to the AlphaRAR library below: the bare `mk_all --check` chokes on the
+          # Comparator library, whose modules are globs with no module directory.
+          mk_all-check: false
+
+      - name: mk_all check (AlphaRAR library only)
+        run: |
+          set -euo pipefail
+          lake exe mk_all --check --lib AlphaRAR
+
+      # The comparator challenge/solution modules (see comparator/README.md). Building them here
+      # keeps them compiling against the current tree, and `checkdecls` (inside the blueprint
+      # step below) imports every library root of the workspace, so the Comparator library's stub
+      # root module must have an olean by then. The library's real modules are globs, not roots,
+      # exactly so that root-importing tools (checkdecls, referee) never load the challenges,
+      # which redeclare project and LML names.
+      - name: Build comparator challenges
+        run: |
+          set -euo pipefail
+          lake build Comparator
 
       - name: Download referee binary
         if: github.event_name == 'push'

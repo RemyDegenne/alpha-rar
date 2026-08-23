@@ -1,0 +1,6 @@
+{
+    "challenge_module": "Challenge_aRTS_prop_dev",
+    "solution_module": "Solution",
+    "theorem_names": ["AlphaRAR.aRTS_prop_dev"],
+    "permitted_axioms": ["propext", "Classical.choice", "Quot.sound"]
+}

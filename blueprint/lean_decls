@@ -124,6 +124,7 @@ AlphaRAR.aRTSFE_count_sub_smul_ae
 AlphaRAR.aRTSFE_clt_joint
 AlphaRAR.aRTSFE_no_starvation
 AlphaRAR.aRTSFE_sparse_rate
+AlphaRAR.aRTSFE_sparse_rate_of_isARTSFE
 AlphaRAR.aRTSFE_sparse_clt
 AlphaRAR.isProjection_one_sub_vecMulVec
 AlphaRAR.isLittleOpOne_of_tendsto_ae

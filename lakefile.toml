@@ -25,3 +25,26 @@ subDir = "LeanSpec"
 
 [[lean_lib]]
 name = "AlphaRAR"
+
+# Comparator (https://github.com/leanprover/comparator) challenge/solution modules for the
+# headline results listed in formalization.yaml; see comparator/README.md. One library with a
+# stub root: tools that import every library root (checkdecls, referee) must not load the
+# challenge modules, which redeclare project and LML names, so those are globs, not roots.
+[[lean_lib]]
+name = "Comparator"
+srcDir = "comparator"
+leanOptions = { weak.linter.mathlibStandardSet = false }
+globs = [
+  "Comparator",
+  "Solution",
+  "ChallengeVendor_Algorithm",
+  "ChallengeVendor_StationaryEnv",
+  "ChallengeVendor_FiniteActions",
+  "Challenge_aRTS_LLN",
+  "Challenge_aRTS_clt_joint_Defs",
+  "Challenge_aRTS_clt_joint",
+  "Challenge_aRTS_prop_dev",
+  "Challenge_aRTS_prop_dev_ae",
+  "Challenge_aRTSFE_sparse_clt_of_contDiffAt",
+  "Challenge_aRTSFE_sparse_rate",
+]

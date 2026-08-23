@@ -1659,6 +1659,28 @@ theorem aRTSFE_sparse_rate [Fintype 𝓐] [DecidableEq 𝓐]
       (hNinf.mono fun ω hω ↦ hω k)] with ω h1 h2 h3
   exact ⟨h1, h2, h3⟩
 
+/-- **Consistency and rate for sparse targets, from the design predicate** (blueprint
+`thm:sparse_rate`). The `IsARTSFE` form of `aRTSFE_sparse_rate`: the process-level throttle and
+forced-exploration hypotheses are discharged from the history-level design predicate through
+`throttle_of_isARTSFE` and `fe_of_isARTSFE`, so — like the other headline results — the statement
+mentions only the design, the environment and the schedule. -/
+theorem aRTSFE_sparse_rate_of_isARTSFE [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
+    [Nonempty 𝓐]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
+    (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
+    (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
+    (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
+    {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched)
+    (hARTSFE : IsARTSFE alg θ₀ T hsched α) (k : 𝓐) :
+    ∀ᵐ ω ∂P, Tendsto (fun n ↦ pullCount A k n ω) atTop atTop ∧
+      Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ))
+        atTop (𝓝 (T ν.means k)) ∧
+      ∃ C', ∀ᶠ n in atTop,
+        |estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k|
+          ≤ C' * √(Real.log (Real.log (pullCount A k n ω : ℝ)) / (pullCount A k n ω : ℝ)) :=
+  aRTSFE_sparse_rate h hνk θ₀ T hT hTnn hTsum α hα hh
+    (fun a ↦ throttle_of_isARTSFE h hARTSFE a) (fe_of_isARTSFE h hARTSFE) k
+
 /-! ### A concrete admissible schedule
 
 `h(n) = n^{2/3}` satisfies every hypothesis the sparse theory imposes, and is **excluded** by the

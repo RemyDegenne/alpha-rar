@@ -1,0 +1,12 @@
+{
+    "challenge_module": "Challenge_aRTSFE_sparse_rate",
+    "solution_module": "Solution",
+    "theorem_names": [
+        "AlphaRAR.aRTSFE_sparse_rate_of_isARTSFE"
+    ],
+    "permitted_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+    ]
+}
