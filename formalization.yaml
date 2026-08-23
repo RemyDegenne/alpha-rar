@@ -6,6 +6,21 @@ version: "v0.4"
 
 project:
   name: "alpha-rar"
+  description: >-
+    A Lean 4 / Mathlib formalization of the two main theorems of "On Response-Adaptive Targeting
+    Strategies for Multi-Treatment Experiments" (Yagouti, Degenne, Kaufmann, arXiv:2606.17777):
+    strong consistency with log-log rates and joint asymptotic normality of the allocation
+    proportions and plug-in targets for the αRTS family of response-adaptive designs. Also
+    formalized: the forced-exploration variant αRTS-FE (the sparse consistency
+    rate and the sparse componentwise CLT under a corrected exploration-schedule condition),
+    three concrete design instances (distance-based, ERADE 2025, interpolated D-Tracking), and
+    the probabilistic prerequisites not yet in Mathlib — a martingale strong law, one-sided and
+    sharp log-log laws of the iterated logarithm with the i.i.d. Hartman–Wintner LIL and optional
+    skipping, a martingale CLT and an abstract Anscombe theorem — stated for their own sake and
+    intended for upstreaming. The development is blueprint-driven, and each headline result can
+    be verified independently of the development with leanprover/comparator: the challenges
+    under comparator/ restate the theorems with their definitional dependencies inlined, over an
+    import closure that bottoms out in Mathlib alone.
   authors:
     - "Rémy Degenne"
   responsible_maintainers:
