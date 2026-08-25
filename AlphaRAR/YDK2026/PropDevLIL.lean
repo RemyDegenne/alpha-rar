@@ -207,25 +207,25 @@ lemma dev_upper_of_hitting
     (hTnn : ∀ z k, 0 ≤ T z k)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
-    (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
+    (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k'' ↦ estimator (fun j ↦ actionIndicator A k'' j ω)
       (Y · ω) (θ₀ k'') n) atTop (𝓝 ν.means))
     (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k) (k' : 𝓐)
-    (hρrate : ∀ᵐ ω ∂P, (fun n ↦ T (fun k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
+    (hρrate : ∀ᵐ ω ∂P, (fun n ↦ T (fun k'' ↦ estimator (fun j ↦ actionIndicator A k'' j ω)
       (Y · ω) (θ₀ k'') n) k' - T ν.means k')
         =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)))
     (hsmall_upper : ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      (count (fun j ↦ armIndicator A k' j ω) (hitting (Q k' ω) n)
+      (count (fun j ↦ actionIndicator A k' j ω) (hitting (Q k' ω) n)
         - (hitting (Q k' ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k')
           ≤ C * √(n * log (log n))) :
     ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      (count (fun j ↦ armIndicator A k' j ω) n
+      (count (fun j ↦ actionIndicator A k' j ω) n
         - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k') ≤ C * √(n * log (log n)) := by
   classical
   set v : ℝ := T ν.means k' with hvdef
-  set ℱ := IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback with hℱ
+  set ℱ := h.filtration with hℱ
   -- Non-sparsity `v > 0` and the consistency `ρ̂ → v` from the estimator consistency.
   have hvpos : 0 < v := by
     obtain ⟨ω, hω⟩ := hθconv.exists
@@ -241,17 +241,17 @@ lemma dev_upper_of_hitting
   have hp1 : ∀ᵐ ω ∂P, ∀ m, aRTSSelProb A k' ℱ P m ω ≤ 1 := by
     rw [ae_all_iff]; intro m
     have hmono := condExp_mono (m := ℱ.shiftDown m)
-      (integrable_armIndicator h.measurable_action P k' m) (integrable_const (1 : ℝ))
-      (Eventually.of_forall fun ω ↦ armIndicator_le_one A k' m ω)
+      (integrable_actionIndicator P k' (h.measurable_action m)) (integrable_const (1 : ℝ))
+      (Eventually.of_forall fun ω ↦ actionIndicator_le_one A k' m ω)
     rw [condExp_const (ℱ.shiftDown.le m)] at hmono
     filter_upwards [hmono] with ω hω; exact hω
   have hMLIL : ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      |assignMart (fun j ↦ armIndicator A k' j) ℱ P n ω| ≤ C * √(n * log (log n)) :=
+      |assignMart (fun j ↦ actionIndicator A k' j) ℱ P n ω| ≤ C * √(n * log (log n)) :=
     ae_eventually_abs_assignMart_le_sqrt_nat_mul_loglog
-      (stronglyAdapted_armIndicator h.measurable_action h.measurable_feedback k')
-      (integrable_armIndicator h.measurable_action P k')
-      (fun n ↦ ae_of_all _ fun ω ↦ armIndicator_nonneg A k' n ω)
-      (fun n ↦ ae_of_all _ fun ω ↦ armIndicator_le_one A k' n ω)
+      (h.adapted_actionIndicator k').stronglyAdapted
+      (fun n ↦ integrable_actionIndicator P k' (h.measurable_action n))
+      (fun n ↦ ae_of_all _ fun ω ↦ actionIndicator_nonneg A k' n ω)
+      (fun n ↦ ae_of_all _ fun ω ↦ actionIndicator_le_one A k' n ω)
   have hρratebd : ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
       ((n : ℕ) : ℝ) * |aRTSTarget A Y θ₀ T n ω k' - v| ≤ C * √(n * log (log n)) := by
     filter_upwards [hρrate] with ω hbigO
@@ -274,16 +274,16 @@ lemma dev_upper_of_hitting
   obtain ⟨Cρ, hCρ⟩ := hρrω
   obtain ⟨Cs, hCs⟩ := hsuω
   obtain ⟨CM', hCM'⟩ := exists_forall_le_mul_sqrt_mul_log_log
-    (g := fun m ↦ |assignMart (fun j ↦ armIndicator A k' j) ℱ P m ω|)
+    (g := fun m ↦ |assignMart (fun j ↦ actionIndicator A k' j) ℱ P m ω|)
     (fun m ↦ abs_nonneg _) hCM
   obtain ⟨Cρ', hCρ'⟩ := exists_forall_le_mul_sqrt_mul_log_log
     (g := fun m ↦ (m : ℝ) * |aRTSTarget A Y θ₀ T m ω k' - v|)
     (fun m ↦ mul_nonneg (Nat.cast_nonneg _) (abs_nonneg _)) hCρ
-  have hseam : ∀ m, assignMG (fun j ↦ armIndicator A k' j ω)
+  have hseam : ∀ m, assignMG (fun j ↦ actionIndicator A k' j ω)
       (fun j ↦ aRTSSelProb A k' ℱ P j ω) m
-      = assignMart (fun j ↦ armIndicator A k' j) ℱ P m ω := fun m ↦
+      = assignMart (fun j ↦ actionIndicator A k' j) ℱ P m ω := fun m ↦
     (assignMart_eq_assignMG m ω).symm
-  have hdU := diff_U_decomp (X := fun j ↦ armIndicator A k' j ω)
+  have hdU := diff_U_decomp (X := fun j ↦ actionIndicator A k' j ω)
     (p := fun j ↦ aRTSSelProb A k' ℱ P j ω) (ρ := fun m ↦ aRTSTarget A Y θ₀ T m ω k') (α := α)
     hρc (ℓ := fun n ↦ hitting (Q k' ω) n) (fun n ↦ Nat.findGreatest_le n) hεpos
   refine ⟨1 + (2 * CM' + (Cρ' + Cρ) + Cs), ?_⟩
@@ -292,17 +292,17 @@ lemma dev_upper_of_hitting
   set ℓn : ℕ := hitting (Q k' ω) n with hℓndef
   have hℓle : ℓn ≤ n := Nat.findGreatest_le n
   -- Key inequality; the smallness at the hitting time enters through `hCsn`.
-  have hgen := generic_ineq_of_hitting (fun j ↦ armIndicator A k' j ω)
+  have hgen := generic_ineq_of_hitting (fun j ↦ actionIndicator A k' j ω)
     (fun j ↦ aRTSSelProb A k' ℱ P j ω) (fun m ↦ aRTSTarget A Y θ₀ T m ω k') α
     (Q k' ω) hthr hp1ω (fun m ↦ mul_nonneg hα.1 (hTnn _ k')) n
   -- `Uincr ≤ (drift + M-diff + ρ-term) + ε(n-ℓ)`.
-  have hUle : auxU (fun j ↦ armIndicator A k' j ω) (fun j ↦ aRTSSelProb A k' ℱ P j ω)
+  have hUle : auxU (fun j ↦ actionIndicator A k' j ω) (fun j ↦ aRTSSelProb A k' ℱ P j ω)
         (fun m ↦ aRTSTarget A Y θ₀ T m ω k') α n
-      - auxU (fun j ↦ armIndicator A k' j ω) (fun j ↦ aRTSSelProb A k' ℱ P j ω)
+      - auxU (fun j ↦ actionIndicator A k' j ω) (fun j ↦ aRTSSelProb A k' ℱ P j ω)
         (fun m ↦ aRTSTarget A Y θ₀ T m ω k') α ℓn
       ≤ (((n : ℝ) - ℓn) * (-(1 - α) * v)
-          + (assignMart (fun j ↦ armIndicator A k' j) ℱ P n ω
-            - assignMart (fun j ↦ armIndicator A k' j) ℱ P ℓn ω)
+          + (assignMart (fun j ↦ actionIndicator A k' j) ℱ P n ω
+            - assignMart (fun j ↦ actionIndicator A k' j) ℱ P ℓn ω)
           + (ℓn : ℝ) * (aRTSTarget A Y θ₀ T ℓn ω k' - aRTSTarget A Y θ₀ T n ω k'))
         + ε * ((n : ℝ) - ℓn) := by
     have h1 := (abs_le.mp hdUn).2
@@ -318,13 +318,13 @@ lemma dev_upper_of_hitting
     have : (0 : ℝ) < (1 - α) * v := mul_pos (by linarith [hα1]) hvpos
     linarith
   -- `M`-difference bound.
-  have hMbound : assignMart (fun j ↦ armIndicator A k' j) ℱ P n ω
-        - assignMart (fun j ↦ armIndicator A k' j) ℱ P ℓn ω ≤ 2 * CM' * √(n * log (log n)) := by
+  have hMbound : assignMart (fun j ↦ actionIndicator A k' j) ℱ P n ω
+        - assignMart (fun j ↦ actionIndicator A k' j) ℱ P ℓn ω ≤ 2 * CM' * √(n * log (log n)) := by
     have hMn := hCM'n n (le_refl n)
     have hMℓ := hCM'n ℓn hℓle
-    have h1 : assignMart (fun j ↦ armIndicator A k' j) ℱ P n ω ≤ CM' * √(n * log (log n)) :=
+    have h1 : assignMart (fun j ↦ actionIndicator A k' j) ℱ P n ω ≤ CM' * √(n * log (log n)) :=
       le_trans (le_abs_self _) hMn
-    have h2 : -assignMart (fun j ↦ armIndicator A k' j) ℱ P ℓn ω ≤ CM' * √(n * log (log n)) :=
+    have h2 : -assignMart (fun j ↦ actionIndicator A k' j) ℱ P ℓn ω ≤ CM' * √(n * log (log n)) :=
       le_trans (neg_le_abs _) hMℓ
     linarith
   -- `ρ̂`-difference bound.
@@ -343,7 +343,7 @@ lemma dev_upper_of_hitting
       exact mul_le_mul_of_nonneg_right (by exact_mod_cast hℓle) (abs_nonneg _)
     rw [hsplit]; linarith
   -- Assemble: `Dev ≤ 1 + small_ℓ + Uincr ≤ 1 + (Cs + 2CM' + Cρ' + Cρ) rate ≤ C rate`.
-  have hDev : count (fun j ↦ armIndicator A k' j ω) n - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k'
+  have hDev : count (fun j ↦ actionIndicator A k' j ω) n - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k'
       ≤ 1 + (2 * CM' * √(n * log (log n)) + (Cρ' + Cρ) * √(n * log (log n))
         + Cs * √(n * log (log n))) := by
     have := hgen
@@ -366,7 +366,7 @@ lemma aRTS_dev_upper [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hT_diff : DifferentiableAt ℝ T ν.means) (k' : 𝓐) :
     ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      (count (fun j ↦ armIndicator A k' j ω) n
+      (count (fun j ↦ actionIndicator A k' j ω) n
         - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k') ≤ C * √(n * log (log n)) :=
   dev_upper_of_hitting h θ₀ T hlip.continuous hTnn α hα hα1 hTpos
     (aRTS_theta_consistent h hνk hlip.continuous hTnn hTsum hα hARTS hTpos)
@@ -374,7 +374,7 @@ lemma aRTS_dev_upper [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
     (aRTS_rho_rate h hνk hlip.continuous hTnn hTsum hα hARTS hTpos hT_diff k')
     (Eventually.of_forall fun ω ↦ ⟨0, Eventually.of_forall fun n ↦ by
       rw [zero_mul]
-      exact preliminary_small (fun j ↦ armIndicator A k' j ω)
+      exact preliminary_small (fun j ↦ actionIndicator A k' j ω)
         (fun m ↦ aRTSTarget A Y θ₀ T m ω k') (aRTSUnder A Y θ₀ T k' ω) n (fun m hm ↦ hm)⟩)
 
 /-- **A.s. loglog deviation between proportions and plug-in target at an abstract hitting time**
@@ -390,34 +390,34 @@ lemma prop_dev_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
-    (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
+    (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k'' ↦ estimator (fun j ↦ actionIndicator A k'' j ω)
       (Y · ω) (θ₀ k'') n) atTop (𝓝 ν.means))
     (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
-    (hρrate : ∀ k', ∀ᵐ ω ∂P, (fun n ↦ T (fun k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
+    (hρrate : ∀ k', ∀ᵐ ω ∂P, (fun n ↦ T (fun k'' ↦ estimator (fun j ↦ actionIndicator A k'' j ω)
       (Y · ω) (θ₀ k'') n) k' - T ν.means k')
         =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)))
     (hsmall_upper : ∀ k', ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      (count (fun j ↦ armIndicator A k' j ω) (hitting (Q k' ω) n)
+      (count (fun j ↦ actionIndicator A k' j ω) (hitting (Q k' ω) n)
         - (hitting (Q k' ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k')
           ≤ C * √(n * log (log n))) (k : 𝓐) :
     ∀ᵐ ω ∂P, (fun n ↦ (pullCount A k n ω : ℝ) - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k)
       =O[atTop] fun n ↦ √(n * log (log n)) := by
   classical
   have hupper : ∀ k', ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      count (fun j ↦ armIndicator A k' j ω) n
+      count (fun j ↦ actionIndicator A k' j ω) n
         - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k' ≤ C * √(n * log (log n)) := fun k' ↦
     dev_upper_of_hitting h θ₀ T hT hTnn α hα hα1 hTpos hθconv Q hthrottle k'
       (hρrate k') (hsmall_upper k')
   filter_upwards [ae_all_iff.mpr hupper] with ω hω
   simp only [← count_indicator_eq_pullCount]
   refine isBigO_of_forall_upper_of_sum_zero
-    (Dev := fun k' n ↦ count (fun j ↦ armIndicator A k' j ω) n
+    (Dev := fun k' n ↦ count (fun j ↦ actionIndicator A k' j ω) n
       - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k') (fun n ↦ ?_) hω k
-  exact sum_count_sub_smul_eq_zero (fun j k' ↦ armIndicator A k' j ω)
-    (fun k' ↦ aRTSTarget A Y θ₀ T n ω k') (fun j ↦ sum_armIndicator A j ω)
+  exact sum_count_sub_smul_eq_zero (fun j k' ↦ actionIndicator A k' j ω)
+    (fun k' ↦ aRTSTarget A Y θ₀ T n ω k') (fun j ↦ sum_actionIndicator A j ω)
     (by simp only [aRTSTarget]; exact hTsum _) n
 
 /-- **A.s. loglog deviation between proportions and plug-in target for the aRTS design**
@@ -444,7 +444,7 @@ lemma aRTS_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace �
     (fun k' ↦ aRTS_rho_rate h hνk hlip.continuous hTnn hTsum hα hARTS hTpos hT_diff k')
     (fun k' ↦ Eventually.of_forall fun ω ↦ ⟨0, Eventually.of_forall fun n ↦ by
       rw [zero_mul]
-      exact preliminary_small (fun j ↦ armIndicator A k' j ω)
+      exact preliminary_small (fun j ↦ actionIndicator A k' j ω)
         (fun m ↦ aRTSTarget A Y θ₀ T m ω k') (aRTSUnder A Y θ₀ T k' ω) n (fun m hm ↦ hm)⟩) k
 
 /-- **A.s. loglog deviation between the count and the target proportion at an abstract hitting
@@ -459,17 +459,17 @@ lemma count_sub_smul_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
-    (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
+    (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k'' ↦ estimator (fun j ↦ actionIndicator A k'' j ω)
       (Y · ω) (θ₀ k'') n) atTop (𝓝 ν.means))
     (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
-    (hρrate : ∀ k', ∀ᵐ ω ∂P, (fun n ↦ T (fun k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
+    (hρrate : ∀ k', ∀ᵐ ω ∂P, (fun n ↦ T (fun k'' ↦ estimator (fun j ↦ actionIndicator A k'' j ω)
       (Y · ω) (θ₀ k'') n) k' - T ν.means k')
         =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)))
     (hsmall_upper : ∀ k', ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      (count (fun j ↦ armIndicator A k' j ω) (hitting (Q k' ω) n)
+      (count (fun j ↦ actionIndicator A k' j ω) (hitting (Q k' ω) n)
         - (hitting (Q k' ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k')
           ≤ C * √(n * log (log n))) (k : 𝓐) :
     ∀ᵐ ω ∂P, (fun n ↦ (pullCount A k n ω : ℝ) - (n : ℝ) * T ν.means k)
@@ -502,7 +502,7 @@ lemma aRTS_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpa
     (fun k' ↦ aRTS_rho_rate h hνk hlip.continuous hTnn hTsum hα hARTS hTpos hT_diff k')
     (fun k' ↦ Eventually.of_forall fun ω ↦ ⟨0, Eventually.of_forall fun n ↦ by
       rw [zero_mul]
-      exact preliminary_small (fun j ↦ armIndicator A k' j ω)
+      exact preliminary_small (fun j ↦ actionIndicator A k' j ω)
         (fun m ↦ aRTSTarget A Y θ₀ T m ω k') (aRTSUnder A Y θ₀ T k' ω) n (fun m hm ↦ hm)⟩) k
 
 end ARTS

@@ -17,7 +17,6 @@ the counting identities every allocation argument needs.
 
 ## Main results
 
-* `Learning.sum_pullCount'`: the history-level counts sum to the number of observations.
 * `Learning.infinite_setOf_eq_of_pullCount_atTop`: a diverging count forces the arm to be chosen
   infinitely often, and `Learning.infinite_setOf_eq_of_tendsto_div` for a positive limiting
   proportion.
@@ -31,23 +30,6 @@ open scoped Topology
 namespace Learning
 
 variable {Ω 𝓐 : Type*} {A : ℕ → Ω → 𝓐}
-
-section Sum
-
-variable [Fintype 𝓐] [DecidableEq 𝓐]
-
-/-- The history-level counts sum to the number `n + 1` of observed samples. -/
-lemma sum_pullCount' (n : ℕ) (h : Iic n → 𝓐 × ℝ) : ∑ a, pullCount' n h a = n + 1 := by
-  simp_rw [pullCount'_eq_sum]
-  rw [Finset.sum_comm]
-  have hcol : ∀ s : Iic n, ∑ a, (if (h s).1 = a then (1 : ℕ) else 0) = 1 := by
-    intro s
-    rw [Finset.sum_ite_eq univ (h s).1 (fun _ ↦ (1 : ℕ))]
-    simp
-  simp_rw [hcol]
-  simp [Nat.card_Iic]
-
-end Sum
 
 section Infinite
 

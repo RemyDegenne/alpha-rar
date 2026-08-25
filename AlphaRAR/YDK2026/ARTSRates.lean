@@ -52,13 +52,13 @@ lemma count_proportion_pos_of_hitting
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1)
     (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hgs : ∀ k, ∀ᵐ ω ∂P, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
-      (count (fun j ↦ armIndicator A k j ω) (hitting (Q k ω) n)
+      (count (fun j ↦ actionIndicator A k j ω) (hitting (Q k ω) n)
           - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k) / (n : ℝ) < δ)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) (k : 𝓐) :
-    ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n
+    ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n
       / (n : ℝ)) atTop (𝓝 uk) := by
   have hmem : ∀ k', ν.means k' ∈ attainableSet A Y (θ₀ k') k' := by
     obtain ⟨ω, hω⟩ :=
@@ -80,12 +80,12 @@ lemma aRTS_count_proportion_pos (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) (k : 𝓐) :
-    ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n
+    ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n
       / (n : ℝ)) atTop (𝓝 uk) :=
   count_proportion_pos_of_hitting h hνk hT hTnn hTsum hα (aRTSUnder A Y θ₀ T)
     (fun k ↦ throttle_of_isARTS h hARTS k)
     (fun k ↦ Eventually.of_forall fun ω δ hδ ↦ generic_small_of_hitting
-      (fun j ↦ armIndicator A k j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k)
+      (fun j ↦ actionIndicator A k j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k)
       (aRTSUnder A Y θ₀ T k ω) (fun _ hm ↦ hm) δ hδ) hTpos k
 
 omit [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐] in
@@ -101,14 +101,14 @@ lemma rho_rate_of_hitting (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1)
     (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hgs : ∀ k, ∀ᵐ ω ∂P, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
-      (count (fun j ↦ armIndicator A k j ω) (hitting (Q k ω) n)
+      (count (fun j ↦ actionIndicator A k j ω) (hitting (Q k ω) n)
           - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k) / (n : ℝ) < δ)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hT_diff : DifferentiableAt ℝ T ν.means) (k : 𝓐) :
-    ∀ᵐ ω ∂P, (fun n ↦ T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
+    ∀ᵐ ω ∂P, (fun n ↦ T (fun k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
       (Y · ω) (θ₀ k') n) k - T ν.means k)
         =O[atTop] (fun n ↦ √(n * log (log n)) / (n : ℝ)) := by
   refine rho_rate hT_diff
@@ -132,13 +132,13 @@ lemma aRTS_rho_rate (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hT_diff : DifferentiableAt ℝ T ν.means) (k : 𝓐) :
-    ∀ᵐ ω ∂P, (fun n ↦ T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
+    ∀ᵐ ω ∂P, (fun n ↦ T (fun k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
       (Y · ω) (θ₀ k') n) k - T ν.means k)
         =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) :=
   rho_rate_of_hitting h hνk hT hTnn hTsum hα (aRTSUnder A Y θ₀ T)
     (fun k ↦ throttle_of_isARTS h hARTS k)
     (fun k ↦ Eventually.of_forall fun ω δ hδ ↦ generic_small_of_hitting
-      (fun j ↦ armIndicator A k j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k)
+      (fun j ↦ actionIndicator A k j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k)
       (aRTSUnder A Y θ₀ T k ω) (fun _ hm ↦ hm) δ hδ)
     hTpos hT_diff k
 
@@ -157,9 +157,9 @@ theorem aRTS_LLN (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hT_diff : DifferentiableAt ℝ T ν.means) (k : 𝓐) :
     ∀ᵐ ω ∂P,
       Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (T ν.means k)) ∧
-      Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
+      Tendsto (fun n ↦ estimator (fun j ↦ actionIndicator A k j ω)
         (Y · ω) (θ₀ k) n) atTop (𝓝 (ν.means k)) ∧
-      (fun n ↦ T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
+      (fun n ↦ T (fun k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
         (Y · ω) (θ₀ k') n) k - T ν.means k)
           =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) := by
   filter_upwards [aRTS_proportion_tendsto h hνk hT hTnn hTsum hα hARTS hTpos k,

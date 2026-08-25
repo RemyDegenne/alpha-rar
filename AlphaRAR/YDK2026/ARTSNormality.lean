@@ -100,13 +100,13 @@ lemma clt_joint_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
     (hQmeas : ∀ k m, MeasurableSet {ω | Q k ω m})
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hgs : ∀ k, ∀ᵐ ω ∂P, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
-      (count (fun j ↦ armIndicator A k j ω) (hitting (Q k ω) n)
+      (count (fun j ↦ actionIndicator A k j ω) (hitting (Q k ω) n)
           - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k) / (n : ℝ) < δ)
     (hsmall_op : ∀ k, IsLittleOpOne P (fun n ω ↦
-      max ((1 + (count (fun j ↦ armIndicator A k j ω) (hitting (Q k ω) n)
+      max ((1 + (count (fun j ↦ actionIndicator A k j ω) (hitting (Q k ω) n)
         - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k)) / √n) 0)) :
     Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ (𝓐 ⊕ 𝓐)))
       (fun n : ℕ ↦ (⟨P.map (jointSqrtNVec ν A Y θ₀ T (T ν.means) n),
@@ -123,7 +123,7 @@ lemma clt_joint_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
   have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
   have hT : Continuous T := hlip.continuous
   -- The `thm:LLN` consistencies at the hitting time.
-  have hcons : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
+  have hcons : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
       (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means) :=
     theta_consistent_of_hitting h hνk θ₀ T hT hTnn hTsum α hα Q hthrottle hgs hTpos
   have hmem : ∀ k', ν.means k' ∈ attainableSet A Y (θ₀ k') k' := by
@@ -131,11 +131,11 @@ lemma clt_joint_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     exact fun k' ↦ estimator_limit_mem_attainableSet k' (θ₀ k') (tendsto_pi_nhds.mp hω k')
   have hv : ∀ a, 0 < T ν.means a := fun a ↦ hTpos ν.means hmem a
   have hNconv_arm : ∀ k', ∀ᵐ ω ∂P,
-      Tendsto (fun n ↦ count (fun j ↦ armIndicator A k' j ω) n / (n : ℝ))
+      Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k' j ω) n / (n : ℝ))
         atTop (𝓝 (T ν.means k')) := fun k' ↦
     (proportion_tendsto_of_hitting h hνk θ₀ T hT hTnn hTsum α hα Q hthrottle hgs hTpos k').mono
       fun ω hω ↦ hω.congr fun n ↦ by rw [count_indicator_eq_pullCount]
-  have hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
+  have hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (T ν.means a)) := ae_all_iff.mpr hNconv_arm
   -- The proportion-deviation fact `√n(N_n/n - ρ̂_n) →ₚ 0`, discharged from `prop_dev_of_hitting`.
   have hprop : TendstoInMeasure P (fun n ω ↦ propSqrtNVec A (T ν.means) n ω
@@ -212,13 +212,13 @@ theorem aRTS_clt_joint [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace �
     (aRTSUnder A Y θ₀ T) (fun k m ↦ measurableSet_aRTSUnder h θ₀ hlip.continuous k m)
     (fun k ↦ throttle_of_isARTS h hARTS k)
     (fun k ↦ Eventually.of_forall fun ω δ hδ ↦ generic_small_of_hitting
-      (fun j ↦ armIndicator A k j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k)
+      (fun j ↦ actionIndicator A k j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k)
       (aRTSUnder A Y θ₀ T k ω) (fun _ hm ↦ hm) δ hδ)
     (fun k ↦ by
       refine IsLittleOpOne.of_abs_le (Y := fun n (_ : Ω) ↦ (1 : ℝ) / √n) ?_
         (isLittleOpOne_const_div_sqrt 1)
       intro n ω
-      have hps := preliminary_small (fun j ↦ armIndicator A k j ω)
+      have hps := preliminary_small (fun j ↦ actionIndicator A k j ω)
         (fun m ↦ aRTSTarget A Y θ₀ T m ω k) (aRTSUnder A Y θ₀ T k ω) n (fun m hm ↦ hm)
       rw [abs_of_nonneg (le_max_right _ _), abs_of_nonneg (by positivity)]
       rcases Nat.eq_zero_or_pos n with hn | hn

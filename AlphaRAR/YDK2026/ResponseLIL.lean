@@ -56,40 +56,41 @@ lemma hitCount_tendsto_atTop {D : ℕ → Ω → ℝ} {ω : Ω}
   omega
 
 variable {𝓐 : Type*} {m𝓐 : MeasurableSpace 𝓐} [DecidableEq 𝓐]
-  {ν : Kernel 𝓐 ℝ} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ}
+  {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν] {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ}
 
 omit [DecidableEq 𝓐] in
 /-- **Reindexing: the response martingale is the subsampled i.i.d. partial sum.** For every `ω`,
 `Q_k n ω = ∑_{i < N_{n,k}} (Y_{τ_i} − θ_k)`, where `N_{n,k} = pullCount A k n ω` counts the pulls of
-arm `k` before `n` and `Y_{τ_i} = sampledSeq Y (armIndicator A k) i` is the response at the `i`-th
-pull. Proved by induction on `n`: a pull at time `n` (rank `N`) contributes `Y_n − θ_k` and advances
-the sample rank; a non-pull leaves both sides unchanged. -/
+arm `k` before `n` and `Y_{τ_i} = sampledSeq Y (actionIndicator A k) i` is the response at the
+`i`-th pull. Proved by induction on `n`: a pull at time `n` (rank `N`) contributes `Y_n − θ_k` and
+advances the sample rank; a non-pull leaves both sides unchanged. -/
 lemma respMart_eq_sum_sampledSeq (k : 𝓐) (n : ℕ) (ω : Ω) :
     respMart ν A Y k n ω
-      = ∑ i ∈ Finset.range (hitCount (armIndicator A k) n ω),
-          (sampledSeq Y (armIndicator A k) i ω - ν.means k) := by
+      = ∑ i ∈ Finset.range (hitCount (actionIndicator A k) n ω),
+          (sampledSeq Y (actionIndicator A k) i ω - ν.means k) := by
   induction n with
   | zero => simp [respMart, hitCount]
   | succ n ih =>
     rw [respMart_succ, Pi.add_apply, ih]
     by_cases hp : A n ω = k
-    · have hD1 : armIndicator A k n ω = 1 := armIndicator_eq_one_iff.mpr hp
+    · have hD1 : actionIndicator A k n ω = 1 := actionIndicator_eq_one_iff.mpr hp
       rw [hitCount_succ_of_hit hD1, Finset.sum_range_succ, sampledSeq_hitCount_of_hit hD1,
-        armIndicator, Set.indicator_of_mem (show ω ∈ {ω | A n ω = k} from hp)]
+        actionIndicator, Set.indicator_of_mem (show ω ∈ {ω | A n ω = k} from hp)]
       ring
-    · have hD0 : armIndicator A k n ω ≠ 1 := fun h ↦ hp (armIndicator_eq_one_iff.mp h)
-      have hcount : hitCount (armIndicator A k) (n + 1) ω = hitCount (armIndicator A k) n ω := by
+    · have hD0 : actionIndicator A k n ω ≠ 1 := fun h ↦ hp (actionIndicator_eq_one_iff.mp h)
+      have hcount :
+          hitCount (actionIndicator A k) (n + 1) ω = hitCount (actionIndicator A k) n ω := by
         unfold hitCount; rw [Nat.count_succ, ite_eq_right hD0, Nat.add_zero]
-      rw [hcount, armIndicator, Set.indicator_of_notMem (show ω ∉ {ω | A n ω = k} from hp)]
+      rw [hcount, actionIndicator, Set.indicator_of_notMem (show ω ∉ {ω | A n ω = k} from hp)]
       simp
 
 /-- The hit count of the arm indicator is the pull count of arm `k`. -/
-lemma hitCount_armIndicator_eq_pullCount (k : 𝓐) (n : ℕ) (ω : Ω) :
-    hitCount (armIndicator A k) n ω = pullCount A k n ω := by
+lemma hitCount_actionIndicator_eq_pullCount (k : 𝓐) (n : ℕ) (ω : Ω) :
+    hitCount (actionIndicator A k) n ω = pullCount A k n ω := by
   rw [hitCount, Nat.count_eq_card_filter_range, pullCount]
-  exact congrArg Finset.card (Finset.filter_congr (fun i _ ↦ by rw [armIndicator_eq_one_iff]))
+  exact congrArg Finset.card (Finset.filter_congr (fun i _ ↦ by rw [actionIndicator_eq_one_iff]))
 
-variable [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν]
+variable [MeasurableSingletonClass 𝓐]
   {P : Measure Ω} [IsProbabilityMeasure P] {alg : Algorithm 𝓐 ℝ}
 
 /-- **Loglog LIL for the response martingale** (blueprint `cor:subsampled_lil`). For an
@@ -107,20 +108,19 @@ lemma abs_respMart_le_sqrt_nat_mul_loglog
         * log (log (pullCount A k n ω : ℝ))) := by
   have hint_id : Integrable (fun x : ℝ ↦ x) (ν k) := hνk.integrable (by norm_num)
   have hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k) := hνk.integrable_sq
-  simp only [← hitCount_armIndicator_eq_pullCount]
+  simp only [← hitCount_actionIndicator_eq_pullCount]
   have : IsProbabilityMeasure (ν k) := IsMarkovKernel.isProbabilityMeasure k
-  set D := armIndicator A k with hDdef
+  set D := actionIndicator A k with hDdef
   set θ := ν.means k with hθdef
-  set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with h𝒢
+  set 𝒢 := h.filtrationAction with h𝒢
   set W : ℕ → Ω → ℝ := fun i ω ↦ sampledClean Y D i ω - θ with hWdef
   -- measurability of the arm selector and the clean samples
   have hD𝒢 : ∀ i, Measurable[𝒢 i] (D i) := by
     intro i
-    exact Measurable.ite ((IsAlgEnvSeq.measurable_action_filtrationAction'
-      h.measurable_action h.measurable_feedback i) (measurableSet_singleton k))
+    exact Measurable.ite ((h.adapted_action_filtrationAction i) (measurableSet_singleton k))
       measurable_const measurable_const
   have hDinf : ∀ᵐ ω ∂P, {j | D j ω = 1}.Infinite := by
-    filter_upwards [hk_inf] with ω hω; rwa [Set.ext (fun j ↦ armIndicator_eq_one_iff)]
+    filter_upwards [hk_inf] with ω hω; rwa [Set.ext (fun j ↦ actionIndicator_eq_one_iff)]
   have hCmeas : ∀ i, Measurable (sampledClean Y D i) :=
     fun i ↦ measurable_sampledClean h.measurable_feedback hD𝒢 i
   have hmapC : ∀ i, P.map (sampledClean Y D i) = ν k := fun i ↦
@@ -236,7 +236,7 @@ lemma abs_estimator_sub_le_rate_loglog_of_proportion
     {v : Ω → ℝ} (hv : ∀ᵐ ω ∂P, 0 < v ω)
     (hN : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω))) :
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
-      |estimator (fun j ↦ armIndicator A k j ω)
+      |estimator (fun j ↦ actionIndicator A k j ω)
           (Y · ω) θ₀ n - ν.means k|
         ≤ C' * (√((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) :=
   abs_estimator_sub_le_rate_loglog_ae k θ₀ hv hN
@@ -254,17 +254,17 @@ consumed when discharging `rho_rate`'s per-arm rate hypothesis for a concrete de
 lemma abs_estimator_sub_le_rate_loglog_of_pos_count
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
     (hνk : MemLp id 2 (ν k))
-    (hpp : ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n
+    (hpp : ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n
       / (n : ℝ)) atTop (𝓝 uk)) :
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
-      |estimator (fun j ↦ armIndicator A k j ω)
+      |estimator (fun j ↦ actionIndicator A k j ω)
           (Y · ω) θ₀ n - ν.means k|
         ≤ C' * (√((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) := by
   classical
   obtain ⟨v, hv, hN⟩ : ∃ v : Ω → ℝ, (∀ᵐ ω ∂P, 0 < v ω) ∧ ∀ᵐ ω ∂P,
       Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω)) := by
     refine ⟨fun ω ↦ if hω : ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ count
-      (fun j ↦ armIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 uk) then hω.choose else 0, ?_, ?_⟩
+      (fun j ↦ actionIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 uk) then hω.choose else 0, ?_, ?_⟩
     · filter_upwards [hpp] with ω hppω
       rw [dite_eq_left hppω]
       exact hppω.choose_spec.1

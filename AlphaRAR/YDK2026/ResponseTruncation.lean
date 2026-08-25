@@ -61,19 +61,19 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
 noncomputable def genRespMart (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (k : 𝓐)
     (g : ℕ → ℝ → ℝ) (n : ℕ) : Ω → ℝ :=
   ∑ m ∈ Finset.range n, fun ω ↦
-    armIndicator A k m ω * (g m (Y m ω) - (ν k)[g m])
+    actionIndicator A k m ω * (g m (Y m ω) - (ν k)[g m])
 
 omit [IsMarkovKernel ν] in
 /-- Each general-functional increment is integrable. -/
 @[fun_prop]
 lemma integrable_genRespMart_increment {m : ℕ} (hAmeas : Measurable (A m)) {g : ℝ → ℝ}
     (hint : Integrable (fun ω ↦ g (Y m ω)) P) (k : 𝓐) :
-    Integrable (fun ω ↦ armIndicator A k m ω
+    Integrable (fun ω ↦ actionIndicator A k m ω
       * (g (Y m ω) - (ν k)[g])) P := by
-  have heq : (fun ω ↦ armIndicator A k m ω * (g (Y m ω) - (ν k)[g]))
+  have heq : (fun ω ↦ actionIndicator A k m ω * (g (Y m ω) - (ν k)[g]))
       = {ω | A m ω = k}.indicator (fun ω ↦ g (Y m ω) - (ν k)[g]) := by
     funext ω
-    simp only [armIndicator, Set.indicator]
+    simp only [actionIndicator, Set.indicator]
     by_cases hω : ω ∈ {ω | A m ω = k} <;> simp [hω]
   rw [heq]
   exact (hint.sub (integrable_const _)).indicator (hAmeas (measurableSet_singleton k))
@@ -81,21 +81,20 @@ lemma integrable_genRespMart_increment {m : ℕ} (hAmeas : Measurable (A m)) {g 
 /-- **The general-functional increment has zero conditional expectation given `𝒢`.**
 For any measurable `g` with `g (Y i)` integrable, the increment `𝟙{A i = k}(g (Y i) - (ν k)[g])`
 vanishes in conditional mean given `filtrationAction i`: pulling out the `𝒢`-measurable indicator
-and using `condExp_feedback_comp` (`𝔼[g (Y i) | 𝒢 i] = (ν (A i))[g]`), the value on `{A i = k}` is
-`(ν k)[g] - (ν k)[g] = 0`. -/
+and using `condExp_feedback_comp_stationaryEnv` (`𝔼[g (Y i) | 𝒢 i] = (ν (A i))[g]`), the value on
+`{A i = k}` is `(ν k)[g] - (ν k)[g] = 0`. -/
 lemma condExp_genRespMart_increment (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (i : ℕ)
     {g : ℝ → ℝ} (hg : StronglyMeasurable g) (hint : Integrable (fun ω ↦ g (Y i ω)) P) :
-    P[fun ω ↦ armIndicator A k i ω * (g (Y i ω) - (ν k)[g])
-        | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]
+    P[fun ω ↦ actionIndicator A k i ω * (g (Y i ω) - (ν k)[g])
+        | h.filtrationAction i]
       =ᵐ[P] 0 := by
   let hA := h.measurable_action
-  let hY := h.measurable_feedback
-  let G := IsAlgEnvSeq.filtrationAction hA hY i
-  set c : Ω → ℝ := armIndicator A k i with hc_def
+  let G := h.filtrationAction i
+  set c : Ω → ℝ := actionIndicator A k i with hc_def
   let gg : Ω → ℝ := fun ω ↦ g (Y i ω) - (ν k)[g]
-  have hGle : G ≤ mΩ := (IsAlgEnvSeq.filtrationAction hA hY).le i
+  have hGle : G ≤ mΩ := h.filtrationAction.le i
   have hAG : Measurable[G] (A i) :=
-    IsAlgEnvSeq.measurable_action_filtrationAction' hA hY i
+    h.adapted_action_filtrationAction i
   have hcG : StronglyMeasurable[G] c :=
     stronglyMeasurable_const.indicator (hAG (measurableSet_singleton k))
   have hggint : Integrable gg P := hint.sub (integrable_const _)
@@ -104,21 +103,21 @@ lemma condExp_genRespMart_increment (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) 
   have hcondg : P[gg | G] =ᵐ[P] fun ω ↦ (ν (A i ω))[g] - (ν k)[g] := by
     refine (condExp_sub hint (integrable_const _) _).trans ?_
     rw [condExp_const hGle]
-    exact (h.condExp_feedback_comp i hg hint).sub (EventuallyEq.refl _ _)
+    exact (h.condExp_feedback_comp_stationaryEnv i hg hint).sub (EventuallyEq.refl _ _)
   have hpull := condExp_mul_of_stronglyMeasurable_left hcG hcint hggint
   filter_upwards [hpull, hcondg] with ω hp hcg
   change P[c * gg | G] ω = 0
   rw [hp, Pi.mul_apply, hcg]
   rcases eq_or_ne (A i ω) k with hak | hak
   · rw [hak]; ring
-  · have : c ω = 0 := by rw [hc_def, armIndicator, Set.indicator_of_notMem (by simpa using hak)]
+  · have : c ω = 0 := by rw [hc_def, actionIndicator, Set.indicator_of_notMem (by simpa using hak)]
     rw [this, zero_mul]
 
 omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] in
 /-- Successor form of the general-functional martingale. -/
 lemma genRespMart_succ (k : 𝓐) (g : ℕ → ℝ → ℝ) (n : ℕ) :
     genRespMart ν A Y k g (n + 1) = genRespMart ν A Y k g n + fun ω ↦
-      armIndicator A k n ω * (g n (Y n ω) - (ν k)[g n]) := by
+      actionIndicator A k n ω * (g n (Y n ω) - (ν k)[g n]) := by
   funext ω
   simp only [genRespMart, Finset.sum_range_succ, Pi.add_apply]
 
@@ -133,17 +132,17 @@ lemma integrable_genRespMart (hA : ∀ n, Measurable (A n)) {g : ℕ → ℝ →
 /-- The general-functional martingale is adapted to `filtrationAction`. -/
 lemma stronglyAdapted_genRespMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     {g : ℕ → ℝ → ℝ} (hg : ∀ n, StronglyMeasurable (g n)) :
-    StronglyAdapted (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback)
+    StronglyAdapted h.filtrationAction
       (genRespMart ν A Y k g) := by
-  set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback
+  set 𝒢 := h.filtrationAction
   intro n
   unfold genRespMart
   refine Finset.stronglyMeasurable_sum _ fun m hm ↦ ?_
   rw [Finset.mem_range] at hm
   have hAm : Measurable[𝒢 n] (A m) :=
-    IsAlgEnvSeq.measurable_action_filtrationAction_lt h.measurable_action h.measurable_feedback hm
+    h.adapted_action_filtrationAction.measurable_le hm.le
   have hYm : Measurable[𝒢 n] (Y m) :=
-    IsAlgEnvSeq.measurable_feedback_filtrationAction_lt h.measurable_action h.measurable_feedback hm
+    h.measurable_feedback_filtrationAction_of_lt hm
   exact (stronglyMeasurable_const.indicator (hAm (measurableSet_singleton k))).mul
     (((hg m).mono le_rfl).comp_measurable hYm |>.sub stronglyMeasurable_const)
 
@@ -157,8 +156,8 @@ lemma martingale_genRespMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     {g : ℕ → ℝ → ℝ} (hg : ∀ n, StronglyMeasurable (g n))
     (hint : ∀ n, Integrable (fun ω ↦ g n (Y n ω)) P) (k : 𝓐) :
     Martingale (genRespMart ν A Y k g)
-      (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P := by
-  set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with h𝒢
+      h.filtrationAction P := by
+  set 𝒢 := h.filtrationAction with h𝒢
   have hInt : ∀ n, Integrable (genRespMart ν A Y k g n) P :=
     integrable_genRespMart h.measurable_action hint k
   have hadapt : StronglyAdapted 𝒢 (genRespMart ν A Y k g) := stronglyAdapted_genRespMart h k hg
@@ -181,59 +180,59 @@ the conditional second central moment of `g` is `∫ (g - (ν k)[g])² ∂(ν k)
 lemma condExp_genRespMart_increment_sq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (i : ℕ) {g : ℝ → ℝ} (hg : StronglyMeasurable g)
     (hcent2 : MemLp (fun ω ↦ g (Y i ω)) 2 P) :
-    P[fun ω ↦ (armIndicator A k i ω * (g (Y i ω) - (ν k)[g])) ^ 2
-        | IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]
-      =ᵐ[P] fun ω ↦ armIndicator A k i ω * variance g (ν k) := by
+    P[fun ω ↦ (actionIndicator A k i ω * (g (Y i ω) - (ν k)[g])) ^ 2
+        | h.filtrationAction i]
+      =ᵐ[P] fun ω ↦ actionIndicator A k i ω * variance g (ν k) := by
   have hcent2' : Integrable (fun ω ↦ (g (Y i ω) - (ν k)[g]) ^ 2) P :=
     (hcent2.sub (memLp_const _)).integrable_sq
   let hA := h.measurable_action
-  let hY := h.measurable_feedback
-  let G := IsAlgEnvSeq.filtrationAction hA hY i
-  set c : Ω → ℝ := armIndicator A k i with hc_def
+  let G := h.filtrationAction i
+  set c : Ω → ℝ := actionIndicator A k i with hc_def
   set gg : Ω → ℝ := fun ω ↦ (g (Y i ω) - (ν k)[g]) ^ 2 with hgg_def
   have hcG : StronglyMeasurable[G] c :=
     stronglyMeasurable_const.indicator
-      ((IsAlgEnvSeq.measurable_action_filtrationAction' hA hY i) (measurableSet_singleton k))
+      ((h.adapted_action_filtrationAction i) (measurableSet_singleton k))
   have hsq : (fun ω ↦ (c ω * (g (Y i ω) - (ν k)[g])) ^ 2) = fun ω ↦ c ω * gg ω := by
     funext ω
     simp only [hgg_def]
     by_cases hω : ω ∈ {ω | A i ω = k}
-    · simp only [hc_def, armIndicator, Set.indicator_of_mem hω]; ring
-    · simp only [hc_def, armIndicator, Set.indicator_of_notMem hω]; ring
+    · simp only [hc_def, actionIndicator, Set.indicator_of_mem hω]; ring
+    · simp only [hc_def, actionIndicator, Set.indicator_of_notMem hω]; ring
   rw [hsq]
   have hcgint : Integrable (fun ω ↦ c ω * gg ω) P := by
     have hform : (fun ω ↦ c ω * gg ω) = {ω | A i ω = k}.indicator gg := by
       funext ω
-      simp only [hc_def, armIndicator, Set.indicator]
+      simp only [hc_def, actionIndicator, Set.indicator]
       by_cases hω : ω ∈ {ω | A i ω = k} <;> simp [hω]
     rw [hform]
     exact hcent2'.indicator (hA i (measurableSet_singleton k))
   have hcondg : P[gg | G] =ᵐ[P] fun ω ↦ ∫ x, (g x - (ν k)[g]) ^ 2 ∂(ν (A i ω)) := by
     have hg2 : StronglyMeasurable (fun x : ℝ ↦ (g x - (ν k)[g]) ^ 2) :=
       (hg.sub stronglyMeasurable_const).pow 2
-    exact h.condExp_feedback_comp i hg2 hcent2'
+    exact h.condExp_feedback_comp_stationaryEnv i hg2 hcent2'
   have hpull := condExp_mul_of_stronglyMeasurable_left hcG hcgint hcent2'
   filter_upwards [hpull, hcondg] with ω hp hcg
   change P[c * gg | G] ω = _
   rw [hp, Pi.mul_apply, hcg]
   rcases eq_or_ne (A i ω) k with hak | hak
   · rw [hak, ← variance_eq_integral hg.aemeasurable]
-  · have hc0 : c ω = 0 := by rw [hc_def, armIndicator, Set.indicator_of_notMem (by simpa using hak)]
+  · have hc0 : c ω = 0 := by
+      rw [hc_def, actionIndicator, Set.indicator_of_notMem (by simpa using hak)]
     rw [hc0, zero_mul, zero_mul]
 
 omit [IsMarkovKernel ν] in
 /-- Each general-functional increment is in `L²` when `g n (Y n)` is. -/
 lemma memLp_genRespMart_increment {m : ℕ} (k : 𝓐) (hAmeas : Measurable (A m)) {g : ℝ → ℝ}
     (hg2 : MemLp (fun ω ↦ g (Y m ω)) 2 P) :
-    MemLp (fun ω ↦ armIndicator A k m ω
+    MemLp (fun ω ↦ actionIndicator A k m ω
       * (g (Y m ω) - (ν k)[g])) 2 P := by
-  have heq : (fun ω ↦ armIndicator A k m ω
+  have heq : (fun ω ↦ actionIndicator A k m ω
         * (g (Y m ω) - (ν k)[g]))
       = {ω | A m ω = k}.indicator (fun ω ↦ g (Y m ω) - (ν k)[g]) := by
     funext ω
     by_cases hω : ω ∈ {ω | A m ω = k}
-    · simp [armIndicator, Set.indicator_of_mem hω]
-    · simp [armIndicator, Set.indicator_of_notMem hω]
+    · simp [actionIndicator, Set.indicator_of_mem hω]
+    · simp [actionIndicator, Set.indicator_of_notMem hω]
   rw [heq]
   exact (hg2.sub (memLp_const _)).indicator (hAmeas (measurableSet_singleton k))
 
@@ -256,9 +255,9 @@ lemma predQuadVar_genRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
     {g : ℕ → ℝ → ℝ} (hg : ∀ n, StronglyMeasurable (g n))
     (hg2 : ∀ n, MemLp (fun ω ↦ g n (Y n ω)) 2 P) (n : ℕ) :
     predQuadVar (genRespMart ν A Y k g)
-        (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P n
+        h.filtrationAction P n
       =ᵐ[P] fun ω ↦ ∑ i ∈ Finset.range n,
-        variance (g i) (ν k) * armIndicator A k i ω := by
+        variance (g i) (ν k) * actionIndicator A k i ω := by
   have hint : ∀ n, Integrable (fun ω ↦ g n (Y n ω)) P := fun n ↦ (hg2 n).integrable one_le_two
   have hQ2 : ∀ n, MemLp (genRespMart ν A Y k g n) 2 P :=
     memLp_genRespMart h.measurable_action hg2 k
@@ -270,14 +269,14 @@ lemma predQuadVar_genRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
     fun m ↦ memLp_increment (hQ2 m) (hQ2 (m + 1))
   have hM := martingale_genRespMart h hg hint k
   have hdiff : ∀ m, (fun ω ↦ (genRespMart ν A Y k g (m + 1) ω - genRespMart ν A Y k g m ω) ^ 2)
-      = fun ω ↦ (armIndicator A k m ω
+      = fun ω ↦ (actionIndicator A k m ω
         * (g m (Y m ω) - (ν k)[g m])) ^ 2 := by
     intro m; funext ω; rw [genRespMart_succ]; simp only [Pi.add_apply]; ring
   have hkey : ∀ m, predQuadVar (genRespMart ν A Y k g)
-          (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P (m + 1)
+          h.filtrationAction P (m + 1)
         - predQuadVar (genRespMart ν A Y k g)
-          (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P m
-      =ᵐ[P] fun ω ↦ variance (g m) (ν k) * armIndicator A k m ω := by
+          h.filtrationAction P m
+      =ᵐ[P] fun ω ↦ variance (g m) (ν k) * actionIndicator A k m ω := by
     intro m
     have h1 := predQuadVar_succ_sub_eq hM m (hd2 m) (hprod m)
     rw [hdiff m] at h1
@@ -291,9 +290,9 @@ lemma predQuadVar_genRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
     simp only [Pi.sub_apply] at hk
     rw [Finset.sum_range_succ]
     have hih' : predQuadVar (genRespMart ν A Y k g)
-        (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P n ω
+        h.filtrationAction P n ω
           = ∑ i ∈ Finset.range n,
-            variance (g i) (ν k) * armIndicator A k i ω := hih
+            variance (g i) (ν k) * actionIndicator A k i ω := hih
     linarith [hk, hih']
 
 /-- The **truncated response martingale** of arm `k`: the general functional martingale with
@@ -341,7 +340,7 @@ Instance of `martingale_genRespMart` with `g i = truncation(· - θ_k, √i)`. -
 lemma martingale_truncRespMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) :
     Martingale (truncRespMart ν A Y k)
-      (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P :=
+      h.filtrationAction P :=
   martingale_genRespMart h (fun _ ↦ stronglyMeasurable_truncation_sub_const _ _)
     (fun n ↦ integrable_truncation_comp hint _ n) k
 
@@ -384,9 +383,9 @@ lemma truncVar_le_variance (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)
 lemma predQuadVar_truncRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) (n : ℕ) :
     predQuadVar (truncRespMart ν A Y k)
-        (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P n
+        h.filtrationAction P n
       =ᵐ[P] fun ω ↦ ∑ i ∈ Finset.range n,
-        truncVar ν k i * armIndicator A k i ω :=
+        truncVar ν k i * actionIndicator A k i ω :=
   predQuadVar_genRespMart_eq h k (fun _ ↦ stronglyMeasurable_truncation_sub_const _ _)
     (fun n ↦ memLp_truncation_comp hint _ n) n
 
@@ -398,9 +397,9 @@ is still dominated by the untruncated `V_k N_{n,k}`"]
 lemma predQuadVar_truncRespMart_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) (n : ℕ) :
     predQuadVar (truncRespMart ν A Y k)
-        (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P n
+        h.filtrationAction P n
       ≤ᵐ[P] fun ω ↦ Var[id; ν k]
-        * ∑ i ∈ Finset.range n, armIndicator A k i ω := by
+        * ∑ i ∈ Finset.range n, actionIndicator A k i ω := by
   filter_upwards [predQuadVar_truncRespMart_eq h hint k n] with ω hω
   rw [hω, Finset.mul_sum]
   refine Finset.sum_le_sum fun i _ ↦ ?_
@@ -436,7 +435,7 @@ lemma abs_truncMean_le (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) (i
 /-- The truncated **drift** process `Dr_n = ∑_{i<n} m_i 𝟙{A i = k}` (blueprint `lem:trunc_drift`),
 the accumulated centering. Deterministic coefficients `m_i` times the arm-`k` indicators. -/
 noncomputable def truncDrift (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (k : 𝓐) (n : ℕ) : Ω → ℝ :=
-  ∑ i ∈ Finset.range n, fun ω ↦ truncMean ν k i * armIndicator A k i ω
+  ∑ i ∈ Finset.range n, fun ω ↦ truncMean ν k i * actionIndicator A k i ω
 
 omit [MeasurableSingletonClass 𝓐] in
 /-- **The drift is `O(√n)`** (blueprint `lem:trunc_drift`): `|Dr_n| ≤ 2 V_k √n`, from
@@ -447,26 +446,26 @@ lemma abs_truncDrift_le (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) (
     |truncDrift ν A k n ω| ≤ 2 * Var[id; ν k] * √n := by
   have harm : 0 ≤ Var[id; ν k] := variance_nonneg _ _
   have hval : truncDrift ν A k n ω
-      = ∑ i ∈ Finset.range n, truncMean ν k i * armIndicator A k i ω :=
+      = ∑ i ∈ Finset.range n, truncMean ν k i * actionIndicator A k i ω :=
     by rw [truncDrift, Finset.sum_apply]
   rw [hval]
   have hterm : ∀ i ∈ Finset.range n,
-      |truncMean ν k i * armIndicator A k i ω|
+      |truncMean ν k i * actionIndicator A k i ω|
         ≤ Var[id; ν k] / √i := by
     intro i _
     rw [abs_mul]
-    have hind : |armIndicator A k i ω| ≤ 1 := by
+    have hind : |actionIndicator A k i ω| ≤ 1 := by
       by_cases hω : ω ∈ {ω | A i ω = k}
-      · rw [armIndicator, Set.indicator_of_mem hω]; norm_num
-      · rw [armIndicator, Set.indicator_of_notMem hω]; norm_num
-    calc |truncMean ν k i| * |armIndicator A k i ω|
+      · rw [actionIndicator, Set.indicator_of_mem hω]; norm_num
+      · rw [actionIndicator, Set.indicator_of_notMem hω]; norm_num
+    calc |truncMean ν k i| * |actionIndicator A k i ω|
         ≤ |truncMean ν k i| * 1 := by
           apply mul_le_mul_of_nonneg_left hind (abs_nonneg _)
       _ = |truncMean ν k i| := mul_one _
       _ ≤ Var[id; ν k] / √i := abs_truncMean_le k hν2 i
-  calc |∑ i ∈ Finset.range n, truncMean ν k i * armIndicator A k i ω|
+  calc |∑ i ∈ Finset.range n, truncMean ν k i * actionIndicator A k i ω|
       ≤ ∑ i ∈ Finset.range n,
-          |truncMean ν k i * armIndicator A k i ω| :=
+          |truncMean ν k i * actionIndicator A k i ω| :=
         Finset.abs_sum_le_sum_abs _ _
     _ ≤ ∑ i ∈ Finset.range n, Var[id; ν k] / √i := Finset.sum_le_sum hterm
     _ = Var[id; ν k] * ∑ i ∈ Finset.range n, 1 / √i := by
@@ -511,15 +510,15 @@ lemma abs_truncRespMart_increment_le (k : 𝓐) (i : ℕ) (ω : Ω) :
   have hsucc := congrFun (genRespMart_succ (ν := ν) (A := A) (Y := Y) k
     (fun j ↦ truncation (fun y ↦ y - ν.means k) (√j)) i) ω
   have hincr : truncRespMart ν A Y k (i + 1) ω - truncRespMart ν A Y k i ω
-      = armIndicator A k i ω
+      = actionIndicator A k i ω
         * (truncation (fun y ↦ y - ν.means k) (√i) (Y i ω) - truncMean ν k i) := by
     simp only [truncRespMart, Pi.add_apply] at hsucc ⊢
     rw [hsucc, add_sub_cancel_left]; rfl
   rw [hincr, abs_mul]
-  have hind : |armIndicator A k i ω| ≤ 1 := by
+  have hind : |actionIndicator A k i ω| ≤ 1 := by
     by_cases hω : ω ∈ {ω | A i ω = k}
-    · rw [armIndicator, Set.indicator_of_mem hω]; norm_num
-    · rw [armIndicator, Set.indicator_of_notMem hω]; norm_num
+    · rw [actionIndicator, Set.indicator_of_mem hω]; norm_num
+    · rw [actionIndicator, Set.indicator_of_notMem hω]; norm_num
   have habs : |truncation (fun y ↦ y - ν.means k) (√i) (Y i ω) - truncMean ν k i|
       ≤ √i + √i := by
     calc |truncation (fun y ↦ y - ν.means k) (√i) (Y i ω) - truncMean ν k i|
@@ -531,7 +530,7 @@ lemma abs_truncRespMart_increment_le (k : 𝓐) (i : ℕ) (ω : Ω) :
           rw [abs_neg]
           exact add_le_add ((abs_truncation_le_bound _ _ _).trans
             (le_of_eq (abs_of_nonneg (sqrt_nonneg _)))) (abs_truncMean_le_sqrt k i)
-  calc |armIndicator A k i ω|
+  calc |actionIndicator A k i ω|
         * |truncation (fun y ↦ y - ν.means k) (√i) (Y i ω) - truncMean ν k i|
       ≤ 1 * (√i + √i) :=
         mul_le_mul hind habs (abs_nonneg _) zero_le_one
@@ -571,16 +570,16 @@ lemma ae_abs_truncRespMart_increment_le (k : 𝓐) (i : ℕ) :
 lemma ae_predQuadVar_truncRespMart_le_nat (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) :
     ∀ᵐ ω ∂P, ∀ n, predQuadVar (truncRespMart ν A Y k)
-        (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P n ω
+        h.filtrationAction P n ω
       ≤ Var[id; ν k] * (n : ℝ) := by
   have harm : (0 : ℝ) ≤ Var[id; ν k] := variance_nonneg _ _
   filter_upwards [ae_all_iff.mpr fun n ↦ predQuadVar_truncRespMart_le h hint k hν2 n] with ω hqv n
   refine (hqv n).trans (mul_le_mul_of_nonneg_left ?_ harm)
-  calc ∑ i ∈ Finset.range n, armIndicator A k i ω
+  calc ∑ i ∈ Finset.range n, actionIndicator A k i ω
       ≤ ∑ _i ∈ Finset.range n, (1 : ℝ) := Finset.sum_le_sum fun i _ ↦ by
         by_cases hω : ω ∈ {ω | A i ω = k}
-        · rw [armIndicator, Set.indicator_of_mem hω]
-        · rw [armIndicator, Set.indicator_of_notMem hω]; norm_num
+        · rw [actionIndicator, Set.indicator_of_mem hω]
+        · rw [actionIndicator, Set.indicator_of_notMem hω]; norm_num
     _ = (n : ℝ) := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul, mul_one]
 
 /-- **Per-block Freedman bound for the truncated martingale** (blueprint `lem:trunc_block`).
@@ -595,7 +594,7 @@ lemma measure_exists_truncRespMart_block (h : IsAlgEnvSeq A Y alg (stationaryEnv
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) (C : ℝ) (j : ℕ) :
     P {ω | ∃ m ≤ 2 ^ j, C * √((2 : ℝ) ^ j * j) ≤ truncRespMart ν A Y k m ω
           ∧ predQuadVar (truncRespMart ν A Y k)
-              (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P m ω
+              h.filtrationAction P m ω
             ≤ Var[id; ν k] * (2 : ℝ) ^ j}
       ≤ ENNReal.ofReal (exp (-(C / 2) * √j + Var[id; ν k] / 4)) := by
   rw [show Var[id; ν k] / 4 = Var[id; ν k] / (2 : ℝ) ^ 2 by norm_num]
@@ -612,7 +611,7 @@ lemma ae_eventually_truncRespMart_lt_block (h : IsAlgEnvSeq A Y alg (stationaryE
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) {C : ℝ} (hC : 0 < C) :
     ∀ᵐ ω ∂P, ∀ᶠ (j : ℕ) in atTop, ∀ m ≤ 2 ^ j,
       predQuadVar (truncRespMart ν A Y k)
-          (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback) P m ω
+          h.filtrationAction P m ω
         ≤ Var[id; ν k] * (2 : ℝ) ^ j →
       truncRespMart ν A Y k m ω < C * √((2 : ℝ) ^ j * j) :=
   ae_eventually_lt_block_of_growing (martingale_truncRespMart h hint k)
@@ -687,7 +686,7 @@ omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] in
 `M̃_{n+1} - M̃_n = 𝟙{A n = k}(truncation(Y n - θ_k, √n) - m_n)`. -/
 lemma truncRespMart_succ_sub (k : 𝓐) (n : ℕ) (ω : Ω) :
     truncRespMart ν A Y k (n + 1) ω - truncRespMart ν A Y k n ω
-      = armIndicator A k n ω
+      = actionIndicator A k n ω
         * (truncation (fun y ↦ y - ν.means k) (√n) (Y n ω) - truncMean ν k n) := by
   have hsucc := congrFun (genRespMart_succ (ν := ν) (A := A) (Y := Y) k
     (fun j ↦ truncation (fun y ↦ y - ν.means k) (√j)) n) ω
@@ -700,24 +699,24 @@ omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] in
 charged only when arm `k` is actually pulled, matching the centring `truncRespMart` removed"]
 lemma truncDrift_succ_sub (k : 𝓐) (n : ℕ) (ω : Ω) :
     truncDrift ν A k (n + 1) ω - truncDrift ν A k n ω
-      = truncMean ν k n * armIndicator A k n ω := by
+      = truncMean ν k n * actionIndicator A k n ω := by
   have h1 : truncDrift ν A k (n + 1) ω
       = ∑ i ∈ Finset.range (n + 1),
-        truncMean ν k i * armIndicator A k i ω := by
+        truncMean ν k i * actionIndicator A k i ω := by
     rw [truncDrift, Finset.sum_apply]
   have h2 : truncDrift ν A k n ω
       = ∑ i ∈ Finset.range n,
-        truncMean ν k i * armIndicator A k i ω := by
+        truncMean ν k i * actionIndicator A k i ω := by
     rw [truncDrift, Finset.sum_apply]
   rw [h1, h2, Finset.sum_range_succ]; ring
 
 /-- The **tail remainder** `R_n = Q_n - M̃_n - Dr_n` of the truncated decomposition
 (blueprint `def:lil_trunc`, the `R` term). -/
-noncomputable def tailRespPart (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (k : 𝓐)
-    (n : ℕ) : Ω → ℝ :=
+noncomputable def tailRespPart (ν : Kernel 𝓐 ℝ) [IsMarkovKernel ν] (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ)
+    (k : 𝓐) (n : ℕ) : Ω → ℝ :=
   respMart ν A Y k n - truncRespMart ν A Y k n - truncDrift ν A k n
 
-omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] in
+omit [MeasurableSingletonClass 𝓐] in
 /-- **The tail-remainder increment is the discarded tail** `𝟙{A n = k}((Y n - θ_k) -
 truncation(Y n - θ_k, √n))`: the truncated mean `m_n` cancels between `M̃` and `Dr`. -/
 @[specifies tailRespPart "certifies the three-way split `Q = M̃ + Dr + R` is exact: the remainder \
@@ -725,25 +724,26 @@ carries precisely what truncation discarded, with the centring `m_n` cancelling 
 martingale and the drift and leaving no extra term"]
 lemma tailRespPart_succ_sub (k : 𝓐) (n : ℕ) (ω : Ω) :
     tailRespPart ν A Y k (n + 1) ω - tailRespPart ν A Y k n ω
-      = armIndicator A k n ω
+      = actionIndicator A k n ω
         * ((Y n ω - ν.means k) - truncation (fun y ↦ y - ν.means k) (√n) (Y n ω)) := by
   simp only [tailRespPart, Pi.sub_apply]
   rw [show respMart ν A Y k (n + 1) ω = respMart ν A Y k n ω
-        + armIndicator A k n ω * (Y n ω - ν.means k) from
+        + actionIndicator A k n ω * (Y n ω - ν.means k) from
       by rw [← respMart_succ_sub]; ring,
     show truncRespMart ν A Y k (n + 1) ω = truncRespMart ν A Y k n ω
-        + armIndicator A k n ω
+        + actionIndicator A k n ω
           * (truncation (fun y ↦ y - ν.means k) (√n) (Y n ω) - truncMean ν k n) from
       by rw [← truncRespMart_succ_sub]; ring,
     show truncDrift ν A k (n + 1) ω = truncDrift ν A k n ω
-        + truncMean ν k n * armIndicator A k n ω from
+        + truncMean ν k n * actionIndicator A k n ω from
       by rw [← truncDrift_succ_sub]; ring]
   ring
 
 /-- **Conditional bookkeeping for the sampled tail.** The probability that arm `k` is chosen at
 step `n` *and* its response lands in the tail `√n ≤ |Y n - θ_k|` is at most the reward law's tail
 `ν_k(√n ≤ |· - θ_k|)`. Conditioning on `𝒢 n` replaces the sampled response's tail indicator by its
-`ν(A n)`-integral (`condExp_feedback_comp`), which on `{A n = k}` is `ν_k`, and `P{A n = k} ≤ 1`. -/
+`ν(A n)`-integral (`condExp_feedback_comp_stationaryEnv`), which on `{A n = k}` is `ν_k`, and
+`P{A n = k} ≤ 1`. -/
 lemma measure_action_and_tail_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
     P {ω | A n ω = k ∧ √n ≤ |Y n ω - ν.means k|}
       ≤ (ν k) {x | √n ≤ |x - ν.means k|} := by
@@ -761,14 +761,14 @@ lemma measure_action_and_tail_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
       (hgSM.comp_measurable (h.measurable_feedback n)).aestronglyMeasurable
       (Filter.Eventually.of_forall fun ω ↦ by rw [Real.norm_eq_abs]; exact hgbound (Y n ω))
   have hAk : MeasurableSet {ω | A n ω = k} := h.measurable_action n (measurableSet_singleton k)
-  set c : Ω → ℝ := armIndicator A k n with hc_def
+  set c : Ω → ℝ := actionIndicator A k n with hc_def
   have hbadmeas : MeasurableSet {ω | A n ω = k ∧ √n ≤ |Y n ω - θ|} :=
     hAk.inter (hSmeas.preimage (h.measurable_feedback n))
   -- `𝟙{bad} = c · (g ∘ Y n)` pointwise.
   have hcg_eq : (fun ω ↦ c ω * g (Y n ω))
       = Set.indicator {ω | A n ω = k ∧ √n ≤ |Y n ω - θ|} (fun _ ↦ (1 : ℝ)) := by
     funext ω
-    rw [hc_def, armIndicator, hg_def]
+    rw [hc_def, actionIndicator, hg_def]
     by_cases hak : A n ω = k
     · by_cases hy : √n ≤ |Y n ω - θ|
       · rw [Set.indicator_of_mem (show ω ∈ {ω | A n ω = k} from hak),
@@ -783,23 +783,24 @@ lemma measure_action_and_tail_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
           (show ω ∉ {ω | A n ω = k ∧ √n ≤ |Y n ω - θ|} from fun hb ↦ hak hb.1), zero_mul]
   have hcint : Integrable (fun ω ↦ c ω * g (Y n ω)) P := by
     rw [hcg_eq]; exact (integrable_const (1 : ℝ)).indicator hbadmeas
-  let G := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback n
+  let G := h.filtrationAction n
   have hGle : G ≤ mΩ :=
-    (IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback).le n
+    h.filtrationAction.le n
   have hcG : StronglyMeasurable[G] c :=
     stronglyMeasurable_const.indicator
-      ((IsAlgEnvSeq.measurable_action_filtrationAction' _ _ n) (measurableSet_singleton k))
+      ((h.adapted_action_filtrationAction n) (measurableSet_singleton k))
   -- Tower + pull-out + feedback: `P[𝟙{bad}] = ν_k(S) · P{A n = k}`.
   have hcondexp : P[fun ω ↦ c ω * g (Y n ω) | G] =ᵐ[P] fun ω ↦ (ν k)[g] * c ω := by
     have hpull : P[fun ω ↦ c ω * g (Y n ω) | G] =ᵐ[P] c * P[fun ω ↦ g (Y n ω) | G] :=
       condExp_mul_of_stronglyMeasurable_left hcG hcint hgint
     have hfb : P[fun ω ↦ g (Y n ω) | G] =ᵐ[P] fun ω ↦ (ν (A n ω))[g] :=
-      h.condExp_feedback_comp n hgSM hgint
+      h.condExp_feedback_comp_stationaryEnv n hgSM hgint
     filter_upwards [hpull, hfb] with ω hp hf
     rw [hp, Pi.mul_apply, hf]
     by_cases hak : A n ω = k
     · rw [hak]; ring
-    · rw [hc_def, armIndicator, Set.indicator_of_notMem (show ω ∉ {ω | A n ω = k} from hak)]; ring
+    · rw [hc_def, actionIndicator, Set.indicator_of_notMem (show ω ∉ {ω | A n ω = k} from hak)]
+      ring
   have hgval : (ν k)[g] = ((ν k) S).toReal := by
     have he : (ν k)[g] = ∫ x, g x ∂(ν k) := rfl
     rw [he, hg_def, integral_indicator_const (1 : ℝ) hSmeas, smul_eq_mul, mul_one]; rfl
@@ -810,7 +811,7 @@ lemma measure_action_and_tail_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
     have hprob : (P {ω | A n ω = k}).toReal ≤ 1 := by
       rw [← ENNReal.toReal_one]; exact ENNReal.toReal_mono ENNReal.one_ne_top prob_le_one
     rw [← hbadint, ← integral_condExp hGle, integral_congr_ae hcondexp, integral_const_mul, hc_def]
-    simp only [armIndicator]
+    simp only [actionIndicator]
     rw [integral_indicator_const (1 : ℝ) hAk, smul_eq_mul, mul_one, hgval]
     exact mul_le_of_le_one_right ENNReal.toReal_nonneg hprob
   exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (measure_ne_top _ _)).mp hreal
@@ -842,7 +843,7 @@ lemma ae_eventually_tailRespPart_const (h : IsAlgEnvSeq A Y alg (stationaryEnv �
       by_contra hne
       exact hn ⟨hak, le_abs_of_truncation_sub_ne (sub_ne_zero.mp hne).symm⟩
     rw [htail, mul_zero]
-  · rw [armIndicator, Set.indicator_of_notMem (show ω ∉ {ω | A n ω = k} from hak), zero_mul]
+  · rw [actionIndicator, Set.indicator_of_notMem (show ω ∉ {ω | A n ω = k} from hak), zero_mul]
 
 /-- **The response martingale is two-sided `O(√(n log n))`** (blueprint `lem:lil_truncation`).
 Assembling the truncated decomposition `Q_n = M̃_n + R_n + Dr_n` (Definition `def:lil_trunc`): the

@@ -186,15 +186,16 @@ def sumRewards' (n : ℕ) (h : Iic n → 𝓐 × ℝ) (a : 𝓐) :=
 end Learning
 end
 
--- ═══ LeanMachineLearning.ArmIndicator ═══
+-- ═══ LeanMachineLearning.SequentialLearning.ActionIndicator ═══
 section
 open MeasureTheory ProbabilityTheory Filter Finset
 namespace Learning
 variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐} [MeasurableSingletonClass 𝓐] {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {P : Measure Ω}
 
-/-- The `{0,1}`-valued assignment indicator of arm `k`: `armIndicator A k n ω = 𝟙{A n ω = k}`. -/
-noncomputable def armIndicator (A : ℕ → Ω → 𝓐) (k : 𝓐) (n : ℕ) (ω : Ω) : ℝ :=
-  Set.indicator {ω | A n ω = k} (fun _ ↦ (1 : ℝ)) ω
+/-- The `{0,1}`-valued assignment indicator of action `k`:
+`actionIndicator A k n ω = 𝟙{A n ω = k}`. -/
+noncomputable def actionIndicator (A : ℕ → Ω → 𝓐) (k : 𝓐) (n : ℕ) (ω : Ω) : ℝ :=
+  {ω | A n ω = k}.indicator (fun _ ↦ (1 : ℝ)) ω
 
 end Learning
 end
@@ -253,7 +254,7 @@ Every pointwise limit of `θ̂_{·,k}` lies in it (`estimator_limit_mem_attainab
 **B**'s positivity requirement on this set transfers to the plug-in-target limit `u_k = T(z)_k`. -/
 def attainableSet (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : ℝ) (k : 𝓐) : Set ℝ :=
   closure (Set.range fun p : ℕ × Ω ↦
-    estimator (fun j ↦ armIndicator A k j p.2) (Y · p.2) θ₀ p.1)
+    estimator (fun j ↦ actionIndicator A k j p.2) (Y · p.2) θ₀ p.1)
 
 end AlphaRAR
 end
@@ -308,9 +309,9 @@ theorem aRTS_LLN (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hT_diff : DifferentiableAt ℝ T ν.means) (k : 𝓐) :
     ∀ᵐ ω ∂P,
       Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (T ν.means k)) ∧
-      Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
+      Tendsto (fun n ↦ estimator (fun j ↦ actionIndicator A k j ω)
         (Y · ω) (θ₀ k) n) atTop (𝓝 (ν.means k)) ∧
-      (fun n ↦ T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
+      (fun n ↦ T (fun k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
         (Y · ω) (θ₀ k') n) k - T ν.means k)
           =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) := sorry
 

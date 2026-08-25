@@ -64,16 +64,14 @@ lemma respMart_selfNorm_anscombe_tendsto
   have : IsProbabilityMeasure (ν k) := IsMarkovKernel.isProbabilityMeasure k
   have hint_id : Integrable (fun x : ℝ ↦ x) (ν k) := hνk.integrable (by norm_num)
   have hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k) := hνk.integrable_sq
-  set D := armIndicator A k with hDdef
+  set D := actionIndicator A k with hDdef
   set θ := ν.means k with hθdef
   -- Clean-sample setup (globally i.i.d.\ representative of the sampled responses of arm `k`).
-  have hD𝒢 : ∀ i,
-      Measurable[IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback i]
-      (D i) := fun i ↦ Measurable.ite ((IsAlgEnvSeq.measurable_action_filtrationAction'
-      h.measurable_action h.measurable_feedback i) (measurableSet_singleton k))
+  have hD𝒢 : ∀ i, Measurable[h.filtrationAction i] (D i) := fun i ↦
+    Measurable.ite ((h.adapted_action_filtrationAction i) (measurableSet_singleton k))
       measurable_const measurable_const
   have hDinf : ∀ᵐ ω ∂P, {j | D j ω = 1}.Infinite := by
-    filter_upwards [hk_inf] with ω hω; rwa [Set.ext (fun j ↦ armIndicator_eq_one_iff)]
+    filter_upwards [hk_inf] with ω hω; rwa [Set.ext (fun j ↦ actionIndicator_eq_one_iff)]
   have hCmeas : ∀ i, Measurable (sampledClean Y D i) :=
     fun i ↦ measurable_sampledClean h.measurable_feedback hD𝒢 i
   have hmapC : ∀ i, P.map (sampledClean Y D i) = ν k := fun i ↦
@@ -134,7 +132,7 @@ lemma respMart_selfNorm_anscombe_tendsto
   refine hanscombe.congr' (Filter.Eventually.of_forall fun n ↦ Subtype.ext (Measure.map_congr ?_))
   filter_upwards [hae_eq] with ω hω
   congr 1
-  rw [hμθ, respMart_eq_sum_sampledSeq k n ω, hitCount_armIndicator_eq_pullCount k n ω, ← hθdef,
+  rw [hμθ, respMart_eq_sum_sampledSeq k n ω, hitCount_actionIndicator_eq_pullCount k n ω, ← hθdef,
     Finset.sum_sub_distrib, Finset.sum_const, Finset.card_range, nsmul_eq_mul]
   congr 1
   exact Finset.sum_congr rfl fun i _ ↦ (hω i).symm
@@ -143,20 +141,20 @@ omit [DecidableEq 𝓐] in
 /-- The per-arm estimator `θ̂_{n,k}` is measurable. -/
 lemma measurable_estimator_arm (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
     (n : ℕ) :
-    Measurable (fun ω ↦ estimator (fun j ↦ armIndicator A k j ω) (Y · ω) θ₀ n) := by
-  have harm : ∀ j, Measurable (fun ω ↦ armIndicator A k j ω) := fun j ↦
+    Measurable (fun ω ↦ estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) θ₀ n) := by
+  have harm : ∀ j, Measurable (fun ω ↦ actionIndicator A k j ω) := fun j ↦
     (measurable_const (a := (1 : ℝ))).indicator
       ((measurableSet_singleton k).preimage (h.measurable_action j))
   simp only [estimator]
   exact Measurable.div
     ((Finset.measurable_sum _ fun j _ ↦ (harm j).mul (h.measurable_feedback j)).add_const θ₀)
-    ((measurable_count_armIndicator h k n).add_const 1)
+    ((measurable_count_actionIndicator h k n).add_const 1)
 
 /-- The self-normalized estimator error `ω ↦ √N_{n,k}(θ̂_{n,k} - θ_k)` is measurable. -/
 lemma measurable_estimatorSqrtN (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
     (n : ℕ) :
     Measurable (fun ω ↦ √(pullCount A k n ω : ℝ)
-      * (estimator (fun j ↦ armIndicator A k j ω) (Y · ω) θ₀ n - ν.means k)) :=
+      * (estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) θ₀ n - ν.means k)) :=
   (((measurable_of_countable _).comp (measurable_pullCount h.measurable_action k n)).sqrt).mul
     ((measurable_estimator_arm h k θ₀ n).sub_const _)
 
@@ -176,7 +174,7 @@ lemma estimator_sqrtN_anscombe_tendsto
     (hreg : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (c n : ℝ)) atTop (𝓝 1)) :
     Tendsto (β := ProbabilityMeasure ℝ)
       (fun n ↦ (⟨P.map (fun ω ↦ √(pullCount A k n ω : ℝ)
-          * (estimator (fun j ↦ armIndicator A k j ω) (Y · ω) θ₀ n - ν.means k)),
+          * (estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) θ₀ n - ν.means k)),
         Measure.isProbabilityMeasure_map
           (measurable_estimatorSqrtN h k θ₀ n).aemeasurable⟩ : ProbabilityMeasure ℝ))
       atTop
@@ -185,12 +183,12 @@ lemma estimator_sqrtN_anscombe_tendsto
   have hQ := respMart_selfNorm_anscombe_tendsto h k hk_inf hνk hc hreg
   -- pull count `→ ∞` a.e. (from infinitely many pulls)
   have hpcinf : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop := by
-    have hDinf : ∀ᵐ ω ∂P, {j | armIndicator A k j ω = 1}.Infinite := by
-      filter_upwards [hk_inf] with ω hω; rwa [Set.ext fun j ↦ armIndicator_eq_one_iff]
+    have hDinf : ∀ᵐ ω ∂P, {j | actionIndicator A k j ω = 1}.Infinite := by
+      filter_upwards [hk_inf] with ω hω; rwa [Set.ext fun j ↦ actionIndicator_eq_one_iff]
     filter_upwards [hDinf] with ω hinf
     exact tendsto_natCast_atTop_atTop.comp
-      ((hitCount_tendsto_atTop (D := armIndicator A k) hinf).congr fun n ↦
-        hitCount_armIndicator_eq_pullCount k n ω)
+      ((hitCount_tendsto_atTop (D := actionIndicator A k) hinf).congr fun n ↦
+        hitCount_actionIndicator_eq_pullCount k n ω)
   -- abbreviations for the Slutsky factors
   set R : ℕ → Ω → ℝ := fun n ω ↦ (pullCount A k n ω : ℝ) / ((pullCount A k n ω : ℝ) + 1) with hRdef
   set E : ℕ → Ω → ℝ := fun n ω ↦
@@ -239,9 +237,9 @@ lemma estimator_sqrtN_anscombe_tendsto
   refine hadd.congr' (Filter.Eventually.of_forall fun n ↦ Subtype.ext (congrArg (P.map ·) ?_))
   funext ω
   simp only [Pi.mul_apply, hRdef, hEdef]
-  have hne : count (fun j ↦ armIndicator A k j ω) n + 1 ≠ 0 := by
+  have hne : count (fun j ↦ actionIndicator A k j ω) n + 1 ≠ 0 := by
     rw [count_indicator_eq_pullCount]; positivity
-  rw [estimator_sub_eq (X := fun j ↦ armIndicator A k j ω) (Y · ω) θ θ₀ n hne,
+  rw [estimator_sub_eq (X := fun j ↦ actionIndicator A k j ω) (Y · ω) θ θ₀ n hne,
     respMG_indicator_eq_respMart, count_indicator_eq_pullCount]
   rcases eq_or_ne (√(pullCount A k n ω : ℝ)) 0 with hs | hs
   · simp [hs]

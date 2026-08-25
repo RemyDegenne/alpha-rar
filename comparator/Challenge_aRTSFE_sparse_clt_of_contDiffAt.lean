@@ -204,15 +204,16 @@ def sumRewards' (n : ℕ) (h : Iic n → 𝓐 × ℝ) (a : 𝓐) :=
 end Learning
 end
 
--- ═══ LeanMachineLearning.ArmIndicator ═══
+-- ═══ LeanMachineLearning.SequentialLearning.ActionIndicator ═══
 section
 open MeasureTheory ProbabilityTheory Filter Finset
 namespace Learning
 variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐} [MeasurableSingletonClass 𝓐] {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {P : Measure Ω}
 
-/-- The `{0,1}`-valued assignment indicator of arm `k`: `armIndicator A k n ω = 𝟙{A n ω = k}`. -/
-noncomputable def armIndicator (A : ℕ → Ω → 𝓐) (k : 𝓐) (n : ℕ) (ω : Ω) : ℝ :=
-  Set.indicator {ω | A n ω = k} (fun _ ↦ (1 : ℝ)) ω
+/-- The `{0,1}`-valued assignment indicator of action `k`:
+`actionIndicator A k n ω = 𝟙{A n ω = k}`. -/
+noncomputable def actionIndicator (A : ℕ → Ω → 𝓐) (k : 𝓐) (n : ℕ) (ω : Ω) : ℝ :=
+  {ω | A n ω = k}.indicator (fun _ ↦ (1 : ℝ)) ω
 
 end Learning
 end
@@ -289,8 +290,8 @@ omit [Fintype 𝓐] [DecidableEq 𝓐] in
 lemma measurable_estimatorErrorVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (n : ℕ) :
     Measurable (fun ω ↦ (WithLp.toLp 2 (fun k ↦
-      √(count (fun j ↦ armIndicator A k j ω) n)
-        * (estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
+      √(count (fun j ↦ actionIndicator A k j ω) n)
+        * (estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
           : EuclideanSpace ℝ 𝓐)) := sorry
 
 end AlphaRAR
@@ -379,8 +380,8 @@ theorem aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [Stand
     (hT2 : ∀ a, T ν.means a = 0 → ContDiffAt ℝ 2 (T · a) ν.means) :
     Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
       (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (WithLp.toLp 2 (fun k ↦
-          √(count (armIndicator A k · ω) n)
-            * (estimator (armIndicator A k · ω) (Y · ω) (θ₀ k) n - ν.means k)))),
+          √(count (actionIndicator A k · ω) n)
+            * (estimator (actionIndicator A k · ω) (Y · ω) (θ₀ k) n - ν.means k)))),
         Measure.isProbabilityMeasure_map (measurable_estimatorErrorVec h θ₀ n).aemeasurable⟩
           : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)))
       atTop

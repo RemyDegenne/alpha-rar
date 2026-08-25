@@ -32,7 +32,7 @@ sampling the times an arm `k` is pulled (`D j = 𝟙{A j = k}`) yields an i.i.d.
 
 These definitions are the *generic* (any `D`, any `Y`, plain `Ω`) counterparts of the arm-specific
 `Learning.stepsUntil`/`Learning.rewardByCount` of the `IsAlgEnvSeq` framework: with the arm selector
-`D = armIndicator A k`, `sampleTime D m` is the `m`-th pull time (matching `stepsUntil A k (m+1)`
+`D = actionIndicator A k`, `sampleTime D m` is the `m`-th pull time (matching `stepsUntil A k (m+1)`
 when finite), `hitCount D n = pullCount A k n`, and `sampledSeq Y D m` is the response at the `m`-th
 pull. We keep the generic form here: it is self-contained (no `ℕ∞`, no extended reward space) and
 carries the optional-skipping argument for an arbitrary predictable selector.
@@ -40,7 +40,7 @@ carries the optional-skipping argument for an arbitrary predictable selector.
 ## Main definitions
 
 * `AlphaRAR.sampleTime D m ω`: the `m`-th hit time `τ_m ω`, via `Nat.nth`.
-* `AlphaRAR.hitCount D j ω`: the number of hits before `j` (`= pullCount` for `armIndicator`).
+* `AlphaRAR.hitCount D j ω`: the number of hits before `j` (`= pullCount` for `actionIndicator`).
 * `AlphaRAR.sampledSeq Y D m ω`: the sampled value `Z_m ω = Y_{τ_m ω} ω`.
 
 ## Main results
@@ -551,9 +551,10 @@ lemma iIndepFun_sampledSeq
 
 We discharge the abstract freshness hypothesis `hfact` for the stationary-environment response
 process: with `𝒢 = filtrationAction`, the selector `D j = 𝟙{A j = k}` of arm `k`, and common law
-`ν k`, the factorisation follows from `condExp_feedback_comp` (the conditional law of the response
-given the history and current action is `ν (A j)`). Hence sampling the pulls of arm `k` yields an
-i.i.d. sequence with law `ν k` — Doob's optional skipping (blueprint `lem:opt_skip`). -/
+`ν k`, the factorisation follows from `condExp_feedback_comp_stationaryEnv` (the conditional law of
+the response given the history and current action is `ν (A j)`). Hence sampling the pulls of arm
+`k` yields an i.i.d. sequence with law `ν k` — Doob's optional skipping (blueprint
+`lem:opt_skip`). -/
 
 open Learning
 
@@ -566,10 +567,10 @@ omit [MeasurableSingletonClass 𝓐] in
 and forces `A j = k`: there the conditional law of the response `Y j` is the constant `ν k`. -/
 lemma hfact_stationaryEnv {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) μ) (k : 𝓐)
     (j : ℕ) {E : Set ℝ} (hE : MeasurableSet E) {S : Set Ω}
-    (hS : MeasurableSet[IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback j] S)
-    (hSsub : S ⊆ {ω | armIndicator A k j ω = 1}) :
+    (hS : MeasurableSet[h.filtrationAction j] S)
+    (hSsub : S ⊆ {ω | actionIndicator A k j ω = 1}) :
     μ (Y j ⁻¹' E ∩ S) = (ν k) E * μ S := by
-  set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with h𝒢
+  set 𝒢 := h.filtrationAction with h𝒢
   have hmle : 𝒢 j ≤ m0 := 𝒢.le j
   have hSamb : MeasurableSet S := hmle S hS
   have hYjmeas : Measurable (Y j) := h.measurable_feedback j
@@ -582,7 +583,7 @@ lemma hfact_stationaryEnv {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (sta
   have hgint_val : ∀ a : 𝓐, (ν a)[g] = ((ν a) E).toReal := by
     intro a
     rw [hg_def, integral_indicator hE, setIntegral_const, smul_eq_mul, mul_one, Measure.real]
-  have hcond := h.condExp_feedback_comp j hg hint
+  have hcond := h.condExp_feedback_comp_stationaryEnv j hg hint
   have e1 : ∫ ω in S, g (Y j ω) ∂μ = (μ (Y j ⁻¹' E ∩ S)).toReal := by
     rw [hcomp, setIntegral_indicator (hYjmeas hE), setIntegral_const, smul_eq_mul, mul_one,
       Set.inter_comm, Measure.real]
@@ -590,7 +591,7 @@ lemma hfact_stationaryEnv {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (sta
     rw [← setIntegral_condExp hmle hint hS]
     refine setIntegral_congr_ae hSamb ?_
     filter_upwards [hcond] with ω hω hωS
-    rw [hω, hgint_val (A j ω), armIndicator_eq_one_iff.mp (hSsub hωS)]
+    rw [hω, hgint_val (A j ω), actionIndicator_eq_one_iff.mp (hSsub hωS)]
   have key : (μ (Y j ⁻¹' E ∩ S)).toReal = ((ν k) E).toReal * (μ S).toReal := by
     rw [← e1, e2, setIntegral_const, smul_eq_mul, Measure.real, mul_comm]
   have hne : (ν k) E * μ S ≠ ⊤ := ENNReal.mul_ne_top (measure_ne_top (ν k) E) (measure_ne_top μ S)
@@ -599,25 +600,24 @@ lemma hfact_stationaryEnv {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (sta
 
 /-- **Doob optional skipping (independence).** For an algorithm–environment sequence in a stationary
 environment with per-arm reward kernel `ν`, if arm `k` is pulled infinitely often almost surely,
-then the responses observed at the pulls of arm `k`, `sampledSeq Y (armIndicator A k)`, are
+then the responses observed at the pulls of arm `k`, `sampledSeq Y (actionIndicator A k)`, are
 independent. (Blueprint `lem:opt_skip`.) -/
 lemma iIndepFun_sampledResponse {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) μ)
     (k : 𝓐) (hk_inf : ∀ᵐ ω ∂μ, {j | A j ω = k}.Infinite) :
-    iIndepFun (sampledSeq Y (armIndicator A k)) μ := by
-  set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with h𝒢
+    iIndepFun (sampledSeq Y (actionIndicator A k)) μ := by
+  set 𝒢 := h.filtrationAction with h𝒢
   have : IsProbabilityMeasure (ν k) := IsMarkovKernel.isProbabilityMeasure k
-  have hDinf : ∀ᵐ ω ∂μ, {j | armIndicator A k j ω = 1}.Infinite := by
+  have hDinf : ∀ᵐ ω ∂μ, {j | actionIndicator A k j ω = 1}.Infinite := by
     filter_upwards [hk_inf] with ω hω
-    rwa [Set.ext (fun j ↦ armIndicator_eq_one_iff)]
-  have hD : ∀ i, Measurable[𝒢 i] (armIndicator A k i) := by
+    rwa [Set.ext (fun j ↦ actionIndicator_eq_one_iff)]
+  have hD : ∀ i, Measurable[𝒢 i] (actionIndicator A k i) := by
     intro i
     have hset : MeasurableSet[𝒢 i] {ω | A i ω = k} :=
-      (IsAlgEnvSeq.measurable_action_filtrationAction' h.measurable_action h.measurable_feedback i)
+      (h.adapted_action_filtrationAction i)
         (measurableSet_singleton k)
     exact Measurable.ite hset measurable_const measurable_const
   exact iIndepFun_sampledSeq h.measurable_feedback
-    (fun a b hab ↦ IsAlgEnvSeq.measurable_feedback_filtrationAction_lt
-      h.measurable_action h.measurable_feedback hab) hD (ν k)
+    (fun a b hab ↦ h.measurable_feedback_filtrationAction_of_lt hab) hD (ν k)
     (fun j E hE S hS hSsub ↦ hfact_stationaryEnv h k j hE hS hSsub) hDinf
 
 /-- **Doob optional skipping (identical distribution).** Each response sampled at a pull of arm `k`
@@ -625,21 +625,20 @@ has law `ν k`. Together with `iIndepFun_sampledResponse` this says the sampled 
 with the arm's reward law. (Blueprint `lem:opt_skip`.) -/
 lemma map_sampledResponse_eq {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) μ)
     (k : 𝓐) (hk_inf : ∀ᵐ ω ∂μ, {j | A j ω = k}.Infinite) (m : ℕ) :
-    μ.map (sampledSeq Y (armIndicator A k) m) = ν k := by
-  set 𝒢 := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with h𝒢
+    μ.map (sampledSeq Y (actionIndicator A k) m) = ν k := by
+  set 𝒢 := h.filtrationAction with h𝒢
   have : IsProbabilityMeasure (ν k) := IsMarkovKernel.isProbabilityMeasure k
-  have hDinf : ∀ᵐ ω ∂μ, {j | armIndicator A k j ω = 1}.Infinite := by
+  have hDinf : ∀ᵐ ω ∂μ, {j | actionIndicator A k j ω = 1}.Infinite := by
     filter_upwards [hk_inf] with ω hω
-    rwa [Set.ext (fun j ↦ armIndicator_eq_one_iff)]
-  have hD : ∀ i, Measurable[𝒢 i] (armIndicator A k i) := by
+    rwa [Set.ext (fun j ↦ actionIndicator_eq_one_iff)]
+  have hD : ∀ i, Measurable[𝒢 i] (actionIndicator A k i) := by
     intro i
     have hset : MeasurableSet[𝒢 i] {ω | A i ω = k} :=
-      (IsAlgEnvSeq.measurable_action_filtrationAction' h.measurable_action h.measurable_feedback i)
+      (h.adapted_action_filtrationAction i)
         (measurableSet_singleton k)
     exact Measurable.ite hset measurable_const measurable_const
   exact map_sampledSeq_eq h.measurable_feedback
-    (fun a b hab ↦ IsAlgEnvSeq.measurable_feedback_filtrationAction_lt
-      h.measurable_action h.measurable_feedback hab) hD (ν k)
+    (fun a b hab ↦ h.measurable_feedback_filtrationAction_of_lt hab) hD (ν k)
     (fun j E hE S hS hSsub ↦ hfact_stationaryEnv h k j hE hS hSsub) hDinf m
 
 end AlphaRAR

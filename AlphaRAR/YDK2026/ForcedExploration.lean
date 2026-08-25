@@ -104,8 +104,8 @@ the forced-exploration hitting time (blueprint `def:hitting_fe`); the generic co
 it. -/
 def aRTSFEUnder (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hsched : ℕ → ℝ) (k : 𝓐) (ω : Ω) (m : ℕ) : Prop :=
-  count (fun j ↦ armIndicator A k j ω) m ≤ (m : ℝ) * aRTSTarget A Y θ₀ T m ω k
-    ∨ count (fun j ↦ armIndicator A k j ω) m ≤ hsched m
+  count (fun j ↦ actionIndicator A k j ω) m ≤ (m : ℝ) * aRTSTarget A Y θ₀ T m ω k
+    ∨ count (fun j ↦ actionIndicator A k j ω) m ≤ hsched m
 
 noncomputable instance {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} {hsched : ℕ → ℝ} {k : 𝓐} {ω : Ω} :
     DecidablePred (aRTSFEUnder A Y θ₀ T hsched k ω) := Classical.decPred _
@@ -149,7 +149,7 @@ lemma measurableSet_aRTSFEUnder [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationa
     (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (hsched : ℕ → ℝ) (k : 𝓐) (m : ℕ) :
     MeasurableSet {ω | aRTSFEUnder A Y θ₀ T hsched k ω m} :=
   (measurableSet_aRTSUnder h θ₀ hT k m).union
-    (measurableSet_le (measurable_count_armIndicator h k m) measurable_const)
+    (measurableSet_le (measurable_count_actionIndicator h k m) measurable_const)
 
 /-- **The forced-exploration gap bound.** At the forced-exploration hitting time the gap
 `N_ℓ - ℓ ρ̂_ℓ` is bounded by `(h(ℓ))^+ ≤ (h(n))^+` (blueprint `def:hitting_fe` (iii)): if `ℓ = 0`
@@ -159,13 +159,13 @@ the gap is `≤ 0`; otherwise the hitting predicate holds at `ℓ`, so either ar
 `O(√(n log log n))`). -/
 lemma aRTSFE_gap_le (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hTnn : ∀ z k, 0 ≤ T z k)
     {hsched : ℕ → ℝ} (hmono : Monotone hsched) (k : 𝓐) (ω : Ω) (n : ℕ) :
-    count (fun j ↦ armIndicator A k j ω) (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n)
+    count (fun j ↦ actionIndicator A k j ω) (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n)
       - (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n : ℝ)
         * aRTSTarget A Y θ₀ T (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n) ω k
       ≤ max 0 (hsched n) := by
   rcases Nat.eq_zero_or_pos (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n) with h0 | hpos
   · rw [h0]
-    have hc0 : count (fun j ↦ armIndicator A k j ω) 0 = 0 := by simp [count]
+    have hc0 : count (fun j ↦ actionIndicator A k j ω) 0 = 0 := by simp [count]
     rw [hc0]; simp only [Nat.cast_zero, zero_mul, sub_zero]; exact le_max_left _ _
   · have hP : aRTSFEUnder A Y θ₀ T hsched k ω (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n) :=
       Nat.findGreatest_of_ne_zero rfl hpos.ne'
@@ -186,7 +186,7 @@ form of `generic_small_of_hitting`). At the forced-exploration hitting time the 
 lemma aRTSFE_smallness (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hTnn : ∀ z k, 0 ≤ T z k)
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched) (k : 𝓐) (ω : Ω) (δ : ℝ) (hδ : 0 < δ) :
     ∀ᶠ n in atTop,
-      (count (fun j ↦ armIndicator A k j ω) (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n)
+      (count (fun j ↦ actionIndicator A k j ω) (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n)
         - (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n : ℝ)
           * aRTSTarget A Y θ₀ T (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n) ω k)
         / (n : ℝ) < δ := by
@@ -211,7 +211,7 @@ consistency/rate theorems (`consistency_of_hitting`, `theta_consistent_of_hittin
 lemma aRTSFE_smallness_all (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hTnn : ∀ z k, 0 ≤ T z k)
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched) :
     ∀ k, ∀ᵐ ω ∂P, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
-      (count (fun j ↦ armIndicator A k j ω) (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n)
+      (count (fun j ↦ actionIndicator A k j ω) (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n)
           - (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n : ℝ)
             * aRTSTarget A Y θ₀ T (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n) ω k)
           / (n : ℝ) < δ :=
@@ -224,7 +224,8 @@ scaled quantity `(1 + N_ℓ - ℓ ρ̂_ℓ)^+ / √n` is dominated by the determ
 lemma aRTSFE_smallness_op (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hTnn : ∀ z k, 0 ≤ T z k)
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched) (hlo : IsSqrtSmall hsched) (k : 𝓐) :
     IsLittleOpOne P (fun n ω ↦
-      max ((1 + (count (fun j ↦ armIndicator A k j ω) (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n)
+      max ((1 + (count (fun j ↦ actionIndicator A k j ω)
+          (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n)
         - (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n : ℝ)
           * aRTSTarget A Y θ₀ T (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n) ω k)) / √n) 0) := by
   -- The deterministic majorant `(1 + max 0 (h n))/√n → 0`.
@@ -275,7 +276,7 @@ eventually (`aRTSFE_maxsched_le_sqrt_mul_log_log`), so `O(√(n log log n))` wit
 lemma aRTSFE_smallness_upper (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hTnn : ∀ z k, 0 ≤ T z k)
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched) (hlo : IsSqrtSmall hsched) (k : 𝓐) :
     ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      (count (fun j ↦ armIndicator A k j ω) (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n)
+      (count (fun j ↦ actionIndicator A k j ω) (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n)
         - (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n : ℝ)
           * aRTSTarget A Y θ₀ T (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n) ω k)
         ≤ C * √(n * Real.log (Real.log n)) := by
@@ -304,10 +305,10 @@ theorem aRTSFE_proportion_tendsto [Fintype 𝓐]
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched)
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ aRTSFEUnder A Y θ₀ T hsched k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
-      Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 (u k))
+      Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 (u k))
         ∧ Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop (𝓝 (u k)) :=
   consistency_of_hitting h hνk θ₀ T hT hTnn hTsum α hα
     (aRTSFEUnder A Y θ₀ T hsched) hthrottle (aRTSFE_smallness_all θ₀ T hTnn hh)
@@ -333,7 +334,7 @@ theorem aRTSFE_prop_dev [Fintype 𝓐] [DecidableEq 𝓐]
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched) (hlo : IsSqrtSmall hsched)
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ aRTSFEUnder A Y θ₀ T hsched k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k) (k : 𝓐) :
     IsLittleOpOne P (fun n ω ↦ ((pullCount A k n ω : ℝ)
       - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k) / √n) := by
@@ -361,7 +362,7 @@ theorem aRTSFE_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐]
     (hT_diff : DifferentiableAt ℝ T ν.means)
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched) (hlo : IsSqrtSmall hsched)
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ aRTSFEUnder A Y θ₀ T hsched k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k) (k : 𝓐) :
     ∀ᵐ ω ∂P, (fun n ↦ (pullCount A k n ω : ℝ) - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k)
       =O[atTop] fun n ↦ √(n * Real.log (Real.log n)) := by
@@ -386,7 +387,7 @@ theorem aRTSFE_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐]
     (hT_diff : DifferentiableAt ℝ T ν.means)
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched) (hlo : IsSqrtSmall hsched)
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ aRTSFEUnder A Y θ₀ T hsched k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k) (k : 𝓐) :
     ∀ᵐ ω ∂P, (fun n ↦ (pullCount A k n ω : ℝ) - (n : ℝ) * T ν.means k)
       =O[atTop] fun n ↦ √(n * Real.log (Real.log n)) := by
@@ -417,7 +418,7 @@ theorem aRTSFE_clt_joint [Fintype 𝓐] [DecidableEq 𝓐]
       (Matrix.toEuclideanCLM (𝕜 := ℝ) G) (WithLp.toLp 2 ν.means))
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched) (hlo : IsSqrtSmall hsched)
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ aRTSFEUnder A Y θ₀ T hsched k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k) :
     Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ (𝓐 ⊕ 𝓐)))
       (fun n : ℕ ↦ (⟨P.map (jointSqrtNVec ν A Y θ₀ T (T ν.means) n),
@@ -828,8 +829,8 @@ lemma not_aRTSFEUnder_of_sched_lt [DecidableEq 𝓐] (ω : Ω) {hsched g : ℕ �
 /-- The count `N_{m,k}` is a **previous-history** statistic: it reads only `A_0,…,A_{m-1}`. -/
 lemma measurable_shiftDown_count
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (m : ℕ) :
-    Measurable[(IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback).shiftDown m]
-      (fun ω ↦ count (fun j ↦ armIndicator A k j ω) m) := by
+    Measurable[h.filtration.shiftDown m]
+      (fun ω ↦ count (fun j ↦ actionIndicator A k j ω) m) := by
   cases m with
   | zero =>
     simp only [count, Finset.range_zero, Finset.sum_empty]
@@ -839,7 +840,7 @@ lemma measurable_shiftDown_count
     refine Finset.measurable_sum _ fun j hj ↦ ?_
     rw [Finset.mem_range] at hj
     exact (measurable_const (a := (1 : ℝ))).indicator ((measurableSet_singleton k).preimage
-      (IsAlgEnvSeq.measurable_action_filtration h.measurable_action h.measurable_feedback
+      (h.adapted_action.measurable_le
         (by omega : j ≤ p)))
 
 /-- The forced-exploration predicate at round `m` is a **previous-history** event: both the count
@@ -850,7 +851,7 @@ is what makes the `α = 0` argument below work with no decay hypothesis at all. 
 lemma measurableSet_shiftDown_aRTSFEUnder [Finite 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ}
     (hT : Continuous T) (hsched : ℕ → ℝ) (k : 𝓐) (m : ℕ) :
-    MeasurableSet[(IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback).shiftDown m]
+    MeasurableSet[h.filtration.shiftDown m]
       {ω | aRTSFEUnder A Y θ₀ T hsched k ω m} := by
   cases m with
   | zero =>
@@ -858,24 +859,24 @@ lemma measurableSet_shiftDown_aRTSFEUnder [Finite 𝓐]
       ext ω; simp [aRTSFEUnder, count]
     rw [huniv]; exact MeasurableSet.univ
   | succ p =>
-    set 𝔾 := IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback with h𝔾
-    have harm : ∀ (k' : 𝓐) (j : ℕ), j ≤ p → Measurable[𝔾 p] (armIndicator A k' j) := by
+    set 𝔾 := h.filtration with h𝔾
+    have harm : ∀ (k' : 𝓐) (j : ℕ), j ≤ p → Measurable[𝔾 p] (actionIndicator A k' j) := by
       intro k' j hj
       exact (measurable_const (a := (1 : ℝ))).indicator ((measurableSet_singleton k').preimage
-        (IsAlgEnvSeq.measurable_action_filtration h.measurable_action h.measurable_feedback hj))
+        (h.adapted_action.measurable_le hj))
     have hcount : ∀ k' : 𝓐,
-        Measurable[𝔾 p] (fun ω ↦ count (fun j ↦ armIndicator A k' j ω) (p + 1)) :=
+        Measurable[𝔾 p] (fun ω ↦ count (fun j ↦ actionIndicator A k' j ω) (p + 1)) :=
       fun k' ↦ measurable_shiftDown_count h k' (p + 1)
     have hnum : ∀ k' : 𝓐, Measurable[𝔾 p]
-        (fun ω ↦ ∑ j ∈ Finset.range (p + 1), armIndicator A k' j ω * Y j ω) := by
+        (fun ω ↦ ∑ j ∈ Finset.range (p + 1), actionIndicator A k' j ω * Y j ω) := by
       intro k'
       refine Finset.measurable_sum _ fun j hj ↦ ?_
       rw [Finset.mem_range] at hj
       exact (harm k' j (by omega : j ≤ p)).mul
-        (IsAlgEnvSeq.measurable_feedback_filtration h.measurable_action h.measurable_feedback
+        (h.adapted_feedback.measurable_le
           (by omega : j ≤ p))
     have hest : @Measurable Ω (𝓐 → ℝ) (𝔾 p) inferInstance
-        (fun ω k' ↦ estimator (fun j ↦ armIndicator A k' j ω) (Y · ω) (θ₀ k') (p + 1)) := by
+        (fun ω k' ↦ estimator (fun j ↦ actionIndicator A k' j ω) (Y · ω) (θ₀ k') (p + 1)) := by
       refine @measurable_pi_lambda Ω 𝓐 (fun _ ↦ ℝ) (𝔾 p) (fun _ ↦ inferInstance) _ fun k' ↦ ?_
       simp only [estimator]
       exact ((hnum k').add_const _).div ((hcount k').add_const 1)
@@ -899,30 +900,29 @@ Both ways the aRTS family forbids a pull factor through this: the `α = 0` throt
 not least-sampled (`fe_of_isARTSFE`). -/
 lemma ae_action_ne_of_selProb_nonpos
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) {k : 𝓐} {S : ℕ → Set Ω}
-    (hS : ∀ m, MeasurableSet[(IsAlgEnvSeq.filtration h.measurable_action
-      h.measurable_feedback).shiftDown m] (S m))
+    (hS : ∀ m, MeasurableSet[h.filtration.shiftDown m] (S m))
     (hsel : ∀ᵐ ω ∂P, ∀ m, ω ∈ S m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ 0) :
     ∀ᵐ ω ∂P, ∀ m, ω ∈ S m → A m ω ≠ k := by
-  set 𝔽 := IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback with h𝔽
-  have hint : ∀ i, Integrable (armIndicator A k i) P := fun i ↦
+  set 𝔽 := h.filtration with h𝔽
+  have hint : ∀ i, Integrable (actionIndicator A k i) P := fun i ↦
     (integrable_const (1 : ℝ)).indicator ((h.measurable_action i) (measurableSet_singleton k))
   have hstep : ∀ m, ∀ᵐ ω ∂P, ω ∈ S m → A m ω ≠ k := by
     intro m
     have hSmeas : MeasurableSet[𝔽.shiftDown m] (S m) := hS m
-    have hzero : ∫ ω in S m, armIndicator A k m ω ∂P = 0 := by
+    have hzero : ∫ ω in S m, actionIndicator A k m ω ∂P = 0 := by
       rw [← setIntegral_condExp (𝔽.shiftDown.le m) (hint m) hSmeas]
       refine setIntegral_eq_zero_of_ae_eq_zero ?_
-      filter_upwards [hsel, condExp_nonneg (m := 𝔽.shiftDown m) (f := armIndicator A k m)
-        (ae_of_all _ fun ω ↦ armIndicator_nonneg A k m ω)] with ω hthr hnn hωS
+      filter_upwards [hsel, condExp_nonneg (m := 𝔽.shiftDown m) (f := actionIndicator A k m)
+        (ae_of_all _ fun ω ↦ actionIndicator_nonneg A k m ω)] with ω hthr hnn hωS
       exact le_antisymm (hthr m hωS) hnn
     have hae := (integral_eq_zero_iff_of_nonneg_ae
-      (ae_of_all _ fun ω ↦ armIndicator_nonneg A k m ω) ((hint m).restrict (s := S m))).mp hzero
+      (ae_of_all _ fun ω ↦ actionIndicator_nonneg A k m ω) ((hint m).restrict (s := S m))).mp hzero
     rw [Filter.EventuallyEq, ae_restrict_iff' ((𝔽.shiftDown).le m _ hSmeas)] at hae
     filter_upwards [hae] with ω hω hnot hAk
-    have hval : armIndicator A k m ω = 1 := by
-      simp only [armIndicator]
+    have hval : actionIndicator A k m ω = 1 := by
+      simp only [actionIndicator]
       rw [Set.indicator_of_mem (show ω ∈ {ω | A m ω = k} from hAk)]
     have hzeroω := hω hnot
     rw [hval] at hzeroω
@@ -943,7 +943,7 @@ lemma throttle_of_isARTSFE [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempt
     {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} {hsched : ℕ → ℝ} {α : ℝ}
     (hFE : IsARTSFE alg θ₀ T hsched α) (k : 𝓐) :
     ∀ᵐ ω ∂P, ∀ m, ¬ aRTSFEUnder A Y θ₀ T hsched k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k := by
   refine ae_all_iff.mpr fun m ↦ ?_
   cases m with
@@ -975,25 +975,24 @@ action: it is measurable for the *previous*-history σ-algebra, which is what le
 probability of `0` on it be turned into \"arm `k` is a.s. not drawn\""]
 lemma measurableSet_shiftDown_feForbidden [Finite 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hsched : ℕ → ℝ) (k : 𝓐) (m : ℕ) :
-    MeasurableSet[(IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback).shiftDown m]
+    MeasurableSet[h.filtration.shiftDown m]
       (feForbidden A hsched k m) := by
   have hcount : ∀ k' : 𝓐,
-      Measurable[(IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback).shiftDown m]
+      Measurable[h.filtration.shiftDown m]
         (fun ω ↦ (pullCount A k' m ω : ℝ)) := by
     intro k'
     have heq : (fun ω ↦ (pullCount A k' m ω : ℝ))
-        = fun ω ↦ count (fun j ↦ armIndicator A k' j ω) m :=
+        = fun ω ↦ count (fun j ↦ actionIndicator A k' j ω) m :=
       funext fun ω ↦ (count_indicator_eq_pullCount k' m ω).symm
     rw [heq]
     exact measurable_shiftDown_count h k' m
-  have hex : MeasurableSet[(IsAlgEnvSeq.filtration h.measurable_action
-      h.measurable_feedback).shiftDown m] {ω | ∃ j, (pullCount A j m ω : ℝ) ≤ hsched m} := by
+  have hex : MeasurableSet[h.filtration.shiftDown m]
+      {ω | ∃ j, (pullCount A j m ω : ℝ) ≤ hsched m} := by
     have hset : {ω | ∃ j, (pullCount A j m ω : ℝ) ≤ hsched m}
         = ⋃ j, {ω | (pullCount A j m ω : ℝ) ≤ hsched m} := by ext ω; simp
     rw [hset]
     exact MeasurableSet.iUnion fun j ↦ measurableSet_le (hcount j) measurable_const
-  have hmin : MeasurableSet[(IsAlgEnvSeq.filtration h.measurable_action
-      h.measurable_feedback).shiftDown m]
+  have hmin : MeasurableSet[h.filtration.shiftDown m]
       {ω | ∃ j, (pullCount A j m ω : ℝ) ≤ hsched m ∧
         (pullCount A j m ω : ℝ) < (pullCount A k m ω : ℝ)} := by
     have hset : {ω | ∃ j, (pullCount A j m ω : ℝ) ≤ hsched m ∧
@@ -1025,7 +1024,7 @@ lemma fe_of_isARTSFE [Finite 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] 
         ∀ j, (pullCount A j m ω : ℝ) ≤ hsched m →
           pullCount A (A m ω) m ω ≤ pullCount A j m ω := by
   have hsel : ∀ k : 𝓐, ∀ᵐ ω ∂P, ∀ m, ω ∈ feForbidden A hsched k m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ 0 := by
     intro k
     refine ae_all_iff.mpr fun m ↦ ?_
@@ -1076,7 +1075,7 @@ lemma not_pulled_of_not_aRTSFEUnder_of_alpha_zero [Finite 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ}
     (hT : Continuous T) {hsched : ℕ → ℝ} {k : 𝓐}
     (hthrottle : ∀ᵐ ω ∂P, ∀ m, ¬ aRTSFEUnder A Y θ₀ T hsched k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ 0) :
     ∀ᵐ ω ∂P, ∀ m, ¬ aRTSFEUnder A Y θ₀ T hsched k ω m → A m ω ≠ k :=
   ae_action_ne_of_selProb_nonpos h
@@ -1102,23 +1101,23 @@ lemma aRTSTarget_le_loglog_of_quadratic [Fintype 𝓐] (ω : Ω)
     {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} {k : 𝓐} {Cq C : ℝ} {L : ℕ → ℝ}
     (hCq : 0 ≤ Cq) (hLnn : ∀ᶠ m : ℕ in atTop, 0 ≤ Real.log (Real.log m) / L m)
     (hquad : ∀ᶠ m in atTop, aRTSTarget A Y θ₀ T m ω k
-      ≤ Cq * ∑ j, (estimator (fun i ↦ armIndicator A j i ω) (Y · ω) (θ₀ j) m
+      ≤ Cq * ∑ j, (estimator (fun i ↦ actionIndicator A j i ω) (Y · ω) (θ₀ j) m
           - ν.means j) ^ 2)
     (hrate : ∀ j, ∀ᶠ m in atTop,
-      |estimator (fun i ↦ armIndicator A j i ω) (Y · ω) (θ₀ j) m - ν.means j|
+      |estimator (fun i ↦ actionIndicator A j i ω) (Y · ω) (θ₀ j) m - ν.means j|
         ≤ C * √(Real.log (Real.log m) / L m)) :
     ∀ᶠ m in atTop, aRTSTarget A Y θ₀ T m ω k
       ≤ (Cq * Fintype.card 𝓐 * C ^ 2) * (Real.log (Real.log m) / L m) := by
   filter_upwards [hquad, eventually_all.mpr hrate, hLnn] with m hq hr hLm
   refine hq.trans ?_
   have hterm : ∀ j ∈ (Finset.univ : Finset 𝓐),
-      (estimator (fun i ↦ armIndicator A j i ω) (Y · ω) (θ₀ j) m - ν.means j) ^ 2
+      (estimator (fun i ↦ actionIndicator A j i ω) (Y · ω) (θ₀ j) m - ν.means j) ^ 2
         ≤ C ^ 2 * (Real.log (Real.log m) / L m) := by
     intro j _
     have h2 := pow_le_pow_left₀ (abs_nonneg _) (hr j) 2
     rw [sq_abs, mul_pow, Real.sq_sqrt hLm] at h2
     exact h2
-  calc Cq * ∑ j, (estimator (fun i ↦ armIndicator A j i ω) (Y · ω) (θ₀ j) m
+  calc Cq * ∑ j, (estimator (fun i ↦ actionIndicator A j i ω) (Y · ω) (θ₀ j) m
           - ν.means j) ^ 2
       ≤ Cq * ∑ _j : 𝓐, C ^ 2 * (Real.log (Real.log m) / L m) := by
         gcongr with j hj
@@ -1142,10 +1141,10 @@ lemma exists_aRTSTarget_le_mul_sum_sq [Fintype 𝓐] (ω : Ω)
     (hT2 : ContDiffAt ℝ 2 (T · k) ν.means)
     (hTnn : ∀ z, 0 ≤ T z k) (hTzero : T ν.means k = 0)
     (hcons : ∀ j, Tendsto
-      (fun m ↦ estimator (fun i ↦ armIndicator A j i ω) (Y · ω) (θ₀ j) m)
+      (fun m ↦ estimator (fun i ↦ actionIndicator A j i ω) (Y · ω) (θ₀ j) m)
       atTop (𝓝 (ν.means j))) :
     ∃ Cq : ℝ, 0 ≤ Cq ∧ ∀ᶠ m in atTop, aRTSTarget A Y θ₀ T m ω k
-      ≤ Cq * ∑ j, (estimator (fun i ↦ armIndicator A j i ω) (Y · ω) (θ₀ j) m
+      ≤ Cq * ∑ j, (estimator (fun i ↦ actionIndicator A j i ω) (Y · ω) (θ₀ j) m
           - ν.means j) ^ 2 := by
   have hmin : IsLocalMin (T · k) ν.means := by
     apply Eventually.of_forall
@@ -1155,13 +1154,13 @@ lemma exists_aRTSTarget_le_mul_sum_sq [Fintype 𝓐] (ω : Ω)
     exact hTnn z
   obtain ⟨K, hK, hbd⟩ := exists_eventually_sub_le_mul_sq_of_isLocalMin hmin hT2
   have hest : Tendsto
-      (fun m ↦ fun j ↦ estimator (fun i ↦ armIndicator A j i ω) (Y · ω) (θ₀ j) m)
+      (fun m ↦ fun j ↦ estimator (fun i ↦ actionIndicator A j i ω) (Y · ω) (θ₀ j) m)
       atTop (𝓝 ν.means) := tendsto_pi_nhds.mpr hcons
   refine ⟨K, hK, ?_⟩
   filter_upwards [hest.eventually hbd] with m hm
-  have hkey : T (fun j ↦ estimator (fun i ↦ armIndicator A j i ω) (Y · ω) (θ₀ j) m) k
+  have hkey : T (fun j ↦ estimator (fun i ↦ actionIndicator A j i ω) (Y · ω) (θ₀ j) m) k
       - T ν.means k
-      ≤ K * ‖(fun j ↦ estimator (fun i ↦ armIndicator A j i ω) (Y · ω) (θ₀ j) m)
+      ≤ K * ‖(fun j ↦ estimator (fun i ↦ actionIndicator A j i ω) (Y · ω) (θ₀ j) m)
           - ν.means‖ ^ 2 := hm
   rw [hTzero, sub_zero] at hkey
   exact hkey.trans (mul_le_mul_of_nonneg_left (sq_norm_le_sum_sq _) hK)
@@ -1183,7 +1182,7 @@ lemma exists_aRTSTarget_le_loglog_of_contDiffAt [Fintype 𝓐] (ω : Ω)
     (hLnn : ∀ᶠ m : ℕ in atTop, 0 ≤ Real.log (Real.log m) / L m)
     (hL0 : Tendsto (fun m : ℕ ↦ Real.log (Real.log m) / L m) atTop (𝓝 0))
     (hrate : ∀ j, ∀ᶠ m in atTop,
-      |estimator (fun i ↦ armIndicator A j i ω) (Y · ω) (θ₀ j) m - ν.means j|
+      |estimator (fun i ↦ actionIndicator A j i ω) (Y · ω) (θ₀ j) m - ν.means j|
         ≤ C * √(Real.log (Real.log m) / L m)) :
     ∃ Cq : ℝ, 0 ≤ Cq ∧ ∀ᶠ m in atTop, aRTSTarget A Y θ₀ T m ω k
       ≤ Cq * (Real.log (Real.log m) / L m) := by
@@ -1192,7 +1191,7 @@ lemma exists_aRTSTarget_le_loglog_of_contDiffAt [Fintype 𝓐] (ω : Ω)
       simpa [Function.comp_def] using (Real.continuous_sqrt.tendsto 0).comp hL0
     simpa using h1.const_mul C
   have hcons : ∀ j, Tendsto
-      (fun m ↦ estimator (fun i ↦ armIndicator A j i ω) (Y · ω) (θ₀ j) m)
+      (fun m ↦ estimator (fun i ↦ actionIndicator A j i ω) (Y · ω) (θ₀ j) m)
       atTop (𝓝 (ν.means j)) := by
     intro j
     rw [tendsto_iff_dist_tendsto_zero]
@@ -1250,7 +1249,7 @@ lemma exists_decay_of_contDiffAt [Fintype 𝓐] (ω : Ω)
     (hstar : Tendsto (fun m : ℕ ↦ (m : ℝ) * Real.log (Real.log m) / (L m * hsched m))
       atTop (𝓝 0))
     (hrate : ∀ j, ∀ᶠ m in atTop,
-      |estimator (fun i ↦ armIndicator A j i ω) (Y · ω) (θ₀ j) m - ν.means j|
+      |estimator (fun i ↦ actionIndicator A j i ω) (Y · ω) (θ₀ j) m - ν.means j|
         ≤ C * √(Real.log (Real.log m) / L m)) :
     ∃ g : ℕ → ℝ, (∀ᶠ m in atTop, aRTSTarget A Y θ₀ T m ω k ≤ g m) ∧
       (∀ᶠ m in atTop, g m < hsched m / (m : ℝ)) := by
@@ -1277,11 +1276,11 @@ lemma exists_rate_loglog_of_pullCount_ge [Finite 𝓐] [DecidableEq 𝓐] (ω : 
     {θ₀ : 𝓐 → ℝ} {L : ℕ → ℝ} (hLtop : Tendsto L atTop atTop)
     (hLle : ∀ j, ∀ᶠ m in atTop, L m ≤ (pullCount A j m ω : ℝ))
     (hC : ∀ j, ∃ C' : ℝ, ∀ᶠ m in atTop,
-      |estimator (fun i ↦ armIndicator A j i ω) (Y · ω) (θ₀ j) m - ν.means j|
+      |estimator (fun i ↦ actionIndicator A j i ω) (Y · ω) (θ₀ j) m - ν.means j|
         ≤ C' * √(Real.log (Real.log (pullCount A j m ω : ℝ))
             / (pullCount A j m ω : ℝ))) :
     ∃ C : ℝ, ∀ j, ∀ᶠ m in atTop,
-      |estimator (fun i ↦ armIndicator A j i ω) (Y · ω) (θ₀ j) m - ν.means j|
+      |estimator (fun i ↦ actionIndicator A j i ω) (Y · ω) (θ₀ j) m - ν.means j|
         ≤ C * √(Real.log (Real.log m) / L m) := by
   classical
   let := Fintype.ofFinite 𝓐
@@ -1309,7 +1308,7 @@ lemma exists_rate_loglog_of_pullCount_ge [Finite 𝓐] [DecidableEq 𝓐] (ω : 
       _ ≤ Real.log (Real.log m) / L m := by
           gcongr
           linarith
-  calc |estimator (fun i ↦ armIndicator A j i ω) (Y · ω) (θ₀ j) m - ν.means j|
+  calc |estimator (fun i ↦ actionIndicator A j i ω) (Y · ω) (θ₀ j) m - ν.means j|
       ≤ C' j * √(Real.log (Real.log (pullCount A j m ω : ℝ))
           / (pullCount A j m ω : ℝ)) := hm
     _ ≤ (∑ i, |C' i|) * √(Real.log (Real.log (pullCount A j m ω : ℝ))
@@ -1321,7 +1320,7 @@ neither under-sampled nor under-explored — so neither the targeting rule nor f
 called for it, and the `αRTS` throttle caps its probability at `α ρ̂_{i,k}`. -/
 noncomputable def throttledIndicator (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ)
     (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hsched : ℕ → ℝ) (k : 𝓐) (i : ℕ) : Ω → ℝ :=
-  {ω | ¬ aRTSFEUnder A Y θ₀ T hsched k ω i}.indicator (armIndicator A k i)
+  {ω | ¬ aRTSFEUnder A Y θ₀ T hsched k ω i}.indicator (actionIndicator A k i)
 
 /-- **The throttled pulls are `o(h)`** (Step 4 of `maths/sparse-clt-fix.md`, the general `α > 0`
 case, in its correct pathwise form). Their count satisfies `E_n/h(n) → 0` a.s.
@@ -1354,7 +1353,7 @@ lemma throttled_count_div_sched_tendsto_zero [Finite 𝓐]
     {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (hTnn : ∀ z k, 0 ≤ T z k) {k : 𝓐} {α : ℝ}
     (hα : 0 ≤ α)
     (hthrottle : ∀ᵐ ω ∂P, ∀ m, ¬ aRTSFEUnder A Y θ₀ T hsched k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hsched_atTop : Tendsto hsched atTop atTop)
     (hsum : ∀ᵐ ω ∂P, Tendsto
@@ -1365,27 +1364,27 @@ lemma throttled_count_div_sched_tendsto_zero [Finite 𝓐]
     ∀ᵐ ω ∂P, Tendsto
       (fun n ↦ count (fun i ↦ throttledIndicator A Y θ₀ T hsched k i ω) n / hsched n)
       atTop (𝓝 0) := by
-  set 𝔽 := IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback with h𝔽
+  set 𝔽 := h.filtration with h𝔽
   set X : ℕ → Ω → ℝ := fun i ↦ throttledIndicator A Y θ₀ T hsched k i with hXdef
   set S : ℕ → Set Ω := fun i ↦ {ω | ¬ aRTSFEUnder A Y θ₀ T hsched k ω i} with hSdef
   have hSm : ∀ i, MeasurableSet[𝔽.shiftDown i] (S i) := fun i ↦
     (measurableSet_shiftDown_aRTSFEUnder h θ₀ hT hsched k i).compl
-  have hintarm : ∀ i, Integrable (armIndicator A k i) P := fun i ↦
+  have hintarm : ∀ i, Integrable (actionIndicator A k i) P := fun i ↦
     (integrable_const (1 : ℝ)).indicator ((h.measurable_action i) (measurableSet_singleton k))
   have hX0 : ∀ i ω, 0 ≤ X i ω := fun i ω ↦
-    Set.indicator_nonneg (fun _ _ ↦ armIndicator_nonneg A k i _) ω
+    Set.indicator_nonneg (fun _ _ ↦ actionIndicator_nonneg A k i _) ω
   have hX1 : ∀ i ω, X i ω ≤ 1 := fun i ω ↦ by
-    change ((S i).indicator (armIndicator A k i)) ω ≤ 1
+    change ((S i).indicator (actionIndicator A k i)) ω ≤ 1
     rw [Set.indicator_apply]
     split_ifs with hc
-    · exact armIndicator_le_one A k i ω
+    · exact actionIndicator_le_one A k i ω
     · norm_num
   have hXint : ∀ i, Integrable (X i) P := fun i ↦
     (hintarm i).indicator ((𝔽.shiftDown).le i _ (hSm i))
   have hXadapt : StronglyAdapted 𝔽 X := fun i ↦
     StronglyMeasurable.indicator
       (((measurable_const (a := (1 : ℝ))).indicator ((measurableSet_singleton k).preimage
-        (IsAlgEnvSeq.measurable_action_filtration h.measurable_action h.measurable_feedback
+        (h.adapted_action.measurable_le
           (le_refl i)))).stronglyMeasurable)
       (Filtration.shiftDown_le_self 𝔽 i _ (hSm i))
   -- (a) The martingale part is `O(√(n log log n))`.
@@ -1396,7 +1395,7 @@ lemma throttled_count_div_sched_tendsto_zero [Finite 𝓐]
       (P[X i | 𝔽.shiftDown i]) ω ≤ α * aRTSTarget A Y θ₀ T i ω k := by
     intro i
     have hpull : P[X i | 𝔽.shiftDown i]
-        =ᵐ[P] (S i).indicator (P[armIndicator A k i | 𝔽.shiftDown i]) :=
+        =ᵐ[P] (S i).indicator (P[actionIndicator A k i | 𝔽.shiftDown i]) :=
       condExp_indicator (hintarm i) (hSm i)
     filter_upwards [hpull, hthrottle] with ω hp hthr
     rw [hp, Set.indicator_apply]
@@ -1478,8 +1477,8 @@ lemma aRTSFE_sparse_clt [Fintype 𝓐] [DecidableEq 𝓐]
       Tendsto (fun n ↦ (pullCount A a n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v a))) :
     Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
       (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (WithLp.toLp 2 (fun k ↦
-          √(count (fun j ↦ armIndicator A k j ω) n)
-            * (estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
+          √(count (fun j ↦ actionIndicator A k j ω) n)
+            * (estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
               : EuclideanSpace ℝ 𝓐)),
         Measure.isProbabilityMeasure_map (measurable_estimatorErrorVec h θ₀ n).aemeasurable⟩
           : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)))
@@ -1503,9 +1502,9 @@ lemma aRTSFE_sparse_clt [Fintype 𝓐] [DecidableEq 𝓐]
     · exact Tendsto.const_mul_atTop (hpos a hfed) tendsto_natCast_atTop_atTop
   -- The per-arm regularity `N_{n,a}/c_{a,n} → 1`, in the `count` form the CLT consumes.
   have hNconv : ∀ᵐ ω ∂P, ∀ a,
-      Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / c a n) atTop (𝓝 1) := by
+      Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / c a n) atTop (𝓝 1) := by
     filter_upwards [hfe, hFE, hprop] with ω hfeω hFEω hpropω a
-    have hbridge : ∀ n, count (fun j ↦ armIndicator A a j ω) n = (pullCount A a n ω : ℝ) :=
+    have hbridge : ∀ n, count (fun j ↦ actionIndicator A a j ω) n = (pullCount A a n ω : ℝ) :=
       fun n ↦ count_indicator_eq_pullCount a n ω
     simp only [hbridge, hc_def]
     split_ifs with hfed
@@ -1536,7 +1535,7 @@ lemma abs_estimator_sub_le_rate_loglog_N [DecidableEq 𝓐]
     (θ₀ : ℝ) (hνk : MemLp id 2 (ν k))
     (hNinf : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ)) atTop atTop) :
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
-      |estimator (fun j ↦ armIndicator A k j ω) (Y · ω) θ₀ n - ν.means k|
+      |estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) θ₀ n - ν.means k|
         ≤ C' * √(Real.log (Real.log (pullCount A k n ω : ℝ)) / (pullCount A k n ω : ℝ)) := by
   have hk_inf : ∀ᵐ ω ∂P, {j | A j ω = k}.Infinite := by
     filter_upwards [hNinf] with ω hNω; exact infinite_setOf_eq_of_pullCount_atTop hNω
@@ -1554,9 +1553,9 @@ lemma abs_estimator_sub_le_rate_loglog_N [DecidableEq 𝓐]
   have hL1' : (1 : ℝ) ≤ L := hL1
   have hsN : (0 : ℝ) < √N := Real.sqrt_pos.mpr hNpos
   -- Bahadur identity `θ̂ - θ = (Q + (θ₀-θ))/(N+1)`.
-  have hcount : count (fun j ↦ armIndicator A k j ω) n = N := count_indicator_eq_pullCount k n ω
-  have hne : count (fun j ↦ armIndicator A k j ω) n + 1 ≠ 0 := by rw [hcount]; positivity
-  rw [estimator_sub_eq (X := fun j ↦ armIndicator A k j ω) (Y · ω) (ν.means k) θ₀ n hne,
+  have hcount : count (fun j ↦ actionIndicator A k j ω) n = N := count_indicator_eq_pullCount k n ω
+  have hne : count (fun j ↦ actionIndicator A k j ω) n + 1 ≠ 0 := by rw [hcount]; positivity
+  rw [estimator_sub_eq (X := fun j ↦ actionIndicator A k j ω) (Y · ω) (ν.means k) θ₀ n hne,
     respMG_indicator_eq_respMart, hcount]
   have hden : (0 : ℝ) < N + 1 := by linarith
   -- `√(L/N) = √L/√N`, and `√(2 V N L) = √(2V)·√N·√L`.
@@ -1613,26 +1612,26 @@ theorem aRTSFE_sparse_rate [Fintype 𝓐] [DecidableEq 𝓐]
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched)
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ aRTSFEUnder A Y θ₀ T hsched k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hfe : ∀ᵐ ω ∂P, ∀ m, (∃ j, (pullCount A j m ω : ℝ) ≤ hsched m) →
       (pullCount A (A m ω) m ω : ℝ) ≤ hsched m ∧
         ∀ j, (pullCount A j m ω : ℝ) ≤ hsched m →
           pullCount A (A m ω) m ω ≤ pullCount A j m ω) (k : 𝓐) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ pullCount A k n ω) atTop atTop ∧
-      Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ))
+      Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n / (n : ℝ))
         atTop (𝓝 (T ν.means k)) ∧
       ∃ C', ∀ᶠ n in atTop,
-        |estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k|
+        |estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k|
           ≤ C' * √(Real.log (Real.log (pullCount A k n ω : ℝ)) / (pullCount A k n ω : ℝ)) := by
   -- No starvation for every arm (`N_{n,k'} → ∞`), in real form.
   have hNinf : ∀ᵐ ω ∂P, ∀ k', Tendsto (fun n ↦ (pullCount A k' n ω : ℝ)) atTop atTop :=
     ae_all_iff.mpr fun k' ↦ (aRTSFE_no_starvation hh.tendsto_atTop hfe k').mono
       fun ω hω ↦ tendsto_natCast_atTop_atTop.comp hω
   -- Estimator vector consistency `θ̂ → θ` from infinite pulls (no positivity).
-  have hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
+  have hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
       (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means) := by
-    have hper : ∀ k', ∀ᵐ ω ∂P, Tendsto (fun n ↦ estimator (fun j ↦ armIndicator A k' j ω)
+    have hper : ∀ k', ∀ᵐ ω ∂P, Tendsto (fun n ↦ estimator (fun j ↦ actionIndicator A k' j ω)
         (Y · ω) (θ₀ k') n) atTop (𝓝 (ν.means k')) := by
       intro k'
       filter_upwards [estimator_ae_tendsto_of_pullCount_atTop h k' hνk (θ₀ k'), hNinf]
@@ -1646,7 +1645,7 @@ theorem aRTSFE_sparse_rate [Fintype 𝓐] [DecidableEq 𝓐]
     filter_upwards [hθconv] with ω hω
     exact tendsto_pi_nhds.mp ((hT.tendsto _).comp hω) k
   -- `N/n → T(θ)_k`: the common matching limit `u_k` equals `T(θ)_k` (uniqueness with `ρ̂ → T(θ)`).
-  have hprop : ∀ᵐ ω ∂P, Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ))
+  have hprop : ∀ᵐ ω ∂P, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n / (n : ℝ))
       atTop (𝓝 (T ν.means k)) := by
     filter_upwards [consistency_of_hitting h hνk θ₀ T hT hTnn hTsum α hα
       (aRTSFEUnder A Y θ₀ T hsched) hthrottle (aRTSFE_smallness_all θ₀ T hTnn hh), hρconv]
@@ -1673,10 +1672,10 @@ theorem aRTSFE_sparse_rate_of_isARTSFE [Fintype 𝓐] [DecidableEq 𝓐] [Standa
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched)
     (hARTSFE : IsARTSFE alg θ₀ T hsched α) (k : 𝓐) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ pullCount A k n ω) atTop atTop ∧
-      Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ))
+      Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n / (n : ℝ))
         atTop (𝓝 (T ν.means k)) ∧
       ∃ C', ∀ᶠ n in atTop,
-        |estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k|
+        |estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k|
           ≤ C' * √(Real.log (Real.log (pullCount A k n ω : ℝ)) / (pullCount A k n ω : ℝ)) :=
   aRTSFE_sparse_rate h hνk θ₀ T hT hTnn hTsum α hα hh
     (fun a ↦ throttle_of_isARTSFE h hARTSFE a) (fe_of_isARTSFE h hARTSFE) k
@@ -2011,7 +2010,7 @@ lemma fEfed_of_decay [Finite 𝓐] [DecidableEq 𝓐]
     {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (hTnn : ∀ z k, 0 ≤ T z k) {k : 𝓐} {α : ℝ}
     (hα : 0 ≤ α)
     (hthrottle : ∀ᵐ ω ∂P, ∀ m, ¬ aRTSFEUnder A Y θ₀ T hsched k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hsched_atTop : Tendsto hsched atTop atTop)
     (hsum : ∀ᵐ ω ∂P, Tendsto
@@ -2027,7 +2026,7 @@ lemma fEfed_of_decay [Finite 𝓐] [DecidableEq 𝓐]
         E m + 1 ≤ E (m + 1)) ∧
       Tendsto (fun n ↦ E n / hsched n) atTop (𝓝 0) := by
   have hX0 : ∀ i ω, 0 ≤ throttledIndicator A Y θ₀ T hsched k i ω := fun i ω ↦
-    Set.indicator_nonneg (fun _ _ ↦ armIndicator_nonneg A k i _) ω
+    Set.indicator_nonneg (fun _ _ ↦ actionIndicator_nonneg A k i _) ω
   filter_upwards [hdecay,
     throttled_count_div_sched_tendsto_zero h hT hTnn hα hthrottle hsched_atTop hsum hsqrt]
     with ω hdecayω hlimω
@@ -2045,7 +2044,7 @@ lemma fEfed_of_decay [Finite 𝓐] [DecidableEq 𝓐]
       exact hnotU ⟨k, not_lt.mp hcon⟩
     have hnot := not_aRTSFEUnder_of_sched_lt ω hmpos hlt hdec hgh
     have hval : throttledIndicator A Y θ₀ T hsched k m ω = 1 := by
-      rw [throttledIndicator, Set.indicator_of_mem hnot, armIndicator]
+      rw [throttledIndicator, Set.indicator_of_mem hnot, actionIndicator]
       exact Set.indicator_of_mem (show ω ∈ {ω | A m ω = k} from hAm) _
     change count (fun i ↦ throttledIndicator A Y θ₀ T hsched k i ω) m + 1
       ≤ count (fun i ↦ throttledIndicator A Y θ₀ T hsched k i ω) (m + 1)
@@ -2074,8 +2073,8 @@ theorem aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [Stand
     (hT2 : ∀ a, T ν.means a = 0 → ContDiffAt ℝ 2 (T · a) ν.means) :
     Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
       (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (WithLp.toLp 2 (fun k ↦
-          √(count (armIndicator A k · ω) n)
-            * (estimator (armIndicator A k · ω) (Y · ω) (θ₀ k) n - ν.means k)))),
+          √(count (actionIndicator A k · ω) n)
+            * (estimator (actionIndicator A k · ω) (Y · ω) (θ₀ k) n - ν.means k)))),
         Measure.isProbabilityMeasure_map (measurable_estimatorErrorVec h θ₀ n).aemeasurable⟩
           : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)))
       atTop
@@ -2087,10 +2086,10 @@ theorem aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [Stand
   -- converges to `T(Θ)_a` (no positivity needed), and the `N`-scaled loglog rate.
   have hsr : ∀ᵐ ω ∂P, ∀ a : 𝓐,
       Tendsto (fun n ↦ pullCount A a n ω) atTop atTop ∧
-      Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
+      Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / (n : ℝ))
         atTop (𝓝 (T ν.means a)) ∧
       ∃ C' : ℝ, ∀ᶠ n in atTop,
-        |estimator (fun j ↦ armIndicator A a j ω) (Y · ω) (θ₀ a) n - ν.means a|
+        |estimator (fun j ↦ actionIndicator A a j ω) (Y · ω) (θ₀ a) n - ν.means a|
           ≤ C' * √(Real.log (Real.log (pullCount A a n ω : ℝ))
               / (pullCount A a n ω : ℝ)) :=
     ae_all_iff.mpr fun a ↦ aRTSFE_sparse_rate h hνk θ₀ T hT hTnn hTsum α hα
@@ -2150,7 +2149,7 @@ theorem aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [Stand
     tendsto_const_mul_sqrt_loglog_div_sched hspos hstar
   -- The LIL rate re-expressed against the deterministic floor.
   have hrate_ae : ∀ᵐ ω ∂P, ∃ C : ℝ, ∀ j, ∀ᶠ m in atTop,
-      |estimator (fun i ↦ armIndicator A j i ω) (Y · ω) (θ₀ j) m - ν.means j|
+      |estimator (fun i ↦ actionIndicator A j i ω) (Y · ω) (θ₀ j) m - ν.means j|
         ≤ C * √(Real.log (Real.log m) / L m) := by
     filter_upwards [hfe, hsr] with ω hfeω hsrω
     exact exists_rate_loglog_of_pullCount_ge ω hLtop

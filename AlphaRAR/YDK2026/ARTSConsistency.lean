@@ -20,7 +20,7 @@ large numbers for the allocation proportions (blueprint `thm:LLN`, consistency d
 The aRTS design is specified through three derived per-arm processes of an
 `IsAlgEnvSeq` algorithm–environment sequence:
 
-* `armIndicator A k n ω = 𝟙{A n ω = k}` — the assignment indicator;
+* `actionIndicator A k n ω = 𝟙{A n ω = k}` — the assignment indicator;
 * `aRTSTarget A Y θ₀ T n ω k = T(θ̂_n)_k` — the plug-in target `ρ̂_{n,k}`, obtained by
   applying a continuous simplex-valued target map `T` to the sequential estimator vector;
 * `aRTSSelProb A k ℱ P n ω = P[𝟙{A n = k} | ℱ_{n-1}] ω` — the selection probability `p_{n,k}`,
@@ -64,13 +64,13 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
 vector of sequential estimators of the arm means. -/
 noncomputable def aRTSTarget (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ)
     (T : (𝓐 → ℝ) → 𝓐 → ℝ) (n : ℕ) (ω : Ω) (k : 𝓐) : ℝ :=
-  T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω) (Y · ω) (θ₀ k') n) k
+  T (fun k' ↦ estimator (fun j ↦ actionIndicator A k' j ω) (Y · ω) (θ₀ k') n) k
 
 /-- The aRTS selection probability `p_{n,k} = P[𝟙{A n = k} | ℱ_{n-1}]`: the conditional probability
 of assigning arm `k` to patient `n` given the previous history `ℱ.shiftDown n = ℱ_{n-1}`. -/
 noncomputable def aRTSSelProb (A : ℕ → Ω → 𝓐) (k : 𝓐) (𝔽 : Filtration ℕ mΩ) (P : Measure Ω)
     (n : ℕ) (ω : Ω) : ℝ :=
-  (P[armIndicator A k n | 𝔽.shiftDown n]) ω
+  (P[actionIndicator A k n | 𝔽.shiftDown n]) ω
 
 /-! #### Characterization of the selection probability
 
@@ -91,21 +91,21 @@ since against `ℱ n` the indicator is already known and the conditional expecta
 existence half of the characterization. -/
 @[characterization existence]
 lemma isCondExp_aRTSSelProb (hA : ∀ n, Measurable (A n)) (k : 𝓐) (𝔽 : Filtration ℕ mΩ) (n : ℕ) :
-    IsCondExp P (𝔽.shiftDown n) (armIndicator A k n) (aRTSSelProb A k 𝔽 P n) :=
-  isCondExp_condExp (𝔽.shiftDown.le n) (integrable_armIndicator hA P k n)
+    IsCondExp P (𝔽.shiftDown n) (actionIndicator A k n) (aRTSSelProb A k 𝔽 P n) :=
+  isCondExp_condExp (𝔽.shiftDown.le n) (integrable_actionIndicator P k (hA n))
 
 /-- **Nothing else does** — the uniqueness half: any `ℱ_{n-1}`-measurable function with the
 integrals of `𝟙{A n = k}` agrees a.e. with `p_{n,k}`. -/
 @[characterization uniqueness]
 lemma IsCondExp.ae_eq_aRTSSelProb (hA : ∀ n, Measurable (A n)) {k : 𝓐} {𝔽 : Filtration ℕ mΩ}
-    {n : ℕ} {g : Ω → ℝ} (hg : IsCondExp P (𝔽.shiftDown n) (armIndicator A k n) g) :
+    {n : ℕ} {g : Ω → ℝ} (hg : IsCondExp P (𝔽.shiftDown n) (actionIndicator A k n) g) :
     g =ᵐ[P] aRTSSelProb A k 𝔽 P n :=
-  hg.ae_eq_condExp (𝔽.shiftDown.le n) (integrable_armIndicator hA P k n)
+  hg.ae_eq_condExp (𝔽.shiftDown.le n) (integrable_actionIndicator P k (hA n))
 
 /-- The under-sampling event of arm `k` at time `m`: `N_{m,k} ≤ m ρ̂_{m,k}`. -/
 def aRTSUnder (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (k : 𝓐) (ω : Ω) (m : ℕ) : Prop :=
-  count (fun j ↦ armIndicator A k j ω) m ≤ (m : ℝ) * aRTSTarget A Y θ₀ T m ω k
+  count (fun j ↦ actionIndicator A k j ω) m ≤ (m : ℝ) * aRTSTarget A Y θ₀ T m ω k
 
 noncomputable instance {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ}
     {k : 𝓐} {ω : Ω} : DecidablePred (aRTSUnder A Y θ₀ T k ω) :=
@@ -129,15 +129,15 @@ lemma consistency_of_hitting [Fintype 𝓐]
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
     (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hgs : ∀ k, ∀ᵐ ω ∂P, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
-      (count (fun j ↦ armIndicator A k j ω) (hitting (Q k ω) n)
+      (count (fun j ↦ actionIndicator A k j ω) (hitting (Q k ω) n)
           - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k) / (n : ℝ) < δ) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
-      Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 (u k))
+      Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 (u k))
         ∧ Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop (𝓝 (u k)) := by
-  let ℱ := IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback
+  let ℱ := h.filtration
   -- The target map lands in `[0,1]` because it lands in the simplex.
   have hTle1 : ∀ z k, T z k ≤ 1 := fun z k ↦
     (Finset.single_le_sum (fun i _ ↦ hTnn z i) (Finset.mem_univ k)).trans_eq (hTsum z)
@@ -148,8 +148,8 @@ lemma consistency_of_hitting [Fintype 𝓐]
       Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop (𝓝 (u k)) :=
     rho_converges h hνk θ₀ T hT
   -- Discharge each hypothesis of `consistency_of_generic_ae`.
-  have hYsum : ∀ᵐ ω ∂P, ∀ j, ∑ k, armIndicator A k j ω = 1 :=
-    Eventually.of_forall fun ω j ↦ sum_armIndicator A j ω
+  have hYsum : ∀ᵐ ω ∂P, ∀ j, ∑ k, actionIndicator A k j ω = 1 :=
+    Eventually.of_forall fun ω j ↦ sum_actionIndicator A j ω
   have hrsum : ∀ᵐ ω ∂P, ∀ n, ∑ k, aRTSTarget A Y θ₀ T n ω k = 1 :=
     Eventually.of_forall fun ω n ↦ by simp only [aRTSTarget]; exact hTsum _
   have hℓle : ∀ k, ∀ᵐ ω ∂P, ∀ n, hitting (Q k ω) n ≤ n :=
@@ -169,44 +169,44 @@ lemma consistency_of_hitting [Fintype 𝓐]
     obtain ⟨uu, huu⟩ := hω
     rw [(huu k).limUnder_eq]
     exact huu k
-  have hM : ∀ k, ∀ᵐ ω ∂P, Tendsto (fun n ↦ assignMG (fun j ↦ armIndicator A k j ω)
+  have hM : ∀ k, ∀ᵐ ω ∂P, Tendsto (fun n ↦ assignMG (fun j ↦ actionIndicator A k j ω)
       (fun j ↦ aRTSSelProb A k ℱ P j ω) n / (n : ℝ)) atTop (𝓝 0) := by
     intro k
     exact assignMG_path_div_ae_tendsto_zero
-      (stronglyAdapted_armIndicator h.measurable_action h.measurable_feedback k)
-      (integrable_armIndicator h.measurable_action P k)
-      (fun n ↦ Eventually.of_forall fun ω ↦ armIndicator_nonneg A k n ω)
-      (fun n ↦ Eventually.of_forall fun ω ↦ armIndicator_le_one A k n ω)
+      (h.adapted_actionIndicator k).stronglyAdapted
+      (fun n ↦ integrable_actionIndicator P k (h.measurable_action n))
+      (fun n ↦ Eventually.of_forall fun ω ↦ actionIndicator_nonneg A k n ω)
+      (fun n ↦ Eventually.of_forall fun ω ↦ actionIndicator_le_one A k n ω)
   -- Selection probabilities are `≤ 1` (conditional expectation of a `≤ 1` indicator).
   have hp1 : ∀ k, ∀ᵐ ω ∂P, ∀ m, aRTSSelProb A k ℱ P m ω ≤ 1 := by
     intro k
     rw [ae_all_iff]
     intro m
     have hmono := condExp_mono (m := ℱ.shiftDown m)
-      (integrable_armIndicator h.measurable_action P k m)
-      (integrable_const (1 : ℝ)) (Eventually.of_forall fun ω ↦ armIndicator_le_one A k m ω)
+      (integrable_actionIndicator P k (h.measurable_action m))
+      (integrable_const (1 : ℝ)) (Eventually.of_forall fun ω ↦ actionIndicator_le_one A k m ω)
     rw [condExp_const (ℱ.shiftDown.le m)] at hmono
     filter_upwards [hmono] with ω hω
     exact hω
   -- Key inequality (`generic_ineq_of_hitting`, constant `1`), valid for any predicate.
   have hgen : ∀ k, ∀ᵐ ω ∂P, ∀ n,
-      count (fun j ↦ armIndicator A k j ω) n - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k
-        ≤ 1 + (count (fun j ↦ armIndicator A k j ω) (hitting (Q k ω) n)
+      count (fun j ↦ actionIndicator A k j ω) n - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k
+        ≤ 1 + (count (fun j ↦ actionIndicator A k j ω) (hitting (Q k ω) n)
               - (hitting (Q k ω) n : ℝ)
                 * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k)
-          + (auxU (fun j ↦ armIndicator A k j ω) (fun j ↦ aRTSSelProb A k ℱ P j ω)
+          + (auxU (fun j ↦ actionIndicator A k j ω) (fun j ↦ aRTSSelProb A k ℱ P j ω)
                 (fun j ↦ aRTSTarget A Y θ₀ T j ω k) α n
-              - auxU (fun j ↦ armIndicator A k j ω) (fun j ↦ aRTSSelProb A k ℱ P j ω)
+              - auxU (fun j ↦ actionIndicator A k j ω) (fun j ↦ aRTSSelProb A k ℱ P j ω)
                 (fun j ↦ aRTSTarget A Y θ₀ T j ω k) α
                 (hitting (Q k ω) n)) := by
     intro k
     filter_upwards [hthrottle k, hp1 k] with ω hthr hp1ω
-    exact generic_ineq_of_hitting (fun j ↦ armIndicator A k j ω)
+    exact generic_ineq_of_hitting (fun j ↦ actionIndicator A k j ω)
       (fun j ↦ aRTSSelProb A k ℱ P j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k) α
       (Q k ω) hthr hp1ω (fun m ↦ mul_nonneg hα.1 (htgt_nn m ω k))
   -- Assemble via the modular theorem (the smallness `hgs` is the design-specific hypothesis).
   have hcons := consistency_of_generic_ae (μ := P)
-    (Y := fun j ω k ↦ armIndicator A k j ω)
+    (Y := fun j ω k ↦ actionIndicator A k j ω)
     (pp := fun j ω k ↦ aRTSSelProb A k ℱ P j ω)
     (r := fun n ω k ↦ aRTSTarget A Y θ₀ T n ω k)
     (u := fun ω k ↦ limUnder atTop fun n ↦ aRTSTarget A Y θ₀ T n ω k)
@@ -231,13 +231,13 @@ lemma theta_consistent_of_hitting [Fintype 𝓐]
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
     (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hgs : ∀ k, ∀ᵐ ω ∂P, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
-      (count (fun j ↦ armIndicator A k j ω) (hitting (Q k ω) n)
+      (count (fun j ↦ actionIndicator A k j ω) (hitting (Q k ω) n)
           - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k) / (n : ℝ) < δ)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) :
-    ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
+    ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
       (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means) := by
   classical
   refine theta_consistent_pi_of_condB h hνk θ₀ T hT hTpos ?_
@@ -258,10 +258,10 @@ lemma proportion_tendsto_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
     (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hgs : ∀ k, ∀ᵐ ω ∂P, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
-      (count (fun j ↦ armIndicator A k j ω) (hitting (Q k ω) n)
+      (count (fun j ↦ actionIndicator A k j ω) (hitting (Q k ω) n)
           - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k) / (n : ℝ) < δ)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) (k : 𝓐) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ))
@@ -288,14 +288,14 @@ lemma aRTS_consistency [Fintype 𝓐]
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ aRTSUnder A Y θ₀ T k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
-      Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 (u k))
+      Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 (u k))
         ∧ Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop (𝓝 (u k)) :=
   consistency_of_hitting h hνk θ₀ T hT hTnn hTsum α hα (aRTSUnder A Y θ₀ T) hthrottle
     (fun k ↦ Eventually.of_forall fun ω δ hδ ↦ generic_small_of_hitting
-      (fun j ↦ armIndicator A k j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k)
+      (fun j ↦ actionIndicator A k j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k)
       (aRTSUnder A Y θ₀ T k ω) (fun _ hm ↦ hm) δ hδ)
 
 end AlphaRAR

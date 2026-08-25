@@ -204,15 +204,16 @@ def sumRewards' (n : ℕ) (h : Iic n → 𝓐 × ℝ) (a : 𝓐) :=
 end Learning
 end
 
--- ═══ LeanMachineLearning.ArmIndicator ═══
+-- ═══ LeanMachineLearning.SequentialLearning.ActionIndicator ═══
 section
 open MeasureTheory ProbabilityTheory Filter Finset
 namespace Learning
 variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐} [MeasurableSingletonClass 𝓐] {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {P : Measure Ω}
 
-/-- The `{0,1}`-valued assignment indicator of arm `k`: `armIndicator A k n ω = 𝟙{A n ω = k}`. -/
-noncomputable def armIndicator (A : ℕ → Ω → 𝓐) (k : 𝓐) (n : ℕ) (ω : Ω) : ℝ :=
-  Set.indicator {ω | A n ω = k} (fun _ ↦ (1 : ℝ)) ω
+/-- The `{0,1}`-valued assignment indicator of action `k`:
+`actionIndicator A k n ω = 𝟙{A n ω = k}`. -/
+noncomputable def actionIndicator (A : ℕ → Ω → 𝓐) (k : 𝓐) (n : ℕ) (ω : Ω) : ℝ :=
+  {ω | A n ω = k}.indicator (fun _ ↦ (1 : ℝ)) ω
 
 end Learning
 end
@@ -350,10 +351,10 @@ theorem aRTSFE_sparse_rate_of_isARTSFE [Fintype 𝓐] [DecidableEq 𝓐] [Standa
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched)
     (hARTSFE : IsARTSFE alg θ₀ T hsched α) (k : 𝓐) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ pullCount A k n ω) atTop atTop ∧
-      Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ))
+      Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n / (n : ℝ))
         atTop (𝓝 (T ν.means k)) ∧
       ∃ C', ∀ᶠ n in atTop,
-        |estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k|
+        |estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k|
           ≤ C' * √(Real.log (Real.log (pullCount A k n ω : ℝ)) / (pullCount A k n ω : ℝ)) := sorry
 
 end AlphaRAR

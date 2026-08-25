@@ -53,13 +53,13 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
 
 /-- The `√n`-scaled proportion-deviation vector `√n(N_{n,k}/n - v_k) ∈ ℝ^𝓐`. -/
 noncomputable def propSqrtNVec (A : ℕ → Ω → 𝓐) (v : 𝓐 → ℝ) (n : ℕ) (ω : Ω) : EuclideanSpace ℝ 𝓐 :=
-  WithLp.toLp 2 (fun k ↦ √n * (count (fun j ↦ armIndicator A k j ω) n / (n : ℝ) - v k))
+  WithLp.toLp 2 (fun k ↦ √n * (count (fun j ↦ actionIndicator A k j ω) n / (n : ℝ) - v k))
 
 /-- The `√n`-scaled plug-in-target error vector `√n(T(θ̂_n) - T(θ)) ∈ ℝ^𝓐`. -/
 noncomputable def targetSqrtNVec (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ)
     (T : (𝓐 → ℝ) → 𝓐 → ℝ) (n : ℕ) (ω : Ω) : EuclideanSpace ℝ 𝓐 :=
   WithLp.toLp 2 (fun k ↦ √n *
-    (T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω) (Y · ω) (θ₀ k') n) k
+    (T (fun k' ↦ estimator (fun j ↦ actionIndicator A k' j ω) (Y · ω) (θ₀ k') n) k
       - T ν.means k))
 
 /-- The `√n`-scaled joint vector `(√n(N_n/n - v), √n(ρ̂_n - v)) ∈ ℝ^(𝓐 ⊕ 𝓐)`. -/
@@ -72,18 +72,18 @@ noncomputable def jointSqrtNVec (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐)
 noncomputable def estimatorSqrtNVec (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ)
     (n : ℕ) (ω : Ω) : EuclideanSpace ℝ 𝓐 :=
   WithLp.toLp 2 (fun k ↦ √n *
-    (estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
+    (estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
 
 omit [DecidableEq 𝓐] [Fintype 𝓐] in
 lemma measurable_estimatorSqrtNVec' (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (n : ℕ) : Measurable (estimatorSqrtNVec ν A Y θ₀ n) := by
   refine (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (measurable_pi_lambda _ fun k ↦ ?_)
   refine Measurable.const_mul ?_ (√n)
-  have harm : ∀ j, Measurable (fun ω ↦ armIndicator A k j ω) := fun j ↦
+  have harm : ∀ j, Measurable (fun ω ↦ actionIndicator A k j ω) := fun j ↦
     (measurable_const (a := (1 : ℝ))).indicator ((measurableSet_singleton k).preimage
       (h.measurable_action j))
   simp only [estimator]
-  refine (Measurable.div ?_ ((measurable_count_armIndicator h k n).add_const 1)).sub_const _
+  refine (Measurable.div ?_ ((measurable_count_actionIndicator h k n).add_const 1)).sub_const _
   exact (Finset.measurable_sum _ fun j _ ↦ (harm j).mul (h.measurable_feedback j)).add_const (θ₀ k)
 
 /-- **The estimator CLT in this file's vector notation** (blueprint `lem:clt_theta`):
@@ -97,7 +97,7 @@ time"]
 lemma estimatorSqrtNVec_joint_tendsto_multivariateGaussian
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp id 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
-    (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
+    (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a))) :
     Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
       (fun n : ℕ ↦ (⟨P.map (estimatorSqrtNVec ν A Y θ₀ n),
@@ -110,15 +110,15 @@ lemma estimatorSqrtNVec_joint_tendsto_multivariateGaussian
 omit [DecidableEq 𝓐] [Fintype 𝓐] in
 /-- Measurability of the estimator vector `ω ↦ (θ̂_{n,k}(ω))_k : 𝓐 → ℝ`. -/
 lemma measurable_estimatorVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ) (n : ℕ) :
-    Measurable (fun ω ↦ (fun k ↦ estimator (fun j ↦ armIndicator A k j ω)
+    Measurable (fun ω ↦ (fun k ↦ estimator (fun j ↦ actionIndicator A k j ω)
       (Y · ω) (θ₀ k) n : 𝓐 → ℝ)) := by
   refine measurable_pi_lambda _ fun k ↦ ?_
-  have harm : ∀ j, Measurable (fun ω ↦ armIndicator A k j ω) := fun j ↦
+  have harm : ∀ j, Measurable (fun ω ↦ actionIndicator A k j ω) := fun j ↦
     (measurable_const (a := (1 : ℝ))).indicator ((measurableSet_singleton k).preimage
       (h.measurable_action j))
   simp only [estimator]
   exact ((Finset.measurable_sum _ fun j _ ↦ (harm j).mul (h.measurable_feedback j)).add_const
-    (θ₀ k)).div ((measurable_count_armIndicator h k n).add_const 1)
+    (θ₀ k)).div ((measurable_count_actionIndicator h k n).add_const 1)
 
 omit [DecidableEq 𝓐] [Fintype 𝓐] in
 lemma measurable_targetSqrtNVec [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
@@ -141,7 +141,7 @@ the product-space Slutsky lemma with `g(x, r) = G·x + r`. -/
 lemma clt_rho_of_tendstoInMeasure
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp id 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
-    (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
+    (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a)))
     {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (G : Matrix 𝓐 𝓐 ℝ)
     (hR : TendstoInMeasure P (fun n ω ↦ targetSqrtNVec ν A Y θ₀ T n ω
@@ -222,13 +222,13 @@ any running quantity, which is what makes the limit the delta-method Gaussian `G
 lemma clt_rho
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp id 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
-    (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
+    (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a)))
     {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (G : Matrix 𝓐 𝓐 ℝ)
     (hTderiv : HasFDerivAt
       (fun x : EuclideanSpace ℝ 𝓐 ↦ (WithLp.toLp 2 (T (WithLp.ofLp x)) : EuclideanSpace ℝ 𝓐))
       (Matrix.toEuclideanCLM (𝕜 := ℝ) G) (WithLp.toLp 2 ν.means))
-    (hcons : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
+    (hcons : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
       (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means)) :
     Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
       (fun n : ℕ ↦ (⟨P.map (targetSqrtNVec ν A Y θ₀ T n),
@@ -245,7 +245,7 @@ lemma clt_rho
   set Tv : EuclideanSpace ℝ 𝓐 → EuclideanSpace ℝ 𝓐 :=
     fun x ↦ WithLp.toLp 2 (T (WithLp.ofLp x)) with hTvdef
   set S : ℕ → Ω → EuclideanSpace ℝ 𝓐 := fun n ω ↦ WithLp.toLp 2
-    (fun k ↦ estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k)
+    (fun k ↦ estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k)
     with hSdef
   set φ : EuclideanSpace ℝ 𝓐 → EuclideanSpace ℝ 𝓐 := fun hh ↦ Tv (p + hh) - Tv p - L hh with hφdef
   -- The remainder `φ` is `o(‖·‖)` at the origin.
@@ -273,17 +273,17 @@ lemma clt_rho
     intro n
     simp only [hSdef]
     refine (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (measurable_pi_lambda _ fun k ↦ ?_)
-    have harm : ∀ j, Measurable (fun ω ↦ armIndicator A k j ω) := fun j ↦
+    have harm : ∀ j, Measurable (fun ω ↦ actionIndicator A k j ω) := fun j ↦
       (measurable_const (a := (1 : ℝ))).indicator ((measurableSet_singleton k).preimage
         (h.measurable_action j))
     simp only [estimator]
-    refine (Measurable.div ?_ ((measurable_count_armIndicator h k n).add_const 1)).sub_const _
+    refine (Measurable.div ?_ ((measurable_count_actionIndicator h k n).add_const 1)).sub_const _
     exact (Finset.measurable_sum _ fun j _ ↦ (harm j).mul
       (h.measurable_feedback j)).add_const (θ₀ k)
   have hS : TendstoInMeasure P S atTop (fun _ ↦ (0 : EuclideanSpace ℝ 𝓐)) := by
     refine tendstoInMeasure_of_tendsto_ae (fun n ↦ (hSmeas n).aestronglyMeasurable) ?_
     filter_upwards [hcons] with ω hω
-    have hSeq : ∀ n, S n ω = WithLp.toLp 2 (fun k ↦ estimator (fun j ↦ armIndicator A k j ω)
+    have hSeq : ∀ n, S n ω = WithLp.toLp 2 (fun k ↦ estimator (fun j ↦ actionIndicator A k j ω)
         (Y · ω) (θ₀ k) n) - p := by
       intro n; simp only [hSdef, hpdef, ← WithLp.toLp_sub]; rfl
     have hc := ((PiLp.continuous_toLp 2 (fun _ : 𝓐 ↦ ℝ)).tendsto ν.means).comp hω
@@ -300,10 +300,10 @@ lemma clt_rho
       - WithLp.toLp 2 (G.mulVec (WithLp.ofLp (estimatorSqrtNVec ν A Y θ₀ n ω)))
       = √n • φ (S n ω) := by
     intro n ω
-    have e1 : Tv (p + S n ω) = WithLp.toLp 2 (T fun k ↦ estimator (fun j ↦ armIndicator A k j ω)
+    have e1 : Tv (p + S n ω) = WithLp.toLp 2 (T fun k ↦ estimator (fun j ↦ actionIndicator A k j ω)
         (Y · ω) (θ₀ k) n) := by
       have hof : (WithLp.ofLp (p + S n ω) : 𝓐 → ℝ)
-          = fun k ↦ estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) n := by
+          = fun k ↦ estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) n := by
         funext k
         simp only [hpdef, hSdef, WithLp.ofLp_add, Pi.add_apply]
         ring

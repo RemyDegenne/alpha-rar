@@ -83,11 +83,11 @@ estimator vector `θ̂_n → θ` a.s. (blueprint `lem:theta_consistent`), each c
 same rate: `ρ̂_{n,k} - v_k = O(r_n)` a.s. for every arm `k`. -/
 lemma rho_rate {θ : 𝓐 → ℝ} {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : DifferentiableAt ℝ T θ)
     {r : ℕ → ℝ}
-    (hconsist : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
+    (hconsist : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
       (Y · ω) (θ₀ k') n) atTop (𝓝 θ))
-    (hrate : ∀ k, ∀ᵐ ω ∂P, (fun n ↦ estimator (fun j ↦ armIndicator A k j ω)
+    (hrate : ∀ k, ∀ᵐ ω ∂P, (fun n ↦ estimator (fun j ↦ actionIndicator A k j ω)
       (Y · ω) (θ₀ k) n - θ k) =O[atTop] r) (k : 𝓐) :
-    ∀ᵐ ω ∂P, (fun n ↦ T (fun k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
+    ∀ᵐ ω ∂P, (fun n ↦ T (fun k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
       (Y · ω) (θ₀ k') n) k - T θ k) =O[atTop] r := by
   filter_upwards [hconsist, ae_all_iff.mpr hrate] with ω hcω hrω
   exact isBigO_target_sub_of_tendsto hT hcω hrω k

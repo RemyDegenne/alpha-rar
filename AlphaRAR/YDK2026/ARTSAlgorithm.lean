@@ -78,11 +78,11 @@ structure IsARTS (alg : Algorithm 𝓐 ℝ) (θ₀ : 𝓐 → ℝ) (T : (𝓐 �
 /-- The deterministic regularized estimator of the assignment/response process equals the
 regularized empirical mean of arm `k`. -/
 lemma estimator_eq (θ₀ : 𝓐 → ℝ) (k : 𝓐) (t : ℕ) (ω : Ω) :
-    estimator (fun j ↦ armIndicator A k j ω) (Y · ω) (θ₀ k) t
+    estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) t
       = (sumRewards A Y k t ω + θ₀ k) / ((pullCount A k t ω : ℝ) + 1) := by
-  rw [estimator, sum_armIndicator_mul A Y]
+  rw [estimator, sum_actionIndicator_mul A Y]
   congr 2
-  simp only [armIndicator]
+  simp only [actionIndicator]
   exact count_indicator_eq_pullCount k t ω
 
 /-- The process plug-in target `ρ̂_{n+1,k}` equals the history-level target evaluated on the
@@ -115,22 +115,22 @@ controls — the mass the policy puts on arm `k` given the history. Without this
 would be a probabilistic object with no operational meaning"]
 lemma aRTSSelProb_succ_ae [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
-    aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P (n + 1)
+    aRTSSelProb A k h.filtration P (n + 1)
       =ᵐ[P] fun ω ↦ (alg.policy n (history A Y n ω) {k}).toReal := by
-  let 𝔽 := IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback
+  let 𝔽 := h.filtration
   set g : 𝓐 → ℝ := Set.indicator {k} (fun _ ↦ (1 : ℝ)) with hg_def
   have hg : StronglyMeasurable g := stronglyMeasurable_const.indicator (measurableSet_singleton k)
-  have hgeq : (fun ω ↦ g (A (n + 1) ω)) = armIndicator A k (n + 1) := by
+  have hgeq : (fun ω ↦ g (A (n + 1) ω)) = actionIndicator A k (n + 1) := by
     funext ω
     by_cases hak : A (n + 1) ω = k
     · have h1 : A (n + 1) ω ∈ ({k} : Set 𝓐) := hak
       have h2 : ω ∈ {ω | A (n + 1) ω = k} := hak
-      rw [hg_def, armIndicator, Set.indicator_of_mem h1, Set.indicator_of_mem h2]
+      rw [hg_def, actionIndicator, Set.indicator_of_mem h1, Set.indicator_of_mem h2]
     · have h1 : A (n + 1) ω ∉ ({k} : Set 𝓐) := hak
       have h2 : ω ∉ {ω | A (n + 1) ω = k} := hak
-      rw [hg_def, armIndicator, Set.indicator_of_notMem h1, Set.indicator_of_notMem h2]
+      rw [hg_def, actionIndicator, Set.indicator_of_notMem h1, Set.indicator_of_notMem h2]
   have hint : Integrable (fun ω ↦ g (A (n + 1) ω)) P := by
-    rw [hgeq]; exact integrable_armIndicator h.measurable_action P k (n + 1)
+    rw [hgeq]; exact integrable_actionIndicator P k (h.measurable_action (n + 1))
   have hbridge : P[fun ω ↦ g (A (n + 1) ω) | 𝔽.shiftDown (n + 1)]
       =ᵐ[P] fun ω ↦ ∫ a, g a ∂(alg.policy n (history A Y n ω)) :=
     (h.hasCondDistrib_action n).condExp_comp_eq (h.measurable_history n) hg hint
@@ -158,7 +158,7 @@ lemma throttle_of_isARTS [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} {α : ℝ} (hARTS : IsARTS alg θ₀ T α) (k : 𝓐) :
     ∀ᵐ ω ∂P, ∀ m, ¬ aRTSUnder A Y θ₀ T k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k := by
   rw [ae_all_iff]
   intro m
@@ -172,7 +172,7 @@ lemma throttle_of_isARTS [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     refine hARTS.throttle n (history A Y n ω) k ?_
     -- Over-sampling: `¬ (N_{n+1,k} ≤ (n+1) ρ̂_{n+1,k})` gives `(n+1) ρ̂ < N_{n+1,k}`.
     have hlt : (↑(n + 1) : ℝ) * aRTSTarget A Y θ₀ T (n + 1) ω k
-        < count (fun j ↦ armIndicator A k j ω) (n + 1) := by
+        < count (fun j ↦ actionIndicator A k j ω) (n + 1) := by
       rw [aRTSUnder] at hm
       exact lt_of_not_ge hm
     rw [histTarget_eq, ← histCount_eq]
@@ -193,7 +193,7 @@ lemma aRTS_consistency_of_isARTS [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonem
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
-      Tendsto (fun n ↦ count (fun j ↦ armIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 (u k))
+      Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 (u k))
         ∧ Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop (𝓝 (u k)) :=
   aRTS_consistency h hνk θ₀ T hT hTnn hTsum α hα (fun k ↦ throttle_of_isARTS h hARTS k)
 
@@ -231,7 +231,7 @@ lemma aRTS_theta_consistent [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty �
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) :
-    ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
+    ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
       (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means) := by
   refine theta_consistent_pi_of_condB h hνk θ₀ T hT hTpos ?_
   filter_upwards [aRTS_consistency_of_isARTS h hνk hT hTnn hTsum hα hARTS] with ω hω

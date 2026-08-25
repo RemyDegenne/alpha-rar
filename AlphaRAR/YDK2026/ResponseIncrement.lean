@@ -44,11 +44,11 @@ lemma qm_increments_resp (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
       IsLittleOpOne P
         (fun n ω ↦ wmaxSeq (fun k ↦ respMart ν A Y k) n ω / √n) := by
   have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
-  set ℱ := IsAlgEnvSeq.filtrationAction h.measurable_action h.measurable_feedback with hℱdef
+  set ℱ := h.filtrationAction with hℱdef
   have hint : ∀ n, Integrable (Y n) P := fun n ↦ (hY2 n).integrable one_le_two
   have hMfam : ∀ k, Martingale (respMart ν A Y k) ℱ P := fun k ↦ martingale_respMart h hint k
   have hM2fam : ∀ k n, MemLp (respMart ν A Y k n) 2 P :=
-    fun k n ↦ memLp_respMart h.measurable_action hY2 k n
+    fun k n ↦ memLp_respMart h hY2 k n
   have hcent2 : ∀ k n, Integrable (fun ω ↦ (Y n ω - ν.means k) ^ 2) P :=
     fun k n ↦ ((hY2 n).sub (memLp_const _)).integrable_sq
   have harmnn : ∀ k, 0 ≤ Var[id; ν k] := fun k ↦ variance_nonneg _ _

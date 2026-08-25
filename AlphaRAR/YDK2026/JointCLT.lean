@@ -47,7 +47,7 @@ omit [DecidableEq 𝓐] [Fintype 𝓐] in
 lemma measurable_propSqrtNVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (v : 𝓐 → ℝ) (n : ℕ) :
     Measurable (propSqrtNVec A v n) := by
   refine (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (measurable_pi_lambda _ fun k ↦ ?_)
-  exact (((measurable_count_armIndicator h k n).div_const _).sub_const _).const_mul _
+  exact (((measurable_count_actionIndicator h k n).div_const _).sub_const _).const_mul _
 
 omit [DecidableEq 𝓐] [Fintype 𝓐] in
 lemma measurable_jointSqrtNVec [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
@@ -98,13 +98,13 @@ Gaussian"]
 theorem clt_joint
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp id 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
-    (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ armIndicator A a j ω) n / (n : ℝ))
+    (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a)))
     {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (G : Matrix 𝓐 𝓐 ℝ)
     (hTderiv : HasFDerivAt
       (fun x : EuclideanSpace ℝ 𝓐 ↦ (WithLp.toLp 2 (T (WithLp.ofLp x)) : EuclideanSpace ℝ 𝓐))
       (Matrix.toEuclideanCLM (𝕜 := ℝ) G) (WithLp.toLp 2 ν.means))
-    (hcons : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
+    (hcons : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
       (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means))
     (hprop : TendstoInMeasure P
       (fun n ω ↦ propSqrtNVec A v n ω - targetSqrtNVec ν A Y θ₀ T n ω) atTop (fun _ ↦ 0)) :

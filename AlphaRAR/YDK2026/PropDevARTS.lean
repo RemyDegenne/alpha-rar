@@ -79,7 +79,7 @@ lemma measurable_hitting {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (Q ω)
 lemma measurableSet_aRTSUnder [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (k' : 𝓐) (m : ℕ) :
     MeasurableSet {ω | aRTSUnder A Y θ₀ T k' ω m} :=
-  measurableSet_le (measurable_count_armIndicator h k' m)
+  measurableSet_le (measurable_count_actionIndicator h k' m)
     ((measurable_aRTSTarget_coord h θ₀ hT m k').const_mul _)
 
 /-- Measurability of the aRTS hitting time `ω ↦ ℓ_{n,k}(ω)`. -/
@@ -126,33 +126,33 @@ design-independent (the `aRTS`/`aRTSFE` hitting times just supply the measurable
 lemma h_bigOp_of_hitting (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (Q ω)] (hQmeas : ∀ m, MeasurableSet {ω | Q ω m})
     (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
-    (hN : ∀ᵐ ω ∂P, Tendsto (fun m ↦ count (fun j ↦ armIndicator A k'' j ω) m / (m : ℝ))
+    (hN : ∀ᵐ ω ∂P, Tendsto (fun m ↦ count (fun j ↦ actionIndicator A k'' j ω) m / (m : ℝ))
       atTop (𝓝 v)) :
     IsBigOpOne P (fun n ω ↦ (hitting (Q ω) n : ℝ)
-      / (count (fun j ↦ armIndicator A k'' j ω) n + 1)) := by
+      / (count (fun j ↦ actionIndicator A k'' j ω) n + 1)) := by
   refine isBigOpOne_of_ae_bounded (fun n ↦ (measurable_hitting_cast hQmeas n).div
-    ((measurable_count_armIndicator h k'' n).add_const 1)) ?_
+    ((measurable_count_actionIndicator h k'' n).add_const 1)) ?_
   filter_upwards [hN] with ω hNω
   obtain ⟨B, hB⟩ := exists_bound_natCast_div
-    (N := fun m ↦ count (fun j ↦ armIndicator A k'' j ω) m) hv
-    (fun m ↦ count_armIndicator_nonneg A k'' m ω) hNω
+    (N := fun m ↦ count (fun j ↦ actionIndicator A k'' j ω) m) hv
+    (fun m ↦ count_actionIndicator_nonneg A k'' m ω) hNω
   refine ⟨B, fun n ↦ ?_⟩
-  have hden : (0 : ℝ) < count (fun j ↦ armIndicator A k'' j ω) n + 1 := by
-    linarith [count_armIndicator_nonneg A k'' n ω]
+  have hden : (0 : ℝ) < count (fun j ↦ actionIndicator A k'' j ω) n + 1 := by
+    linarith [count_actionIndicator_nonneg A k'' n ω]
   rw [abs_of_nonneg (by positivity)]
-  calc (hitting (Q ω) n : ℝ) / (count (fun j ↦ armIndicator A k'' j ω) n + 1)
-      ≤ (n : ℝ) / (count (fun j ↦ armIndicator A k'' j ω) n + 1) := by
+  calc (hitting (Q ω) n : ℝ) / (count (fun j ↦ actionIndicator A k'' j ω) n + 1)
+      ≤ (n : ℝ) / (count (fun j ↦ actionIndicator A k'' j ω) n + 1) := by
         gcongr; exact_mod_cast Nat.findGreatest_le n
     _ ≤ B := hB n
 
 /-- **`√n/(N_{n,k''}+1) → 0` a.s.** from `N_{n,k''}/n → v > 0`. -/
 lemma tendsto_sqrt_div_count (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
-    {ω : Ω} (hNω : Tendsto (fun m ↦ count (fun j ↦ armIndicator A k'' j ω) m / (m : ℝ))
+    {ω : Ω} (hNω : Tendsto (fun m ↦ count (fun j ↦ actionIndicator A k'' j ω) m / (m : ℝ))
       atTop (𝓝 v)) :
-    Tendsto (fun n : ℕ ↦ √n / (count (fun j ↦ armIndicator A k'' j ω) n + 1))
+    Tendsto (fun n : ℕ ↦ √n / (count (fun j ↦ actionIndicator A k'' j ω) n + 1))
       atTop (𝓝 0) := by
   have hden : Tendsto
-      (fun n ↦ (count (fun j ↦ armIndicator A k'' j ω) n + 1) / √n) atTop atTop := by
+      (fun n ↦ (count (fun j ↦ actionIndicator A k'' j ω) n + 1) / √n) atTop atTop := by
     have hsqrt : Tendsto (fun n : ℕ ↦ √n) atTop atTop :=
       Real.tendsto_sqrt_atTop.comp tendsto_natCast_atTop_atTop
     obtain ⟨m₀, hm₀⟩ := eventually_atTop.mp
@@ -162,12 +162,12 @@ lemma tendsto_sqrt_div_count (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
     have hn1 : 1 ≤ n := le_trans (le_max_left _ _) hn
     have hnR : (0 : ℝ) < n := by exact_mod_cast hn1
     have hsn : (0 : ℝ) < √n := Real.sqrt_pos.mpr hnR
-    have hgt : v / 2 < count (fun j ↦ armIndicator A k'' j ω) n / (n : ℝ) :=
+    have hgt : v / 2 < count (fun j ↦ actionIndicator A k'' j ω) n / (n : ℝ) :=
       hm₀ n (le_trans (le_max_right _ _) hn)
     rw [lt_div_iff₀ hnR] at hgt
     rw [le_div_iff₀ hsn]
     have hsqn : √n * √n = (n : ℝ) := Real.mul_self_sqrt hnR.le
-    nlinarith [hgt, count_armIndicator_nonneg A k'' n ω, hsn, hsqn]
+    nlinarith [hgt, count_actionIndicator_nonneg A k'' n ω, hsn, hsqn]
   simpa using hden.inv_tendsto_atTop.congr (fun n ↦ (inv_div _ _))
 
 /-- **The `g`-coefficient of `ell_rho_control` is `o_p(1)`**, at an abstract measurable hitting time
@@ -179,27 +179,27 @@ lemma g_littleOp_of_hitting [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEn
     (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ)
     {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (Q ω)] (hQmeas : ∀ m, MeasurableSet {ω | Q ω m})
     (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
-    (hN : ∀ᵐ ω ∂P, Tendsto (fun m ↦ count (fun j ↦ armIndicator A k'' j ω) m / (m : ℝ))
+    (hN : ∀ᵐ ω ∂P, Tendsto (fun m ↦ count (fun j ↦ actionIndicator A k'' j ω) m / (m : ℝ))
       atTop (𝓝 v)) :
     IsLittleOpOne P (fun n ω ↦ (hitting (Q ω) n : ℝ)
       * (|respMart ν A Y k'' (hitting (Q ω) n) ω| + |θ₀ k'' - ν.means k''|)
-      / ((count (fun j ↦ armIndicator A k'' j ω) (hitting (Q ω) n) + 1)
-        * (count (fun j ↦ armIndicator A k'' j ω) n + 1))) := by
+      / ((count (fun j ↦ actionIndicator A k'' j ω) (hitting (Q ω) n) + 1)
+        * (count (fun j ↦ actionIndicator A k'' j ω) n + 1))) := by
   have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
   have hint : ∀ n, Integrable (Y n) P := fun n ↦ (hY2 n).integrable one_le_two
   set ℓ : ℕ → Ω → ℕ := fun n ω ↦ hitting (Q ω) n with hℓ
-  set Nc : ℕ → Ω → ℝ := fun n ω ↦ count (fun j ↦ armIndicator A k'' j ω) n with hNc
-  have hNcnn : ∀ m ω, 0 ≤ Nc m ω := fun m ω ↦ count_armIndicator_nonneg A k'' m ω
+  set Nc : ℕ → Ω → ℝ := fun n ω ↦ count (fun j ↦ actionIndicator A k'' j ω) n with hNc
+  have hNcnn : ∀ m ω, 0 ≤ Nc m ω := fun m ω ↦ count_actionIndicator_nonneg A k'' m ω
   set a : ℝ := |θ₀ k'' - ν.means k''| with ha
   -- F₁ = ℓ/(N_ℓ+1) is O_p (a.s. bounded).
   have hF1 : IsBigOpOne P (fun n ω ↦ (ℓ n ω : ℝ) / (Nc (ℓ n ω) ω + 1)) := by
     refine isBigOpOne_of_ae_bounded (fun n ↦ ?_) ?_
     · exact measurable_eval_of_le (H := fun ω m ↦ (m : ℝ) / (Nc m ω + 1))
-        (fun m ↦ measurable_const.div ((measurable_count_armIndicator h k'' m).add_const 1))
+        (fun m ↦ measurable_const.div ((measurable_count_actionIndicator h k'' m).add_const 1))
         (measurable_hitting hQmeas n) (fun _ ↦ Nat.findGreatest_le n)
     · filter_upwards [hN] with ω hNω
       obtain ⟨B, hB⟩ := exists_bound_natCast_div (N := fun m ↦ Nc m ω) hv
-        (fun m ↦ count_armIndicator_nonneg A k'' m ω) hNω
+        (fun m ↦ count_actionIndicator_nonneg A k'' m ω) hNω
       refine ⟨B, fun n ↦ ?_⟩
       rw [abs_of_nonneg (div_nonneg (Nat.cast_nonneg _) (by linarith [hNcnn (ℓ n ω) ω]))]
       exact hB (ℓ n ω)
@@ -208,8 +208,8 @@ lemma g_littleOp_of_hitting [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEn
     (fun m ↦ |respMart ν A Y k'' m ω|) with hSseq
   have hSOp : IsBigOpOne P (fun n ω ↦ Sseq n ω / √n) := by
     refine isBigOpOne_sup'_abs_div_sqrt (martingale_respMart h hint k'')
-      (fun n ↦ memLp_respMart h.measurable_action hY2 k'' n)
-      (ae_of_all _ fun ω ↦ by simp [respMart, Finset.range_zero]) (Var[id; ν k''])
+      (fun n ↦ memLp_respMart h hY2 k'' n)
+      (ae_of_all _ fun ω ↦ by simp [respMart]) (Var[id; ν k''])
       (variance_nonneg _ _)
       (fun n ↦ integral_respMart_increment_sq_le h k'' n hνk)
   have hSseqnn : ∀ n ω, 0 ≤ Sseq n ω := fun n ω ↦ by
@@ -227,7 +227,7 @@ lemma g_littleOp_of_hitting [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEn
         hSOp.add ((isLittleOpOne_const_div_sqrt a).isBigOpOne (fun _ ↦ aemeasurable_const))
       have hopseq : IsLittleOpOne P (fun n ω ↦ √n / (Nc n ω + 1)) := by
         refine isLittleOpOne_of_tendsto_ae (fun n ↦ (measurable_const.div
-          ((measurable_count_armIndicator h k'' n).add_const 1)).aestronglyMeasurable) ?_
+          ((measurable_count_actionIndicator h k'' n).add_const 1)).aestronglyMeasurable) ?_
         filter_upwards [hN] with ω hNω
         exact tendsto_sqrt_div_count k'' hv hNω
       exact hOpseq.mul_littleOp hopseq
@@ -275,17 +275,17 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
     {K : ℝ≥0} (hlip : LipschitzWith K T)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
-    (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ armIndicator A k' j ω)
+    (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
       (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means))
-    (hNconv : ∀ k', ∀ᵐ ω ∂P, Tendsto (fun n ↦ count (fun j ↦ armIndicator A k' j ω) n / (n : ℝ))
+    (hNconv : ∀ k', ∀ᵐ ω ∂P, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k' j ω) n / (n : ℝ))
       atTop (𝓝 (T ν.means k')))
     (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
     (hQmeas : ∀ k m, MeasurableSet {ω | Q k ω m})
     (hthrottle : ∀ k, ∀ᵐ ω ∂P, ∀ m, ¬ Q k ω m →
-      aRTSSelProb A k (IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback) P m ω
+      aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hsmall_op : ∀ k, IsLittleOpOne P (fun n ω ↦
-      max ((1 + (count (fun j ↦ armIndicator A k j ω) (hitting (Q k ω) n)
+      max ((1 + (count (fun j ↦ actionIndicator A k j ω) (hitting (Q k ω) n)
         - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k)) / √n) 0))
     (k : 𝓐) :
     IsLittleOpOne P (fun n ω ↦ ((pullCount A k n ω : ℝ)
@@ -316,23 +316,23 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
           intro k'
           rw [Real.dist_eq]
           exact Finset.single_le_sum (fun i _ ↦ abs_nonneg (z i - z' i)) (Finset.mem_univ k')
-  set ℱ := IsAlgEnvSeq.filtration h.measurable_action h.measurable_feedback with hℱ
+  set ℱ := h.filtration with hℱ
   -- Concrete objects (the hitting time is the abstract `hitting (Q k ·) n`).
   set ℓ : 𝓐 → ℕ → Ω → ℕ := fun k n ω ↦ hitting (Q k ω) n with hℓdef
   set Dev : 𝓐 → ℕ → Ω → ℝ := fun k n ω ↦
-    count (fun j ↦ armIndicator A k j ω) n - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k with hDevdef
+    count (fun j ↦ actionIndicator A k j ω) n - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k with hDevdef
   set d : 𝓐 → ℕ → Ω → ℝ := fun k n ω ↦ (n : ℝ) - (ℓ k n ω : ℝ) with hddef
   set small : 𝓐 → ℕ → Ω → ℝ := fun k n ω ↦
-    1 + (count (fun j ↦ armIndicator A k j ω) (ℓ k n ω)
+    1 + (count (fun j ↦ actionIndicator A k j ω) (ℓ k n ω)
       - (ℓ k n ω : ℝ) * aRTSTarget A Y θ₀ T (ℓ k n ω) ω k) with hsmalldef
   set Uincr : 𝓐 → ℕ → Ω → ℝ := fun k n ω ↦
-    auxU (fun j ↦ armIndicator A k j ω) (fun j ↦ aRTSSelProb A k ℱ P j ω)
+    auxU (fun j ↦ actionIndicator A k j ω) (fun j ↦ aRTSSelProb A k ℱ P j ω)
         (fun j ↦ aRTSTarget A Y θ₀ T j ω k) α n
-      - auxU (fun j ↦ armIndicator A k j ω) (fun j ↦ aRTSSelProb A k ℱ P j ω)
+      - auxU (fun j ↦ actionIndicator A k j ω) (fun j ↦ aRTSSelProb A k ℱ P j ω)
         (fun j ↦ aRTSTarget A Y θ₀ T j ω k) α (ℓ k n ω) with hUdef
   set Mincr : 𝓐 → ℕ → Ω → ℝ := fun k n ω ↦
-    assignMG (fun j ↦ armIndicator A k j ω) (fun j ↦ aRTSSelProb A k ℱ P j ω) n
-      - assignMG (fun j ↦ armIndicator A k j ω) (fun j ↦ aRTSSelProb A k ℱ P j ω) (ℓ k n ω)
+    assignMG (fun j ↦ actionIndicator A k j ω) (fun j ↦ aRTSSelProb A k ℱ P j ω) n
+      - assignMG (fun j ↦ actionIndicator A k j ω) (fun j ↦ aRTSSelProb A k ℱ P j ω) (ℓ k n ω)
     with hMdef
   set rhoterm : 𝓐 → ℕ → Ω → ℝ := fun k n ω ↦
     (ℓ k n ω : ℝ) * (aRTSTarget A Y θ₀ T (ℓ k n ω) ω k - aRTSTarget A Y θ₀ T n ω k) with hrhodef
@@ -341,27 +341,27 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (Uincr k n ω - (-c k * d k n ω + Mincr k n ω + rhoterm k n ω)) / d k n ω with hpertdef
   -- M-increment control coefficients (assignment martingale, singleton family).
   set VM : 𝓐 → ℕ → Ω → ℝ := fun k ↦
-    vmaxSeq (fun _ : Unit ↦ assignMart (fun j ↦ armIndicator A k j) ℱ P) with hVMdef
+    vmaxSeq (fun _ : Unit ↦ assignMart (fun j ↦ actionIndicator A k j) ℱ P) with hVMdef
   set WM : 𝓐 → ℕ → Ω → ℝ := fun k ↦
-    wmaxSeq (fun _ : Unit ↦ assignMart (fun j ↦ armIndicator A k j) ℱ P) with hWMdef
+    wmaxSeq (fun _ : Unit ↦ assignMart (fun j ↦ actionIndicator A k j) ℱ P) with hWMdef
   -- Assignment-martingale facts (per arm): it is an `ℱ.shiftDown`-martingale started at `0` with
   -- increments `|ΔM| ≤ 1`, so `qm_increments_of_bdd` gives the `o_p` increment maxima.
-  have hMmart : ∀ k', Martingale (assignMart (fun j ↦ armIndicator A k' j) ℱ P) ℱ.shiftDown P :=
+  have hMmart : ∀ k', Martingale (assignMart (fun j ↦ actionIndicator A k' j) ℱ P) ℱ.shiftDown P :=
     fun k' ↦ martingale_assignMart
-      (stronglyAdapted_armIndicator h.measurable_action h.measurable_feedback k')
-      (integrable_armIndicator h.measurable_action P k')
-  have hMzero : ∀ k', assignMart (fun j ↦ armIndicator A k' j) ℱ P 0 =ᵐ[P] 0 := fun k' ↦
+      (h.adapted_actionIndicator k').stronglyAdapted
+      (fun n ↦ integrable_actionIndicator P k' (h.measurable_action n))
+  have hMzero : ∀ k', assignMart (fun j ↦ actionIndicator A k' j) ℱ P 0 =ᵐ[P] 0 := fun k' ↦
     ae_of_all _ fun ω ↦ by simp [assignMart, martingalePart_zero, count_zero]
   have hMdelta : ∀ k' n, ∀ᵐ ω ∂P,
-      |assignMart (fun j ↦ armIndicator A k' j) ℱ P (n + 1) ω
-        - assignMart (fun j ↦ armIndicator A k' j) ℱ P n ω| ≤ 1 := fun k' n ↦
-    abs_assignMart_succ_sub_le (integrable_armIndicator h.measurable_action P k')
-      (fun m ↦ ae_of_all _ fun ω ↦ armIndicator_nonneg A k' m ω)
-      (fun m ↦ ae_of_all _ fun ω ↦ armIndicator_le_one A k' m ω) n
+      |assignMart (fun j ↦ actionIndicator A k' j) ℱ P (n + 1) ω
+        - assignMart (fun j ↦ actionIndicator A k' j) ℱ P n ω| ≤ 1 := fun k' n ↦
+    abs_assignMart_succ_sub_le (fun n ↦ integrable_actionIndicator P k' (h.measurable_action n))
+      (fun m ↦ ae_of_all _ fun ω ↦ actionIndicator_nonneg A k' m ω)
+      (fun m ↦ ae_of_all _ fun ω ↦ actionIndicator_le_one A k' m ω) n
   have hMqm : ∀ k', IsLittleOpOne P (vmaxSeq (fun _ : Unit ↦
-        assignMart (fun j ↦ armIndicator A k' j) ℱ P))
+        assignMart (fun j ↦ actionIndicator A k' j) ℱ P))
       ∧ IsLittleOpOne P (fun n ω ↦ wmaxSeq (fun _ : Unit ↦
-        assignMart (fun j ↦ armIndicator A k' j) ℱ P) n ω / √n) := fun k' ↦
+        assignMart (fun j ↦ actionIndicator A k' j) ℱ P) n ω / √n) := fun k' ↦
     qm_increments_of_bdd (hMmart k') (hMzero k') (hMdelta k')
   -- The ρ-increment control coefficients from `ell_rho_control`.
   have hρctrl : ∀ k', ∃ Vρ Wρ : ℕ → Ω → ℝ,
@@ -371,13 +371,13 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     obtain ⟨hQvop, hQwop⟩ := qm_increments_resp h hνk
     refine ell_rho_control (rhoterm := rhoterm k') (d := d k') (L := L)
       (θdiff := fun k'' n ω ↦ (ℓ k' n ω : ℝ)
-        * |estimator (fun j ↦ armIndicator A k'' j ω) (Y · ω) (θ₀ k'') (ℓ k' n ω)
-          - estimator (fun j ↦ armIndicator A k'' j ω) (Y · ω) (θ₀ k'') n|)
+        * |estimator (fun j ↦ actionIndicator A k'' j ω) (Y · ω) (θ₀ k'') (ℓ k' n ω)
+          - estimator (fun j ↦ actionIndicator A k'' j ω) (Y · ω) (θ₀ k'') n|)
       (g := fun k'' n ω ↦ (ℓ k' n ω : ℝ)
         * (|respMart ν A Y k'' (ℓ k' n ω) ω| + |θ₀ k'' - ν.means k''|)
-        / ((count (fun j ↦ armIndicator A k'' j ω) (ℓ k' n ω) + 1)
-          * (count (fun j ↦ armIndicator A k'' j ω) n + 1)))
-      (h := fun k'' n ω ↦ (ℓ k' n ω : ℝ) / (count (fun j ↦ armIndicator A k'' j ω) n + 1))
+        / ((count (fun j ↦ actionIndicator A k'' j ω) (ℓ k' n ω) + 1)
+          * (count (fun j ↦ actionIndicator A k'' j ω) n + 1)))
+      (h := fun k'' n ω ↦ (ℓ k' n ω : ℝ) / (count (fun j ↦ actionIndicator A k'' j ω) n + 1))
       (Qinc := fun k'' n ω ↦ |respMart ν A Y k'' n ω - respMart ν A Y k'' (ℓ k' n ω) ω|)
       (Qvinc := vmaxSeq (fun k'' ↦ respMart ν A Y k''))
       (Qwinc := wmaxSeq (fun k'' ↦ respMart ν A Y k''))
@@ -388,9 +388,9 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
       have hℓnn : (0 : ℝ) ≤ (hitting (Q k' ω) n : ℝ) := Nat.cast_nonneg _
       have hTb : aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k'
             - aRTSTarget A Y θ₀ T n ω k'
-          ≤ L * ∑ k'', |estimator (fun j ↦ armIndicator A k'' j ω) (Y · ω) (θ₀ k'')
+          ≤ L * ∑ k'', |estimator (fun j ↦ actionIndicator A k'' j ω) (Y · ω) (θ₀ k'')
               (hitting (Q k' ω) n)
-            - estimator (fun j ↦ armIndicator A k'' j ω) (Y · ω) (θ₀ k'') n| := by
+            - estimator (fun j ↦ actionIndicator A k'' j ω) (Y · ω) (θ₀ k'') n| := by
         refine le_trans (le_abs_self _) ?_
         simp only [aRTSTarget]
         exact hTlip _ _ k'
@@ -398,21 +398,21 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
             * (aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k'
               - aRTSTarget A Y θ₀ T n ω k')
           ≤ (hitting (Q k' ω) n : ℝ)
-            * (L * ∑ k'', |estimator (fun j ↦ armIndicator A k'' j ω) (Y · ω) (θ₀ k'')
+            * (L * ∑ k'', |estimator (fun j ↦ actionIndicator A k'' j ω) (Y · ω) (θ₀ k'')
                 (hitting (Q k' ω) n)
-              - estimator (fun j ↦ armIndicator A k'' j ω) (Y · ω) (θ₀ k'') n|) :=
+              - estimator (fun j ↦ actionIndicator A k'' j ω) (Y · ω) (θ₀ k'') n|) :=
             mul_le_mul_of_nonneg_left hTb hℓnn
         _ = L * ∑ k'', (hitting (Q k' ω) n : ℝ)
-              * |estimator (fun j ↦ armIndicator A k'' j ω) (Y · ω) (θ₀ k'')
+              * |estimator (fun j ↦ actionIndicator A k'' j ω) (Y · ω) (θ₀ k'')
                 (hitting (Q k' ω) n)
-              - estimator (fun j ↦ armIndicator A k'' j ω) (Y · ω) (θ₀ k'') n| := by
+              - estimator (fun j ↦ actionIndicator A k'' j ω) (Y · ω) (θ₀ k'') n| := by
             rw [← Finset.mul_sum]; ring
     · -- hdiff: `abs_estimator_diff_le`, bridged from `respMG` to `respMart`.
       intro k'' n ω
       simp only [hddef, hℓdef]
-      have hae := abs_estimator_diff_le (fun j ↦ armIndicator A k'' j ω)
-        (fun j ↦ armIndicator_nonneg A k'' j ω)
-        (fun j ↦ armIndicator_le_one A k'' j ω) (Y · ω) (ν.means k'') (θ₀ k'')
+      have hae := abs_estimator_diff_le (fun j ↦ actionIndicator A k'' j ω)
+        (fun j ↦ actionIndicator_nonneg A k'' j ω)
+        (fun j ↦ actionIndicator_le_one A k'' j ω) (Y · ω) (ν.means k'') (θ₀ k'')
         (ℓ := hitting (Q k' ω) n) (Nat.findGreatest_le n)
       simp only [respMG_indicator_eq_respMart] at hae
       exact hae
@@ -421,7 +421,7 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
       exact g_littleOp_of_hitting h hνk θ₀ (hQmeas k') k'' (hv k'') (hNconv k'')
     · -- hhnn
       intro k'' n ω
-      exact div_nonneg (Nat.cast_nonneg _) (by linarith [count_armIndicator_nonneg A k'' n ω])
+      exact div_nonneg (Nat.cast_nonneg _) (by linarith [count_actionIndicator_nonneg A k'' n ω])
     · -- hh
       intro k''
       exact h_bigOp_of_hitting h (hQmeas k') k'' (hv k'') (hNconv k'')
@@ -460,8 +460,8 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     rw [ae_all_iff]
     intro m
     have hmono := condExp_mono (m := ℱ.shiftDown m)
-      (integrable_armIndicator h.measurable_action P k' m)
-      (integrable_const (1 : ℝ)) (Eventually.of_forall fun ω ↦ armIndicator_le_one A k' m ω)
+      (integrable_actionIndicator P k' (h.measurable_action m))
+      (integrable_const (1 : ℝ)) (Eventually.of_forall fun ω ↦ actionIndicator_le_one A k' m ω)
     rw [condExp_const (ℱ.shiftDown.le m)] at hmono
     filter_upwards [hmono] with ω hω
     exact hω
@@ -470,7 +470,7 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
       (𝓝 (T ν.means k')) := by
     intro k'
     filter_upwards [hθconv] with ω hω
-    have hTtend : Tendsto (fun n ↦ T (fun k'' ↦ estimator (fun j ↦ armIndicator A k'' j ω)
+    have hTtend : Tendsto (fun n ↦ T (fun k'' ↦ estimator (fun j ↦ actionIndicator A k'' j ω)
         (Y · ω) (θ₀ k'') n)) atTop (𝓝 (T ν.means)) :=
       (hT.tendsto ν.means).comp hω
     exact ((continuous_apply k').tendsto _).comp hTtend
@@ -480,14 +480,14 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
   · -- hsum
     intro n ω
     simp only [hDevdef]
-    exact sum_count_sub_smul_eq_zero (fun j k' ↦ armIndicator A k' j ω)
-      (fun k' ↦ aRTSTarget A Y θ₀ T n ω k') (fun j ↦ sum_armIndicator A j ω)
+    exact sum_count_sub_smul_eq_zero (fun j k' ↦ actionIndicator A k' j ω)
+      (fun k' ↦ aRTSTarget A Y θ₀ T n ω k') (fun j ↦ sum_actionIndicator A j ω)
       (by simp only [aRTSTarget]; exact hTsum _) n
   · -- hle
     intro k' n
     filter_upwards [hthrottle k', hp1 k'] with ω hthr hp1ω
     simp only [hDevdef, hsmalldef, hUdef, hℓdef]
-    have hgen := generic_ineq_of_hitting (fun j ↦ armIndicator A k' j ω)
+    have hgen := generic_ineq_of_hitting (fun j ↦ actionIndicator A k' j ω)
       (fun j ↦ aRTSSelProb A k' ℱ P j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k') α
       (Q k' ω) hthr hp1ω (fun m ↦ mul_nonneg hα.1 (hTnn _ k')) n
     linarith [hgen]
@@ -519,7 +519,7 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     linarith [key]
   · -- hpert: the diff_U_decomp perturbation is `o_p` (a.e. `→ 0`, by consistency of `ρ̂`)
     intro k'
-    have harmmeas : ∀ j, Measurable (fun ω ↦ armIndicator A k' j ω) := fun j ↦
+    have harmmeas : ∀ j, Measurable (fun ω ↦ actionIndicator A k' j ω) := fun j ↦
       (measurable_const (a := (1 : ℝ))).indicator
         ((measurableSet_singleton k').preimage (h.measurable_action j))
     have hselmeas : ∀ j, Measurable (fun ω ↦ aRTSSelProb A k' ℱ P j ω) := fun j ↦ by
@@ -534,11 +534,12 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
       measurable_eval_of_le (H := fun _ m ↦ (m : ℝ)) (fun _ ↦ measurable_const)
         (hℓmeas n) (hℓleN n)
     have hassignMGmeas : ∀ m, Measurable (fun ω ↦
-        assignMG (fun j ↦ armIndicator A k' j ω) (fun j ↦ aRTSSelProb A k' ℱ P j ω) m) := fun m ↦ by
+        assignMG (fun j ↦ actionIndicator A k' j ω) (fun j ↦ aRTSSelProb A k' ℱ P j ω) m) :=
+        fun m ↦ by
       simp only [assignMG]
       exact Finset.measurable_sum _ fun j _ ↦ (harmmeas j).sub (hselmeas j)
     have hauxUmeas : ∀ m, Measurable (fun ω ↦
-        auxU (fun j ↦ armIndicator A k' j ω) (fun j ↦ aRTSSelProb A k' ℱ P j ω)
+        auxU (fun j ↦ actionIndicator A k' j ω) (fun j ↦ aRTSSelProb A k' ℱ P j ω)
           (fun j ↦ aRTSTarget A Y θ₀ T j ω k') α m) := fun m ↦ by
       simp only [auxU]
       exact ((Finset.measurable_sum _ fun j _ ↦ (hrhomeas j).const_mul α).add
@@ -565,20 +566,20 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
       filter_upwards [hρconv k'] with ω hρω
       rw [NormedAddGroup.tendsto_nhds_zero]
       intro ε hε
-      have hdec := diff_U_decomp (fun j ↦ armIndicator A k' j ω)
+      have hdec := diff_U_decomp (fun j ↦ actionIndicator A k' j ω)
         (fun j ↦ aRTSSelProb A k' ℱ P j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k') α hρω
         (ℓ := fun n ↦ ℓ k' n ω) (fun n ↦ Nat.findGreatest_le n) (half_pos hε)
       filter_upwards [hdec] with n hn
       have hdval : d k' n ω = (n : ℝ) - ℓ k' n ω := by simp only [hddef]
       have hER : Uincr k' n ω - (-c k' * d k' n ω + Mincr k' n ω + rhoterm k' n ω)
-          = auxU (fun j ↦ armIndicator A k' j ω) (fun j ↦ aRTSSelProb A k' ℱ P j ω)
+          = auxU (fun j ↦ actionIndicator A k' j ω) (fun j ↦ aRTSSelProb A k' ℱ P j ω)
               (fun j ↦ aRTSTarget A Y θ₀ T j ω k') α n
-            - auxU (fun j ↦ armIndicator A k' j ω) (fun j ↦ aRTSSelProb A k' ℱ P j ω)
+            - auxU (fun j ↦ actionIndicator A k' j ω) (fun j ↦ aRTSSelProb A k' ℱ P j ω)
               (fun j ↦ aRTSTarget A Y θ₀ T j ω k') α (ℓ k' n ω)
             - (((n : ℝ) - ℓ k' n ω) * (-(1 - α) * T ν.means k')
-              + (assignMG (fun j ↦ armIndicator A k' j ω)
+              + (assignMG (fun j ↦ actionIndicator A k' j ω)
                   (fun j ↦ aRTSSelProb A k' ℱ P j ω) n
-                - assignMG (fun j ↦ armIndicator A k' j ω)
+                - assignMG (fun j ↦ actionIndicator A k' j ω)
                   (fun j ↦ aRTSSelProb A k' ℱ P j ω) (ℓ k' n ω))
               + (ℓ k' n ω : ℝ)
                 * (aRTSTarget A Y θ₀ T (ℓ k' n ω) ω k' - aRTSTarget A Y θ₀ T n ω k')) := by
@@ -605,23 +606,23 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     refine ae_of_all _ fun ω ↦ ?_
     have hℓle : ℓ k' n ω ≤ n := Nat.findGreatest_le n
     have hseam : Mincr k' n ω
-        = assignMart (fun j ↦ armIndicator A k' j) ℱ P n ω
-          - assignMart (fun j ↦ armIndicator A k' j) ℱ P (ℓ k' n ω) ω := by
+        = assignMart (fun j ↦ actionIndicator A k' j) ℱ P n ω
+          - assignMart (fun j ↦ actionIndicator A k' j) ℱ P (ℓ k' n ω) ω := by
       simp only [hMdef]
       rw [assignMart_eq_assignMG, assignMart_eq_assignMG]; rfl
     have hni := norm_increment_le_vmaxSeq_wmaxSeq
-      (M := fun _ : Unit ↦ assignMart (fun j ↦ armIndicator A k' j) ℱ P) n hn2 hℓle ω
-    have hsum1 : √(∑ _u : Unit, (assignMart (fun j ↦ armIndicator A k' j) ℱ P n ω
-          - assignMart (fun j ↦ armIndicator A k' j) ℱ P (ℓ k' n ω) ω) ^ 2)
-        = |assignMart (fun j ↦ armIndicator A k' j) ℱ P n ω
-          - assignMart (fun j ↦ armIndicator A k' j) ℱ P (ℓ k' n ω) ω| := by
+      (M := fun _ : Unit ↦ assignMart (fun j ↦ actionIndicator A k' j) ℱ P) n hn2 hℓle ω
+    have hsum1 : √(∑ _u : Unit, (assignMart (fun j ↦ actionIndicator A k' j) ℱ P n ω
+          - assignMart (fun j ↦ actionIndicator A k' j) ℱ P (ℓ k' n ω) ω) ^ 2)
+        = |assignMart (fun j ↦ actionIndicator A k' j) ℱ P n ω
+          - assignMart (fun j ↦ actionIndicator A k' j) ℱ P (ℓ k' n ω) ω| := by
       rw [Finset.sum_const, Finset.card_univ, Fintype.card_unit, one_nsmul, Real.sqrt_sq_eq_abs]
     have hdeq : ((n - ℓ k' n ω : ℕ) : ℝ) = d k' n ω := by
       simp only [hddef]; rw [Nat.cast_sub hℓle]
     rw [hsum1, hdeq] at hni
     calc Mincr k' n ω ≤ |Mincr k' n ω| := le_abs_self _
-      _ = |assignMart (fun j ↦ armIndicator A k' j) ℱ P n ω
-          - assignMart (fun j ↦ armIndicator A k' j) ℱ P (ℓ k' n ω) ω| := by rw [hseam]
+      _ = |assignMart (fun j ↦ actionIndicator A k' j) ℱ P n ω
+          - assignMart (fun j ↦ actionIndicator A k' j) ℱ P (ℓ k' n ω) ω| := by rw [hseam]
       _ ≤ d k' n ω * VM k' n ω + WM k' n ω := hni
       _ = VM k' n ω * d k' n ω + WM k' n ω := by rw [mul_comm]
   · -- hVM
@@ -672,7 +673,7 @@ lemma aRTS_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] 
   refine IsLittleOpOne.of_abs_le (Y := fun n (_ : Ω) ↦ (1 : ℝ) / √n) ?_
     (isLittleOpOne_const_div_sqrt 1)
   intro n ω
-  have hps := preliminary_small (fun j ↦ armIndicator A k' j ω)
+  have hps := preliminary_small (fun j ↦ actionIndicator A k' j ω)
     (fun j ↦ aRTSTarget A Y θ₀ T j ω k') (aRTSUnder A Y θ₀ T k' ω) n (fun m hm ↦ hm)
   rw [abs_of_nonneg (le_max_right _ _), abs_of_nonneg (by positivity)]
   rcases Nat.eq_zero_or_pos n with hn | hn
