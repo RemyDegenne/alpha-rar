@@ -13,7 +13,7 @@ public import AlphaRAR.Mathlib.TsumMeasureIoi
 public import Mathlib.Probability.ConditionalExpectation
 public import Mathlib.Analysis.SumIntegralComparisons
 public import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # The i.i.d. Hartman–Wintner law of the iterated logarithm

@@ -14,7 +14,7 @@ public import Mathlib.MeasureTheory.Measure.LevyConvergence
 public import Mathlib.Probability.CondVar
 public import Mathlib.Probability.Distributions.Gaussian.Real
 public import Mathlib.Probability.Process.Filtration
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # Martingale central limit theorem (Lindeberg form)

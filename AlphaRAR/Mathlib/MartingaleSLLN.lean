@@ -9,7 +9,7 @@ public import AlphaRAR.Mathlib.Kronecker
 public import AlphaRAR.Mathlib.QuadraticVariation
 public import Mathlib.Analysis.PSeries
 public import Mathlib.Probability.Martingale.Convergence
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # Strong law of large numbers for martingales

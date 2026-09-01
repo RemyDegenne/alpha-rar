@@ -10,7 +10,7 @@ public import AlphaRAR.Mathlib.Process
 public import AlphaRAR.YDK2026.Deterministic
 public import Mathlib.Order.CompletePartialOrder
 public import Mathlib.Probability.Martingale.Centering
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # The assignment martingale

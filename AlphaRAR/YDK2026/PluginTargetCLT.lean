@@ -7,7 +7,7 @@ module
 
 public import AlphaRAR.Mathlib.TendstoInMeasure
 public import AlphaRAR.YDK2026.ResponseCLTJoint
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # The delta-method central limit theorem for the plug-in target

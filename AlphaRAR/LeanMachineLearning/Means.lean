@@ -6,7 +6,7 @@ Authors: Rémy Degenne
 module
 
 public import AlphaRAR.LeanMachineLearning.PullCount
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # The means of a kernel

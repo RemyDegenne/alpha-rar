@@ -8,7 +8,7 @@ module
 public import AlphaRAR.YDK2026.PropDevARTS
 public import AlphaRAR.YDK2026.AssignmentRate
 public import AlphaRAR.YDK2026.ARTSRates
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # The a.s. `O(√(n log log n))` proportion-deviation bound for the aRTS design

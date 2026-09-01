@@ -434,6 +434,6 @@ acknowledgements: >-
   `AlphaRAR/Mathlib/CramerWold.lean` is vendored verbatim from Mathlib PR #40345 by Ivo
   Malinowski, pending that PR's merge; it is not work of this project.
   Built on Mathlib. Depends on LeanMachineLearning for the bandit/algorithm-environment
-  interaction model (`Learning.IsAlgEnvSeq`, `Learning.actionIndicator`), on LeanSpec for
+  interaction model (`Learning.IsAlgEnvSeq`, `Learning.actionIndicator`), on Characterization for
   specification statements, and on Patrick Massot's leanblueprint/checkdecls for the blueprint
   infrastructure.

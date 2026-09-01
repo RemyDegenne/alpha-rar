@@ -6,7 +6,7 @@ Authors: Rémy Degenne
 module
 
 public import AlphaRAR.Mathlib.LILLogLog
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # The sharp-constant martingale law of the iterated logarithm

@@ -8,7 +8,7 @@ module
 public import AlphaRAR.Mathlib.TaylorRemainder
 public import AlphaRAR.YDK2026.ARTSNormality
 public import AlphaRAR.YDK2026.PropDevLIL
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # Forced exploration and sparse targets

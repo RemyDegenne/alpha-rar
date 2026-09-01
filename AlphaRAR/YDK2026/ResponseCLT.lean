@@ -8,7 +8,7 @@ module
 public import AlphaRAR.Mathlib.MartingaleCLT
 public import AlphaRAR.YDK2026.ARTSConsistency
 public import AlphaRAR.Mathlib.Tactic.Tendsto
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # The self-normalized central limit theorem for the response martingale

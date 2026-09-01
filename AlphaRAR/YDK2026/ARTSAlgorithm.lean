@@ -6,7 +6,7 @@ Authors: Rémy Degenne
 module
 
 public import AlphaRAR.YDK2026.ARTSConsistency
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # The aRTS design family as a property of an `Algorithm`

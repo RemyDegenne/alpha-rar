@@ -8,7 +8,7 @@ module
 public import AlphaRAR.YDK2026.Response
 public import Mathlib.Data.Nat.Nth
 public import Mathlib.Probability.Independence.Basic
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # Doob optional skipping

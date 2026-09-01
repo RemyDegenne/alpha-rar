@@ -8,7 +8,7 @@ module
 public import AlphaRAR.Mathlib.QuadraticVariation
 public import Mathlib.Order.CompletePartialOrder
 public import Mathlib.Probability.Martingale.OptionalStopping
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # Exponential supermartingale for the law of the iterated logarithm

@@ -8,7 +8,7 @@ module
 public import AlphaRAR.Mathlib.StochasticOrder
 public import AlphaRAR.Mathlib.MartingaleMaximal
 public import AlphaRAR.Mathlib.IncrementControl
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # `o_p` increment bounds for a martingale family

@@ -18,10 +18,9 @@ name = "checkdecls"
 git = "https://github.com/PatrickMassot/checkdecls.git"
 
 [[require]]
-name = "LeanSpec"
-git = "https://github.com/LeanMachineLearning/exposition"
+name = "Characterization"
+git = "https://github.com/RemyDegenne/characterization"
 rev = "main"
-subDir = "LeanSpec"
 
 [[lean_lib]]
 name = "AlphaRAR"

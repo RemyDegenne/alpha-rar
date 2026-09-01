@@ -8,7 +8,7 @@ module
 public import AlphaRAR.Mathlib.CondExp
 public import AlphaRAR.YDK2026.ConsistencyMatching
 public import AlphaRAR.YDK2026.ResponseConsistency
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # Consistency of the aRTS design family

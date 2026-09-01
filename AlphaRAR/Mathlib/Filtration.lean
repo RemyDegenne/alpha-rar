@@ -6,7 +6,7 @@ Authors: Rémy Degenne
 module
 
 public import Mathlib.Probability.Process.Filtration
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # The previous-index filtration

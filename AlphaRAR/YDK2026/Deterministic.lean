@@ -11,7 +11,7 @@ public import Mathlib.Algebra.BigOperators.Field
 public import Mathlib.Algebra.Order.Star.Real
 public import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
 public import Mathlib.Analysis.Complex.ExponentialBounds
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # Deterministic core of the auxiliary processes

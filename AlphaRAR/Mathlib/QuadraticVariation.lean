@@ -7,7 +7,7 @@ module
 
 public import AlphaRAR.Mathlib.Process
 public import Mathlib.Probability.Martingale.Centering
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # Predictable quadratic variation

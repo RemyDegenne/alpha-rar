@@ -8,7 +8,7 @@ module
 public import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 public import Mathlib.MeasureTheory.Measure.Tight
 public import Mathlib.MeasureTheory.Order.Group.Lattice
-public meta import LeanSpec
+public meta import Characterization
 
 /-!
 # Stochastic Landau orders `o_p` and `O_p`
