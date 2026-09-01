@@ -1,6 +1,12 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
 # formalization.yaml (v0.4): repo-root metadata for formalization projects.
 # See https://github.com/mathlib-initiative/formalization.yaml
+#
+# Everything below is keyed to the paper. Statements are named by their number in
+# "On Response-Adaptive Targeting Strategies for Multi-Treatment Experiments" (Theorem 4.1,
+# Lemma 4.5, Corollary 5.3, ...), whose LaTeX source is vendored under `arxiv/`. The blueprint
+# under `blueprint/` is an auxiliary intermediate document produced by this project to organize
+# the formalization; it is not a source and is not used to identify results here.
 
 version: "v0.4"
 
@@ -9,18 +15,16 @@ project:
   description: >-
     A Lean 4 / Mathlib formalization of the two main theorems of "On Response-Adaptive Targeting
     Strategies for Multi-Treatment Experiments" (Yagouti, Degenne, Kaufmann, arXiv:2606.17777):
-    strong consistency with log-log rates and joint asymptotic normality of the allocation
-    proportions and plug-in targets for the αRTS family of response-adaptive designs. Also
-    formalized: the forced-exploration variant αRTS-FE (the sparse consistency
-    rate and the sparse componentwise CLT under a corrected exploration-schedule condition),
-    three concrete design instances (distance-based, ERADE 2025, interpolated D-Tracking), and
-    the probabilistic prerequisites not yet in Mathlib — a martingale strong law, one-sided and
+    Theorem 4.1, strong consistency with log-log rates, and Theorem 4.2, joint asymptotic
+    normality of the allocation proportions and plug-in targets, for the αRTS family of
+    response-adaptive designs. Also formalized: Section 3's three concrete designs
+    (distance-based, ERADE 2025, interpolated D-Tracking); the forced-exploration variant
+    αRTS-FE of Section 5 — Theorem 5.1, Theorem 5.2 and Corollary 5.3, the last under a
+    corrected exploration-schedule condition; and the probabilistic limit theorems the paper
+    invokes by citation but that are not yet in Mathlib — a martingale strong law, one-sided and
     sharp log-log laws of the iterated logarithm with the i.i.d. Hartman–Wintner LIL and optional
     skipping, a martingale CLT and an abstract Anscombe theorem — stated for their own sake and
-    intended for upstreaming. The development is blueprint-driven, and each headline result can
-    be verified independently of the development with leanprover/comparator: the challenges
-    under comparator/ restate the theorems with their definitional dependencies inlined, over an
-    import closure that bottoms out in Mathlib alone.
+    intended for upstreaming.
   authors:
     - "Rémy Degenne"
   responsible_maintainers:
@@ -31,6 +35,7 @@ project:
   license: "Apache-2.0"
   # extra keys (tolerated by the schema), kept for convenience:
   repository: "https://github.com/RemyDegenne/alpha-rar"
+  # Auxiliary working document, not a source; see `alignment.note`.
   blueprint: "https://remydegenne.github.io/alpha-rar/blueprint/"
 
 # This repository is the substantive formalization, not a packaging or comparison layer.
@@ -45,15 +50,19 @@ sources:
       - "Emilie Kaufmann"
     id: "arXiv:2606.17777"
     type: "preprint"
-    location: "the full paper except the hypothesis-testing application; see status.scope"
+    location: >-
+      Sections 2–5 and Appendices A–C, i.e. the whole theory. Out of scope: the simulation study
+      of Section 6, apart from its Lemma 6.1, which is only partially formalized. See
+      status.scope for the exceptions inside Sections 2–5 and Appendices A–C.
     relationship: "formalizes"
     license: ""
     author_endorsement: "participated"   # the formaliser is an author of the source paper
     note: >-
-      The LaTeX source of the paper is vendored in this repository under `arxiv/`, and the
-      formalization is driven by a blueprint (`blueprint/src/`) written by Claude Opus
-      (4.8 first, then 5) alongside the formalization that decomposes the paper's proofs into
-      small lemmas. The blueprint is a derived artifact of this project, not an independent source.
+      The LaTeX source of the paper is vendored in this repository under `arxiv/`, and all
+      statement numbers used in this file (Theorem 4.1, Lemma 4.5, Corollary 5.3, ...) are the
+      numbers of that source as compiled. The formalization is organized by an auxiliary
+      blueprint (`blueprint/src/`) written by Claude Opus (4.8 first, then 5) alongside the Lean,
+      which decomposes the paper's proofs into small lemmas.
 
 related_formalizations: []   # no earlier or parallel formalization of this paper is known
 
@@ -70,31 +79,35 @@ classification:
 
 status:
   scope: >-
-    The two main theorems of the paper are formalized for the αRTS design family, together with
-    the forced-exploration variant αRTS-FE and three concrete design instances.
+    The two main theorems of the paper — Theorem 4.1 (strong consistency and rates) and
+    Theorem 4.2 (asymptotic normality, both parts) — are formalized for the αRTS family,
+    together with the forced-exploration variant αRTS-FE of Section 5 and the three concrete
+    designs of Section 3.
 
-    Formalized (Part I of the blueprint): the model, estimators and Conditions A/B
-    (`chap:model`); the αRTS family and the distance-based, ERADE-2025 and interpolated
-    D-Tracking designs (`chap:design`); the auxiliary processes and technical lemmas
-    (`chap:auxiliary`, `chap:technical`); the generic sufficient conditions and their
-    verification for αRTS (`chap:generic`); strong consistency and rates (`chap:consistency`,
-    `thm:LLN`); asymptotic normality, both parts (`chap:normality`, `thm:normality`); forced
-    exploration, no-starvation, the sparse consistency rate and the sparse componentwise CLT
-    (`chap:forced`).
+    Formalized: the model, RAR procedures and the sequential estimator (1) of Sections 2 and 3,
+    with Conditions A and B of Section 4; Definition 3.1 (the αRTS family, throttling
+    condition (3)) and Examples 3.1–3.3 (distance-based, ERADE 2025, interpolated D-Tracking);
+    the auxiliary process U of Section 4.2 and the technical lemmas of Appendices A and C;
+    the generic sufficient conditions of Lemma 4.4 and their verification for αRTS (Lemma A.1);
+    Theorem 4.1 with its proof of Appendix A.1; Theorem 4.2, parts (i) and (ii) — equations
+    (5)–(9) — with its proof of Appendix A.2, including Lemma 4.5; and Section 5 in full:
+    Definition 5.1, Theorem 5.1 (through Lemma B.1), Theorem 5.2 and Corollary 5.3, proved in
+    Appendix B.
 
-    Also formalized: the probabilistic prerequisites of Part II that are not in Mathlib, stated
-    for their own sake and intended for eventual upstreaming — martingale SLLN
-    (`chap:pre_slln`), one-sided and sharp-loglog martingale LIL with the i.i.d.
-    Hartman–Wintner LIL and optional skipping (`chap:pre_lil`, `chap:pre_llil`), the martingale
-    CLT and an abstract Anscombe theorem (`chap:pre_clt`), and the supporting o_p/O_p,
-    predictable quadratic variation and multivariate Taylor API (`chap:pre_orders`).
-    These live under `AlphaRAR/Mathlib/`.
+    Also formalized, under `AlphaRAR/Mathlib/`: the probabilistic limit theorems that the paper
+    invokes by citation rather than proving, restated and proved here for their own sake and
+    intended for eventual upstreaming to Mathlib — the martingale SLLN used in Appendix A.1
+    (cited there to Chow 1967), the one-sided and sharp log-log martingale laws of the iterated
+    logarithm used in Appendices A.1–A.2 (cited to Stout 1970), with the i.i.d. Hartman–Wintner
+    LIL and optional skipping, and the martingale CLT of Appendix A.2 together with an abstract
+    Anscombe theorem. The supporting API — the o_p/O_p notation of Section 2, predictable
+    quadratic variation and multivariate Taylor expansion — lives there too.
 
-    Not formalized: the hypothesis-testing application (`chap:testing`) beyond the idempotent
-    projection lemma — the Pearson statistic, its quadratic-form rewriting and its asymptotic
-    null distribution are stated in the blueprint only; the χ²/Cochran prerequisites
-    (`chap:pre_cochran`); and the exponential-family variance identity `prop:exp_fam` used in
-    the asymptotic-efficiency remark `rem:efficiency`.
+    Not formalized: Lemma 6.1, the asymptotic null distribution of the Pearson statistic proved
+    in Appendix B.3, beyond its idempotent-projection ingredient — the statistic, its
+    quadratic-form rewriting and its limit await the χ²/Cochran theory; Proposition C.4
+    (variance equals inverse Fisher information) and, with it, the asymptotic-efficiency
+    Remark 4.3; and the simulation study of Section 6.
   # Proof-development sorries only; the deliberate placeholder sorries in the comparator
   # challenge modules (comparator/Challenge_*.lean) are excluded, as v0.4 specifies.
   sorry_count: 0
@@ -104,14 +117,15 @@ status:
     - "Classical.choice"
     - "Quot.sound"
   size:
-    lean_lines: 23750
+    # Counted over the development, `AlphaRAR/**/*.lean`; the comparator challenges are excluded.
+    # `definitions` counts def/abbrev/structure/inductive.
+    lean_lines: 23593
     theorems_and_lemmas: 721
-    definitions: 86
-    blueprint_tagged_declarations: 225   # blueprint/lean_decls, autogenerated
+    definitions: 87
   main_results:
     - declaration: "AlphaRAR.aRTS_LLN"
       file: "AlphaRAR/YDK2026/ARTSRates.lean"
-      source_statement: "Theorem thm:LLN — strong consistency and rates"
+      source_statement: "Theorem 4.1 — strong consistency and rates"
       note: >-
         Under Conditions A–B, for an α-throttled αRTS design and every arm k, almost surely:
         N_{n,k}/n → v_k, θ̂_{n,k} → θ_k, and ρ̂_{n,k} − v_k = O(√(log log n / n)).
@@ -121,28 +135,31 @@ status:
       literature_dependencies: []
     - declaration: "AlphaRAR.aRTS_clt_joint"
       file: "AlphaRAR/YDK2026/ARTSNormality.lean"
-      source_statement: "Theorem thm:normality, part (ii) — asymptotic normality"
+      source_statement: "Theorem 4.2, part (ii), equation (9) — joint asymptotic normality"
       note: >-
         Joint CLT for (√n(N_n/n − v), √n(ρ̂_n − v)) ⇒ 𝒩(0, Ω) for the αRTS design; the
         proportion-deviation hypothesis is discharged from `aRTS_prop_dev`. The marginal
-        estimator CLT √n(θ̂_n − θ) ⇒ 𝒩(0, V) is `AlphaRAR.clt_rho`'s companion
-        `AlphaRAR.estimator_sqrtN_joint_tendsto_multivariateGaussian`.
+        estimator CLT of equation (8), √n(Θ̂_n − Θ) ⇒ 𝒩(0, V), is
+        `AlphaRAR.estimator_sqrtN_joint_tendsto_multivariateGaussian`, companion of the
+        plug-in-target CLT `AlphaRAR.clt_rho`.
       sorry_count: 0
       axioms: ["propext", "Classical.choice", "Quot.sound"]
       comparator_config: "comparator/aRTS_clt_joint.json"
       literature_dependencies: []
     - declaration: "AlphaRAR.aRTS_prop_dev"
       file: "AlphaRAR/YDK2026/PropDevARTS.lean"
-      source_statement: "Theorem thm:normality, part (i) — |N_{n,k} − n ρ̂_{n,k}| = o_p(√n)"
+      source_statement: >-
+        Theorem 4.2, part (i), equation (5) — |N_{n,k} − n ρ̂_{n,k}| = o_P(√n)
       sorry_count: 0
       axioms: ["propext", "Classical.choice", "Quot.sound"]
       comparator_config: "comparator/aRTS_prop_dev.json"
       literature_dependencies: []
     - declaration: "AlphaRAR.aRTS_prop_dev_ae"
       file: "AlphaRAR/YDK2026/PropDevLIL.lean"
-      source_statement: "Theorem thm:normality, part (i) — a.s. O(√(n log log n)) deviation"
+      source_statement: >-
+        Theorem 4.2, part (i), equation (6) — |N_{n,k} − n ρ̂_{n,k}| = O(√(n log log n)) a.s.
       note: >-
-        Companion `AlphaRAR.aRTS_count_sub_smul_ae` (same file) gives
+        Companion `AlphaRAR.aRTS_count_sub_smul_ae` (same file) is equation (7),
         N_{n,k} − n v_k = O(√(n log log n)) a.s.
       sorry_count: 0
       axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -150,9 +167,9 @@ status:
       literature_dependencies: []
     - declaration: "AlphaRAR.aRTSFE_sparse_clt_of_contDiffAt"
       file: "AlphaRAR/YDK2026/ForcedExploration.lean"
-      source_statement: "Corollary corr:componentwise — sparse componentwise CLT for αRTS-FE"
+      source_statement: "Corollary 5.3 — componentwise CLT for αRTS-FE under a sparse target"
       note: >-
-        Proved under a *modified* exploration-schedule condition; see `fidelity.divergences`.
+        Proved under a *modified* condition (ii) of Definition 5.1; see `fidelity.divergences`.
         `AlphaRAR.aRTSFE_sparse_clt` is the same conclusion with the regularity input taken as
         a hypothesis; `AlphaRAR.sched23_satisfies_schedule_hypotheses` shows the modified
         hypotheses are satisfiable (by h(n) = n^{2/3}).
@@ -162,12 +179,11 @@ status:
       literature_dependencies: []
     - declaration: "AlphaRAR.aRTSFE_sparse_rate_of_isARTSFE"
       file: "AlphaRAR/YDK2026/ForcedExploration.lean"
-      source_statement: "Theorem thm:sparse_rate — consistency and rate for sparse targets"
+      source_statement: "Theorem 5.2 — consistency and rate for sparse targets"
       note: >-
-        Stated from the history-level design predicate `IsARTSFE`, like the other headline
-        results. `AlphaRAR.aRTSFE_sparse_rate` (same file) is the same conclusion from the raw
-        process-level throttle and forced-exploration hypotheses; the `IsARTSFE` form discharges
-        them through `throttle_of_isARTSFE`/`fe_of_isARTSFE`.
+        Stated from the history-level design predicate `IsARTSFE`, like every other result of
+        the αRTS-FE chapter: the process-level throttle and forced-exploration facts are
+        discharged inside the proof through `throttle_of_isARTSFE`/`fe_of_isARTSFE`.
       sorry_count: 0
       axioms: ["propext", "Classical.choice", "Quot.sound"]
       comparator_config: "comparator/aRTSFE_sparse_rate.json"
@@ -189,72 +205,71 @@ automation:
         spend_usd: "subscription-based usage"
         hardware: "API-only (developer laptop)"
       prompting_notes: >-
-        Blueprint-driven. The blueprint itself was written by the agent, not by hand: for each
-        area of the paper the agent first produced the LaTeX decomposition into small lemmas,
-        which the human author reviewed, and was then pointed at individual blueprint items (by
-        label, e.g. `lem:prop_dev`) and asked to formalize them, keeping the `\lean{}`/`\leanok`
-        tags in the LaTeX in sync with the Lean source. Blueprint and Lean therefore grew
-        together, and the decomposition was revised as formalization exposed problems with it.
-        Work was scoped to one coherent mathematical area at a time rather than to scattered
-        individual lemmas. Every mathematical divergence from the paper was written up as a
-        standalone note (`maths/`, `notes/`) and reviewed before the corresponding Lean was
-        accepted.
+        The agent worked from the paper's LaTeX source, one coherent mathematical area at a time
+        rather than on scattered individual lemmas. For each area it first produced a LaTeX
+        decomposition of the paper's proofs into small lemmas — the auxiliary blueprint — which
+        the human author reviewed; it was then pointed at individual items of that decomposition
+        and asked to formalize them, keeping each item's `\lean{}` tag in sync with the Lean
+        source so that every Lean declaration stays traceable back to the paper statement it
+        serves. Decomposition and Lean therefore grew together, and the decomposition was
+        revised whenever formalization exposed a problem with it. Every mathematical divergence
+        from the paper was written up as a standalone note (`maths/`, `notes/`) and reviewed
+        before the corresponding Lean was accepted.
   spend_usd: "subscription-based usage"
   notes: >-
     All Lean in this repository was produced with Claude Code under human direction and review,
-    as were the blueprint LaTeX and the choice of decomposition into small lemmas. The two
+    as was the auxiliary blueprint and the choice of decomposition into small lemmas. The two
     divergences below came out of that collaboration. The agent found the gap in the paper's
-    `lem:componentwise` (divergence 1), explored fixes, and reported that recovering the sparse
-    corollary was blocked by the paper's schedule condition h(n) = o(√n). The human author —
-    the paper's co-authors having already suspected that condition was unnecessarily
-    restrictive — directed it to relax the condition by strengthening the proofs rather than
-    working around it; the agent then found the relaxation to h(n) = o(n) and the proof under
+    Lemma 4.5 (divergence 1), explored fixes, and reported that recovering Corollary 5.3 was
+    blocked by condition (ii) of Definition 5.1, h(n) = o(√n). The human author — the paper's
+    co-authors having already suspected that condition was unnecessarily restrictive — directed
+    it to relax the condition by strengthening the proofs rather than working around it; the
+    agent then found the relaxation to h(n) = o(n) and the proof under
     (⋆) √(n log log n) ≪ h(n) = o(n) (divergence 2). Every such decision was reviewed and
     accepted by the human author.
 
 fidelity:
   divergences: >-
-    1. Sparse componentwise CLT — hypothesis changed. The paper's Lemma `lem:componentwise`
-    ("Joint CLT with componentwise scaling") is stated under the hypothesis that every treatment
-    is sampled infinitely often (N_{n,k} → ∞ a.s.). That hypothesis is not sufficient: the proof
-    in `arxiv/sections/appendixA.tex` verifies the self-normalized Lindeberg condition and then
+    1. Lemma 4.5 (Joint CLT with componentwise scaling) — hypothesis changed. The paper states
+    it, in Section 4.2, under the hypothesis that every treatment is sampled infinitely often
+    (N_{n,k} → ∞ a.s.). That hypothesis is not sufficient: the proof in Appendix A.2
+    (`arxiv/sections/appendixA.tex`) verifies the self-normalized Lindeberg condition and then
     applies a martingale CLT to a randomly normalized martingale, which additionally needs a
     stabilization/regularity hypothesis that is never established, and a law-of-the-iterated-
     logarithm construction shows the conclusion genuinely fails without it. The formalized
     statement `AlphaRAR.estimatorError_joint_tendsto_multivariateGaussian` therefore assumes
-    regularity, N_{n,k}/c_{k,n} → 1 for a deterministic sequence c. The non-sparse results are
-    unaffected (regularity holds there for free). Write-up: `notes/regularity-gap.md`.
+    regularity, N_{n,k}/c_{k,n} → 1 for a deterministic sequence c. Theorem 4.1 and Theorem 4.2
+    are unaffected (regularity holds there for free). Write-up: `notes/regularity-gap.md`.
 
-    2. αRTS-FE exploration schedule — condition reversed. To recover the sparse corollary
-    `corr:componentwise`, the paper's schedule condition h(n) = o(√n) is replaced by
+    2. Definition 5.1 (αRTS-FE) — exploration-schedule condition reversed. To recover
+    Corollary 5.3, condition (ii) of Definition 5.1, h(n) = o(√n), is replaced by
     (⋆) √(n log log n) ≪ h(n) = o(n). This is not a weakening in the paper's direction: it is a
     different condition, and the two overlap only trivially. It is justified because (a) the
-    paper's h = o(√n) is not needed for the non-sparse theory — under Condition B forced
-    exploration switches itself off (`AlphaRAR.underExplored_eventually_empty`), so h(n) = o(n)
-    suffices — and (b) (⋆) delivers exactly the regularity hypothesis of divergence 1 for sparse
-    arms (`AlphaRAR.pullCount_div_sched_tendsto_one`). `AlphaRAR.sched23_satisfies_schedule_hypotheses`
-    checks that h(n) = n^{2/3} satisfies (⋆) and fails the paper's condition, so the result is
-    not vacuous. Write-up: `maths/sparse-clt-fix.md`.
+    paper's h = o(√n) is not needed for Theorem 5.1 — under Condition B forced exploration
+    switches itself off (`AlphaRAR.underExplored_eventually_empty`), so h(n) = o(n) suffices, and
+    that is how the five Theorem 5.1 declarations are proved here: none of them assumes o(√n) —
+    and (b) (⋆) delivers exactly the regularity hypothesis of divergence 1 for sparse arms
+    (`AlphaRAR.pullCount_div_sched_tendsto_one`).
+    `AlphaRAR.sched23_satisfies_schedule_hypotheses` checks that h(n) = n^{2/3} satisfies (⋆)
+    and fails the paper's condition, so the result is not vacuous. Write-up:
+    `maths/sparse-clt-fix.md`.
 
     3. Generalizations and restatements. The asymptotic theory is proved once from an abstract
-    hitting-time interface (blueprint `chap:generic`) and instantiated for both αRTS and αRTS-FE,
-    rather than being reproved per design; unused hypotheses of the paper's lemmas were dropped
-    where the Lean proof did not need them. The unconditional bounded-increment LIL
-    `AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd` replaces an application of the
-    standard martingale LIL, whose ⟨M⟩ → ∞ hypothesis is false for a generic αRTS design.
-    Indexing is 0-based throughout (arm 0 first), against the paper's 1-based convention.
+    hitting-time interface — the Lean counterpart of the paper's Lemma 4.4 — and instantiated
+    for both αRTS (Lemma A.1) and αRTS-FE (Lemma B.1), rather than being reproved per design;
+    unused hypotheses of the paper's lemmas were dropped where the Lean proof did not need them.
+    The unconditional bounded-increment LIL
+    `AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd` replaces the appeal to the
+    standard martingale LIL made in Appendix A.2, whose ⟨M⟩ → ∞ hypothesis is false for a
+    generic αRTS design. Indexing is 0-based throughout (arm 0 first), against the paper's
+    1-based convention [K] = {1, …, K}.
 
 review:
   status: "author-verified"
   reviewers:
     - "Rémy Degenne"    # author of the source paper and of the formalization
   notes: >-
-    Every formalized blueprint item carries an explicit `\lean{}` tag naming the Lean
-    declaration, checked mechanically against the Lean source by `leanblueprint checkdecls` in
-    CI, and a `\leanok` mark asserting that the statement was read against the paper. The two
-    places where the paper's statements do not survive that reading are recorded above and
-    written up in full in `notes/regularity-gap.md` and `maths/sparse-clt-fix.md`. No
-    independent reviewer has audited the formalization.
+    No independent reviewer has audited the formalization.
 
     Each main result above additionally has a leanprover/comparator setup (its
     `comparator_config`): a short self-contained challenge file under `comparator/` restates the
@@ -268,78 +283,155 @@ review:
 alignment:
   namespace: "AlphaRAR"
   note: >-
-    The full source-to-Lean map is the blueprint itself: each theorem/lemma/definition
-    environment in `blueprint/src/chapters/*.tex` carries a `\lean{}` tag naming the
-    corresponding declaration, and the dependency graph is rendered on the blueprint website.
-    `blueprint/lean_decls` is the autogenerated list of tagged declarations. Only the headline
-    statements are repeated here.
+    Statements are identified by their number in the paper, as compiled from the vendored
+    source `arxiv/article_arxiv.tex`, and listed in paper order. This table covers the paper's
+    definitions and numbered statements; the finer-grained map, from each intermediate lemma of
+    the decomposition down to its Lean declaration, is carried by the `\lean{}` tags of the
+    auxiliary blueprint (`blueprint/src/chapters/*.tex`, with `blueprint/lean_decls` the
+    autogenerated list of tagged declarations) and rendered as a dependency graph on the
+    blueprint website.
   statements:
-    - source: "thm:LLN — strong consistency and rates"
+    - source: "Section 2, equation (1) / Section 3 — model, RAR procedures, sequential estimator"
+      lean: "AlphaRAR.count, AlphaRAR.estimator, AlphaRAR.aRTSTarget, AlphaRAR.attainableSet"
+      module: >-
+        AlphaRAR.YDK2026.Count, AlphaRAR.YDK2026.Deterministic, AlphaRAR.YDK2026.ARTSConsistency,
+        AlphaRAR.YDK2026.ResponseConsistency
+      status: "proved"
+      note: >-
+        Assignments and the filtration are the algorithm/environment interaction model of LML
+        (`Learning.actionIndicator`, `Learning.IsAlgEnvSeq.filtration`). Conditions A and B of
+        Section 4 are hypotheses of the theorems rather than standalone declarations.
+    - source: "Definition 3.1 — the αRTS family (throttling condition (3))"
+      lean: "AlphaRAR.IsARTS"
+      module: "AlphaRAR.YDK2026.ARTSAlgorithm"
+      status: "proved"
+      note: "History-level design predicate; the throttling condition (3) is its content."
+    - source: "Examples 3.1–3.3 — distance-based, ERADE 2025, interpolated D-Tracking"
+      lean: "AlphaRAR.distance_isARTS, AlphaRAR.erade_isARTS, AlphaRAR.dTracking_isARTS"
+      module: "AlphaRAR.YDK2026.ARTSDesigns"
+      status: "proved"
+      note: >-
+        Each design is defined (`distanceAlgorithm`, `eradeAlgorithm`, `dTrackingAlgorithm`),
+        shown to take values in the simplex, and shown to be αRTS.
+    - source: "Theorem 4.1 — strong consistency and rates"
       lean: "AlphaRAR.aRTS_LLN"
       module: "AlphaRAR.YDK2026.ARTSRates"
       status: "proved"
       note: ""
-    - source: "thm:normality (i) — proportion deviations"
+    - source: "Theorem 4.2, part (i), equations (5)–(7) — proportion deviations"
       lean: "AlphaRAR.aRTS_prop_dev, AlphaRAR.aRTS_prop_dev_ae, AlphaRAR.aRTS_count_sub_smul_ae"
       module: "AlphaRAR.YDK2026.PropDevARTS, AlphaRAR.YDK2026.PropDevLIL"
       status: "proved"
+      note: "Equation (5) is `aRTS_prop_dev`, (6) is `aRTS_prop_dev_ae`, (7) is `aRTS_count_sub_smul_ae`."
+    - source: "Theorem 4.2, part (ii), equation (8) — √n(Θ̂ₙ − Θ) ⇒ 𝒩(0, V)"
+      lean: "AlphaRAR.estimator_sqrtN_joint_tendsto_multivariateGaussian"
+      module: "AlphaRAR.YDK2026.ResponseCLTJoint"
+      status: "proved"
       note: ""
-    - source: "thm:normality (ii) — asymptotic normality"
+    - source: "Theorem 4.2, part (ii), equation (9) — joint CLT for proportions and plug-in target"
       lean: "AlphaRAR.aRTS_clt_joint"
       module: "AlphaRAR.YDK2026.ARTSNormality"
       status: "proved"
       note: ""
-    - source: "lem:clt_rho — CLT for the plug-in target"
+    - source: >-
+        Section 4.2 (proof of Theorem 4.2(ii)) — delta-method CLT
+        √n(ρ̂ₙ − v) ⇒ 𝒩(0, GVGᵀ)
       lean: "AlphaRAR.clt_rho"
       module: "AlphaRAR.YDK2026.PluginTargetCLT"
       status: "proved"
-      note: ""
-    - source: "lem:componentwise — joint CLT with componentwise scaling"
+      note: "An unnumbered display in the paper's proof sketch, isolated as a lemma in Lean."
+    - source: "Remark 4.3 — asymptotic efficiency (with Proposition C.4)"
+      lean: ""
+      module: ""
+      status: "not-formalized"
+      note: >-
+        Needs Proposition C.4, the exponential-family variance / inverse-Fisher-information
+        identity, deliberately out of scope.
+    - source: "Lemma 4.4 — generic sufficient conditions for Theorems 4.1 and 4.2"
+      lean: "AlphaRAR.consistency_of_generic_ae"
+      module: "AlphaRAR.YDK2026.ConsistencyMatching"
+      status: "in-progress"
+      note: >-
+        The Theorem 4.1 direction is formalized generically: the generic conditions plus the
+        plug-in-target limit give N_{n,k}/n → u_k a.s. for every arm. The Theorem 4.2 direction
+        is not a single generic statement; it is obtained through the shared hitting-time
+        interface, instantiated separately for αRTS and αRTS-FE.
+    - source: "Lemma 4.5 — joint CLT with componentwise scaling"
       lean: "AlphaRAR.estimatorError_joint_tendsto_multivariateGaussian"
       module: "AlphaRAR.YDK2026.ResponseCLTJoint"
       status: "proved"
       note: "Statement strengthened by a regularity hypothesis; see fidelity.divergences item 1."
-    - source: "thm:forced_valid — validity under forced exploration"
-      lean: "AlphaRAR.aRTSFE_proportion_tendsto, AlphaRAR.aRTSFE_prop_dev, AlphaRAR.aRTSFE_prop_dev_ae, AlphaRAR.aRTSFE_count_sub_smul_ae, AlphaRAR.aRTSFE_clt_joint"
+    - source: "Definition 5.1 — the αRTS-FE family"
+      lean: "AlphaRAR.IsARTSFE, AlphaRAR.IsExplorationSchedule"
       module: "AlphaRAR.YDK2026.ForcedExploration"
       status: "proved"
-      note: ""
-    - source: "lem:fe_no_starvation — every arm is sampled infinitely often"
-      lean: "AlphaRAR.aRTSFE_no_starvation"
+      note: "Condition (ii) on the schedule h is modified; see fidelity.divergences item 2."
+    - source: "Theorem 5.1 — validity under forced exploration"
+      lean: >-
+        AlphaRAR.aRTSFE_proportion_tendsto, AlphaRAR.aRTSFE_prop_dev,
+        AlphaRAR.aRTSFE_prop_dev_ae, AlphaRAR.aRTSFE_count_sub_smul_ae, AlphaRAR.aRTSFE_clt_joint
       module: "AlphaRAR.YDK2026.ForcedExploration"
       status: "proved"
-      note: ""
-    - source: "thm:sparse_rate — consistency and rate for sparse targets"
-      lean: "AlphaRAR.aRTSFE_sparse_rate, AlphaRAR.aRTSFE_sparse_rate_of_isARTSFE"
+      note: "The conclusions of Theorems 4.1 and 4.2 transported to αRTS-FE, one declaration each."
+    - source: "Theorem 5.2 — consistency and rate for sparse targets"
+      lean: "AlphaRAR.aRTSFE_sparse_rate_of_isARTSFE"
       module: "AlphaRAR.YDK2026.ForcedExploration"
       status: "proved"
-      note: ""
-    - source: "corr:componentwise — sparse componentwise CLT"
+      note: >-
+        Its first conclusion, N_{n,k} → ∞ a.s. (no starvation, proved in Appendix B.2), is
+        `AlphaRAR.aRTSFE_no_starvation` in the same module.
+    - source: "Corollary 5.3 — componentwise CLT for αRTS-FE"
       lean: "AlphaRAR.aRTSFE_sparse_clt_of_contDiffAt"
       module: "AlphaRAR.YDK2026.ForcedExploration"
       status: "proved"
       note: "Under the modified schedule condition (⋆); see fidelity.divergences item 2."
-    - source: "chap:design — the three example designs"
-      lean: "AlphaRAR.distance_isARTS, AlphaRAR.erade_isARTS, AlphaRAR.dTracking_isARTS"
-      module: "AlphaRAR.YDK2026.ARTSDesigns"
-      status: "proved"
-      note: "Distance-based, ERADE 2025, interpolated D-Tracking; definitions and simplex lemmas also formalized."
-    - source: "rem:efficiency / prop:exp_fam — asymptotic efficiency"
-      lean: ""
-      module: ""
-      status: "not-formalized"
-      note: "Needs the exponential-family variance/inverse-Fisher-information identity, deliberately out of scope."
-    - source: "chap:testing — Pearson statistic and its null distribution"
+    - source: "Lemma 6.1 — Pearson statistic and its asymptotic null distribution (Appendix B.3)"
       lean: "AlphaRAR.isProjection_one_sub_vecMulVec"
       module: "AlphaRAR.Mathlib.Projection"
       status: "in-progress"
-      note: "Only lem:projection is formalized; def:pearson_stat, lem:pearson_quadform and lem:pearson are blueprint-only, pending the χ²/Cochran prerequisites of chap:pre_cochran."
+      note: >-
+        Only the idempotent-projection ingredient of the Appendix B.3 proof is formalized; the
+        statistic, its quadratic-form rewriting and its χ²_{K−1} limit need the χ²/Cochran
+        theory, which is not formalized.
+    - source: "Lemma A.1 — the αRTS hitting time satisfies the conditions of Lemma 4.4"
+      lean: >-
+        AlphaRAR.preliminary_ineq, AlphaRAR.preliminary_small,
+        AlphaRAR.generic_ineq_of_hitting, AlphaRAR.generic_small_of_hitting
+      module: "AlphaRAR.YDK2026.Deterministic"
+      status: "proved"
+      note: ""
+    - source: "Lemma B.1 — the αRTS-FE hitting time satisfies the conditions of Lemma 4.4"
+      lean: "AlphaRAR.aRTSFE_smallness, AlphaRAR.throttle_of_isARTSFE, AlphaRAR.fe_of_isARTSFE"
+      module: "AlphaRAR.YDK2026.ForcedExploration"
+      status: "proved"
+      note: ""
+    - source: "Lemmas C.1, C.2, C.5 — technical lemmas of Appendix C"
+      lean: >-
+        AlphaRAR.mart_maximal, AlphaRAR.mart_maximal_dyadic, AlphaRAR.isBigOpOne_of_lintegral_le,
+        AlphaRAR.isBigOpOne_of_lintegral_sq_le, AlphaRAR.tendsto_posPart_sub_div
+      module: >-
+        AlphaRAR.Mathlib.MartingaleMaximal, AlphaRAR.Mathlib.StochasticOrder,
+        AlphaRAR.Mathlib.Convergence
+      status: "proved"
+      note: >-
+        Lemma C.3 (Kolmogorov-type inequality) is used only through its consequence
+        `AlphaRAR.isBigOpOne_martingale_div_sqrt`, and Lemma C.6 through
+        `AlphaRAR.isBigOpOne_of_bdd_increments`; both are in AlphaRAR.Mathlib.StochasticOrder.
+    - source: "Proposition C.4 — variance equals inverse Fisher information"
+      lean: ""
+      module: ""
+      status: "not-formalized"
+      note: "Deliberately out of scope; only used for Remark 4.3."
+    - source: "Section 6 — simulation study"
+      lean: ""
+      module: ""
+      status: "not-formalized"
+      note: "Empirical, not a mathematical statement; out of scope apart from Lemma 6.1 above."
 
 acknowledgements: >-
   `AlphaRAR/Mathlib/CramerWold.lean` is vendored verbatim from Mathlib PR #40345 by Ivo
   Malinowski, pending that PR's merge; it is not work of this project.
-  Built on Mathlib. Depends on LeanMachineLearning/LML for the bandit/algorithm-environment
+  Built on Mathlib. Depends on LeanMachineLearning for the bandit/algorithm-environment
   interaction model (`Learning.IsAlgEnvSeq`, `Learning.actionIndicator`), on LeanSpec for
   specification statements, and on Patrick Massot's leanblueprint/checkdecls for the blueprint
-  infrastructure. The material under `AlphaRAR/Mathlib/` is written to be contributed upstream
-  to Mathlib (but needs further review and refinement).
+  infrastructure.

@@ -76,15 +76,18 @@ lemma measurable_hitting {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (Q ω)
   exact hQmeas m
 
 /-- The level sets of the aRTS under-sampling predicate are measurable. -/
-lemma measurableSet_aRTSUnder [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma measurableSet_aRTSUnder [Finite 𝓐] [DecidableEq 𝓐]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (k' : 𝓐) (m : ℕ) :
-    MeasurableSet {ω | aRTSUnder A Y θ₀ T k' ω m} :=
-  measurableSet_le (measurable_count_actionIndicator h k' m)
+    MeasurableSet {ω | aRTSUnder A Y θ₀ T k' ω m} := by
+  simp only [aRTSUnder, ← count_indicator_eq_pullCount]
+  exact measurableSet_le (measurable_count_actionIndicator h k' m)
     ((measurable_aRTSTarget_coord h θ₀ hT m k').const_mul _)
 
 /-- Measurability of the aRTS hitting time `ω ↦ ℓ_{n,k}(ω)`. -/
-lemma measurable_hitting_aRTSUnder [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (k' : 𝓐) (n : ℕ) :
+lemma measurable_hitting_aRTSUnder [Finite 𝓐] [DecidableEq 𝓐]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ}
+    (hT : Continuous T) (k' : 𝓐) (n : ℕ) :
     Measurable (fun ω ↦ hitting (aRTSUnder A Y θ₀ T k' ω) n) :=
   measurable_hitting (measurableSet_aRTSUnder h θ₀ hT k') n
 
@@ -119,10 +122,28 @@ lemma measurable_hitting_cast {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (
   measurable_eval_of_le (H := fun _ m ↦ (m : ℝ)) (fun _ ↦ measurable_const)
     (measurable_hitting hQmeas n) (fun _ ↦ Nat.findGreatest_le n)
 
+/-- **Measurability of the generic-condition gap at an abstract hitting time**:
+`ω ↦ N_{ℓ_n,k} - ℓ_n ρ̂_{ℓ_n,k}`, for a measurable-level-set predicate `Q`. This is the quantity
+every smallness condition bounds, so measurability is what turns an a.s. bound on it into the
+`o_p`-smallness `hsmall_op` asks for. -/
+lemma measurable_gap_hitting [Finite 𝓐] [DecidableEq 𝓐] {Q : Ω → ℕ → Prop}
+    [∀ ω, DecidablePred (Q ω)]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ}
+    (hT : Continuous T) (hQmeas : ∀ m, MeasurableSet {ω | Q ω m}) (k : 𝓐) (n : ℕ) :
+    Measurable (fun ω ↦ (pullCount A k (hitting (Q ω) n) ω : ℝ)
+      - (hitting (Q ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q ω) n) ω k) := by
+  simp only [← count_indicator_eq_pullCount]
+  exact (measurable_eval_of_le (fun m ↦ measurable_count_actionIndicator h k m)
+        (measurable_hitting hQmeas n) fun _ ↦ Nat.findGreatest_le n).sub
+    ((measurable_hitting_cast hQmeas n).mul
+      (measurable_eval_of_le (fun m ↦ measurable_aRTSTarget_coord h θ₀ hT m k)
+        (measurable_hitting hQmeas n) fun _ ↦ Nat.findGreatest_le n))
+
 /-- **The reweighting coefficient `ℓ_{n}/(N_{n,k''}+1)` is `O_p(1)`** (converging a.s. to
 `1/v_{k''}`), for an abstract hitting time `hitting (Q ·) n ≤ n`. This is the coefficient `h` fed to
 `ell_rho_control`; the argument only uses `ℓ ≤ n` and the proportion consistency, so it is
-design-independent (the `aRTS`/`aRTSFE` hitting times just supply the measurable predicate `Q`). -/
+design-independent (the `aRTS`/`aRTSFE` hitting times just supply the measurable predicate `Q`).
+Stated in `count` form, like `ell_rho_control` itself. -/
 lemma h_bigOp_of_hitting (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (Q ω)] (hQmeas : ∀ m, MeasurableSet {ω | Q ω m})
     (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
@@ -145,7 +166,8 @@ lemma h_bigOp_of_hitting (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
         gcongr; exact_mod_cast Nat.findGreatest_le n
     _ ≤ B := hB n
 
-/-- **`√n/(N_{n,k''}+1) → 0` a.s.** from `N_{n,k''}/n → v > 0`. -/
+/-- **`√n/(N_{n,k''}+1) → 0` a.s.** from `N_{n,k''}/n → v > 0`. Stated in `count` form: it is an
+internal helper of `g_littleOp_of_hitting`, whose proof works with the indicator sums. -/
 lemma tendsto_sqrt_div_count (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
     {ω : Ω} (hNω : Tendsto (fun m ↦ count (fun j ↦ actionIndicator A k'' j ω) m / (m : ℝ))
       atTop (𝓝 v)) :
@@ -174,9 +196,10 @@ lemma tendsto_sqrt_div_count (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
 `hitting (Q ·) n ≤ n`. With `g = ℓ(|Q_ℓ| + |θ_0-θ|)/((N_ℓ+1)(N_n+1))`, write `g = F₁·F₂` with
 `F₁ = ℓ/(N_ℓ+1) = O_p(1)` (a.s. bounded) and `F₂ = (|Q_ℓ|+|a|)/(N_n+1) = o_p(1)` (via the Doob
 running-max `sup_{m≤n}|Q_m| = O_p(√n)` and `√n/(N_n+1) → 0`); then `O_p·o_p = o_p`. The argument
-uses only `ℓ ≤ n` and measurability of `Q`, so it is design-independent. -/
-lemma g_littleOp_of_hitting [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ)
+uses only `ℓ ≤ n` and measurability of `Q`, so it is design-independent. Stated in `count` form,
+like `ell_rho_control` itself. -/
+lemma g_littleOp_of_hitting [Finite 𝓐]
+    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ)
     {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (Q ω)] (hQmeas : ∀ m, MeasurableSet {ω | Q ω m})
     (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
     (hN : ∀ᵐ ω ∂P, Tendsto (fun m ↦ count (fun j ↦ actionIndicator A k'' j ω) m / (m : ℝ))
@@ -257,6 +280,30 @@ lemma g_littleOp_of_hitting [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEn
   rw [hgeq]
   exact hF1.mul_littleOp hF2
 
+/-- **The `aRTS` `o_p`-smallness**, in the form consumed by `prop_dev_of_hitting` and
+`clt_joint_of_hitting`: at the last under-sampling time `N_ℓ - ℓ ρ̂_ℓ ≤ 0` (`preliminary_small`),
+so `(1 + N_ℓ - ℓ ρ̂_ℓ)^+ / √n ≤ 1/√n → 0`. The `aRTS` counterpart of `aRTSFE_smallness_op`, and —
+like `aRTS_smallness_all` — the reason the `aRTS` design needs no smallness argument of its own. -/
+lemma aRTS_smallness_op [DecidableEq 𝓐] (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (k : 𝓐) :
+    IsLittleOpOne P (fun n ω ↦
+      max ((1 + ((pullCount A k (hitting (aRTSUnder A Y θ₀ T k ω) n) ω : ℝ)
+        - (hitting (aRTSUnder A Y θ₀ T k ω) n : ℝ)
+          * aRTSTarget A Y θ₀ T (hitting (aRTSUnder A Y θ₀ T k ω) n) ω k)) / √n) 0) := by
+  simp only [← count_indicator_eq_pullCount]
+  refine IsLittleOpOne.of_abs_le (Y := fun n (_ : Ω) ↦ (1 : ℝ) / √n) ?_
+    (isLittleOpOne_const_div_sqrt 1)
+  intro n ω
+  have hps := preliminary_small (fun j ↦ actionIndicator A k j ω)
+    (fun m ↦ aRTSTarget A Y θ₀ T m ω k) (aRTSUnder A Y θ₀ T k ω) n
+    (fun m hm ↦ by rwa [count_indicator_eq_pullCount])
+  rw [abs_of_nonneg (le_max_right _ _), abs_of_nonneg (by positivity)]
+  rcases Nat.eq_zero_or_pos n with hn | hn
+  · subst hn; simp
+  · have hsn : (0 : ℝ) < √n := Real.sqrt_pos.mpr (by exact_mod_cast hn)
+    refine max_le ?_ (by positivity)
+    gcongr
+    linarith [hps]
+
 /-- **Deviation between proportions and plug-in target at an abstract hitting time** (blueprint
 `lem:prop_dev`, `thm:normality` part (i), `o_p(√n)` half, generic form). The abstract-hitting-time
 generalisation of `aRTS_prop_dev`: for any per-arm predicate `Q` with measurable level sets
@@ -277,7 +324,7 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
       (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means))
-    (hNconv : ∀ k', ∀ᵐ ω ∂P, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k' j ω) n / (n : ℝ))
+    (hNconv : ∀ k', ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k' n ω : ℝ) / (n : ℝ))
       atTop (𝓝 (T ν.means k')))
     (Q : 𝓐 → Ω → ℕ → Prop) [∀ k ω, DecidablePred (Q k ω)]
     (hQmeas : ∀ k m, MeasurableSet {ω | Q k ω m})
@@ -285,14 +332,15 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
       aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hsmall_op : ∀ k, IsLittleOpOne P (fun n ω ↦
-      max ((1 + (count (fun j ↦ actionIndicator A k j ω) (hitting (Q k ω) n)
+      max ((1 + ((pullCount A k (hitting (Q k ω) n) ω : ℝ)
         - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k)) / √n) 0))
     (k : 𝓐) :
     IsLittleOpOne P (fun n ω ↦ ((pullCount A k n ω : ℝ)
       - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k) / √n) := by
   classical
-  -- `N_{n,k}` in pull-count form is the count of the assignment indicator.
-  simp only [← count_indicator_eq_pullCount]
+  -- The `ell_rho_control` plumbing below works with the assignment-indicator sums, so unfold the
+  -- pull counts of the statement and of the two count hypotheses into that form.
+  simp only [← count_indicator_eq_pullCount] at hNconv hsmall_op ⊢
   -- Continuity and the `ℓ¹`-form Lipschitz bound both follow from `LipschitzWith K T`.
   set L : ℝ := (K : ℝ) with hLdef
   have hT : Continuous T := hlip.continuous
@@ -662,25 +710,10 @@ lemma aRTS_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] 
     IsLittleOpOne P (fun n ω ↦ ((pullCount A k n ω : ℝ)
       - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k) / √n) := by
   have hT : Continuous T := hlip.continuous
-  refine prop_dev_of_hitting h hνk θ₀ T hTnn hTsum α hα hα1 hlip hTpos
+  exact prop_dev_of_hitting h hνk θ₀ T hTnn hTsum α hα hα1 hlip hTpos
     (aRTS_theta_consistent h hνk hT hTnn hTsum hα hARTS hTpos)
-    (fun k' ↦ (aRTS_proportion_tendsto h hνk hT hTnn hTsum hα hARTS hTpos k').mono
-      fun ω hω ↦ hω.congr fun n ↦ by rw [count_indicator_eq_pullCount])
+    (fun k' ↦ aRTS_proportion_tendsto h hνk hT hTnn hTsum hα hARTS hTpos k')
     (aRTSUnder A Y θ₀ T) (fun k m ↦ measurableSet_aRTSUnder h θ₀ hT k m)
-    (fun k ↦ throttle_of_isARTS h hARTS k) ?_ k
-  -- The aRTS smallness `o_p`-bound: `1 + N_ℓ - ℓ ρ̂_ℓ ≤ 1` (`preliminary_small`), so `/√n → 0`.
-  intro k'
-  refine IsLittleOpOne.of_abs_le (Y := fun n (_ : Ω) ↦ (1 : ℝ) / √n) ?_
-    (isLittleOpOne_const_div_sqrt 1)
-  intro n ω
-  have hps := preliminary_small (fun j ↦ actionIndicator A k' j ω)
-    (fun j ↦ aRTSTarget A Y θ₀ T j ω k') (aRTSUnder A Y θ₀ T k' ω) n (fun m hm ↦ hm)
-  rw [abs_of_nonneg (le_max_right _ _), abs_of_nonneg (by positivity)]
-  rcases Nat.eq_zero_or_pos n with hn | hn
-  · subst hn; simp
-  · have hsn : (0 : ℝ) < √n := Real.sqrt_pos.mpr (by exact_mod_cast hn)
-    refine max_le ?_ (by positivity)
-    gcongr
-    linarith [hps]
+    (fun k ↦ throttle_of_isARTS h hARTS k) (aRTS_smallness_op θ₀ T) k
 
 end AlphaRAR

@@ -165,17 +165,17 @@ lemma throttle_of_isARTS [StandardBorelSpace 𝓐] [Nonempty 𝓐]
   cases m with
   | zero =>
     filter_upwards with ω hm
-    exact absurd (by simp [aRTSUnder, count] : aRTSUnder A Y θ₀ T k ω 0) hm
+    exact absurd (by simp [aRTSUnder] : aRTSUnder A Y θ₀ T k ω 0) hm
   | succ n =>
     filter_upwards [aRTSSelProb_succ_ae h k n] with ω hsel hm
     rw [hsel, ← histTarget_eq]
     refine hARTS.throttle n (history A Y n ω) k ?_
     -- Over-sampling: `¬ (N_{n+1,k} ≤ (n+1) ρ̂_{n+1,k})` gives `(n+1) ρ̂ < N_{n+1,k}`.
     have hlt : (↑(n + 1) : ℝ) * aRTSTarget A Y θ₀ T (n + 1) ω k
-        < count (fun j ↦ actionIndicator A k j ω) (n + 1) := by
+        < (pullCount A k (n + 1) ω : ℝ) := by
       rw [aRTSUnder] at hm
       exact lt_of_not_ge hm
-    rw [histTarget_eq, ← histCount_eq]
+    rw [histTarget_eq, ← histCount_eq, count_indicator_eq_pullCount]
     push_cast at hlt ⊢
     linarith
 
@@ -193,7 +193,7 @@ lemma aRTS_consistency_of_isARTS [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonem
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
-      Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 (u k))
+      Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (u k))
         ∧ Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop (𝓝 (u k)) :=
   aRTS_consistency h hνk θ₀ T hT hTnn hTsum α hα (fun k ↦ throttle_of_isARTS h hARTS k)
 
@@ -214,7 +214,7 @@ lemma aRTS_pullCount_div_ae_tendsto [Fintype 𝓐] [StandardBorelSpace 𝓐] [No
       Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (u k)) := by
   filter_upwards [aRTS_consistency_of_isARTS h hνk hT hTnn hTsum hα hARTS] with ω hω
   obtain ⟨u, hu⟩ := hω
-  exact ⟨u, fun k ↦ ((hu k).1).congr fun n ↦ by rw [count_indicator_eq_pullCount]⟩
+  exact ⟨u, fun k ↦ (hu k).1⟩
 
 /-- **Estimator consistency for an aRTS algorithm** (blueprint `lem:theta_consistent`). Under
 Condition **B**'s non-sparsity — `hTpos`, i.e. `T` maps the product of the attainable sets
@@ -236,7 +236,7 @@ lemma aRTS_theta_consistent [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty �
   refine theta_consistent_pi_of_condB h hνk θ₀ T hT hTpos ?_
   filter_upwards [aRTS_consistency_of_isARTS h hνk hT hTnn hTsum hα hARTS] with ω hω
   obtain ⟨u, hu⟩ := hω
-  exact ⟨u, fun k ↦ ⟨((hu k).1).congr fun n ↦ by rw [count_indicator_eq_pullCount], (hu k).2⟩⟩
+  exact ⟨u, hu⟩
 
 /-- **Allocation proportions converge to the target** (blueprint `thm:LLN`, first conclusion). For
 an aRTS design, under Condition **B** the allocation proportion converges a.s. to the
@@ -259,6 +259,6 @@ lemma aRTS_proportion_tendsto [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty
     tendsto_pi_nhds.mp ((hT.tendsto _).comp hθω) k
   have huk : u k = T ν.means k := tendsto_nhds_unique (hu k).2 hrho
   rw [← huk]
-  exact ((hu k).1).congr fun n ↦ by rw [count_indicator_eq_pullCount]
+  exact (hu k).1
 
 end AlphaRAR

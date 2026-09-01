@@ -51,12 +51,10 @@ $h(n)=o(n)$ with no loss anywhere in the non-sparse theory. In particular D-Trac
 $h(n)=(\sqrt n-K/2)^+$ — which the paper's Example must currently disqualify — becomes admissible.
 
 *Formalization note.* `IsExplorationSchedule` has been weakened accordingly: its field is now
-`div_tendsto_zero` ($h=o(m)$), and the paper's $h=o(\sqrt m)$ survives as a separate predicate
-`IsSqrtSmall`, taken as an explicit hypothesis by exactly the lemmas that need it — the four
-$\sqrt n$-scaled normality results and their three helpers. Everything else, including the whole
-sparse chain, now needs only $h=o(m)$. Proposition 1 is the route to removing `IsSqrtSmall` from
-those four as well (replacing the gap bound by an "eventually zero gap" argument under Condition
-**B**); that last step is not yet formalized. See §5.
+`div_tendsto_zero` ($h=o(m)$). Proposition 1 is wired all the way through, so **no declaration
+assumes $h=o(\sqrt m)$**: the paper's condition survives only as the predicate `IsSqrtSmall`, which
+is never taken as a hypothesis and is kept to record what the paper asks and to state that the
+sparse regime lies outside it (`not_isSqrtSmall_sched23`). See §5.
 
 ## 2. What a sparse arm's count really is
 
@@ -189,16 +187,33 @@ Already done (build green):
 
 Also done:
 
-* **`IsExplorationSchedule` relaxed.** Its `littleO` field ($h=o(\sqrt m)$) is replaced by
-  `div_tendsto_zero` ($h=o(m)$); the paper's stronger condition survives as a separate predicate
-  `IsSqrtSmall`, taken as an explicit hypothesis by exactly the four $\sqrt n$-scaled normality
-  lemmas that need it (`aRTSFE_smallness_op`, `aRTSFE_maxsched_le_logLogRate`,
-  `aRTSFE_smallness_upper` and the wrappers `aRTSFE_prop_dev`, `aRTSFE_prop_dev_ae`,
-  `aRTSFE_count_sub_smul_ae`, `aRTSFE_clt_joint`). Everything on the LLN/sparse side — including
-  `pullCount_div_sched_tendsto_one` and `aRTSFE_sparse_clt` — now needs only $h=o(m)$.
+* **`IsExplorationSchedule` relaxed, and $h=o(\sqrt m)$ eliminated everywhere.** Its `littleO`
+  field ($h=o(\sqrt m)$) is replaced by `div_tendsto_zero` ($h=o(m)$), and **no declaration of the
+  development assumes $h=o(\sqrt m)$** — the predicate `IsSqrtSmall` is kept only as a record of
+  the paper's condition and to state that the sparse regime lies outside it
+  (`not_isSqrtSmall_sched23`, `sched23_satisfies_schedule_hypotheses`).
 
-  This is what makes the sparse results *usable*: with `littleO` a field, the regularity theorem
-  could only ever be discharged in the regime where forced exploration does **not** dominate.
+  The four $\sqrt n$-scaled normality results (`aRTSFE_prop_dev`, `aRTSFE_prop_dev_ae`,
+  `aRTSFE_count_sub_smul_ae`, `aRTSFE_clt_joint`) get their smallness from Proposition 1 instead of
+  from a bound on $h$. The chain is:
+
+  - `eventually_sched_lt_pullCount` — the single-arm form of Proposition 1: $N_{n,k}/n\to v>0$ and
+    $h=o(n)$ give $h(n)<N_{n,k}$ for $n\ge n_0(\omega)$, i.e. arm $k$ is eventually never
+    under-explored;
+  - `aRTSFE_gap_le_sum_of_not_underExplored` — pathwise: past $n_0$ the hitting predicate can only
+    fire through its *under-sampling* clause (gap $\le0$), so for **every** $n$ the gap is bounded
+    by $C(\omega):=\sum_{m<n_0}(N_{m,k}-m\hat\rho_{m,k})^+$, a path constant;
+  - `aRTSFE_smallness_op` / `aRTSFE_smallness_upper` — a constant is $o(\sqrt n)$ and
+    $O(\sqrt{n\log\log n})$ for free (the $o_p$ form needs the gap to be measurable in $\omega$:
+    `measurable_gap_hitting`).
+
+  The Condition **B** input ($v>0$ and $N_{n,k}/n\to v$) is `target_pos_of_theta_consistent` and
+  `proportion_tendsto_of_hitting`, both fed by `aRTSFE_smallness_all`, which uses only $h=o(m)$ —
+  so there is no circularity.
+
+  This is also what makes the sparse results *usable*: with `littleO` a field, the regularity
+  theorem could only ever be discharged in the regime where forced exploration does **not**
+  dominate.
 
 * **Step 3** — `not_aRTSFEUnder_of_sched_lt`: at a round where arm $k$ is not under-explored and its
   target has decayed below $h(m)/m$, arm $k$ is over-sampled, i.e. `¬ aRTSFEUnder` — the antecedent

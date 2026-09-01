@@ -19,7 +19,10 @@ An \emph{exploration schedule} is a function $h : \N \to \R$ with
   \item[(ii)] $h(n) = o(\sqrt n)$ as $n\to\infty$.
 \end{enumerate}
 (The Lean \texttt{AlphaRAR.IsExplorationSchedule} additionally records that $h$ is nondecreasing, a
-harmless convenience satisfied by the paper's examples that gives $h(\ell)\le h(n)$ for $\ell\le n$.)
+harmless convenience satisfied by the paper's examples that gives $h(\ell)\le h(n)$ for $\ell\le n$.
+It also \emph{weakens} (ii) to $h(n)=o(n)$: no result of the formalization uses $h(n)=o(\sqrt n)$
+--- see Remark~\ref{rem:sparse_clt_fix} --- and the paper's condition survives only as the separate
+predicate \texttt{AlphaRAR.IsSqrtSmall}, which nothing assumes.)
 \end{definition}
 
 \begin{example}\label{ex:h_choice}
@@ -114,8 +117,10 @@ intermediate $p_{m,k}-\alpha\hat{\rho}_{m-1,k}\le0$ — gives inequality
 $N_{m,k}/m\le\hat{\rho}_{m,k}$, giving $N_{m,k}-m\hat{\rho}_{m,k}\le0$, or $k$ is
 least-sampled in $\mathbf{U}_m$, giving
 $N_{\ell_{n,k}^{\mathrm{FE}},k}-\ell_{n,k}^{\mathrm{FE}}\hat{\rho}_{\ell_{n,k}^{\mathrm{FE}},k}
- \le N_{\ell_{n,k}^{\mathrm{FE}},k}\le h(\ell_{n,k}^{\mathrm{FE}})=o(\sqrt n)$
-by Definition~\ref{def:exploration_schedule}.
+ \le N_{\ell_{n,k}^{\mathrm{FE}},k}\le h(\ell_{n,k}^{\mathrm{FE}})=o(n)$
+by Definition~\ref{def:exploration_schedule}. (The paper bounds this by $o(\sqrt n)$ using
+condition (ii); $o(n)$ is all the consistency direction needs, and the $\sqrt n$-scaled direction
+gets a sharper bound from Remark~\ref{rem:sparse_clt_fix}.)
 \end{proof}
 
 \section{Validity under forced exploration (non-sparse targets)}
@@ -136,20 +141,32 @@ conditions with $\ell^{\mathrm{FE}}$; apply Theorem~\ref{thm:generic_main}.
 
 \emph{Formalization.} Both directions are \emph{direct reuses} of abstract-hitting-time theorems
 with the forced-exploration hitting predicate \texttt{AlphaRAR.aRTSFEUnder}
-(``under-sampled or under-explored''); the throttle enters as the design hypothesis, and the only
-new ingredients are the forced-exploration smallness lemmas. The consistency direction
+(``under-sampled or under-explored''); the design enters as the history-level predicate
+\texttt{AlphaRAR.IsARTSFE} (Definition~\ref{def:aRTSFE}), whose throttle field is transported to
+the process by \texttt{AlphaRAR.throttle\_of\_isARTSFE}, and the only new ingredients are the
+forced-exploration smallness lemmas. So each of the five declarations mentions only the design, the
+environment and the schedule --- no process-level throttle hypothesis --- exactly as on the
+$\aRTS$ side. The consistency direction
 ($N_{n,k}/n\to v_k$, $\hat\rho_{n,k}\to v_k$) is \texttt{AlphaRAR.aRTSFE\_proportion\_tendsto}
 (reusing \texttt{AlphaRAR.consistency\_of\_hitting}), whose smallness is
 \texttt{AlphaRAR.aRTSFE\_smallness} ($N_\ell-\ell\hat\rho_\ell\le(h(\ell))^+=o(n)$). The
 asymptotic-normality direction (Theorem~\ref{thm:normality}) is: the $o_p(\sqrt n)$ deviation
 \texttt{AlphaRAR.aRTSFE\_prop\_dev} (reusing \texttt{AlphaRAR.prop\_dev\_of\_hitting}, smallness
-\texttt{aRTSFE\_smallness\_op} using $h(n)=o(\sqrt n)$), the a.s.\ $O(\sqrt{n\log\log n})$ deviations
+\texttt{aRTSFE\_smallness\_op}), the a.s.\ $O(\sqrt{n\log\log n})$ deviations
 \texttt{AlphaRAR.aRTSFE\_prop\_dev\_ae} and \texttt{AlphaRAR.aRTSFE\_count\_sub\_smul\_ae} (reusing
 \texttt{prop\_dev\_ae\_of\_hitting}/\texttt{count\_sub\_smul\_ae\_of\_hitting}, smallness
 \texttt{aRTSFE\_smallness\_upper}), and the joint CLT \texttt{AlphaRAR.aRTSFE\_clt\_joint} (reusing
 \texttt{AlphaRAR.clt\_joint\_of\_hitting}). Each abstract-hitting-time theorem is the generalisation
 of the corresponding \texttt{aRTS} theorem to an arbitrary measurable hitting predicate, with the
 throttle and smallness taken as hypotheses.
+
+Neither $\sqrt n$-scaled smallness lemma uses condition (ii): under Condition~\textbf{B} forced
+exploration eventually stops firing (\texttt{AlphaRAR.eventually\_sched\_lt\_pullCount}, the single-arm
+form of \texttt{AlphaRAR.underExplored\_eventually\_empty}), so past that time the hitting predicate
+can only fire through its under-sampling clause and the gap is bounded by a path constant
+(\texttt{AlphaRAR.aRTSFE\_gap\_le\_sum\_of\_not\_underExplored}) --- which is $o(\sqrt n)$ and
+$O(\sqrt{n\log\log n})$ for free. The Condition~\textbf{B} input is the consistency direction of
+this same theorem, so there is no circularity: it needs only $h(n)=o(n)$.
 \end{proof}
 
 \section{Sparse target allocations}
@@ -185,7 +202,7 @@ the positive part), so $D(n+1)+1=D(n)$ for $n\ge N_1$ forces $t\le D(N_1)$ for a
 \end{proof}
 
 \begin{theorem}[Consistency and rate for sparse targets]\label{thm:sparse_rate}
-\lean{AlphaRAR.aRTSFE_sparse_rate, AlphaRAR.aRTSFE_sparse_rate_of_isARTSFE}\leanok
+\lean{AlphaRAR.aRTSFE_sparse_rate_of_isARTSFE}\leanok
 \uses{def:aRTSFE, def:condA, def:counts, def:estimator}
 Under Condition~\textbf{A} only, any $\aRTSFE$ design satisfies, for every $k$,
 \[
@@ -279,7 +296,8 @@ Replacing $h(n)=o(\sqrt n)$ by $\sqrt{n\log\log n}\ll h(n)=o(n)$ puts a sparse a
 forced-exploration-dominated regime, where its count is regular against the deterministic schedule.
 Condition (ii) is in any case not needed elsewhere: under Condition~\textbf{B} forced exploration
 switches itself off (\texttt{AlphaRAR.underExplored\_eventually\_empty}), so $h(n)=o(n)$ suffices for
-the whole $\sqrt n$-theory. The reversed condition is satisfiable precisely where (ii) fails, e.g.\
+the whole $\sqrt n$-theory --- and this is how Theorem~\ref{thm:forced_valid} is actually proved
+here, so no declaration of the formalization assumes $h(n)=o(\sqrt n)$. The reversed condition is satisfiable precisely where (ii) fails, e.g.\
 $h(n)=n^{2/3}$ (\texttt{AlphaRAR.sched23\_satisfies\_schedule\_hypotheses}).
 
 \emph{Formalization.} \texttt{AlphaRAR.aRTSFE\_sparse\_clt\_of\_contDiffAt}: the conclusion of

@@ -58,11 +58,12 @@ the challenge files leave them `sorry`.
 
 The sparse-rate challenge states `AlphaRAR.aRTSFE_sparse_rate_of_isARTSFE`, blueprint
 `thm:sparse_rate` from the history-level design predicate `IsARTSFE` (the same packaging as the
-other headline results). The raw process-level form `AlphaRAR.aRTSFE_sparse_rate` says the same
-thing but its throttle hypothesis mentions LML's history filtration `IsAlgEnvSeq.filtration`,
-whose definition rests on a *module-private* auxiliary constant (see *Maintenance*) that no
-restatement outside LML can reproduce — so that form cannot be challenged under a Mathlib-only
-import closure.
+other headline results). That packaging is what makes the statement challengeable at all: a form
+taking the process-level throttle as a hypothesis would mention LML's history filtration
+`IsAlgEnvSeq.filtration`, whose definition rests on a *module-private* auxiliary constant (see
+*Maintenance*) that no restatement outside LML can reproduce — so such a form cannot be challenged
+under a Mathlib-only import closure. Every αRTS-FE result therefore states its design hypothesis
+as `IsARTSFE` rather than as a throttle.
 
 ## Running it
 

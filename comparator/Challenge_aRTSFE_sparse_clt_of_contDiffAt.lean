@@ -309,12 +309,14 @@ nondecreasing threshold `h(m)` with `h(m) → ∞` and `h(m) = o(m)`. Monotonici
 convenience that lets `h(ℓ) ≤ h(n)` for `ℓ ≤ n`.
 
 The paper additionally requires `h(m) = o(√m)`; that is `IsSqrtSmall` below, deliberately *not* a
-field here. It is needed only by the `√n`-scaled normality results, and even there it is not
-necessary (`underExplored_eventually_empty`: under Condition **B** forced exploration switches
-itself off, so any `h(m) = o(m)` does). Keeping it separate is what makes schedules with
-`h(m) ≫ √m` available — and those are exactly the ones under which forced exploration, rather than
-the data-dependent targeting rule, decides a *sparse* arm's sample size, which is what earns the
-sparse componentwise CLT (`pullCount_div_sched_tendsto_one`, `aRTSFE_sparse_clt`). -/
+field here, and in fact assumed by *no* result of this development. It would only ever be used by
+the `√n`-scaled normality results, and there it is unnecessary
+(`underExplored_eventually_empty`: under Condition **B** forced exploration switches itself off,
+so any `h(m) = o(m)` does — see `aRTSFE_smallness_op` and `aRTSFE_smallness_upper`). Dropping it is
+what makes schedules with `h(m) ≫ √m` available — and those are exactly the ones under which forced
+exploration, rather than the data-dependent targeting rule, decides a *sparse* arm's sample size,
+which is what earns the sparse componentwise CLT (`pullCount_div_sched_tendsto_one`,
+`aRTSFE_sparse_clt`). -/
 structure IsExplorationSchedule (hsched : ℕ → ℝ) : Prop where
   /-- The schedule is nondecreasing. -/
   mono : Monotone hsched

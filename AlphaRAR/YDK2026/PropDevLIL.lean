@@ -201,7 +201,7 @@ is `≤ C · √(n log log n)` eventually. The chain: `generic_ineq_of_hitting` 
 assignment-martingale LIL and the `ρ̂`-difference by the loglog rate, both lifted over the random
 time `ℓ ≤ n` via `exists_forall_le_mul_sqrt_mul_log_log`. Everything but `hsmall_upper` and the
 throttle is design-independent. -/
-lemma dev_upper_of_hitting
+lemma dev_upper_of_hitting [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k)
@@ -217,13 +217,14 @@ lemma dev_upper_of_hitting
       (Y · ω) (θ₀ k'') n) k' - T ν.means k')
         =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)))
     (hsmall_upper : ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      (count (fun j ↦ actionIndicator A k' j ω) (hitting (Q k' ω) n)
+      ((pullCount A k' (hitting (Q k' ω) n) ω : ℝ)
         - (hitting (Q k' ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k')
           ≤ C * √(n * log (log n))) :
     ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      (count (fun j ↦ actionIndicator A k' j ω) n
+      ((pullCount A k' n ω : ℝ)
         - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k') ≤ C * √(n * log (log n)) := by
   classical
+  simp only [← count_indicator_eq_pullCount] at hsmall_upper ⊢
   set v : ℝ := T ν.means k' with hvdef
   set ℱ := h.filtration with hℱ
   -- Non-sparsity `v > 0` and the consistency `ρ̂ → v` from the estimator consistency.
@@ -366,16 +367,17 @@ lemma aRTS_dev_upper [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hT_diff : DifferentiableAt ℝ T ν.means) (k' : 𝓐) :
     ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      (count (fun j ↦ actionIndicator A k' j ω) n
+      ((pullCount A k' n ω : ℝ)
         - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k') ≤ C * √(n * log (log n)) :=
   dev_upper_of_hitting h θ₀ T hlip.continuous hTnn α hα hα1 hTpos
     (aRTS_theta_consistent h hνk hlip.continuous hTnn hTsum hα hARTS hTpos)
     (aRTSUnder A Y θ₀ T) (fun k ↦ throttle_of_isARTS h hARTS k) k'
     (aRTS_rho_rate h hνk hlip.continuous hTnn hTsum hα hARTS hTpos hT_diff k')
     (Eventually.of_forall fun ω ↦ ⟨0, Eventually.of_forall fun n ↦ by
-      rw [zero_mul]
+      rw [zero_mul, ← count_indicator_eq_pullCount]
       exact preliminary_small (fun j ↦ actionIndicator A k' j ω)
-        (fun m ↦ aRTSTarget A Y θ₀ T m ω k') (aRTSUnder A Y θ₀ T k' ω) n (fun m hm ↦ hm)⟩)
+        (fun m ↦ aRTSTarget A Y θ₀ T m ω k') (aRTSUnder A Y θ₀ T k' ω) n
+        (fun m hm ↦ by rwa [count_indicator_eq_pullCount])⟩)
 
 /-- **A.s. loglog deviation between proportions and plug-in target at an abstract hitting time**
 (blueprint `lem:prop_dev`, `thm:normality` part (i), `O(√(n log log n))` a.s. half, generic form).
@@ -400,7 +402,7 @@ lemma prop_dev_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
       (Y · ω) (θ₀ k'') n) k' - T ν.means k')
         =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)))
     (hsmall_upper : ∀ k', ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      (count (fun j ↦ actionIndicator A k' j ω) (hitting (Q k' ω) n)
+      ((pullCount A k' (hitting (Q k' ω) n) ω : ℝ)
         - (hitting (Q k' ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k')
           ≤ C * √(n * log (log n))) (k : 𝓐) :
     ∀ᵐ ω ∂P, (fun n ↦ (pullCount A k n ω : ℝ) - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k)
@@ -408,9 +410,10 @@ lemma prop_dev_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
   classical
   have hupper : ∀ k', ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
       count (fun j ↦ actionIndicator A k' j ω) n
-        - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k' ≤ C * √(n * log (log n)) := fun k' ↦
-    dev_upper_of_hitting h θ₀ T hT hTnn α hα hα1 hTpos hθconv Q hthrottle k'
-      (hρrate k') (hsmall_upper k')
+        - (n : ℝ) * aRTSTarget A Y θ₀ T n ω k' ≤ C * √(n * log (log n)) := fun k' ↦ by
+    simpa only [← count_indicator_eq_pullCount] using
+      dev_upper_of_hitting h θ₀ T hT hTnn α hα hα1 hTpos hθconv Q hthrottle k'
+        (hρrate k') (hsmall_upper k')
   filter_upwards [ae_all_iff.mpr hupper] with ω hω
   simp only [← count_indicator_eq_pullCount]
   refine isBigO_of_forall_upper_of_sum_zero
@@ -443,9 +446,10 @@ lemma aRTS_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace �
     (aRTSUnder A Y θ₀ T) (fun k ↦ throttle_of_isARTS h hARTS k)
     (fun k' ↦ aRTS_rho_rate h hνk hlip.continuous hTnn hTsum hα hARTS hTpos hT_diff k')
     (fun k' ↦ Eventually.of_forall fun ω ↦ ⟨0, Eventually.of_forall fun n ↦ by
-      rw [zero_mul]
+      rw [zero_mul, ← count_indicator_eq_pullCount]
       exact preliminary_small (fun j ↦ actionIndicator A k' j ω)
-        (fun m ↦ aRTSTarget A Y θ₀ T m ω k') (aRTSUnder A Y θ₀ T k' ω) n (fun m hm ↦ hm)⟩) k
+        (fun m ↦ aRTSTarget A Y θ₀ T m ω k') (aRTSUnder A Y θ₀ T k' ω) n
+        (fun m hm ↦ by rwa [count_indicator_eq_pullCount])⟩) k
 
 /-- **A.s. loglog deviation between the count and the target proportion at an abstract hitting
 time** (blueprint `lem:prop_dev`, `thm:normality` part (i), last line, generic form). For every arm
@@ -469,7 +473,7 @@ lemma count_sub_smul_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
       (Y · ω) (θ₀ k'') n) k' - T ν.means k')
         =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)))
     (hsmall_upper : ∀ k', ∀ᵐ ω ∂P, ∃ C, ∀ᶠ n in atTop,
-      (count (fun j ↦ actionIndicator A k' j ω) (hitting (Q k' ω) n)
+      ((pullCount A k' (hitting (Q k' ω) n) ω : ℝ)
         - (hitting (Q k' ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k' ω) n) ω k')
           ≤ C * √(n * log (log n))) (k : 𝓐) :
     ∀ᵐ ω ∂P, (fun n ↦ (pullCount A k n ω : ℝ) - (n : ℝ) * T ν.means k)
@@ -501,9 +505,10 @@ lemma aRTS_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpa
     (aRTSUnder A Y θ₀ T) (fun k ↦ throttle_of_isARTS h hARTS k)
     (fun k' ↦ aRTS_rho_rate h hνk hlip.continuous hTnn hTsum hα hARTS hTpos hT_diff k')
     (fun k' ↦ Eventually.of_forall fun ω ↦ ⟨0, Eventually.of_forall fun n ↦ by
-      rw [zero_mul]
+      rw [zero_mul, ← count_indicator_eq_pullCount]
       exact preliminary_small (fun j ↦ actionIndicator A k' j ω)
-        (fun m ↦ aRTSTarget A Y θ₀ T m ω k') (aRTSUnder A Y θ₀ T k' ω) n (fun m hm ↦ hm)⟩) k
+        (fun m ↦ aRTSTarget A Y θ₀ T m ω k') (aRTSUnder A Y θ₀ T k' ω) n
+        (fun m hm ↦ by rwa [count_indicator_eq_pullCount])⟩) k
 
 end ARTS
 

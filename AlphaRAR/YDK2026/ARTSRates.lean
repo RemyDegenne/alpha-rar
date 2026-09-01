@@ -38,8 +38,8 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
   {P : Measure Ω} [IsProbabilityMeasure P]
   {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
-omit [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐] in
-/-- **Positive allocation proportion at an abstract hitting time** (count form, per-arm). The
+omit [StandardBorelSpace 𝓐] [Nonempty 𝓐] in
+/-- **Positive allocation proportion at an abstract hitting time** (per-arm). The
 abstract-hitting-time generalisation of `aRTS_count_proportion_pos`: given the consistency
 throttle `hthrottle` and smallness `hgs`, together with Condition **B**'s non-sparsity `hTpos`, each
 allocation proportion `N_{n,k}/n` converges a.s. to a *positive* limit `v_k = T(θ)_k`. The target
@@ -55,10 +55,10 @@ lemma count_proportion_pos_of_hitting
       aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hgs : ∀ k, ∀ᵐ ω ∂P, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
-      (count (fun j ↦ actionIndicator A k j ω) (hitting (Q k ω) n)
+      ((pullCount A k (hitting (Q k ω) n) ω : ℝ)
           - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k) / (n : ℝ) < δ)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) (k : 𝓐) :
-    ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n
+    ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ (pullCount A k n ω : ℝ)
       / (n : ℝ)) atTop (𝓝 uk) := by
   have hmem : ∀ k', ν.means k' ∈ attainableSet A Y (θ₀ k') k' := by
     obtain ⟨ω, hω⟩ :=
@@ -80,15 +80,13 @@ lemma aRTS_count_proportion_pos (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) (k : 𝓐) :
-    ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n
+    ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ (pullCount A k n ω : ℝ)
       / (n : ℝ)) atTop (𝓝 uk) :=
   count_proportion_pos_of_hitting h hνk hT hTnn hTsum hα (aRTSUnder A Y θ₀ T)
     (fun k ↦ throttle_of_isARTS h hARTS k)
-    (fun k ↦ Eventually.of_forall fun ω δ hδ ↦ generic_small_of_hitting
-      (fun j ↦ actionIndicator A k j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k)
-      (aRTSUnder A Y θ₀ T k ω) (fun _ hm ↦ hm) δ hδ) hTpos k
+    (aRTS_smallness_all θ₀ T) hTpos k
 
-omit [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐] in
+omit [StandardBorelSpace 𝓐] [Nonempty 𝓐] in
 /-- **Loglog rate of the plug-in target at an abstract hitting time** (blueprint `lem:rho_rate`,
 `thm:LLN` third conclusion, generic form). The abstract-hitting-time generalisation of
 `aRTS_rho_rate`: the plug-in target achieves `ρ̂_{n,k} - v_k = O(√(log log n / n))` a.s., combining
@@ -104,7 +102,7 @@ lemma rho_rate_of_hitting (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
       aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hgs : ∀ k, ∀ᵐ ω ∂P, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
-      (count (fun j ↦ actionIndicator A k j ω) (hitting (Q k ω) n)
+      ((pullCount A k (hitting (Q k ω) n) ω : ℝ)
           - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k) / (n : ℝ) < δ)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
     (hT_diff : DifferentiableAt ℝ T ν.means) (k : 𝓐) :
@@ -115,7 +113,8 @@ lemma rho_rate_of_hitting (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (theta_consistent_of_hitting h hνk θ₀ T hT hTnn hTsum α hα Q hthrottle hgs hTpos)
     (fun k' ↦ ?_) k
   filter_upwards [abs_estimator_sub_le_rate_loglog_of_pos_count h k' (θ₀ k') (hνk k')
-    (count_proportion_pos_of_hitting h hνk hT hTnn hTsum hα Q hthrottle hgs hTpos k')] with ω hω
+    (by simpa only [← count_indicator_eq_pullCount] using
+      count_proportion_pos_of_hitting h hνk hT hTnn hTsum hα Q hthrottle hgs hTpos k')] with ω hω
   obtain ⟨C', hC'⟩ := hω
   refine isBigO_iff.mpr ⟨C', ?_⟩
   filter_upwards [hC'] with n hn
@@ -137,9 +136,7 @@ lemma aRTS_rho_rate (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
         =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) :=
   rho_rate_of_hitting h hνk hT hTnn hTsum hα (aRTSUnder A Y θ₀ T)
     (fun k ↦ throttle_of_isARTS h hARTS k)
-    (fun k ↦ Eventually.of_forall fun ω δ hδ ↦ generic_small_of_hitting
-      (fun j ↦ actionIndicator A k j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k)
-      (aRTSUnder A Y θ₀ T k ω) (fun _ hm ↦ hm) δ hδ)
+    (aRTS_smallness_all θ₀ T)
     hTpos hT_diff k
 
 /-- **Strong consistency and rates for an aRTS design** (blueprint `thm:LLN`). Under Conditions

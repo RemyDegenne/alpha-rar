@@ -103,13 +103,28 @@ lemma IsCondExp.ae_eq_aRTSSelProb (hA : ∀ n, Measurable (A n)) {k : 𝓐} {�
   hg.ae_eq_condExp (𝔽.shiftDown.le n) (integrable_actionIndicator P k (hA n))
 
 /-- The under-sampling event of arm `k` at time `m`: `N_{m,k} ≤ m ρ̂_{m,k}`. -/
-def aRTSUnder (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
-    (k : 𝓐) (ω : Ω) (m : ℕ) : Prop :=
-  count (fun j ↦ actionIndicator A k j ω) m ≤ (m : ℝ) * aRTSTarget A Y θ₀ T m ω k
+def aRTSUnder [DecidableEq 𝓐] (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ)
+    (T : (𝓐 → ℝ) → 𝓐 → ℝ) (k : 𝓐) (ω : Ω) (m : ℕ) : Prop :=
+  (pullCount A k m ω : ℝ) ≤ (m : ℝ) * aRTSTarget A Y θ₀ T m ω k
 
-noncomputable instance {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ}
-    {k : 𝓐} {ω : Ω} : DecidablePred (aRTSUnder A Y θ₀ T k ω) :=
+noncomputable instance [DecidableEq 𝓐] {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {θ₀ : 𝓐 → ℝ}
+    {T : (𝓐 → ℝ) → 𝓐 → ℝ} {k : 𝓐} {ω : Ω} : DecidablePred (aRTSUnder A Y θ₀ T k ω) :=
   Classical.decPred _
+
+omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] [IsProbabilityMeasure P] in
+/-- **The `aRTS` consistency smallness**, in the form consumed by the abstract-hitting-time
+theorems: at the last under-sampling time the gap `N_ℓ - ℓ ρ̂_ℓ` is `≤ 0` by the very definition of
+`aRTSUnder`, so it is smaller than any `δ > 0` after division by `n`. The `aRTS` counterpart of
+`aRTSFE_smallness_all`, and the reason the `aRTS` design needs no smallness argument at all. -/
+lemma aRTS_smallness_all [DecidableEq 𝓐] (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) :
+    ∀ k, ∀ᵐ ω ∂P, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
+      ((pullCount A k (hitting (aRTSUnder A Y θ₀ T k ω) n) ω : ℝ)
+          - (hitting (aRTSUnder A Y θ₀ T k ω) n : ℝ)
+            * aRTSTarget A Y θ₀ T (hitting (aRTSUnder A Y θ₀ T k ω) n) ω k) / (n : ℝ) < δ :=
+  fun k ↦ Eventually.of_forall fun ω δ hδ ↦ by
+    simpa only [count_indicator_eq_pullCount] using generic_small_of_hitting
+      (fun j ↦ actionIndicator A k j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k)
+      (aRTSUnder A Y θ₀ T k ω) (fun _ hm ↦ by rwa [count_indicator_eq_pullCount]) δ hδ
 
 /-! ### The concrete aRTS consistency theorem -/
 
@@ -122,7 +137,7 @@ and both are taken as hypotheses. The `aRTS` and `aRTSFE` designs then instantia
 respective predicates (last under-sampling time, resp. forced-exploration hitting time). Everything
 else — the vanishing normalised martingale, the plug-in-target convergence, and the generic key
 inequality (`generic_ineq_of_hitting`, valid for *any* predicate) — is discharged uniformly. -/
-lemma consistency_of_hitting [Fintype 𝓐]
+lemma consistency_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -132,11 +147,12 @@ lemma consistency_of_hitting [Fintype 𝓐]
       aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hgs : ∀ k, ∀ᵐ ω ∂P, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
-      (count (fun j ↦ actionIndicator A k j ω) (hitting (Q k ω) n)
+      ((pullCount A k (hitting (Q k ω) n) ω : ℝ)
           - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k) / (n : ℝ) < δ) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
-      Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 (u k))
+      Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (u k))
         ∧ Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop (𝓝 (u k)) := by
+  simp only [← count_indicator_eq_pullCount] at hgs ⊢
   let ℱ := h.filtration
   -- The target map lands in `[0,1]` because it lands in the simplex.
   have hTle1 : ∀ z k, T z k ≤ 1 := fun z k ↦
@@ -224,7 +240,7 @@ consistency `consistency_of_hitting` (whose throttle `hthrottle` and smallness `
 design-specific inputs) and Condition **B**'s non-sparsity `hTpos`, the sequential estimator
 converges a.s. to the true parameter `θ̂_n → θ = (ν.means k)_k`, via the design-independent
 `theta_consistent_pi_of_condB`. -/
-lemma theta_consistent_of_hitting [Fintype 𝓐]
+lemma theta_consistent_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -234,7 +250,7 @@ lemma theta_consistent_of_hitting [Fintype 𝓐]
       aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hgs : ∀ k, ∀ᵐ ω ∂P, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
-      (count (fun j ↦ actionIndicator A k j ω) (hitting (Q k ω) n)
+      ((pullCount A k (hitting (Q k ω) n) ω : ℝ)
           - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k) / (n : ℝ) < δ)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) :
     ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
@@ -243,7 +259,22 @@ lemma theta_consistent_of_hitting [Fintype 𝓐]
   refine theta_consistent_pi_of_condB h hνk θ₀ T hT hTpos ?_
   filter_upwards [consistency_of_hitting h hνk θ₀ T hT hTnn hTsum α hα Q hthrottle hgs] with ω hω
   obtain ⟨u, hu⟩ := hω
-  exact ⟨u, fun k ↦ ⟨((hu k).1).congr fun n ↦ by rw [count_indicator_eq_pullCount], (hu k).2⟩⟩
+  exact ⟨u, hu⟩
+
+omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] in
+/-- **Condition B holds at the limit**: `0 < T(θ)_k` for every arm. The estimator is a.s.
+consistent, so the mean vector `ν.means` is an *attainable* limit (`attainableSet` is exactly the
+set of such limits, `estimator_limit_mem_attainableSet`), and non-sparsity `hTpos` applies to it.
+The conclusion is deterministic, so a single path witnessing the consistency suffices. -/
+lemma target_pos_of_theta_consistent {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ}
+    (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k)
+    (hθconv : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
+      (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means)) :
+    ∀ k, 0 < T ν.means k := by
+  have hmem : ∀ k', ν.means k' ∈ attainableSet A Y (θ₀ k') k' := by
+    obtain ⟨ω, hω⟩ := hθconv.exists
+    exact fun k' ↦ estimator_limit_mem_attainableSet k' (θ₀ k') (tendsto_pi_nhds.mp hω k')
+  exact fun k ↦ hTpos ν.means hmem k
 
 /-- **Allocation proportions converge to the target at an abstract hitting time** (blueprint
 `thm:LLN`, first conclusion, generic form). The abstract-hitting-time generalisation of
@@ -261,7 +292,7 @@ lemma proportion_tendsto_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
       aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k)
     (hgs : ∀ k, ∀ᵐ ω ∂P, ∀ δ : ℝ, 0 < δ → ∀ᶠ n in atTop,
-      (count (fun j ↦ actionIndicator A k j ω) (hitting (Q k ω) n)
+      ((pullCount A k (hitting (Q k ω) n) ω : ℝ)
           - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k) / (n : ℝ) < δ)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) (k : 𝓐) :
     ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ))
@@ -275,14 +306,14 @@ lemma proportion_tendsto_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     tendsto_pi_nhds.mp ((hT.tendsto _).comp hθω) k
   have huk : u k = T ν.means k := tendsto_nhds_unique (hu k).2 hrho
   rw [← huk]
-  exact ((hu k).1).congr fun n ↦ by rw [count_indicator_eq_pullCount]
+  exact (hu k).1
 
 /-- **Consistency of the aRTS allocation proportions** (blueprint `thm:LLN`, consistency direction).
 The `aRTS` instantiation of `consistency_of_hitting` at the last under-sampling time
 `hitting (aRTSUnder …)`: whenever arm `k` is over-sampled its selection probability is throttled
 (`hthrottle`), so the smallness `N_{ℓ} - ℓ ρ̂_{ℓ} ≤ 0` is automatic (`generic_small_of_hitting`).
 Almost surely there is a common limit `u` with `N_{n,k}/n → u_k`, `ρ̂_{n,k} → u_k` for every `k`. -/
-lemma aRTS_consistency [Fintype 𝓐]
+lemma aRTS_consistency [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -291,11 +322,9 @@ lemma aRTS_consistency [Fintype 𝓐]
       aRTSSelProb A k h.filtration P m ω
         ≤ α * aRTSTarget A Y θ₀ T m ω k) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k,
-      Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 (u k))
+      Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (u k))
         ∧ Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop (𝓝 (u k)) :=
   consistency_of_hitting h hνk θ₀ T hT hTnn hTsum α hα (aRTSUnder A Y θ₀ T) hthrottle
-    (fun k ↦ Eventually.of_forall fun ω δ hδ ↦ generic_small_of_hitting
-      (fun j ↦ actionIndicator A k j ω) (fun j ↦ aRTSTarget A Y θ₀ T j ω k)
-      (aRTSUnder A Y θ₀ T k ω) (fun _ hm ↦ hm) δ hδ)
+    (aRTS_smallness_all θ₀ T)
 
 end AlphaRAR
