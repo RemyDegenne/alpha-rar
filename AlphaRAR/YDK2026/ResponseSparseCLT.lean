@@ -17,11 +17,11 @@ responses of a fixed arm `k`, we obtain the self-normalized response-martingale 
 the arm's **own** random pull count `N_{n,k}`:
 `Q_{n,k}/√N_{n,k} ⇒ 𝒩(0, V_k)`, where `V_k = Var[id; ν k]`.
 
-Unlike the deterministic-normalizer route (`AlphaRAR.respMart_selfNorm_tendsto_gaussianReal`), which
-requires a *positive* limiting proportion `N_{n,k}/n → v_k > 0`, this version needs only the
-regularity `N_{n,k}/c_{n,k} → 1` for a deterministic `c_{n,k} → ∞` — the concentration input which,
-for **sparse** targets `v_k = 0`, replaces positivity. This is the componentwise ingredient of the
-sparse CLT (blueprint `cor:sparse_clt`, `lem:componentwise`).
+Unlike `AlphaRAR.respMart_selfNorm_tendsto_gaussianReal`, which passes through a deterministic
+normalizer and so requires a *positive* limiting proportion `N_{n,k}/n → v_k > 0`, this version
+needs only the regularity `N_{n,k}/c_{n,k} → 1` for a deterministic `c_{n,k} → ∞` — the
+concentration input which, for **sparse** targets `v_k = 0`, replaces positivity. This is the
+componentwise ingredient of the sparse CLT, the paper's Corollary 5.3.
 -/
 
 @[expose] public section
@@ -44,8 +44,8 @@ lemma measurable_respSelfNorm (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k 
   (((measurable_of_countable _).comp (measurable_pullCount h.measurable_action k n)).sqrt.inv).mul
     (measurable_respMart h k n)
 
-/-- **The self-normalized response-martingale CLT for sparse targets** (blueprint
-`lem:componentwise`, per-arm form via Anscombe). Under Condition A, for an arm `k` sampled
+/-- **The self-normalized response-martingale CLT for sparse targets**, the per-arm form of the
+paper's Lemma 4.5 obtained via Anscombe. Under Condition A, for an arm `k` sampled
 infinitely often, whose pull count obeys the regularity `N_{n,k}/c_n → 1` a.s.\ for some
 deterministic `c_n → ∞`, the response martingale normalized by its own random count converges,
 `Q_{n,k}/√N_{n,k} ⇒ 𝒩(0, V_k)`, where `V_k = Var[id; ν k]`. No positivity of the limiting proportion
@@ -158,8 +158,8 @@ lemma measurable_estimatorSqrtN (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (
   (((measurable_of_countable _).comp (measurable_pullCount h.measurable_action k n)).sqrt).mul
     ((measurable_estimator_arm h k θ₀ n).sub_const _)
 
-/-- **The self-normalized estimator CLT for sparse targets** (blueprint `cor:sparse_clt`, per-arm
-form via Anscombe). Under Condition A, for an arm `k` sampled infinitely often whose pull count
+/-- **The self-normalized estimator CLT for sparse targets**, the per-arm form via Anscombe of the
+paper's Corollary 5.3. Under Condition A, for an arm `k` sampled infinitely often whose pull count
 obeys the regularity `N_{n,k}/c_n → 1` a.s.\ for some deterministic `c_n → ∞`, the estimator error
 scaled by its own random count converges,
 `√N_{n,k}(θ̂_{n,k} - θ_k) ⇒ 𝒩(0, V_k)`, with `V_k = Var[id; ν k]`. No positivity of the limiting

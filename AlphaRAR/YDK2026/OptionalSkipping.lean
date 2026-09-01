@@ -20,14 +20,14 @@ for `μ (Y j ⁻¹' E ∩ S) = ρ E · μ S` for every `S ∈ 𝒢 j` contained 
 Enumerate the hit times `τ_0 < τ_1 < ⋯`. Then the sampled sequence `Z m = Y_{τ_m}` is i.i.d. with
 law `ρ`.
 
-This is the probabilistic content of Doob's optional-skipping theorem (blueprint `lem:opt_skip`),
-which is not in Mathlib: there is no interaction between `IsStoppingTime` and independence in the
-library, so the core is built from scratch. The proof avoids the stopping-time σ-algebra and works
-with the fixed-time σ-algebra `𝒢 j` and the countable decomposition over the value of `τ_m`.
+This is the probabilistic content of Doob's optional-skipping theorem, which is not in Mathlib:
+there is no interaction between `IsStoppingTime` and independence in the library, so the core is
+built from scratch. The proof avoids the stopping-time σ-algebra and works with the fixed-time
+σ-algebra `𝒢 j` and the countable decomposition over the value of `τ_m`.
 
 The abstract factorisation `hfact` is a *generic sufficient condition*. It is discharged in the
 `IsAlgEnvSeq` framework (`AlphaRAR.iIndepFun_sampledResponse`): under a stationary environment the
-response `Y (n+1)` is fresh given the history and the current action `filtrationAction (n+1)`, so
+response `Y j` is fresh given the history and the current action (`filtrationAction j`), so
 sampling the times an arm `k` is pulled (`D j = 𝟙{A j = k}`) yields an i.i.d. `ν k` sequence.
 
 These definitions are the *generic* (any `D`, any `Y`, plain `Ω`) counterparts of the arm-specific
@@ -553,8 +553,7 @@ We discharge the abstract freshness hypothesis `hfact` for the stationary-enviro
 process: with `𝒢 = filtrationAction`, the selector `D j = 𝟙{A j = k}` of arm `k`, and common law
 `ν k`, the factorisation follows from `condExp_feedback_comp_stationaryEnv` (the conditional law of
 the response given the history and current action is `ν (A j)`). Hence sampling the pulls of arm
-`k` yields an i.i.d. sequence with law `ν k` — Doob's optional skipping (blueprint
-`lem:opt_skip`). -/
+`k` yields an i.i.d. sequence with law `ν k` — Doob's optional skipping. -/
 
 open Learning
 
@@ -601,7 +600,7 @@ lemma hfact_stationaryEnv {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (sta
 /-- **Doob optional skipping (independence).** For an algorithm–environment sequence in a stationary
 environment with per-arm reward kernel `ν`, if arm `k` is pulled infinitely often almost surely,
 then the responses observed at the pulls of arm `k`, `sampledSeq Y (actionIndicator A k)`, are
-independent. (Blueprint `lem:opt_skip`.) -/
+independent. -/
 lemma iIndepFun_sampledResponse {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) μ)
     (k : 𝓐) (hk_inf : ∀ᵐ ω ∂μ, {j | A j ω = k}.Infinite) :
     iIndepFun (sampledSeq Y (actionIndicator A k)) μ := by
@@ -622,7 +621,7 @@ lemma iIndepFun_sampledResponse {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y al
 
 /-- **Doob optional skipping (identical distribution).** Each response sampled at a pull of arm `k`
 has law `ν k`. Together with `iIndepFun_sampledResponse` this says the sampled responses are i.i.d.
-with the arm's reward law. (Blueprint `lem:opt_skip`.) -/
+with the arm's reward law. -/
 lemma map_sampledResponse_eq {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) μ)
     (k : 𝓐) (hk_inf : ∀ᵐ ω ∂μ, {j | A j ω = k}.Infinite) (m : ℕ) :
     μ.map (sampledSeq Y (actionIndicator A k) m) = ν k := by

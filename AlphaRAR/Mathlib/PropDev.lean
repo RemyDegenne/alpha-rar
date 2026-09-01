@@ -10,7 +10,7 @@ public import AlphaRAR.Mathlib.DeviationBound
 /-!
 # `ell_rho_control` and the assembled `prop_dev` deviation bound
 
-This file assembles the `o_p(√n)` deviation bound `lem:prop_dev` from the generic pieces of
+This file assembles the `o_p(√n)` deviation bound `prop_dev` from the generic pieces of
 `DeviationBound.lean`. The one Condition-B–specific input is packaged as the hypothesis `hlip`
 of `ell_rho_control`: the target map `T` is Lipschitz near `θ`, so (eventually) the plug-in target
 increment is controlled by the estimator increment,
@@ -33,14 +33,14 @@ namespace AlphaRAR
 
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω} {μ : Measure Ω}
 
-/-- **Control of the plug-in-target increment** (blueprint `lem:ell_rho_control`), parameterized by
-the Condition-B Lipschitz bound `hlip`. Given the estimator-increment control `hdiff`
-(`AlphaRAR.abs_estimator_diff_le`), the coefficient bounds (`g = o_p(1)` and the reweighting
-coefficient `h ≥ 0` bounded in probability, `h = O_p(1)`), and the `Q`-increment control
-(`Q-increment ≤ Qv·(n-ℓ) + Qw` with `Qv = o_p(1)`, `Qw = o_p(√n)`), the scaled target increment
-`rhoterm = ℓ(ρ̂_ℓ - ρ̂_n)` is bounded by `Vρ·(n-ℓ) + Wρ` with `Vρ = o_p(1)` and `Wρ = o_p(√n)`. The
-reweighting coefficient `h = ℓ/(N_n+1)` is only *bounded in probability* (it converges a.s. to
-`1/v_k`), not by a uniform constant, so it enters via `O_p·o_p = o_p`. -/
+/-- **Control of the plug-in-target increment**, parameterized by the Condition-B Lipschitz bound
+`hlip`. Given the estimator-increment control `hdiff` (`AlphaRAR.abs_estimator_diff_le`), the
+coefficient bounds (`g = o_p(1)` and the reweighting coefficient `h ≥ 0` bounded in probability,
+`h = O_p(1)`), and the `Q`-increment control (`Q-increment ≤ Qv·(n-ℓ) + Qw` with `Qv = o_p(1)`,
+`Qw = o_p(√n)`), the scaled target increment `rhoterm = ℓ(ρ̂_ℓ - ρ̂_n)` is bounded by
+`Vρ·(n-ℓ) + Wρ` with `Vρ = o_p(1)` and `Wρ = o_p(√n)`. The reweighting coefficient `h = ℓ/(N_n+1)`
+is only *bounded in probability* (it converges a.s. to `1/v_k`), not by a uniform constant, so it
+enters via `O_p·o_p = o_p`. -/
 lemma ell_rho_control {ι : Type*} [Fintype ι] {rhoterm d : ℕ → Ω → ℝ}
     {θdiff g h Qinc : ι → ℕ → Ω → ℝ}
     {Qvinc Qwinc : ℕ → Ω → ℝ} {L : ℝ} (hL : 0 ≤ L)
@@ -84,11 +84,12 @@ lemma ell_rho_control {ι : Type*} [Fintype ι] {rhoterm d : ℕ → Ω → ℝ}
     exact IsLittleOpOne.const_mul L
       (isLittleOpOne_finset_sum fun k _ ↦ (hh k).mul_littleOp hQw)
 
-/-- **Deviation between proportions and plug-in target** (blueprint `lem:prop_dev`, `o_p(√n)` part).
-Assembling all generic pieces: for a finite family with `∑_k Dev_k = 0`, the generic-inequality
-bound `Dev_k ≤ small_k + Uincr_k` with `small = o_p(√n)`, and the `U`-increment decomposition
-(drift `-c_k`, an `M`-term and a `ρ`-term each increment-controlled, and an `o_p(1)` perturbation),
-we get `Dev_k = o_p(√n)` for every arm `k`. -/
+/-- **Deviation between proportions and plug-in target**, the `o_p(√n)` half of the paper's
+Theorem 4.2 (i), eq. (5), in abstract form. Assembling all generic pieces: for a finite family
+with `∑_k Dev_k = 0`, the generic-inequality bound `Dev_k ≤ small_k + Uincr_k` with the positive
+part of `small_k/√n` an `o_p(1)`, and the `U`-increment decomposition (drift `-c_k`, an `M`-term
+and a `ρ`-term each increment-controlled, and an `o_p(1)` perturbation), we get `Dev_k = o_p(√n)`
+for every arm `k`. -/
 lemma prop_dev {ι : Type*} [Fintype ι]
     {Dev small Uincr Mincr rhoterm pert : ι → ℕ → Ω → ℝ} {d : ι → ℕ → Ω → ℝ} {c : ι → ℝ}
     {VM WM Vρ Wρ : ι → ℕ → Ω → ℝ}

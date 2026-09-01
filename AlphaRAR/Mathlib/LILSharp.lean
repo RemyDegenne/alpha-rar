@@ -15,24 +15,22 @@ The refined one-step estimate `eˣ ≤ 1 + x + ½(1+δ)x²` (valid as the increm
 exponential supermartingale and Freedman inequality it drives live in `LIL.lean`, which also
 derives its own crude `O`-rate engine as the `δ = 1` instance. This file takes that refined engine
 and pushes `δ ↓ 0`, together with geometric blocks of base `ρ ↓ 1`, to yield the sharp constant
-`limsup Mₙ/√(2⟨M⟩ₙ log log⟨M⟩ₙ) ≤ 1` (blueprint chapter `chap:pre_llil`, section
-"The sharp constant").
+`limsup Mₙ/√(2⟨M⟩ₙ log log⟨M⟩ₙ) ≤ 1`.
 
 ## Main results (in progress)
 
 * `AlphaRAR.measure_exists_ge_le_exp_optimized_refined` / `_all_refined`: the refined Freedman
-  bounds at the optimal `θ`, exponent `-λ²/(2(1+δ)v)` (blueprint `lem:llil_refined_freedman`),
-  from the refined supermartingale of `LIL.lean`.
+  bounds at the optimal `θ`, exponent `-λ²/(2(1+δ)v)`, from the refined supermartingale of
+  `LIL.lean`.
 * `AlphaRAR.ae_eventually_forall_lt_of_summable_eventually_refined`: the refined
   eventual-admissibility Borel–Cantelli step.
-* `AlphaRAR.ae_eventually_forall_lt_pow_loglog_sharp`: the sharp exceedance for bounded increments
-  (blueprint `lem:llil_sharp_block`): `⟨M⟩_n ≤ ρ^k ⇒ M_n < √(2(1+ε)ρ^k log(k+2))` eventually.
+* `AlphaRAR.ae_eventually_forall_lt_pow_loglog_sharp`: the sharp exceedance for bounded increments,
+  `⟨M⟩_n ≤ ρ^k ⇒ M_n < √(2(1+ε)ρ^k log(k+2))` eventually.
 * `AlphaRAR.ae_eventually_le_sqrt_predQuadVar_mul_loglog_sharp` / `_sharp'` / `_sharp_all`: the
   sharp normalized bound, repackaging least-`k` with the loglog bound kept additive; `_sharp_all`
   gives the one-sided `limsup ≤ 1` (`∀ b > 1, ∀ᶠ n, M_n ≤ b√(2⟨M⟩_n log log⟨M⟩_n)`).
 * `AlphaRAR.ae_eventually_abs_le_sqrt_predQuadVar_mul_loglog_sharp`: the **sharp constant,
-  two-sided** (blueprint `thm:llil_sharp`): a.s. for every `b > 1`, eventually
-  `|M_n| ≤ b √(2 ⟨M⟩_n log log⟨M⟩_n)`.
+  two-sided**: a.s. for every `b > 1`, eventually `|M_n| ≤ b √(2 ⟨M⟩_n log log⟨M⟩_n)`.
 * `AlphaRAR.ae_limsup_abs_div_sqrt_predQuadVar_mul_loglog_le_one`: the same in genuine `limsup`
   form, `limsup_n |M_n|/√(2 ⟨M⟩_n log log⟨M⟩_n) ≤ 1` a.s.
 * `AlphaRAR.measure_exists_ge_le_exp_horizon_refined`,
@@ -49,14 +47,16 @@ and pushes `δ ↓ 0`, together with geometric blocks of base `ρ ↓ 1`, to yie
 * `AlphaRAR.exists_ceil_pow_horizon`: the geometric horizons `N_j = ⌈ρ^j⌉` and their properties.
 * `AlphaRAR.ae_eventually_le_sqrt_nat_mul_loglog_of_growing_sharp'`: the single-constant wrapper,
   hiding the `C, α` choice — takes only `ρ, δ, b` with `(1+δ)ρ < b²`, and the martingale data.
-* `AlphaRAR.tendsto_growth_horizon`: the base-independent condition (H). From `g` with
-  `g n √(loglog n/n) → 0` it derives, for the geometric horizons `N_j` with `ρ^j ≤ N_j`, the block
-  condition `g(N_j) √(log(j+2)/N_j) → 0` (via `log(j+2) ≤ (log K+1)·loglog N_j`, `K = 1/log ρ + 2`).
-* `AlphaRAR.ae_eventually_le_sqrt_nat_mul_loglog_of_growth_sharp_all` / `_abs_..._growth_sharp_all`:
-  the **`b > 1` limit** of the growing sharp LIL (one- and two-sided): for a martingale with
-  base-independent increment growth `|ΔM_i| ≤ g(i)` (`g` monotone, `g n √(loglog n/n) → 0`) and
-  `⟨M⟩_n ≤ v·n`, a.s. `∀ b > 1, ∀ᶠ n, |M_n| ≤ b √(2 v n loglog n)`. For each `b` we block with base
-  `ρ = 1 + (b-1)/2 ↓ 1`; condition (H) comes from `tendsto_growth_horizon`.
+* `AlphaRAR.tendsto_growth_horizon`: the bridge from a base-independent increment growth to the
+  per-block condition. From `g` with `g n √(loglog n/n) → 0` it derives, for the geometric horizons
+  `N_j` with `ρ^j ≤ N_j`, the block condition `g(N_j) √(log(j+2)/N_j) → 0` (via
+  `log(j+2) ≤ (log K+1)·loglog N_j`, `K = 1/log ρ + 2`).
+* `AlphaRAR.ae_eventually_le_sqrt_nat_mul_loglog_of_growth_sharp_all`,
+  `AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growth_sharp_all`: the **`b > 1` limit** of
+  the growing sharp LIL (one- and two-sided): for a martingale with base-independent increment
+  growth `|ΔM_i| ≤ g(i)` (`g` monotone, `g n √(loglog n/n) → 0`) and `⟨M⟩_n ≤ v·n`, a.s.
+  `∀ b > 1, ∀ᶠ n, |M_n| ≤ b √(2 v n loglog n)`. For each `b` we block with base
+  `ρ = 1 + (b-1)/2 ↓ 1`; the block condition comes from `tendsto_growth_horizon`.
 * `AlphaRAR.ae_limsup_abs_div_sqrt_nat_mul_loglog_of_growth_le_one`: the same in genuine `limsup`
   form, `limsup_n |M_n|/√(2 v n log log n) ≤ 1` a.s. The sharp constant `1` for the low part.
 -/
@@ -72,9 +72,8 @@ namespace AlphaRAR
 variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω} {ℱ : Filtration ℕ m0}
   {M : ℕ → Ω → ℝ}
 
-/-- **Refined Freedman with the optimal `θ = λ/((1+δ)v)`** (finite horizon, blueprint
-`lem:llil_refined_freedman`). At the optimizer the exponent is the sharp `-λ²/(2(1+δ)v)`; the
-admissibility `θ c ≤ η` reads `λ c ≤ (1+δ) v η`. -/
+/-- **Refined Freedman with the optimal `θ = λ/((1+δ)v)`** (finite horizon). At the optimizer the
+exponent is the sharp `-λ²/(2(1+δ)v)`; the admissibility `θ c ≤ η` reads `λ c ≤ (1+δ) v η`. -/
 lemma measure_exists_ge_le_exp_optimized_refined [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c δ η : ℝ} (hδ : 0 ≤ δ)
     (hη : ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2)
@@ -113,10 +112,10 @@ lemma measure_exists_ge_le_exp_all_refined [IsProbabilityMeasure μ] (hM : Marti
   exact iSup_le fun n ↦
     measure_exists_ge_le_exp_optimized_refined hM hM0 hM2 hδ hη hb hlam hv hadm n
 
-/-- **Refined Borel–Cantelli with eventual admissibility** (blueprint `lem:llil_evt_adm`, sharp
-version). The sharp analogue of `ae_eventually_forall_lt_of_summable_eventually`: with the refined
-Freedman bounds `exp(-λ_k²/(2(1+δ)v_k))` summable and admissibility `λ_k c ≤ (1+δ)v_k η` holding
-eventually, almost surely for all large `k` and every `n`, `⟨M⟩_n ≤ v_k ⇒ M_n < λ_k`. -/
+/-- **Refined Borel–Cantelli with eventual admissibility.** The sharp analogue of
+`ae_eventually_forall_lt_of_summable_eventually`: with the refined Freedman bounds
+`exp(-λ_k²/(2(1+δ)v_k))` summable and admissibility `λ_k c ≤ (1+δ)v_k η` holding eventually, almost
+surely for all large `k` and every `n`, `⟨M⟩_n ≤ v_k ⇒ M_n < λ_k`. -/
 lemma ae_eventually_forall_lt_of_summable_eventually_refined [IsProbabilityMeasure μ]
     (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {c δ η : ℝ} (hδ : 0 ≤ δ) (hη : ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2)
@@ -169,10 +168,10 @@ lemma tendsto_log_add_two_div_pow {ρ : ℝ} (hρ : 1 < ρ) :
   · gcongr
     exact (log_le_sub_one_of_pos (by positivity)).trans (by linarith)
 
-/-- **Sharp exceedance for bounded increments** (blueprint `lem:llil_sharp_block`). With blocks
-`v_k = ρ^k` and sharp thresholds `λ_k = √(2(1+ε)ρ^k log(k+2))` (using `log(k+2) ≍ loglog ρ^k`),
-almost surely for all large `k` and every `n`, `⟨M⟩_n ≤ ρ^k ⇒ M_n < √(2(1+ε)ρ^k log(k+2))`. The
-refined Freedman tail is `exp(-((1+ε)/(1+δ)) log(k+2))`, a `p`-series with `p = (1+ε)/(1+δ) > 1`
+/-- **Sharp exceedance for bounded increments.** With blocks `v_k = ρ^k` and sharp thresholds
+`λ_k = √(2(1+ε)ρ^k log(k+2))` (using `log(k+2) ≍ loglog ρ^k`), almost surely for all large `k`
+and every `n`, `⟨M⟩_n ≤ ρ^k ⇒ M_n < √(2(1+ε)ρ^k log(k+2))`. The refined Freedman tail is
+`exp(-((1+ε)/(1+δ)) log(k+2))`, a `p`-series with `p = (1+ε)/(1+δ) > 1`
 (`summable_exp_neg_mul_log_add`); admissibility `λ_k c ≤ (1+δ)ρ^k η_δ` holds eventually since
 `log(k+2)/ρ^k → 0`. -/
 lemma ae_eventually_forall_lt_pow_loglog_sharp [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
@@ -219,8 +218,8 @@ lemma ae_eventually_forall_lt_pow_loglog_sharp [IsProbabilityMeasure μ] (hM : M
   filter_upwards [ae_eventually_forall_lt_of_summable_eventually_refined hM hM0 hM2 hδ.le hη hb
     (v := fun k ↦ ρ ^ k) hadm hsum] with ω hω using hω
 
-/-- **Sharp normalized bound for fixed block base** (blueprint `lem:llil_sharp_block` repackaged).
-For bounded increments with `⟨M⟩_n → ∞`, if `b² > (1+ε)ρ` then almost surely eventually
+/-- **Sharp normalized bound for fixed block base.** For bounded increments with `⟨M⟩_n → ∞`, if
+`b² > (1+ε)ρ` then almost surely eventually
 `M_n ≤ b √(2 ⟨M⟩_n log log⟨M⟩_n)`. Repackaging the sharp block via the least `k` with `⟨M⟩_n ≤ ρ^k`:
 `ρ^k ≤ ρ⟨M⟩_n` and, crucially, the loglog bound is kept **additive**,
 `log(k+2) ≤ D_ρ + log log⟨M⟩_n` (with `D_ρ = log(1/log ρ + 1)`), so no constant `> 1` multiplies the
@@ -329,8 +328,8 @@ lemma ae_eventually_le_sqrt_predQuadVar_mul_loglog_sharp' [IsProbabilityMeasure 
     (ρ := 1 + t) (ε := t) (δ := t / 2) (b := b) (by linarith) (by linarith) (by linarith)
     (by linarith) (by nlinarith [ht4, ht1, ht0])
 
-/-- **Sharp `limsup ≤ 1`, one-sided** (blueprint `thm:llil_sharp`). For a bounded-increment
-`L²`-martingale with `M_0 = 0` and `⟨M⟩_n → ∞` a.s., almost surely for every `b > 1` eventually
+/-- **Sharp `limsup ≤ 1`, one-sided.** For a bounded-increment `L²`-martingale with `M_0 = 0` and
+`⟨M⟩_n → ∞` a.s., almost surely for every `b > 1` eventually
 `M_n ≤ b √(2 ⟨M⟩_n log log⟨M⟩_n)`, i.e. `limsup M_n/√(2⟨M⟩_n log log⟨M⟩_n) ≤ 1`. Countable
 intersection over `b_m = 1 + 1/(m+1) ↓ 1` of the previous lemma. -/
 lemma ae_eventually_le_sqrt_predQuadVar_mul_loglog_sharp_all [IsProbabilityMeasure μ]
@@ -352,9 +351,9 @@ lemma ae_eventually_le_sqrt_predQuadVar_mul_loglog_sharp_all [IsProbabilityMeasu
   refine hn.trans (mul_le_mul_of_nonneg_right ?_ (Real.sqrt_nonneg _))
   linarith [hm]
 
-/-- **Sharp `limsup ≤ 1`, two-sided** (blueprint `thm:llil_sharp`). Applying the one-sided sharp
-bound to `M` and `-M` (same quadratic variation, `predQuadVar_neg`) gives, a.s., for every `b > 1`
-eventually `|M_n| ≤ b √(2 ⟨M⟩_n log log⟨M⟩_n)`. This is the sharp constant `1` (two-sided). -/
+/-- **Sharp `limsup ≤ 1`, two-sided.** Applying the one-sided sharp bound to `M` and `-M` (same
+quadratic variation, `predQuadVar_neg`) gives, a.s., for every `b > 1` eventually
+`|M_n| ≤ b √(2 ⟨M⟩_n log log⟨M⟩_n)`. This is the sharp constant `1` (two-sided). -/
 lemma ae_eventually_abs_le_sqrt_predQuadVar_mul_loglog_sharp [IsProbabilityMeasure μ]
     (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {c : ℝ} (hc : 0 < c) (hbd : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
@@ -381,9 +380,8 @@ lemma ae_eventually_abs_le_sqrt_predQuadVar_mul_loglog_sharp [IsProbabilityMeasu
   rw [abs_le]
   exact ⟨by linarith [h2], h1⟩
 
-/-- **Sharp constant as an actual `limsup`** (blueprint `thm:llil_sharp`). The two-sided sharp bound
-in genuine `limsup` form: almost surely
-`limsup_n |M_n| / √(2 ⟨M⟩_n log log⟨M⟩_n) ≤ 1`. Derived from the `∀ b > 1, ∀ᶠ` form
+/-- **Sharp constant as an actual `limsup`.** The two-sided sharp bound in genuine `limsup` form:
+almost surely `limsup_n |M_n| / √(2 ⟨M⟩_n log log⟨M⟩_n) ≤ 1`. Derived from the `∀ b > 1, ∀ᶠ` form
 (`ae_eventually_abs_le_sqrt_predQuadVar_mul_loglog_sharp`): each `b > 1` bounds the `limsup`
 (`limsup_le_of_le`, the quotient being cobounded below by `0`), and `limsup ≤ b` for all `b > 1`
 gives `limsup ≤ 1`. -/
@@ -412,18 +410,18 @@ lemma ae_limsup_abs_div_sqrt_predQuadVar_mul_loglog_le_one [IsProbabilityMeasure
 
 The sharp bounded engine above requires a global increment bound; the i.i.d. Hartman–Wintner low
 part has increments growing like `√(i/log i)`. As in the `O`-rate `LILLogLog.lean`, we handle
-growing increments by stopping at each deterministic horizon `2^j` (`stopMart`), where the
+growing increments by stopping at each deterministic horizon `N_j` (`stopMart`), where the
 increments are bounded up to the horizon, and applying the refined pre-optimization Freedman bound
-with the near-optimal `θ_j = α√(log(j+2)/2^j)`. The refined exponent collapses to the sharp
+with the near-optimal `θ_j = α√(log(j+2)/N_j)`. The refined exponent collapses to the sharp
 `(½(1+δ)α²v - αC)log(j+2)`, a `p`-series tail.
 
-**Scope.** These are the *sharp per-block bounds* (refined-Freedman exponent). Repackaging them to
-the natural `n`-scale via the least `j` with `n ≤ 2^j` incurs `2^j ≤ 2n`, an irreducible base-2
-factor, so the resulting LIL constant is `√2·(C/√(2v)) → √2`, not the sharp `1` — the base-2
-deterministic horizon sharpens the exponent but not the constant. The sharp constant for growing
-increments instead requires blocking with base `ρ ↓ 1` (quadratic-variation stopping at level `ρ^k`,
-blueprint `lem:llil_qv_stop`), which reuses the *bounded* sharp block on the stopped martingale;
-that random-stopping quadratic-variation identity is the remaining ingredient. -/
+**Scope.** These are the *sharp per-block bounds* (refined-Freedman exponent). With dyadic
+horizons, repackaging them to the natural `n`-scale via the least `j` with `n ≤ 2^j` incurs
+`2^j ≤ 2n`, an irreducible base-2 factor, so the LIL constant would be `√2·(C/√(2v)) → √2`, not the
+sharp `1`: the base-2 deterministic horizon sharpens the exponent but not the constant. The sharp
+constant comes instead from horizons of base `ρ ↓ 1` together with a linear quadratic-variation
+bound `⟨M⟩_n ≤ v·n`, which lets a deterministic horizon play the role of quadratic-variation
+stopping at level `ρ^k`. -/
 
 /-- **Refined Freedman with a horizon-local increment bound.** The sharp-constant analogue of
 `measure_exists_ge_le_exp_horizon`: the increment bound `|ΔM_i| ≤ c` is required only for `i < N`,
@@ -461,8 +459,8 @@ lemma measure_exists_ge_le_exp_horizon_refined [IsProbabilityMeasure μ] (hM : M
   rw [hset]; exact hmain
 
 /-- **Sharp per-block loglog Freedman bound for a growing-increment martingale.** With
-`θ_j = α√(log(j+2)/2^j)`, an increment bound `c` up to horizon `2^j`, threshold
-`λ_j = C√(2^j log(j+2))` and quadratic-variation bound `v·2^j`, the refined horizon Freedman gives
+`θ_j = α√(log(j+2)/N_j)`, an increment bound `c` up to horizon `N_j`, threshold
+`λ_j = C√(N_j log(j+2))` and quadratic-variation bound `v·N_j`, the refined horizon Freedman gives
 the sharp exponent `(½(1+δ)α²v - αC)log(j+2)` (square roots collapse). Admissibility
 `θ_j c ≤ η` is a hypothesis (`η` from the refined inequality). -/
 lemma measure_exists_ge_le_exp_block_loglog_sharp [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
@@ -557,7 +555,7 @@ set_option maxHeartbeats 800000 in
 -- the additive `log(j+2) ≤ D_ρ + loglog n` through a single `nlinarith`; the accumulated linear
 -- arithmetic exceeds the default heartbeat budget.
 /-- **Sharp `√(2vn loglog n)` LIL for a growing-increment martingale with a linear quadratic
-variation bound.** With time horizons `N_j = ⌈ρ^j⌉` (`ρ ↓ 1`), condition \textbf{(H)} in the form
+variation bound.** With time horizons `N_j = ⌈ρ^j⌉` (`ρ ↓ 1`), the block condition
 `c_j √(log(j+2)/N_j) → 0`, and `⟨M⟩_n ≤ v·n`, almost surely eventually
 `M_n ≤ b √(2 v n log log n)`, whenever `C√ρ < b√(2v)` and `1 < αC - ½(1+δ)α²v`. Repackaging the
 block via the least `j` with `n ≤ N_j`: `N_j ≤ ρn+1` and (additively) `log(j+2) ≤ D_ρ + loglog n`,
@@ -578,7 +576,7 @@ lemma ae_eventually_le_sqrt_nat_mul_loglog_of_growing_sharp [IsProbabilityMeasur
   have hlogρ : (0 : ℝ) < log ρ := log_pos hρ
   have h2v : (0 : ℝ) < 2 * v := by positivity
   have hρpos : (0 : ℝ) < ρ := by linarith
-  -- Eventual admissibility from condition (H).
+  -- Eventual admissibility from the block condition.
   have hAdm : ∀ᶠ (j : ℕ) in atTop, α * √(log ((j : ℝ) + 2) / (N j : ℝ)) * c j ≤ η := by
     have htend : Tendsto (fun j : ℕ ↦ α * (c j * √(log ((j : ℝ) + 2) / (N j : ℝ)))) atTop
         (𝓝 0) := by tendsto
@@ -726,7 +724,7 @@ lemma exists_ceil_pow_horizon {ρ : ℝ} (hρ : 1 < ρ) :
 sharp block/repackaging with an internally-chosen optimizer `α = C/((1+δ)v)`,
 `C = √((1+δ)v + b²v/ρ)` (so `2(1+δ)v < C² < 2b²v/ρ`) yields `M_n ≤ b √(2vn loglog n)` a.s.
 This packages the `C, α` arithmetic; the caller supplies only the horizons, the increment bound and
-condition \textbf{(H)}. -/
+the block condition `c_j √(log(j+2)/N_j) → 0`. -/
 lemma ae_eventually_le_sqrt_nat_mul_loglog_of_growing_sharp' [IsProbabilityMeasure μ]
     (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {v δ b ρ : ℝ} (hρ : 1 < ρ) (hδ : 0 < δ) (hv : 0 < v) (hb0 : 0 < b) (hbρ : (1 + δ) * ρ < b ^ 2)
@@ -763,7 +761,7 @@ lemma ae_eventually_le_sqrt_nat_mul_loglog_of_growing_sharp' [IsProbabilityMeasu
   exact ae_eventually_le_sqrt_nat_mul_loglog_of_growing_sharp hM hM0 hM2 hρ hδ hαpos hv hp hb0 hbC
     N hNmono hN1 hNle hNlt c hc0 hinc hH hqv
 
-/-- **Condition (H) from a base-independent increment growth.** If the increment growth `g`
+/-- **The block condition from a base-independent increment growth.** If the increment growth `g`
 (`0 ≤ g`) satisfies `g n · √(loglog n / n) → 0`, then for the geometric horizons `N_j` with
 `ρ^j ≤ N_j` (`ρ > 1`) the block condition `g(N_j) √(log(j+2)/N_j) → 0` holds. The bridge:
 `N_j → ∞`, and `log(j+2) ≤ (log K + 1)·loglog N_j` with `K = 1/log ρ + 2` (from
@@ -833,7 +831,7 @@ lemma tendsto_growth_horizon {ρ : ℝ} (hρ : 1 < ρ) {g : ℕ → ℝ} (hgnn :
 base-independent increment growth `|ΔM_i| ≤ g(i)` (`g` monotone, `0 ≤ g`, `g n √(loglog n/n) → 0`)
 and linear quadratic variation `⟨M⟩_n ≤ v·n`, almost surely for every `b > 1` eventually
 `M_n ≤ b √(2 v n loglog n)`. For each `b`, blocks with base `ρ = 1 + (b-1)/2 ↓ 1` and
-`δ = (b-1)/2` give `(1+δ)ρ = ρ² < b²`; condition (H) comes from `tendsto_growth_horizon`. -/
+`δ = (b-1)/2` give `(1+δ)ρ = ρ² < b²`; the block condition comes from `tendsto_growth_horizon`. -/
 lemma ae_eventually_le_sqrt_nat_mul_loglog_of_growth_sharp_all [IsProbabilityMeasure μ]
     (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {v : ℝ} (hv : 0 < v) {g : ℕ → ℝ} (hgmono : Monotone g) (hgnn : ∀ i, 0 ≤ g i)

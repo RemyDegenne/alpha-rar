@@ -15,9 +15,9 @@ public import Mathlib.Order.Filter.AtTopBot.Archimedean
 
 If `b` is positive, nondecreasing with `b n → ∞` and the partial sums `∑_{k < n} y k` converge,
 then the `b`-weighted averages `(1/b n) ∑_{k < n} b (k+1) · y k` tend to `0`. This is the form of
-Kronecker's lemma used in the martingale strong law of large numbers: applied to `y_k = ΔM_k / b_k`
-with `b_k = 1 + ⟨M⟩_k`, it turns the a.s. convergence of the bracket-normalized series
-`∑ ΔM_k / b_k` into `M_n / b_n → 0`.
+Kronecker's lemma used in the martingale strong law of large numbers: applied to
+`y_k = ΔM_k / b_{k+1}` with `b_k = 1 + ⟨M⟩_k`, it turns the a.s. convergence of the
+bracket-normalized series `∑ ΔM_k / b_{k+1}` into `M_n / b_n → 0`.
 
 We prove the general statement `kronecker_general` by summation by parts (a Toeplitz/Silverman
 argument on the weights) and derive the identity-weight special cases `kronecker'` (weights `k + 1`)
@@ -191,7 +191,7 @@ lemma kronecker_general {b y : ℕ → ℝ} {s : ℝ}
 
 /-- Kronecker's lemma with weights `k + 1`: if `∑_{k<n} x k` converges, then
 `(1/n) ∑_{k<n} (k+1)·x k → 0`. This is the form used for the martingale SLLN, where
-`x_k = ΔM_k / (k+1)` makes `∑_{k<n} (k+1)·x_k = M n` telescope.
+`x_k = ΔM_k / (k+1)` makes `∑_{k<n} (k+1)·x_k` telescope to `M n - M 0`.
 
 It is the special case of `kronecker_general` with the positive nondecreasing weights
 `b_k = max k 1` (equal to `k` for `k ≥ 1`, so `b (k+1) = k+1` and the divisor is `n` eventually). -/

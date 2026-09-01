@@ -14,15 +14,14 @@ public import AlphaRAR.YDK2026.PluginTargetCLT
 # The `o_p(√n)` proportion-deviation bound for the aRTS design
 
 This file instantiates the generic deviation theorem `AlphaRAR.prop_dev` for the concrete aRTS
-design, giving the paper-form statement (blueprint `lem:prop_dev`, `thm:normality` part (i),
-`o_p(√n)` half): for every arm `k`,
+design, giving equation (5) of Theorem 4.2 (i) of the paper: for every arm `k`,
 `|N_{n,k} - n ρ̂_{n,k}| = o_p(√n)`, where `N_{n,k}` is the allocation count and `ρ̂_{n,k}` the
 plug-in target.
 
 Everything is derived from the aRTS design bundle (an `IsAlgEnvSeq` algorithm–environment sequence
-under Condition **A** `hY2`, the throttle, `α ∈ [0,1)`) plus Condition **B** (the target map `T`
-Lipschitz near `θ`, non-sparsity `v_k > 0`, and the a.s. consistency `N/n → v`, `θ̂ → θ` from
-`thm:LLN`).
+under Condition **A** `hνk`, the throttle, `α ∈ [0,1)`) plus Condition **B** (the target map `T`
+Lipschitz, non-sparsity `v_k > 0`, and the a.s. consistency `N/n → v`, `θ̂ → θ` of Theorem 4.1 of
+the paper).
 
 ## Main results
 
@@ -143,7 +142,7 @@ lemma measurable_gap_hitting [Finite 𝓐] [DecidableEq 𝓐] {Q : Ω → ℕ �
 `1/v_{k''}`), for an abstract hitting time `hitting (Q ·) n ≤ n`. This is the coefficient `h` fed to
 `ell_rho_control`; the argument only uses `ℓ ≤ n` and the proportion consistency, so it is
 design-independent (the `aRTS`/`aRTSFE` hitting times just supply the measurable predicate `Q`).
-Stated in `count` form, like `ell_rho_control` itself. -/
+Stated in `count` form, which is how it is passed to `ell_rho_control`. -/
 lemma h_bigOp_of_hitting (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (Q ω)] (hQmeas : ∀ m, MeasurableSet {ω | Q ω m})
     (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
@@ -197,7 +196,7 @@ lemma tendsto_sqrt_div_count (k'' : 𝓐) {v : ℝ} (hv : 0 < v)
 `F₁ = ℓ/(N_ℓ+1) = O_p(1)` (a.s. bounded) and `F₂ = (|Q_ℓ|+|a|)/(N_n+1) = o_p(1)` (via the Doob
 running-max `sup_{m≤n}|Q_m| = O_p(√n)` and `√n/(N_n+1) → 0`); then `O_p·o_p = o_p`. The argument
 uses only `ℓ ≤ n` and measurability of `Q`, so it is design-independent. Stated in `count` form,
-like `ell_rho_control` itself. -/
+which is how it is passed to `ell_rho_control`. -/
 lemma g_littleOp_of_hitting [Finite 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ)
     {Q : Ω → ℕ → Prop} [∀ ω, DecidablePred (Q ω)] (hQmeas : ∀ m, MeasurableSet {ω | Q ω m})
@@ -304,17 +303,17 @@ lemma aRTS_smallness_op [DecidableEq 𝓐] (θ₀ : 𝓐 → ℝ) (T : (𝓐 →
     gcongr
     linarith [hps]
 
-/-- **Deviation between proportions and plug-in target at an abstract hitting time** (blueprint
-`lem:prop_dev`, `thm:normality` part (i), `o_p(√n)` half, generic form). The abstract-hitting-time
-generalisation of `aRTS_prop_dev`: for any per-arm predicate `Q` with measurable level sets
-(`hQmeas`), given the `thm:LLN` consistencies `θ̂ → θ` (`hθconv`) and `N/n → v` (`hNconv`), the
-throttle `¬ Q → p ≤ α ρ̂` (`hthrottle`), and the smallness `o_p`-bound `hsmall_op` (that
+/-- **Deviation between proportions and plug-in target at an abstract hitting time**, the
+abstract-hitting-time generalisation of `aRTS_prop_dev` (equation (5) of Theorem 4.2 (i) of the
+paper): for any per-arm predicate `Q` with measurable level sets (`hQmeas`), given the
+consistencies `θ̂ → θ` (`hθconv`) and `N/n → v` (`hNconv`), the throttle `¬ Q → p ≤ α ρ̂`
+(`hthrottle`), and the smallness `o_p`-bound `hsmall_op` (that
 `(1 + N_ℓ - ℓ ρ̂_ℓ)^+/√n = o_p(1)`), the deviation `N_{n,k} - n ρ̂_{n,k} = o_p(√n)`. Everything
-else —
-the key inequality `generic_ineq_of_hitting`, the `diff_U_decomp` perturbation, the assignment-
-martingale `M`-increment, and the `ell_rho_control` `g`/`h`-coefficients (`g_littleOp_of_hitting`,
-`h_bigOp_of_hitting`) — depends only on `hitting (Q k ·) n ≤ n`, so it is discharged uniformly. The
-`aRTS`/`aRTSFE` designs then instantiate it with their respective predicates. -/
+else — the key inequality `generic_ineq_of_hitting`, the `diff_U_decomp` perturbation, the
+assignment-martingale `M`-increment, and the `ell_rho_control` `g`/`h`-coefficients
+(`g_littleOp_of_hitting`, `h_bigOp_of_hitting`) — depends only on `hitting (Q k ·) n ≤ n`, so it is
+discharged uniformly. The `aRTS`/`aRTSFE` designs then instantiate it with their respective
+predicates. -/
 lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
@@ -686,21 +685,19 @@ lemma prop_dev_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
   · -- hWρ
     exact hWρ
 
-/-- **Deviation between proportions and plug-in target for the aRTS design**
-(blueprint `lem:prop_dev`, `thm:normality` part (i), `o_p(√n)` half). For every arm `k`,
-`|N_{n,k} - n ρ̂_{n,k}| = o_p(√n)`.
+/-- **Deviation between proportions and plug-in target for the aRTS design** (equation (5) of
+Theorem 4.2 (i) of the paper). For every arm `k`, `|N_{n,k} - n ρ̂_{n,k}| = o_p(√n)`.
 
 The `aRTS` instantiation of `prop_dev_of_hitting` at the last under-sampling time
-`hitting (aRTSUnder …)`, fully self-contained: the `thm:LLN` consistencies `θ̂ → θ`
+`hitting (aRTSUnder …)`, fully self-contained: the consistencies `θ̂ → θ`
 (`aRTS_theta_consistent`), `N/n → v` (`aRTS_proportion_tendsto`), the throttle
 (`throttle_of_isARTS`, from the algorithm-level `IsARTS` predicate), and the smallness are all
-discharged from the same
-`aRTS_LLN` design bundle — an `IsAlgEnvSeq` sequence, `Y ∈ L²` (Condition **A**), a simplex-valued
-`LipschitzWith K` target `T` (Condition **B**), `α ∈ [0,1)`, and the non-sparsity `hTpos`. The
-smallness is automatic: at the last under-sampling time `N_ℓ - ℓ ρ̂_ℓ ≤ 0` (`preliminary_small`), so
-`(1 + N_ℓ - ℓ ρ̂_ℓ)^+/√n ≤ 1/√n = o_p(1)`. The a.s. `O(√(n log log n))` bounds are a separate
-statement. -/
-lemma aRTS_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+discharged from the same `aRTS_LLN` design bundle — an `IsAlgEnvSeq` sequence, `Y ∈ L²`
+(Condition **A**), a simplex-valued `LipschitzWith K` target `T` (Condition **B**), `α ∈ [0,1)`,
+and the non-sparsity `hTpos`. The smallness is automatic: at the last under-sampling time
+`N_ℓ - ℓ ρ̂_ℓ ≤ 0` (`preliminary_small`), so `(1 + N_ℓ - ℓ ρ̂_ℓ)^+/√n ≤ 1/√n = o_p(1)`. The a.s.
+`O(√(n log log n))` bounds are a separate statement. -/
+theorem aRTS_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)

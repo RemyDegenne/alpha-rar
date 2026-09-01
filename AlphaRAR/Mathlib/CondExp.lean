@@ -19,8 +19,8 @@ The point of naming the property is that many of this development's definitions 
 expectations of a specific random variable given a specific σ-algebra — the selection probability
 `aRTSSelProb`, the cell variances `MartDiffArray.condVar` — and for those the mathematical content
 is not the formula but which variable and which σ-algebra. `IsCondExp` is the predicate their
-`@[characterization]` bundles are stated with; `Mathlib.condExp` itself cannot carry the bundle,
-since the attribute refuses to annotate an imported declaration.
+`@[characterization]` bundles are stated with: Mathlib expresses the property only through the
+function `MeasureTheory.condExp`, and a bundle needs a `Prop` that a candidate `g` satisfies.
 -/
 
 @[expose] public section

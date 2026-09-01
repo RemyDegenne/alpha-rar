@@ -14,7 +14,7 @@ public import LeanMachineLearning.SequentialLearning.Means
 # The feedback of an algorithm–environment sequence in a stationary environment
 
 In a **stationary environment** with per-arm reward kernel `ν : Kernel 𝓐 ℝ`, the response of a
-round assigned to arm `a` is drawn from `ν a`, independently of the past given the arm. Two
+round assigned to arm `a` is drawn from `ν a`, independently of the past given the arm. Three
 consequences are recorded here:
 
 * `condExp_feedback_comp_stationaryEnv` — the conditional law of the response given the history
@@ -23,6 +23,7 @@ consequences are recorded here:
   *after* the arm is chosen. It is the stationary-environment instance of the upstream
   `IsAlgEnvSeq.condExp_feedback_comp` (`env.feedback n (history, A (n+1))` is `ν (A (n+1))`) and
   `IsAlgEnvSeq.condExp_feedback_zero_comp`, with the two cases `n = 0` and `n = m+1` merged.
+* `condExp_feedback_stationaryEnv` — its `g = id` case, `𝔼[Y n | 𝒢 n] = ν.means (A n)`.
 * `memLp_feedback` — with finitely many arms, `Y n ∈ L²` as soon as every `ν a` is.
 
 Nothing here is specific to any particular design; these are statements about
@@ -42,9 +43,10 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
   {P : Measure Ω} [IsProbabilityMeasure P]
   {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
-/-- **The response is in `L²` as soon as every arm's reward distribution is** (Condition **A**).
-With finitely many arms the second moments `∫ x² dν a` have a finite maximum, and the response's
-conditional law given the chosen arm is `ν (A n)`; so `hY2` need not be assumed alongside `hνk`.
+/-- **The response is in `L²` as soon as every arm's reward distribution is** (the paper's
+Condition **A**). With finitely many arms the second moments `∫ x² dν a` have a finite maximum,
+and the response's conditional law given the chosen arm is `ν (A n)`; so an `L²` hypothesis on
+`Y` need not be assumed alongside `hνk`.
 
 The two cases of `n` mirror `condExp_feedback_comp_stationaryEnv`: at `n = 0` the conditional
 distribution is `ν` given `A 0`, and at `n = m+1` it is `ν.prodMkLeft` given the history together

@@ -15,7 +15,7 @@ Combining the martingale `L²` growth bound (`integral_sq_le_of_increment_bound`
 the discrete Itô isometry plus telescoping of the quadratic variation) with the
 `L²` Chebyshev bound (`isBigOpOne_of_lintegral_sq_le`) gives that a square-integrable
 martingale with `M 0 = 0` and increment second moments bounded by `σ²` is
-`O_p(√n)`. This is blueprint `cor:mart_Op`.
+`O_p(√n)`.
 -/
 
 @[expose] public section
@@ -28,9 +28,11 @@ namespace AlphaRAR
 variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
   {ℱ : Filtration ℕ m0} {M : ℕ → Ω → ℝ}
 
-/-- **A square-integrable martingale is `O_p(√n)`** (blueprint `cor:mart_Op`).
+/-- **A square-integrable martingale is `O_p(√n)`**.
 If `M` is a martingale with `M 0 = 0`, square-integrable, whose increments have
-second moment `≤ σ²`, then `M n / √n = O_p(1)`, i.e. `M n = O_p(√n)`.
+second moment `≤ σ²`, then `M n / √n = O_p(1)`, i.e. `M n = O_p(√n)`. The paper
+reaches the same conclusion from its Lemma C.3, a Kolmogorov-type maximal
+inequality.
 
 The proof bounds `E[M n²] ≤ σ² n` (`integral_sq_le_of_increment_bound`) and feeds
 it to the `L²` Chebyshev inequality (`isBigOpOne_of_lintegral_sq_le`). The rate is
@@ -84,14 +86,14 @@ lemma isBigOpOne_martingale_div_sqrt [IsFiniteMeasure μ] (hM : Martingale M ℱ
     filter_upwards with ω
     rw [hvn]
 
-/-- **A martingale with bounded increments is `O_p(√n)`** (blueprint
-`lem:mart_bdd_incr_Op`). If `M` is a martingale with `M 0 = 0` and every increment
-satisfies `|ΔM (n+1)| ≤ c` a.e., then `M n / √n = O_p(1)`.
+/-- **A martingale with bounded increments is `O_p(√n)`**.
+If `M` is a martingale with `M 0 = 0` and every increment satisfies
+`|ΔM (n+1)| ≤ c` a.e., then `M n / √n = O_p(1)`.
 
-This is the convenient form of `cor:mart_Op` for the assignment martingale: the
-bounded increments give all the integrability side conditions (`M n` is a.e. bounded
-by `c n`, hence square-integrable) and the increment second moment bound
-`E[(ΔM)²] ≤ c² μ(univ)`. -/
+This is the convenient form of `isBigOpOne_martingale_div_sqrt` for the assignment
+martingale: the bounded increments give all the integrability side conditions
+(`M n` is a.e. bounded by `c n`, hence square-integrable) and the increment second
+moment bound `E[(ΔM)²] ≤ c² μ(univ)`. -/
 lemma isBigOpOne_of_bdd_increments [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (c : ℝ)
     (hΔ : ∀ n, ∀ᵐ ω ∂μ, |M (n + 1) ω - M n ω| ≤ c) :

@@ -30,10 +30,8 @@ This file is Mathlib-bound staging (cf. the `AlphaRAR/Mathlib/` directory).
 ## Reusable analytic ingredients
 
 * `AlphaRAR.norm_expI_sub_taylor_le` : `‖e^{ix} - (1 + ix - x²/2)‖ ≤ min (2x²) |x|³`,
-  the second-order expansion of the complex exponential on the imaginary axis
-  (blueprint `lem:clt_exp_bound`).
-* `AlphaRAR.abs_exp_mul_one_sub_le` : `|eʸ(1-y) - 1| ≤ y²` on `[0,1]`
-  (blueprint `lem:clt_real_exp_bound`).
+  the second-order expansion of the complex exponential on the imaginary axis.
+* `AlphaRAR.abs_exp_mul_one_sub_le` : `|eʸ(1-y) - 1| ≤ y²` for `y ≤ 1`.
 
 ## Main results
 
@@ -44,8 +42,8 @@ This file is Mathlib-bound staging (cf. the `AlphaRAR/Mathlib/` directory).
   `L_n(ε)` converge in probability to `0` for every `ε > 0`, then the row sums converge in
   distribution to `𝒩(0, σ²)`.
 * `AlphaRAR.MartDiffArray.clt_charFun` : the characteristic-function form behind `mart_clt`,
-  `𝔼[e^{it S_n}] → e^{-t²σ²/2}`, obtained from the bounded-increment case
-  `mart_clt_bounded` by truncation.
+  `𝔼[e^{it S_n}] → e^{-t²σ²/2}`, obtained from the bounded-predictable-variation case
+  `clt_charFun_bounded` by truncation.
 * `AlphaRAR.MartDiffArray.ofSeq` : the array built from a single adapted sequence, with
   `rowSum_ofSeq` and `predVar_ofSeq` identifying its row sums and predictable variation.
 * `AlphaRAR.tendsto_map_mul_of_tendstoInMeasure_one` and
@@ -138,8 +136,8 @@ lemma norm_expI_sub_one_sub_le (x : ℝ) :
         exact le_trans (norm_expI_sub_one_le s) (abs_le_of_mem_uIoc hs)
     _ = x ^ 2 := by rw [sub_zero, ← sq_abs x, pow_two]
 
-/-- **Complex exponential expansion** (blueprint `lem:clt_exp_bound`): the second-order
-Taylor remainder of `e^{ix}` on the imaginary axis is `O(min(x², |x|³))`. -/
+/-- **Complex exponential expansion**: the second-order Taylor remainder of `e^{ix}` on the
+imaginary axis is `O(min(x², |x|³))`. -/
 lemma norm_expI_sub_taylor_le (x : ℝ) :
     ‖Complex.exp (x * I) - 1 - x * I + (x : ℂ) ^ 2 / 2‖ ≤ min (2 * x ^ 2) (|x| ^ 3) := by
   rw [le_min_iff]
@@ -181,8 +179,7 @@ end ExpBound
 
 section RealExpBound
 
-/-- **Real elementary bound** (blueprint `lem:clt_real_exp_bound`):
-`|eʸ(1-y) - 1| ≤ y²` for `y ≤ 1` (in particular on `[0,1]`). -/
+/-- **Real elementary bound**: `|eʸ(1-y) - 1| ≤ y²` for `y ≤ 1` (in particular on `[0,1]`). -/
 lemma abs_exp_mul_one_sub_le {y : ℝ} (hy1 : y ≤ 1) :
     |Real.exp y * (1 - y) - 1| ≤ y ^ 2 := by
   have hle : Real.exp y * (1 - y) ≤ 1 := by
@@ -197,9 +194,9 @@ lemma abs_exp_mul_one_sub_le {y : ℝ} (hy1 : y ≤ 1) :
   rw [abs_of_nonpos (by linarith)]
   linarith
 
-/-- **Real elementary bound, unbounded form** (blueprint `lem:clt_real_exp_bound_pos`):
-`|eʸ(1-y) - 1| ≤ y²·eʸ` for every `y ≥ 0`. Unlike `abs_exp_mul_one_sub_le`, this holds for
-all `y ≥ 0` (the extra `eʸ` factor is what makes it valid past `y = 1`). -/
+/-- **Real elementary bound, unbounded form**: `|eʸ(1-y) - 1| ≤ y²·eʸ` for every `y ≥ 0`. Unlike
+`abs_exp_mul_one_sub_le`, this holds for all `y ≥ 0` (the extra `eʸ` factor is what makes it valid
+past `y = 1`). -/
 lemma abs_exp_mul_one_sub_le' {y : ℝ} (hy : 0 ≤ y) :
     |Real.exp y * (1 - y) - 1| ≤ y ^ 2 * Real.exp y := by
   have hle : Real.exp y * (1 - y) ≤ 1 := by
@@ -281,10 +278,10 @@ section CondChar
 
 variable {Ω : Type*} {m m0 : MeasurableSpace Ω} {P : Measure Ω}
 
-/-- **Conditional characteristic increment** (blueprint `lem:clt_cond_char`):
-for a centered square-integrable increment `Δ` and a sub-σ-algebra `m`, the conditional
-characteristic function `E[e^{itΔ}|m]` agrees with `1 - (t²/2)E[Δ²|m]` up to an error whose
-norm is bounded a.e. by the conditional expectation of `min(2t²Δ², |t|³|Δ|³)`. -/
+/-- **Conditional characteristic increment**: for a centered square-integrable increment `Δ` and a
+sub-σ-algebra `m`, the conditional characteristic function `E[e^{itΔ}|m]` agrees with
+`1 - (t²/2)E[Δ²|m]` up to an error whose norm is bounded a.e. by the conditional expectation of
+`min(2t²Δ², |t|³|Δ|³)`. -/
 lemma norm_condExp_expI_sub_le [IsProbabilityMeasure P] (hm : m ≤ m0)
     {Δ : Ω → ℝ} (hΔ : MemLp Δ 2 P) (hcent : P[Δ | m] =ᵐ[P] 0) (t : ℝ) :
     (fun ω ↦ ‖(P[fun ω' ↦ Complex.exp (((t * Δ ω' : ℝ) : ℂ) * I) | m]) ω
@@ -391,7 +388,7 @@ lemma norm_condExp_expI_sub_le [IsProbabilityMeasure P] (hm : m ≤ m0)
   rw [h1]
   exact le_trans h2 h3
 
-/-- Conditional variance split at level `ε` (blueprint `lem:clt_max_var`, per-cell core):
+/-- Conditional variance split at level `ε` (per-cell core):
 `E[d²|m] ≤ ε² + E[d²·𝟙{|d|>ε}|m]` a.e. -/
 lemma condExp_sq_le [IsProbabilityMeasure P] {d : Ω → ℝ} (hd : Measurable d)
     (hd2 : MemLp d 2 P) (hm : m ≤ m0) (ε : ℝ) :
@@ -423,7 +420,7 @@ lemma condExp_const_mul (c : ℝ) (f : Ω → ℝ) :
     P[fun ω ↦ c * f ω | m] =ᵐ[P] fun ω ↦ c * (P[f | m]) ω := condExp_smul c f m
 
 /-- Split the conditional expectation of `min(2t²d², |t|³|d|³)` at level `ε ≥ 0` into a
-`v`-term and a Lindeberg term (blueprint `lem:clt_sum_rem`, per-cell core). -/
+`v`-term and a Lindeberg term (per-cell core). -/
 lemma condExp_min_le {d : Ω → ℝ} (hd : Measurable d)
     (hd2 : MemLp d 2 P) {ε : ℝ} (hε : 0 ≤ ε) (t : ℝ) :
     P[fun ω ↦ min (2 * t ^ 2 * (d ω) ^ 2) (|t| ^ 3 * |d ω| ^ 3) | m] ≤ᵐ[P]
@@ -691,8 +688,8 @@ lemma _root_.AlphaRAR.IsCondExp.ae_eq_condVar [IsFiniteMeasure P] {n i : ℕ} {g
     (hg : IsCondExp P (A.𝓕 n i) (fun ω ↦ (A.d n i ω) ^ 2) g) : g =ᵐ[P] A.condVar n i :=
   hg.ae_eq_condExp ((A.𝓕 n).le i) (A.integrable_sq n i)
 
-/-- **Uniform smallness of the conditional variances** (blueprint `lem:clt_max_var`):
-each cell variance is controlled by `ε²` plus the whole Lindeberg sum. -/
+/-- **Uniform smallness of the conditional variances**: each cell variance is controlled by `ε²`
+plus the whole Lindeberg sum. -/
 @[specifies lindeberg "what the Lindeberg quantity buys, and the reason it is the right \
 uniform-asymptotic-negligibility statistic: driving it to `0` forces every individual cell \
 variance to `0` as well"]
@@ -729,8 +726,8 @@ lemma condVar_ae_eq_condVar (n i : ℕ) :
   simp only [Pi.sub_apply, Pi.pow_apply, Pi.zero_apply] at hω ⊢
   rw [hω, sub_zero]
 
-/-- **Sum of squared conditional variances** (blueprint `lem:clt_sum_var_sq`):
-`∑_i v_{n,i}² ≤ (ε² + L_n(ε)) · V_n` a.e., for every `ε`. -/
+/-- **Sum of squared conditional variances**: `∑_i v_{n,i}² ≤ (ε² + L_n(ε)) · V_n` a.e., for
+every `ε`. -/
 lemma sum_condVar_sq_le [IsProbabilityMeasure P] (n : ℕ) (ε : ℝ) :
     (fun ω ↦ ∑ i ∈ Finset.range (A.k n), (A.condVar n i ω) ^ 2)
       ≤ᵐ[P] fun ω ↦ (ε ^ 2 + A.lindeberg n ε ω) * A.predVar n ω := by
@@ -751,7 +748,7 @@ lemma sum_condVar_sq_le [IsProbabilityMeasure P] (n : ℕ) (ε : ℝ) :
     _ = (ε ^ 2 + A.lindeberg n ε ω) * A.predVar n ω := by
         simp only [MartDiffArray.predVar]; rw [← Finset.sum_mul]; ring
 
-/-- **Sum of the conditional-remainder majorants** (blueprint `lem:clt_sum_rem`):
+/-- **Sum of the conditional-remainder majorants**:
 `∑_i E[min(2t²d_i², |t|³|d_i|³) | 𝓕 i] ≤ |t|³ε·V_n + 2t²·L_n(ε)` a.e., for `ε ≥ 0`.
 Together with Lemma `norm_condExp_expI_sub_le` this bounds `∑_i ‖r_{n,i}‖`. -/
 lemma sum_condExp_min_le (n : ℕ) {ε : ℝ} (hε : 0 ≤ ε) (t : ℝ) :
@@ -926,8 +923,8 @@ lemma condVar_trunc [IsFiniteMeasure P] (B : ℝ) (n i : ℕ) :
   rw [heq]
   exact condExp_indicator (A.integrable_sq n i) (A.measurableSet_truncSet_filt B n i)
 
-/-- **No overshoot** (blueprint `lem:clt_truncation`(ii)): the predictable variation of the
-array truncated at level `B ≥ 0` is bounded by the constant `B`. -/
+/-- **No overshoot**: the predictable variation of the array truncated at level `B ≥ 0` is
+bounded by the constant `B`. -/
 @[specifies trunc "the point of stopping on `V_{n,i+1} ≤ B` rather than on `V_{n,i} ≤ B`: the \
 level is tested *before* the cell is admitted, so the truncated variation never overshoots `B` — \
 with the other index convention it could overshoot by one full cell"]
@@ -954,7 +951,7 @@ lemma partialVar_mono (n : ℕ) {a b : ℕ} (hab : a ≤ b) :
     (fun x hx ↦ Finset.mem_range.mpr (lt_of_lt_of_le (Finset.mem_range.mp hx) hab))
     fun l _ _ ↦ hω l
 
-/-- **One-step conditional increment of the `Z`-process** (heart of `lem:clt_Z_expectation`):
+/-- **One-step conditional increment of the `Z`-process** (heart of `clt_Z_expectation`):
 `E[Z_{n,j+1} - Z_{n,j} | 𝓕 j] = Z_{n,j}·e^{(t²/2)v_{n,j}}·E[e^{itΔ_{n,j}} | 𝓕 j] - Z_{n,j}` a.e.
 The factor `Z_{n,j}·e^{(t²/2)v_{n,j}}` is `𝓕 j`-measurable and is pulled out of the conditional
 expectation; the remaining `e^{itΔ_{n,j}}` is the fresh randomness. -/
@@ -1006,7 +1003,7 @@ lemma partialVar_succ (n j : ℕ) (ω : Ω) :
     A.partialVar n (j + 1) ω = A.partialVar n j ω + A.condVar n j ω := by
   simp only [MartDiffArray.partialVar, Finset.sum_range_succ]
 
-/-- **One-step norm bound for the `Z`-increment** (core estimate of `lem:clt_Z_expectation`):
+/-- **One-step norm bound for the `Z`-increment** (core estimate of `clt_Z_expectation`):
 a.e. `‖E[Z_{n,j+1} - Z_{n,j} | 𝓕 j]‖` is at most
 `e^{(t²/2)V_{n,j+1}}·((t⁴/4)v_{n,j}² + E[min(2t²Δ²,|t|³|Δ|³)|𝓕 j])`.
 The predictable prefactor `e^{(t²/2)V_{n,j+1}}` is bounded once the array has bounded predictable
@@ -1093,7 +1090,7 @@ lemma memLp_condVar {B : ℝ} {n j : ℕ}
   rw [Real.norm_eq_abs, abs_of_nonneg (by positivity)]
   nlinarith [mul_nonneg (sub_nonneg.mpr hbω) hnnω]
 
-/-- **Pointwise summed one-step bound** (bounded-variance step towards `lem:clt_Z_expectation`).
+/-- **Pointwise summed one-step bound** (bounded-variance step towards `clt_Z_expectation`).
 Under `V_n ≤ B` a.e., summing the one-step norm bounds over `j < k n` gives, a.e.,
 `∑_j ‖E[Z_{j+1}-Z_j|𝓕 j]‖ ≤ e^{(t²/2)B}·((t⁴/4)∑_j v_{n,j}² + ∑_j E[min(2t²Δ²,|t|³|Δ|³)|𝓕 j])`. -/
 lemma sum_norm_condExp_increment_le [IsProbabilityMeasure P] (t : ℝ) (n : ℕ) {B : ℝ}
@@ -1142,7 +1139,7 @@ lemma sum_norm_condExp_increment_le [IsProbabilityMeasure P] (t : ℝ) (n : ℕ)
         rw [← Finset.mul_sum, Finset.sum_add_distrib, ← Finset.mul_sum]
 
 /-- **Integral form of the almost-martingale bound** (bounded-variance core of
-`lem:clt_Z_expectation`). Under `V_n ≤ B` a.e.,
+`clt_Z_expectation`). Under `V_n ≤ B` a.e.,
 `‖∫ Z_{n,k_n} - 1‖ ≤ e^{(t²/2)B}·((t⁴/4)∫∑_j v_{n,j}² + ∫∑_j E[min(2t²Δ²,|t|³|Δ|³)|𝓕 j])`.
 The proof telescopes `∫ Z_{n,k_n} - 1 = ∑_j ∫ E[Z_{j+1}-Z_j|𝓕 j]` (tower property), then applies
 the pointwise summed one-step bound `sum_norm_condExp_increment_le`. -/
@@ -1374,7 +1371,7 @@ open Filter in
 /-- The exponential weight `e^{-(t²/2)V_n}` converges in probability to `e^{-(t²/2)σ²}` whenever
 `V_n → σ²` in probability (with `V_n ≥ 0` a.e., `σ² ≥ 0`, `t ≠ 0`). Via the `1`-Lipschitz bound
 `abs_exp_neg_sub_le`. This is the `W_n → 0` step feeding the bounded-convergence part of
-`clt_product`. -/
+`clt_charFun_bounded`. -/
 lemma tendstoInMeasure_expNeg_predVar_sub {t : ℝ} (ht : t ≠ 0)
     {σ2 : ℝ} (hσ2 : 0 ≤ σ2) (hVnn : ∀ n, (0 : Ω → ℝ) ≤ᵐ[P] A.predVar n)
     (hV : TendstoInMeasure P (fun n ↦ A.predVar n) atTop (fun _ ↦ σ2)) :
@@ -1413,7 +1410,7 @@ lemma tendstoInMeasure_expNeg_predVar_sub {t : ℝ} (ht : t ≠ 0)
     (fun _ ↦ zero_le) (fun n ↦ measure_mono_ae (hsub n))
 
 open Filter in
-/-- **Almost-martingale expectation** (blueprint `lem:clt_Z_expectation`, bounded-variance form).
+/-- **Almost-martingale expectation, bounded-variance form.**
 If the array has predictable variation uniformly bounded by `B` (`V_n ≤ B` a.e.) and satisfies the
 conditional Lindeberg condition (`L_n(ε) → 0` in probability for every `ε > 0`), then
 `∫ Z_{n,k_n} → 1`. Combines the integral bound `norm_integral_Zproc_sub_one_le` with the two
@@ -1487,7 +1484,7 @@ lemma clt_Z_expectation [IsProbabilityMeasure P] (t : ℝ) {B : ℝ} (hB0 : 0 �
     _ = G + K * ∫ ω, A.lindeberg n ε ω ∂P := by rw [hGdef, hKdef]; ring
 
 open Filter in
-/-- **Characteristic-function limit, bounded-variance form** (core of blueprint `lem:clt_product`).
+/-- **Characteristic-function limit, bounded-variance form.**
 With `V_n ≤ B` a.e., `V_n → σ²` in probability and the conditional Lindeberg condition,
 `E[e^{itS_n}] = charFun → e^{-σ²t²/2}`. The general form follows by the variance truncation. -/
 lemma clt_charFun_bounded [IsProbabilityMeasure P] (t : ℝ) {B σ2 : ℝ} (hB0 : 0 ≤ B)
@@ -1555,10 +1552,10 @@ lemma clt_charFun_bounded [IsProbabilityMeasure P] (t : ℝ) {B σ2 : ℝ} (hB0 
   rw [hpt, integral_add hZWc_int ((hZint n).const_mul c), MeasureTheory.integral_const_mul]
 
 open Filter ProbabilityTheory MeasureTheory in
-/-- **Martingale CLT, Lindeberg form — bounded predictable variation** (blueprint `thm:mart_clt`
-under the truncation normalization `V_n ≤ B`). If `V_n ≤ B` a.e., `V_n → σ²` in probability and the
-conditional Lindeberg condition holds, then the laws of the row sums converge weakly to
-`𝒩(0, σ²)`. Combines `clt_charFun_bounded` with Mathlib's Lévy continuity theorem. -/
+/-- **Martingale CLT, Lindeberg form — bounded predictable variation.** If `V_n ≤ B` a.e.,
+`V_n → σ²` in probability and the conditional Lindeberg condition holds, then the laws of the row
+sums converge weakly to `𝒩(0, σ²)`. Combines `clt_charFun_bounded` with Mathlib's Lévy continuity
+theorem. -/
 lemma mart_clt_bounded [IsProbabilityMeasure P] {B σ2 : ℝ} (hB0 : 0 ≤ B) (hσ2 : 0 ≤ σ2)
     (hB : ∀ n, A.predVar n ≤ᵐ[P] fun _ ↦ B)
     (hV : TendstoInMeasure P (fun n ↦ A.predVar n) atTop (fun _ ↦ σ2))
@@ -1727,9 +1724,9 @@ lemma tendstoInMeasure_expI_rowSum_sub [IsProbabilityMeasure P] (t : ℝ) {σ2 B
     (fun n ↦ measure_mono_ae (hsub n))
 
 open Filter in
-/-- **Characteristic-function limit** (blueprint `lem:clt_product`). Under `V_n → σ²` in probability
-and the conditional Lindeberg condition, `E[e^{itS_n}] → e^{-σ²t²/2}`. The predictable variation is
-truncated at level `B = σ² + 1` to reduce to the bounded case `clt_charFun_bounded`. -/
+/-- **Characteristic-function limit.** Under `V_n → σ²` in probability and the conditional
+Lindeberg condition, `E[e^{itS_n}] → e^{-σ²t²/2}`. The predictable variation is truncated at level
+`B = σ² + 1` to reduce to the bounded case `clt_charFun_bounded`. -/
 lemma clt_charFun [IsProbabilityMeasure P] (t : ℝ) {σ2 : ℝ} (hσ2 : 0 ≤ σ2)
     (hV : TendstoInMeasure P (fun n ↦ A.predVar n) atTop (fun _ ↦ σ2))
     (hLindeberg : ∀ ε, 0 < ε → TendstoInMeasure P (A.lindeberg · ε) atTop 0) :
@@ -1763,7 +1760,7 @@ lemma clt_charFun [IsProbabilityMeasure P] (t : ℝ) {σ2 : ℝ} (hσ2 : 0 ≤ �
   exact (tendsto_congr hsplit).mpr hcomb
 
 open Filter ProbabilityTheory MeasureTheory in
-/-- **Martingale CLT, Lindeberg form** (blueprint `thm:mart_clt`). Let `(Δ_{n,i})_{i<k_n}` be a
+/-- **Martingale CLT, Lindeberg form** (Hall–Heyde). Let `(Δ_{n,i})_{i<k_n}` be a
 martingale difference array with predictable quadratic variation `V_n → σ²` in probability and
 satisfying the conditional Lindeberg condition. Then the laws of the row sums `S_n = ∑_i Δ_{n,i}`
 converge weakly to `𝒩(0, σ²)`. -/
@@ -1863,10 +1860,10 @@ open Filter ProbabilityTheory MeasureTheory
 variable {P : Measure Ω}
 
 /-- **Slutsky self-normalization for the CLT.** If the laws of `X n` converge weakly to `𝒩(0,σ²)`
-and `Y n → 1` in probability, then so do the laws of `X n · Y n`. This is what replaces the
-(unnecessary) Anscombe random-time-change argument in the self-normalized martingale CLT:
+and `Y n → 1` in probability, then so do the laws of `X n · Y n`. It is what makes the
+self-normalized martingale CLT elementary, with no Anscombe random-time-change argument:
 `M_n/√(random) = (M_n/√(deterministic)) · √(deterministic/random)`, and the second factor tends to
-`1` in probability by the strong law, so the deterministic-normalizer CLT (`thm:mart_clt`) plus
+`1` in probability by the strong law, so the deterministic-normalizer CLT (`mart_clt`) plus
 this Slutsky step give the self-normalized limit. -/
 lemma tendsto_map_mul_of_tendstoInMeasure_one [IsProbabilityMeasure P] {σ2 : NNReal}
     {X Y : ℕ → Ω → ℝ} (hX_meas : ∀ n, AEMeasurable (X n) P) (hY_meas : ∀ n, AEMeasurable (Y n) P)

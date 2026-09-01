@@ -13,22 +13,24 @@ public meta import LeanSpec
 # The delta-method central limit theorem for the plug-in target
 
 The estimator satisfies the joint CLT `√n(θ̂_n - θ) ⇒ 𝒩(0, V)` with `V = diag(V_k/v_k)`
-(`estimator_sqrtN_joint_tendsto_multivariateGaussian`, blueprint `lem:clt_theta`). Applying the
+(`estimator_sqrtN_joint_tendsto_multivariateGaussian`, equation (8) of the paper). Applying the
 *delta method* to the (Condition **B**) target map `T`, differentiable at `θ` with Jacobian `G`, the
-plug-in target `ρ̂_n = T(θ̂_n)` inherits the CLT `√n(ρ̂_n - v) ⇒ 𝒩(0, G V Gᵀ)` (blueprint
-`lem:clt_rho`).
+plug-in target `ρ̂_n = T(θ̂_n)` inherits the CLT `√n(ρ̂_n - v) ⇒ 𝒩(0, G V Gᵀ)`, an unnumbered
+display in the paper's proof of Theorem 4.2 (ii).
 
 This file assembles the delta method from three inputs: the estimator CLT, the linear pushforward of
 a multivariate Gaussian (`multivariateGaussian_map_matrix`, giving the covariance `G V Gᵀ`) and the
 product-space Slutsky lemma (`tendsto_map_comp_of_tendstoInMeasure_const`). The remaining analytic
 content — that the first-order Taylor remainder `√n(T(θ̂_n)-T(θ)) - G·√n(θ̂_n-θ)` vanishes in
-probability — enters as the hypothesis `hR`, isolating it for a separate argument (tightness of
-`√n(θ̂_n-θ)` from the CLT, plus differentiability of `T` at `θ`).
+probability — enters as the hypothesis `hR` of `clt_rho_of_tendstoInMeasure`, and is discharged in
+`clt_rho` from tightness of `√n(θ̂_n-θ)` (from the CLT) plus differentiability of `T` at `θ`.
 
 ## Main results
 
 * `AlphaRAR.clt_rho_of_tendstoInMeasure`: the delta-method CLT for the plug-in target, conditional
   on the Taylor-remainder-in-probability hypothesis.
+* `AlphaRAR.clt_rho`: the same CLT with that hypothesis discharged, from the differentiability of
+  `T` at `θ` and the a.s. consistency `θ̂_n → θ`.
 -/
 
 @[expose] public section
@@ -68,7 +70,8 @@ noncomputable def jointSqrtNVec (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐)
   WithLp.toLp 2 (Sum.elim (WithLp.ofLp (propSqrtNVec A v n ω))
     (WithLp.ofLp (targetSqrtNVec ν A Y θ₀ T n ω)))
 
-/-- The `√n`-scaled estimator error vector `√n(θ̂_n - θ) ∈ ℝ^𝓐` (the vector of `clt_theta`). -/
+/-- The `√n`-scaled estimator error vector `√n(θ̂_n - θ) ∈ ℝ^𝓐`, the vector appearing in the
+estimator CLT `estimator_sqrtN_joint_tendsto_multivariateGaussian`. -/
 noncomputable def estimatorSqrtNVec (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ)
     (n : ℕ) (ω : Ω) : EuclideanSpace ℝ 𝓐 :=
   WithLp.toLp 2 (fun k ↦ √n *
@@ -86,7 +89,7 @@ lemma measurable_estimatorSqrtNVec' (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) 
   refine (Measurable.div ?_ ((measurable_count_actionIndicator h k n).add_const 1)).sub_const _
   exact (Finset.measurable_sum _ fun j _ ↦ (harm j).mul (h.measurable_feedback j)).add_const (θ₀ k)
 
-/-- **The estimator CLT in this file's vector notation** (blueprint `lem:clt_theta`):
+/-- **The estimator CLT in this file's vector notation**, equation (8) of the paper:
 `√n(θ̂_n - θ) ⇒ 𝒩(0, diag(V_k/v_k))`. This is
 `estimator_sqrtN_joint_tendsto_multivariateGaussian` read through `estimatorSqrtNVec`, which it
 matches definitionally. -/
@@ -131,8 +134,8 @@ lemma measurable_targetSqrtNVec [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationa
     (hT.measurable.comp (measurable_estimatorVec h θ₀ n))).sub_const _
 
 open scoped RealInnerProductSpace in
-/-- **Delta-method CLT for the plug-in target** (blueprint `lem:clt_rho`), conditional on the
-Taylor-remainder-in-probability hypothesis. Given the estimator CLT
+/-- **Delta-method CLT for the plug-in target**, conditional on the Taylor-remainder-in-probability
+hypothesis. Given the estimator CLT
 `√n(θ̂_n - θ) ⇒ 𝒩(0, diag(V_k/v_k))` and a matrix `G` (the Jacobian of `T` at `θ`) such that the
 first-order remainder `√n(T(θ̂_n)-T(θ)) - G·√n(θ̂_n-θ)` tends to `0` in probability (`hR`), the
 plug-in target satisfies `√n(T(θ̂_n) - T(θ)) ⇒ 𝒩(0, G · diag(V_k/v_k) · Gᵀ)`. The limiting law is
@@ -205,9 +208,9 @@ lemma clt_rho_of_tendstoInMeasure
   abel
 
 open scoped RealInnerProductSpace in
-/-- **Delta-method CLT for the plug-in target** (blueprint `lem:clt_rho`), fully discharged. Given
-the estimator CLT `√n(θ̂_n - θ) ⇒ 𝒩(0, diag(V_k/v_k))`, the a.s. consistency `θ̂_n → θ` (`hcons`,
-from thm:LLN) and the differentiability of the (vectorised) target map at `θ` with Jacobian matrix
+/-- **Delta-method CLT for the plug-in target**, fully discharged. Given the estimator CLT
+`√n(θ̂_n - θ) ⇒ 𝒩(0, diag(V_k/v_k))`, the a.s. consistency `θ̂_n → θ` (`hcons`, from Theorem 4.1
+of the paper) and the differentiability of the (vectorised) target map at `θ` with Jacobian matrix
 `G` (`hTderiv`, from Condition **B**), the plug-in target satisfies
 `√n(T(θ̂_n) - T(θ)) ⇒ 𝒩(0, G · diag(V_k/v_k) · Gᵀ)`.
 

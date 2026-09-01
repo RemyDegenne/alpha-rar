@@ -429,7 +429,7 @@ lemma lindeberg_wArray_ae [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv 
 
 omit [DecidableEq 𝓐] in
 /-- **The weighted conditional Lindeberg condition holds** (the `lindeberg` hypothesis of
-`thm:mart_clt`) for the per-arm scaled weights `(wn n)_k = w_k/√(c_{k,n})`. In closed form
+`MartDiffArray.mart_clt`) for the per-arm scaled weights `(wn n)_k = w_k/√(c_{k,n})`. In closed form
 `L_n(ε) = ∑_k w_k² h_{n,k}(ε) (N_{n,k}/c_{k,n})`, where each truncated moment `h_{n,k}(ε) → 0` by
 dominated convergence (`tendsto_integral_sq_indicator_gt`; the threshold `ε√(c_{k,n})/|w_k| → ∞`)
 while `N_{n,k}/c_{k,n} → ρ_k`, so the product tends to `0` a.s., hence in measure. -/
@@ -648,9 +648,9 @@ lemma inner_respVec (c : 𝓐 → ℕ → ℝ) (n : ℕ) (ω : Ω) (t : Euclidea
   exact Finset.sum_congr rfl fun a _ ↦ by rw [div_eq_mul_inv]; ring
 
 open scoped RealInnerProductSpace in
-/-- **The joint componentwise CLT** (blueprint `lem:componentwise`, deterministic-normalizer form,
-per-arm normalizers): the joint law of `(Q_{n,k}/√(c_{k,n}))_k` converges weakly to the diagonal
-Gaussian `𝒩(0, diag(ρ_k V_k))` whenever `N_{n,k}/c_{k,n} → ρ_k` and `c_{k,n} → ∞`.
+/-- **The joint componentwise CLT** (deterministic-normalizer form, per-arm normalizers): the joint
+law of `(Q_{n,k}/√(c_{k,n}))_k` converges weakly to the diagonal Gaussian `𝒩(0, diag(ρ_k V_k))`
+whenever `N_{n,k}/c_{k,n} → ρ_k` and `c_{k,n} → ∞`.
 Proved by the Cramér–Wold device (`tendsto_map_of_tendsto_map_inner`): every scalar projection
 `⟪·, t⟫ = ∑_k (t_k/√(c_{k,n})) Q_{n,k}` converges to `𝒩(0, ∑_k t_k² ρ_k V_k)` (the 1-D CLT
 `wLinComb_scaled_tendsto_gaussianReal`), which is exactly the projection of the target Gaussian
@@ -702,7 +702,8 @@ lemma respMart_joint_tendsto_multivariateGaussian
     (wLinComb_scaled_tendsto_gaussianReal h t.ofLp hνk hc hc_atTop hs2nn hNconv)
 
 omit [Fintype 𝓐] [DecidableEq 𝓐] in
-/-- The self-normalized joint response-martingale vector `((√N_{n,a})⁻¹ Q_{n,a})_a ∈ ℝ^𝓐`. -/
+/-- The self-normalized joint response-martingale vector `((√N_{n,a})⁻¹ Q_{n,a})_a ∈ ℝ^𝓐` is
+measurable. -/
 @[fun_prop]
 lemma measurable_respSelfNormVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (n : ℕ) :
     Measurable (fun ω ↦ (WithLp.toLp 2 (fun a ↦
@@ -713,9 +714,9 @@ lemma measurable_respSelfNormVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
       ((measurable_count_actionIndicator h a n).sqrt.inv).mul (measurable_respMart h a n))
 
 open scoped RealInnerProductSpace in
-/-- **The self-normalized joint componentwise CLT** (blueprint `lem:componentwise`,
-pure-martingale form). The joint law of `(Q_{n,k}/√N_{n,k})_k` — each response martingale
-normalized by its *own* random count `√N_{n,k}` — converges weakly to `𝒩(0, diag(V_k))`.
+/-- **The self-normalized joint componentwise CLT** (pure-martingale form). The joint law of
+`(Q_{n,k}/√N_{n,k})_k` — each response martingale normalized by its *own* random count
+`√N_{n,k}` — converges weakly to `𝒩(0, diag(V_k))`.
 This is the deterministic-normalizer joint CLT (`respMart_joint_tendsto_multivariateGaussian`)
 composed with multivariate Slutsky (`tendsto_map_comp_of_tendstoInMeasure_const`): the
 coordinatewise scaling `√(c_{k,n}/N_{n,k}) → 1/√ρ_k` in probability, and the diagonal rescaling of
@@ -834,10 +835,9 @@ lemma measurable_estimatorErrorVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P
   exact (Finset.measurable_sum _ fun j _ ↦ (harm j).mul (h.measurable_feedback j)).add_const (θ₀ k)
 
 open scoped RealInnerProductSpace in
-/-- **The self-normalized componentwise CLT for the estimators** (blueprint
-`cor:mart_clt_componentwise` / `lem:componentwise`, martingale + Bahadur form). With
-`D_n = diag(√N_{n,1},…,√N_{n,K})`, the estimator errors converge jointly,
-`D_n(θ̂_n - θ) ⇒ 𝒩(0, diag(V_1,…,V_K))`. From the self-normalized martingale CLT
+/-- **The self-normalized componentwise CLT for the estimators** (the paper's Lemma 4.5, in
+martingale + Bahadur form). With `D_n = diag(√N_{n,1},…,√N_{n,K})`, the estimator errors converge
+jointly, `D_n(θ̂_n - θ) ⇒ 𝒩(0, diag(V_1,…,V_K))`. From the self-normalized martingale CLT
 (`respMart_joint_selfNorm_tendsto_multivariateGaussian`) via the exact Bahadur identity
 `θ̂_{n,k} - θ_k = (Q_{n,k}+(θ_{0,k}-θ_k))/(N_{n,k}+1)` (`estimator_sub_eq`): coordinate `k` equals
 `(Q_{n,k}/√N_{n,k})·N_{n,k}/(N_{n,k}+1) + (θ_{0,k}-θ_k)√N_{n,k}/(N_{n,k}+1)`, whose scaling factors
@@ -845,14 +845,14 @@ tend to `(1,0)` in probability, so multivariate Slutsky leaves the limit unchang
 
 The hypothesis is the **regularity** `N_{n,k}/c_{k,n} → v_k > 0` for a deterministic `c_{k,n} → ∞`.
 Two instances:
-* `c_{k,n} = n`, `v` the limiting proportions (needs `v_k > 0`): the non-sparse
-  `cor:mart_clt_componentwise`;
-* per-arm `c_{k,n}` with `v ≡ 1`: the **sparse** componentwise CLT (`cor:sparse_clt`), which needs
-  no positivity and so covers arms whose limiting proportion is `0`.
+* `c_{k,n} = n`, `v` the limiting proportions (needs `v_k > 0`): the non-sparse componentwise CLT;
+* per-arm `c_{k,n}` with `v ≡ 1`: the **sparse** componentwise CLT behind the paper's
+  Corollary 5.3, which needs no positivity and so covers arms whose limiting proportion is `0`.
 
-Some regularity of this kind is genuinely necessary: `N_{n,k} → ∞` alone does **not** suffice when
-the index is chosen adaptively (one can freeze the self-normalized martingale above its typical
-value by pausing an arm near a level crossing, using the law of the iterated logarithm). -/
+Some regularity of this kind is genuinely necessary, and the paper's Lemma 4.5 instead assumes only
+`N_{n,k} → ∞`, which does **not** suffice when the index is chosen adaptively (one can freeze the
+self-normalized martingale above its typical value by pausing an arm near a level crossing, using
+the law of the iterated logarithm). -/
 lemma estimatorError_joint_tendsto_multivariateGaussian
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp id 2 (ν a)) {cn : 𝓐 → ℕ → ℝ} (hcn : ∀ a n, 0 ≤ cn a n)
@@ -1000,11 +1000,12 @@ lemma measurable_estimatorSqrtNVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P
   exact (Finset.measurable_sum _ fun j _ ↦ (harm j).mul (h.measurable_feedback j)).add_const (θ₀ k)
 
 open scoped RealInnerProductSpace in
-/-- **The CLT for the estimator** (blueprint `lem:clt_theta`). Under Condition~A with
-`N_{n,k}/n → v_k` a.s. (`v_k>0`), the `√n`-normalized estimator errors converge jointly,
+/-- **The CLT for the estimator**, equation (8) of the paper's Theorem 4.2 (ii). Under Condition A
+with `N_{n,k}/n → v_k` a.s. (`v_k>0`), the `√n`-normalized estimator errors converge jointly,
 `√n(θ̂_n - θ) ⇒ 𝒩(0, diag(V_k/v_k))`. Same Bahadur + product-space Slutsky as
-`cor:mart_clt_componentwise`, but the martingale is normalized by the deterministic `√n`: coordinate
-`k` is `(Q_{n,k}/√N_{n,k})·√(n N_{n,k})/(N_{n,k}+1) + (θ_{0,k}-θ_k)√n/(N_{n,k}+1)`, whose scaling
+`estimatorError_joint_tendsto_multivariateGaussian`, but the martingale is normalized by the
+deterministic `√n`: coordinate `k` is
+`(Q_{n,k}/√N_{n,k})·√(n N_{n,k})/(N_{n,k}+1) + (θ_{0,k}-θ_k)√n/(N_{n,k}+1)`, whose scaling
 factors tend to `1/√v_k` and `0`, so the diagonal Gaussian rescaling
 (`multivariateGaussian_diagonal_smul_map`) sends `diag(V_k)` to `diag(V_k/v_k)`. -/
 lemma estimator_sqrtN_joint_tendsto_multivariateGaussian

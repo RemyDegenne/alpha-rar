@@ -75,12 +75,11 @@ lemma isLittleOpOne_max_div_sqrt_of_drift {c : ℝ} (hc : 0 < c)
   exact tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hsum
     (Eventually.of_forall (fun n ↦ zero_le)) hbound
 
-/-- **Generic `U`-increment bound** (blueprint `lem:U_increment_bound`, `o_p(√n)` half). If the
-`U`-increment decomposes as `U_n - U_ℓ ≤ -c·d_n + M_n + ρ_n + pert_n·d_n` with `c > 0`, `d_n ≥ 0`,
-`pert = o_p(1)`, and the `M`- and `ρ`-terms are increment-controlled `≤ V·d_n + W` with
-`V = o_p(1)`, `W = o_p(√n)`, then `(U_n - U_ℓ)^+ = o_p(√n)` (one-sided). The negative drift `-c`
-absorbs all the
-`o_p(1)·d_n` perturbations. -/
+/-- **Generic `U`-increment bound**, the one-sided `o_p(√n)` half. If the `U`-increment decomposes
+as `U_n - U_ℓ ≤ -c·d_n + M_n + ρ_n + pert_n·d_n` with `c > 0`, `d_n ≥ 0`, `pert = o_p(1)`, and the
+`M`- and `ρ`-terms are increment-controlled `≤ V·d_n + W` with `V = o_p(1)`, `W = o_p(√n)`, then
+`(U_n - U_ℓ)^+ = o_p(√n)` (one-sided). The negative drift `-c` absorbs all the `o_p(1)·d_n`
+perturbations. -/
 lemma isLittleOpOne_max_of_decomp {c : ℝ} (hc : 0 < c)
     {d Uincr Mincr rhoterm pert VM WM Vρ Wρ : ℕ → Ω → ℝ}
     (hd : ∀ n ω, 0 ≤ d n ω)
@@ -132,10 +131,10 @@ lemma isLittleOpOne_maxDev_of_le {Dev small Uincr : ℕ → Ω → ℝ}
     have hUle := le_max_left (Uincr n ω / √n) 0
     linarith
 
-/-- **Two-sided deviation from one-sided bounds** (blueprint `lem:prop_dev` reverse step). For a
-finite family `Dev` with `∑_j Dev_j = 0` (the counts/target simplex identity), if each positive
-part `(Dev_j/√n)^+ = o_p(1)`, then `Dev_k = o_p(√n)` for every `k`. The reverse inequality
-`-Dev_k = ∑_{j≠k} Dev_j` transfers the one-sided bounds. -/
+/-- **Two-sided deviation from one-sided bounds.** For a finite family `Dev` with `∑_j Dev_j = 0`
+(the counts/target simplex identity), if each positive part `(Dev_j/√n)^+ = o_p(1)`, then
+`Dev_k = o_p(√n)` for every `k`. The identity `-Dev_k = ∑_{j≠k} Dev_j` transfers the one-sided
+bounds. -/
 lemma isLittleOpOne_dev_of_sum_zero {ι : Type*} [Fintype ι]
     {Dev : ι → ℕ → Ω → ℝ} (hsum : ∀ n ω, ∑ j, Dev j n ω = 0)
     (hfwd : ∀ j, IsLittleOpOne μ (fun n ω ↦ max (Dev j n ω / √n) 0)) (k : ι) :

@@ -39,9 +39,10 @@ namespace AlphaRAR
 
 /-! ### Definition -/
 
-/-- Allocation count of a fixed arm, `N n = ∑_{j<n} X j` (blueprint `def:counts`). Stated for a
-general `AddCommMonoid` so it serves both the deterministic per-path counts (`X : ℕ → ℝ`) and the
-process-level count (`X : ℕ → Ω → ℝ`, the assignment count process of `Assignment.lean`). -/
+/-- Allocation count of a fixed arm, `N n = ∑_{j<n} X j`, the count `N_{n,k}` of Section 2 of the
+paper. Stated for a general `AddCommMonoid` so it serves both the deterministic per-path counts
+(`X : ℕ → ℝ`) and the process-level count (`X : ℕ → Ω → ℝ`, the assignment count process of
+`Assignment.lean`). -/
 def count {M : Type*} [AddCommMonoid M] (X : ℕ → M) (n : ℕ) : M := ∑ j ∈ range n, X j
 
 @[simp, specifies count "fixes the base of the count; with `count_succ` it determines every value, \
@@ -59,7 +60,7 @@ lemma count_succ {M : Type*} [AddCommMonoid M] (X : ℕ → M) (n : ℕ) :
 
 /-! ### Simplex identities -/
 
-/-- **Counts sum to time** (blueprint `lem:counts_sum`).
+/-- **Counts sum to time.**
 If the assignment vector sums to one at each time, then the arm counts sum to the
 time index. -/
 lemma counts_sum {ι : Type*} [Fintype ι] (Y : ℕ → ι → ℝ) (hY : ∀ j, ∑ k, Y j k = 1) (n : ℕ) :
@@ -68,8 +69,9 @@ lemma counts_sum {ι : Type*} [Fintype ι] (Y : ℕ → ι → ℝ) (hY : ∀ j,
   rw [Finset.sum_comm]
   simp only [hY, Finset.sum_const, Finset.card_range, nsmul_eq_mul, mul_one]
 
-/-- **Deviation simplex identity** (backbone of the `lem:prop_dev` reverse step). If the assignment
-vector and the target vector each sum to one, then the deviations `N_{n,k} - n r_k` sum to zero. -/
+/-- **Deviation simplex identity** (backbone of the reverse step in the proportion-deviation
+bounds). If the assignment vector and the target vector each sum to one, then the deviations
+`N_{n,k} - n r_k` sum to zero. -/
 lemma sum_count_sub_smul_eq_zero {ι : Type*} [Fintype ι] (Y : ℕ → ι → ℝ) (r : ι → ℝ)
     (hY : ∀ j, ∑ k, Y j k = 1) (hr : ∑ k, r k = 1) (n : ℕ) :
     ∑ k, (count (Y · k) n - (n : ℝ) * r k) = 0 := by

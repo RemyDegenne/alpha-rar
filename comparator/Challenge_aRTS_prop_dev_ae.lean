@@ -230,9 +230,9 @@ section
 open Filter Finset MeasureTheory Learning
 namespace AlphaRAR
 
-/-- Allocation count of a fixed arm, `N n = ∑_{j<n} X j` (blueprint `def:counts`). Stated for a
-general `AddCommMonoid` so it serves both the deterministic per-path counts (`X : ℕ → ℝ`) and the
-process-level count (`X : ℕ → Ω → ℝ`, the assignment count process of `Assignment.lean`). -/
+/-- Allocation count of a fixed arm, `N n = ∑_{j<n} X j`. Stated for a general `AddCommMonoid` so
+it serves both the deterministic per-path counts (`X : ℕ → ℝ`) and the process-level count
+(`X : ℕ → Ω → ℝ`, the assignment count process of `Assignment.lean`). -/
 def count {M : Type*} [AddCommMonoid M] (X : ℕ → M) (n : ℕ) : M := ∑ j ∈ range n, X j
 
 end AlphaRAR
@@ -245,7 +245,7 @@ open scoped Topology
 namespace AlphaRAR
 variable (X p ρ : ℕ → ℝ) (α : ℝ)
 
-/-- Sequential estimator of a fixed arm (blueprint `def:estimator`),
+/-- Sequential estimator of a fixed arm, equation (1) of the paper:
 `θ̂ n = (∑_{j<n} X j ξ j + θ₀) / (N n + 1)`, with initial value `θ₀` and the `+1`
 regularization in the denominator. -/
 noncomputable def estimator (ξ : ℕ → ℝ) (θ₀ : ℝ) (n : ℕ) : ℝ :=
@@ -261,10 +261,10 @@ open scoped Topology
 namespace AlphaRAR
 variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐} [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν] {P : Measure Ω} [IsProbabilityMeasure P] {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
-/-- **Attainable set of the estimator** (blueprint `def:attainable`, closure form). The closure of
-all values `θ̂_{n,k}(ω)` of the sequential estimator for arm `k`, over times `n` and outcomes `ω`.
-Every pointwise limit of `θ̂_{·,k}` lies in it (`estimator_limit_mem_attainableSet`), so Condition
-**B**'s positivity requirement on this set transfers to the plug-in-target limit `u_k = T(z)_k`. -/
+/-- **Attainable set of the estimator.** The closure of all values `θ̂_{n,k}(ω)` of the sequential
+estimator for arm `k`, over times `n` and outcomes `ω`. Every pointwise limit of `θ̂_{·,k}` lies in
+it (`estimator_limit_mem_attainableSet`), so Condition **B**'s positivity requirement on this set
+transfers to the plug-in-target limit `u_k = T(z)_k`. -/
 def attainableSet (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : ℝ) (k : 𝓐) : Set ℝ :=
   closure (Set.range fun p : ℕ × Ω ↦
     estimator (fun j ↦ actionIndicator A k j p.2) (Y · p.2) θ₀ p.1)
@@ -303,8 +303,8 @@ noncomputable def histTarget (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐
     (h : Iic n → 𝓐 × ℝ) : ℝ :=
   T (fun k' ↦ (sumRewards' n h k' + θ₀ k') / ((pullCount' n h k' : ℝ) + 1)) k
 
-/-- **The aRTS design family** (blueprint `def:aRTS`, algorithm form). An algorithm `alg` is an
-`α`-throttled aRTS design with offsets `θ₀` and target map `T` if its policy throttles every
+/-- **The aRTS design family** (Definition 3.1 of the paper, algorithm form). An algorithm `alg`
+is an `α`-throttled aRTS design with offsets `θ₀` and target map `T` if its policy throttles every
 over-sampled arm: for any history `h : Iic n → 𝓐 × ℝ`, if arm `k` is over-sampled
 (`N_{n+1,k}(h) > (n+1) ρ̂_k(h)`), then the probability the policy assigns to arm `k` for the next
 patient is at most `α ρ̂_k(h)`. -/
@@ -325,13 +325,13 @@ section ARTS
 variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐} [MeasurableSingletonClass 𝓐] {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν] {P : Measure Ω} [IsProbabilityMeasure P] {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
 /-- **A.s. loglog deviation between proportions and plug-in target for the aRTS design**
-(blueprint `lem:prop_dev`, `thm:normality` part (i), `O(√(n log log n))` a.s. half). For every arm
-`k`, almost surely `N_{n,k} - n ρ̂_{n,k} = O(√(n log log n))`.
+(Theorem 4.2 (i) of the paper, equation (6)). For every arm `k`, almost surely
+`N_{n,k} - n ρ̂_{n,k} = O(√(n log log n))`.
 
-The `aRTS` instantiation of `prop_dev_ae_of_hitting`: the estimator consistency, throttle and loglog
-rate are the `aRTS_LLN` bundle, and the smallness is automatic (`N_ℓ - ℓ ρ̂_ℓ ≤ 0`,
-`preliminary_small`). Condition **A** (`hνk`) and the Condition **B** differentiability
-`hT_diff` feed the loglog rate `aRTS_rho_rate`. -/
+The `aRTS` instantiation of `prop_dev_ae_of_hitting`: the estimator consistency and loglog rate
+come from the `aRTS_LLN` bundle, the throttle from `throttle_of_isARTS`, and the smallness is
+automatic (`N_ℓ - ℓ ρ̂_ℓ ≤ 0`, `preliminary_small`). Condition **A** (`hνk`) and the Condition
+**B** differentiability `hT_diff` feed the loglog rate `aRTS_rho_rate`. -/
 lemma aRTS_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)

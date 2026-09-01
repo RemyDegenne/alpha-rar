@@ -22,9 +22,13 @@ submartingale `M²` via `AlphaRAR.submartingale_sq`) with the analytic core
 `MeasureTheory.lintegral_le_two_mul_sqrt_of_meas_ge_le`: the former yields the inverse-square tail
 `μ{max_{k≤N}|M k| ≥ t} ≤ E[M_N²]/t²`, and the latter turns it into the `L¹` bound.
 
-## Main result
+## Main results
 
-* `AlphaRAR.lintegral_sup'_abs_le_two_mul_sqrt`.
+* `AlphaRAR.lintegral_sup'_abs_le_two_mul_sqrt`: the inequality above.
+* `AlphaRAR.mart_maximal` and `AlphaRAR.mart_maximal_dyadic`: bounds on the backward increments,
+  for `max_{m ≤ L} |M n - M (n-m)|` and for `max_{L ≤ m ≤ n} |M n - M (n-m)| / m`.
+* `AlphaRAR.mart_maximal_pi` and `AlphaRAR.mart_maximal_dyadic_pi`: those two bounds for a finite
+  family of martingales, with the Euclidean norm of the increment vector.
 -/
 
 @[expose] public section
@@ -123,9 +127,9 @@ lemma lintegral_sup'_abs_le_two_mul_sqrt (hM : Martingale M ℱ μ)
       _ ≤ ENNReal.ofReal B := ENNReal.ofReal_le_ofReal hle2
   exact lintegral_le_two_mul_sqrt_of_meas_ge_le hYnn hYmeas.aemeasurable hBnn htail
 
-/-- **Doob-type maximal bound for backward increments** (blueprint `lem:mart_maximal`, lintegral
-form). For a square-integrable martingale `M` whose increments have second moment `≤ C₀`, and
-`L ≤ n`, the maximal backward increment satisfies
+/-- **Doob-type maximal bound for backward increments** (the first bound of Lemma C.1 of the
+paper, in lintegral form). For a square-integrable martingale `M` whose increments have second
+moment `≤ C₀`, and `L ≤ n`, the maximal backward increment satisfies
 `∫⁻ (max_{m ≤ L} |M n - M (n-m)|) ≤ 4√(C₀ L)`.
 
 Reduces to the forward Doob `L²` maximal inequality via the shifted martingale
@@ -239,8 +243,9 @@ private lemma geom_dyadic_sum_le {L : ℕ} (hL : 0 < L) (jL j1 : ℕ) (hjL : L �
     _ ≤ 4 * (√L)⁻¹ := by gcongr
     _ = 4 / √L := by rw [div_eq_mul_inv]
 
-/-- **Dyadic maximal bound** (blueprint `lem:mart_maximal_dyadic`, lintegral form). For a
-square-integrable martingale `M` whose increments have second moment `≤ C₀`, and `0 < L ≤ n`,
+/-- **Dyadic maximal bound** (a form of the second bound of Lemma C.1 of the paper, as an
+lintegral bound and with a larger constant). For a square-integrable martingale `M` whose
+increments have second moment `≤ C₀`, and `0 < L ≤ n`,
 `∫⁻ (max_{L ≤ m ≤ n} |M n - M (n-m)| / m) ≤ 32√(C₀/L)`. -/
 lemma mart_maximal_dyadic (hM : Martingale M ℱ μ)
     (hM2 : ∀ n, MemLp (M n) 2 μ)

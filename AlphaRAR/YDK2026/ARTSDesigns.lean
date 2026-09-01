@@ -12,15 +12,17 @@ public meta import LeanSpec
 /-!
 # Example designs in the aRTS family
 
-This file records the concrete example designs of Section 3.1 (blueprint Chapter `chap:design`) and
+This file records the concrete example designs of Section 3 of the paper (Examples 3.1–3.3) and
 verifies that each belongs to the aRTS family, i.e. satisfies the throttling condition `IsARTS`.
 
 The shared plumbing is a generic construction of an `Algorithm` from a measurable, history-dependent
-*probability-vector* function `p : (n) → (Iic n → 𝓐 × ℝ) → 𝓐 → ℝ`:
+*probability-vector* function `p : (n : ℕ) → (Iic n → 𝓐 × ℝ) → 𝓐 → ℝ`:
 
 * `AlphaRAR.probVecKernel`: the Markov kernel `x ↦ ∑ₐ p(x,a) δₐ` on a finite action space.
-* `AlphaRAR.aRTSAlgorithmOfProb`: packages such a `p` (measurable, a probability vector, and
-  satisfying the throttle) into an `Algorithm` together with a proof that it `IsARTS`.
+* `AlphaRAR.aRTSAlgorithmOfProb`: packages such a `p` (measurable, a probability vector) into an
+  `Algorithm`.
+* `AlphaRAR.aRTSAlgorithmOfProb_isARTS`: if `p` also throttles every over-sampled arm, the
+  resulting algorithm `IsARTS`.
 
 Each concrete design (`distanceProb`, `eradeProb`, `dTrackingProb`) is then a probability-vector
 function whose simplex property and throttle inequality are pure arithmetic on the design formula.
@@ -120,8 +122,7 @@ lemma sum_histTarget (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ
 
 /-- The `Algorithm` whose policy at each step draws the next arm from the history-dependent
 probability vector `p n h`, and whose first action is an arbitrary point mass (the burn-in plays no
-role, cf. blueprint `rem:burnin`). Requires `p n h` to be measurable in `h` and a probability
-vector. -/
+role in the analysis). Requires `p n h` to be measurable in `h` and a probability vector. -/
 noncomputable def aRTSAlgorithmOfProb (p : (n : ℕ) → (Iic n → 𝓐 × ℝ) → 𝓐 → ℝ)
     (hp : ∀ n a, Measurable fun h ↦ p n h a) (hnn : ∀ n h a, 0 ≤ p n h a)
     (hsum : ∀ n h, ∑ a, p n h a = 1) : Algorithm 𝓐 ℝ where
@@ -170,7 +171,7 @@ lemma measurable_histProp (k : 𝓐) (n : ℕ) :
   simp only [histProp]
   exact (measurable_from_top.comp (measurable_pullCount' n k)).div_const _
 
-/-! ### Distance-based design (blueprint `def:distance_design`) -/
+/-! ### Distance-based design (Example 3.1 of the paper) -/
 
 /-- The **distance-based** design's probability vector: `p_k = α ρ̂_k + (1-α) δ_k / (∑_i δ_i)` with
 under-sampling deficit `δ_k = max(0, ρ̂_k - N_k/(n+1))`, degenerating to `ρ̂_k` when `∑ δ = 0`. -/
@@ -200,7 +201,7 @@ lemma distanceProb_nonneg (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 �
     linarith
 
 omit [MeasurableSpace 𝓐] [MeasurableSingletonClass 𝓐] [Nonempty 𝓐] in
-/-- **Distance-based is a valid probability vector** (blueprint `lem:distance_simplex`). -/
+/-- **Distance-based is a valid probability vector.** -/
 @[specifies distanceProb "with `distanceProb_nonneg`, the design is a genuine randomization rule; \
 in particular the degenerate branch `∑ δ = 0` was given the right fallback value `ρ̂_k`, which is \
 the one choice that keeps the total mass at `1`"]
@@ -231,9 +232,9 @@ lemma measurable_distanceProb (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → �
     (measurable_const.mul ((hδ k).div hS)))
 
 omit [MeasurableSpace 𝓐] [MeasurableSingletonClass 𝓐] [Nonempty 𝓐] in
-/-- **Distance-based is aRTS** (blueprint `lem:distance_isARTS`): when arm `k` is over-sampled its
-deficit vanishes, forcing `p_k = α ρ̂_k`; the mixing normaliser is positive because some *other* arm
-is then under-sampled (the deficits sum to `0` and are nonnegative after the `max`). -/
+/-- **Distance-based is aRTS**: when arm `k` is over-sampled its deficit vanishes, forcing
+`p_k = α ρ̂_k`; the mixing normaliser is positive because some *other* arm is then under-sampled
+(the deficits sum to `0` and are nonnegative after the `max`). -/
 @[specifies distanceProb "the design's membership in the aRTS family: the `max 0 (·)` deficit is \
 what makes an over-sampled arm receive none of the exploration mass, so its probability collapses \
 to the throttled `α ρ̂_k`"]
@@ -261,16 +262,16 @@ lemma distanceProb_throttle (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 
   refine le_of_eq ?_
   simp only [distanceProb, ite_eq_right hSpos.ne', hδk, zero_div, mul_zero, add_zero]
 
-/-- The **distance-based** aRTS design as an `Algorithm` (blueprint `def:distance_design`). -/
+/-- The **distance-based** aRTS design as an `Algorithm` (Example 3.1 of the paper). -/
 noncomputable def distanceAlgorithm (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1) {α : ℝ}
     (hα : α ∈ Set.Icc (0 : ℝ) 1) : Algorithm 𝓐 ℝ :=
   aRTSAlgorithmOfProb (distanceProb θ₀ T α) (fun n k ↦ measurable_distanceProb θ₀ hT α n k)
     (fun n h a ↦ distanceProb_nonneg θ₀ hTnn hα n h a) (fun n h ↦ distanceProb_sum θ₀ hTsum α n h)
 
-/-- **The distance-based design belongs to the aRTS family** (blueprint `lem:distance_isARTS`). -/
+/-- **The distance-based design belongs to the aRTS family.** -/
 @[specifies distanceAlgorithm "the only thing the packaged algorithm has to be: a member of the \
-aRTS family, so that every result of the chapter applies to it"]
+aRTS family, so that every result about that family applies to it"]
 lemma distance_isARTS (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1) {α : ℝ}
     (hα : α ∈ Set.Icc (0 : ℝ) 1) :
@@ -278,7 +279,7 @@ lemma distance_isARTS (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → �
   aRTSAlgorithmOfProb_isARTS (distanceProb θ₀ T α) _ _ _ θ₀ T α
     (fun n h k hover ↦ distanceProb_throttle θ₀ hTsum α n h k hover)
 
-/-! ### ERADE 2025 design (blueprint `def:erade2025`) -/
+/-! ### ERADE 2025 design (Example 3.2 of the paper) -/
 
 /-- The **ERADE 2025** design's probability vector: over-sampled arms are throttled to `α ρ̂_k`,
 arms at their target keep `ρ̂_k`, and each under-sampled arm receives `ρ̂_k` plus an equal share
@@ -309,7 +310,7 @@ lemma eradeProb_nonneg (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → �
   · exact hρnn k
 
 omit [MeasurableSpace 𝓐] [MeasurableSingletonClass 𝓐] [Nonempty 𝓐] in
-/-- **ERADE 2025 is a valid probability vector** (blueprint `lem:erade2025_simplex`). -/
+/-- **ERADE 2025 is a valid probability vector.** -/
 @[specifies eradeProb "the redistribution is exactly mass-preserving: the `(1-α)` taken from the \
 over-sampled arms is precisely what the equal shares hand to the under-sampled ones, and the arms \
 sitting at their target are left alone"]
@@ -390,8 +391,7 @@ lemma measurable_eradeProb (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 �
     ((hρ k).add (measurable_const.mul (hA.div hTc))) (hρ k)
 
 omit [MeasurableSpace 𝓐] [MeasurableSingletonClass 𝓐] [Nonempty 𝓐] in
-/-- **ERADE 2025 is aRTS** (blueprint `lem:erade2025_isARTS`): an over-sampled arm gets exactly
-`p_k = α ρ̂_k`. -/
+/-- **ERADE 2025 is aRTS**: an over-sampled arm gets exactly `p_k = α ρ̂_k`. -/
 @[specifies eradeProb "the design's membership in the aRTS family, and it confirms the branch \
 condition `ρ̂_k < N_k/(n+1)` is the same over-sampling test `IsARTS` uses"]
 lemma eradeProb_throttle (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (α : ℝ) (n : ℕ) (h : Iic n → 𝓐 × ℝ)
@@ -403,16 +403,16 @@ lemma eradeProb_throttle (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 →
   refine le_of_eq ?_
   simp only [eradeProb, ite_eq_left hlt]
 
-/-- The **ERADE 2025** aRTS design as an `Algorithm` (blueprint `def:erade2025`). -/
+/-- The **ERADE 2025** aRTS design as an `Algorithm` (Example 3.2 of the paper). -/
 noncomputable def eradeAlgorithm (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1) {α : ℝ}
     (hα : α ∈ Set.Icc (0 : ℝ) 1) : Algorithm 𝓐 ℝ :=
   aRTSAlgorithmOfProb (eradeProb θ₀ T α) (fun n k ↦ measurable_eradeProb θ₀ hT α n k)
     (fun n h a ↦ eradeProb_nonneg θ₀ hTnn hα n h a) (fun n h ↦ eradeProb_sum θ₀ hTsum α n h)
 
-/-- **The ERADE 2025 design belongs to the aRTS family** (blueprint `lem:erade2025_isARTS`). -/
+/-- **The ERADE 2025 design belongs to the aRTS family.** -/
 @[specifies eradeAlgorithm "the only thing the packaged algorithm has to be: a member of the aRTS \
-family, so that every result of the chapter applies to it"]
+family, so that every result about that family applies to it"]
 lemma erade_isARTS (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1) {α : ℝ}
     (hα : α ∈ Set.Icc (0 : ℝ) 1) :
@@ -420,7 +420,7 @@ lemma erade_isARTS (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} 
   aRTSAlgorithmOfProb_isARTS (eradeProb θ₀ T α) _ _ _ θ₀ T α
     (fun n h k hover ↦ eradeProb_throttle θ₀ α n h k hover)
 
-/-! ### Interpolated D-Tracking design (blueprint `def:d_tracking`) -/
+/-! ### Interpolated D-Tracking design (Example 3.3 of the paper) -/
 
 /-- The deficit `m ρ̂_{m,a} - N_{m,a}` (with `m = n+1`) of arm `a` relative to its target: the
 amount by which it is under-allocated. The most under-sampled arm (largest deficit) is favoured. -/
@@ -458,7 +458,7 @@ lemma dTrackingProb_nonneg (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 �
   split_ifs <;> norm_num
 
 omit [MeasurableSpace 𝓐] [MeasurableSingletonClass 𝓐] in
-/-- **D-Tracking is a valid probability vector** (blueprint `lem:d_tracking_simplex`). -/
+/-- **D-Tracking is a valid probability vector.** -/
 @[specifies dTrackingProb "the `(1-α)` mass is put on *exactly one* arm, so the interpolation \
 between the target `ρ̂` and the deterministic tracking choice is mass-preserving"]
 lemma dTrackingProb_sum (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -470,9 +470,9 @@ lemma dTrackingProb_sum (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → 
   ring
 
 omit [MeasurableSpace 𝓐] [MeasurableSingletonClass 𝓐] in
-/-- **Interpolated D-Tracking is aRTS** (blueprint `lem:d_tracking_isARTS`): an over-sampled arm has
-negative deficit, while the maximal deficit is `≥ 0` (deficits sum to `0`), so an over-sampled arm
-is never the favoured `k⋆` and receives exactly `p_k = α ρ̂_k`. -/
+/-- **Interpolated D-Tracking is aRTS**: an over-sampled arm has negative deficit, while the maximal
+deficit is `≥ 0` (deficits sum to `0`), so an over-sampled arm is never the favoured `k⋆` and
+receives exactly `p_k = α ρ̂_k`. -/
 @[specifies dTrackingProb "the design's membership in the aRTS family; it also shows the `argmax` \
 tie-breaking is irrelevant, since *no* over-sampled arm can be selected however ties are resolved"]
 lemma dTrackingProb_throttle (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -510,17 +510,16 @@ lemma measurable_dTrackingProb (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → �
   exact Measurable.ite (measurableSet_eq_fun measurable_const hargmax) measurable_const
     measurable_const
 
-/-- The **Interpolated D-Tracking** aRTS design as an `Algorithm` (blueprint `def:d_tracking`). -/
+/-- The **Interpolated D-Tracking** aRTS design as an `Algorithm` (Example 3.3 of the paper). -/
 noncomputable def dTrackingAlgorithm (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1) {α : ℝ}
     (hα : α ∈ Set.Icc (0 : ℝ) 1) : Algorithm 𝓐 ℝ :=
   aRTSAlgorithmOfProb (dTrackingProb θ₀ T α) (fun n k ↦ measurable_dTrackingProb θ₀ hT α n k)
     (fun n h a ↦ dTrackingProb_nonneg θ₀ hTnn hα n h a) (fun n h ↦ dTrackingProb_sum θ₀ hTsum α n h)
 
-/-- **The Interpolated D-Tracking design belongs to the aRTS family**
-(blueprint `lem:d_tracking_isARTS`). -/
+/-- **The Interpolated D-Tracking design belongs to the aRTS family.** -/
 @[specifies dTrackingAlgorithm "the only thing the packaged algorithm has to be: a member of the \
-aRTS family, so that every result of the chapter applies to it"]
+aRTS family, so that every result about that family applies to it"]
 lemma dTracking_isARTS (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1) {α : ℝ}
     (hα : α ∈ Set.Icc (0 : ℝ) 1) :

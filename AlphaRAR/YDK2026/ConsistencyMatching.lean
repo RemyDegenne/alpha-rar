@@ -21,12 +21,16 @@ part of the 0-indexed count `count X`, compensated against the previous-history 
 
 i.e. the compensator uses the conditional selection probability `p_j = μ[X j | ℱ (j-1)]`.
 This file records that identification and the resulting a.s. statement
-`assignMG(path)/n → 0`, which supplies the `hM` hypothesis of `pos_part_vanishes`.
+`assignMG(path)/n → 0`, which supplies the `hM` hypothesis of `pos_part_vanishes_ae`.
+It then lifts the deterministic matching lemmas to almost-sure statements, ending with the
+convergence of the allocation proportions under the generic conditions.
 
 ## Main results
 
 * `AlphaRAR.assignMart_eq_assignMG`: the per-path identification above.
 * `AlphaRAR.assignMG_path_div_ae_tendsto_zero`: `assignMG(path)/n → 0` a.s.
+* `AlphaRAR.consistency_ae`: `N_{n,k}/n → u_k` a.s. for every arm, from the vanishing gaps.
+* `AlphaRAR.consistency_of_generic_ae`: the same conclusion from the generic conditions.
 -/
 
 @[expose] public section
@@ -60,10 +64,11 @@ lemma assignMart_eq_assignMG (n : ℕ) (ω : Ω) :
   have hi := congrFun (assignMart_succ_sub (X := X) (ℱ := ℱ) (μ := μ) i) ω
   simpa only [Pi.sub_apply] using hi
 
-/-- **The normalized assignment martingale vanishes, in path form** (blueprint `lem:M_lln`,
-per-path). For a `[0,1]`-valued adapted integrable assignment indicator `X`, almost surely
+/-- **The normalized assignment martingale vanishes, in path form.**
+For a `[0,1]`-valued adapted integrable assignment indicator `X`, almost surely
 `assignMG(path)_n / n → 0`, where `path = (X · ω)` and the compensator uses
-`p_j = μ[X j | ℱ (j-1)]`. This is exactly the `hM` hypothesis consumed by `pos_part_vanishes`. -/
+`p_j = μ[X j | ℱ (j-1)]`. This is exactly the `hM` hypothesis consumed by
+`pos_part_vanishes_ae`. -/
 lemma assignMG_path_div_ae_tendsto_zero [IsProbabilityMeasure μ]
     (hX : StronglyAdapted ℱ X) (hX_int : ∀ n, Integrable (X n) μ)
     (h0X : ∀ n, 0 ≤ᵐ[μ] X n) (h1X : ∀ n, X n ≤ᵐ[μ] fun _ ↦ (1 : ℝ)) :
@@ -72,14 +77,14 @@ lemma assignMG_path_div_ae_tendsto_zero [IsProbabilityMeasure μ]
   filter_upwards [assignMart_div_atTop_ae_tendsto_zero hX hX_int h0X h1X] with ω hω
   exact hω.congr fun n ↦ by rw [assignMart_eq_assignMG]
 
-/-- **Positive part vanishes a.s.** (blueprint `lem:pos_part_vanishes`, a.s. form).
+/-- **Positive part vanishes a.s.**
 The a.s. wrapper of the pathwise `pos_part_vanishes`, over general per-path processes
 `Xp, pp, ρp : ℕ → Ω → ℝ` (assignment indicator, selection probability, plug-in target) and a
 per-path last-under-sampling schedule `ℓ : Ω → ℕ → ℕ`. Given the plug-in-target limit (`hρ`,
 from `rho_converges`), the vanishing normalized martingale (`hM`, from
 `assignMG_path_div_ae_tendsto_zero`), and the two generic conditions (`hgen`, `hgs`, discharged
 separately for the specific design) all a.s., the positive gap `(N_{n,k}/n - ρ̂_{n,k})⁺ → 0`
-a.s. Each is `filter_upwards` + the pathwise `pos_part_vanishes`. -/
+a.s. Proved by `filter_upwards` over the hypotheses and the pathwise `pos_part_vanishes`. -/
 lemma pos_part_vanishes_ae {Xp pp ρp : ℕ → Ω → ℝ} {α C : ℝ} {ℓ : Ω → ℕ → ℕ} {u : Ω → ℝ}
     (hℓle : ∀ᵐ ω ∂μ, ∀ n, ℓ ω n ≤ n) (hα : α ∈ Set.Icc (0 : ℝ) 1)
     (hu : ∀ᵐ ω ∂μ, u ω ∈ Set.Icc (0 : ℝ) 1)
@@ -102,13 +107,13 @@ lemma pos_part_vanishes_ae {Xp pp ρp : ℕ → Ω → ℝ} {α C : ℝ} {ℓ : 
 
 These are the a.s. forms of the deterministic matching lemmas: each is a `filter_upwards` over the
 a.s. hypotheses (the vanishing positive/negative parts and the plug-in-target limit, supplied by
-`pos_part_vanishes`/`neg_part_vanishes` and `rho_converges`) followed by the corresponding pathwise
-core. The proportion process is `count (Y · ω k)` (`= N_{n,k}(ω)`), the plug-in target is
+`pos_part_vanishes_ae`/`neg_part_vanishes_ae` and `rho_converges`) followed by the corresponding
+pathwise core. The proportion process is `count (Y · ω k)` (`= N_{n,k}(ω)`), the plug-in target is
 `r n ω k` (`= ρ̂_{n,k}(ω)`), and the (random) limit is `u ω`. -/
 
 variable {ι : Type*}
 
-/-- **Negative part vanishes a.s.** (blueprint `lem:neg_part_vanishes`, a.s. form). -/
+/-- **Negative part vanishes a.s.**, the a.s. form of the pathwise `neg_part_vanishes`. -/
 lemma neg_part_vanishes_ae [Fintype ι] {Y r : ℕ → Ω → ι → ℝ}
     (hY : ∀ᵐ ω ∂μ, ∀ j, ∑ k, Y j ω k = 1) (hr : ∀ᵐ ω ∂μ, ∀ n, ∑ k, r n ω k = 1)
     (hpos : ∀ᵐ ω ∂μ, ∀ j : ι,
@@ -119,7 +124,7 @@ lemma neg_part_vanishes_ae [Fintype ι] {Y r : ℕ → Ω → ι → ℝ}
   filter_upwards [hY, hr, hpos] with ω hYω hrω hposω
   exact neg_part_vanishes (Y · ω) (r · ω) hYω hrω hposω k
 
-/-- **Proportions match the plug-in target a.s.** (blueprint `lem:match`, a.s. form).
+/-- **Proportions match the plug-in target a.s.**
 Given the vanishing gaps and `ρ̂_{n,k} → u_k`, the proportion `N_{n,k}/n → u_k` a.s. -/
 lemma match_proportion_ae {Y r : ℕ → Ω → ι → ℝ} {u : Ω → ℝ} (k : ι)
     (hpos : ∀ᵐ ω ∂μ,
@@ -131,7 +136,7 @@ lemma match_proportion_ae {Y r : ℕ → Ω → ι → ℝ} {u : Ω → ℝ} (k 
   filter_upwards [hpos, hneg, hr] with ω hp hn hrω
   exact match_proportion (Y · ω) (r · ω) k hp hn hrω
 
-/-- **All arms sampled infinitely often a.s.** (blueprint `lem:all_arms_infinite`, a.s. form).
+/-- **All arms sampled infinitely often a.s.**
 If the proportion converges to a positive (random) limit, the count diverges a.s. -/
 lemma all_arms_infinite_ae {Y : ℕ → Ω → ι → ℝ} {u : Ω → ℝ} (k : ι) (hu : ∀ᵐ ω ∂μ, 0 < u ω)
     (hmatch : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ count (Y · ω k) n / (n : ℝ)) atTop (𝓝 (u ω))) :
@@ -139,8 +144,8 @@ lemma all_arms_infinite_ae {Y : ℕ → Ω → ι → ℝ} {u : Ω → ℝ} (k :
   filter_upwards [hu, hmatch] with ω huω hmω
   exact all_arms_infinite (Y · ω) k huω hmω
 
-/-- **A.s. consistency of the proportions** (blueprint `lem:consistency_matching`, the first
-conclusion of `thm:LLN`). Given the a.s. vanishing positive gaps for every arm (from
+/-- **A.s. consistency of the proportions**, the generic form of the first conclusion of the
+paper's Theorem 4.1. Given the a.s. vanishing positive gaps for every arm (from
 `pos_part_vanishes_ae`) and the plug-in-target limits `ρ̂_{n,k} → u_k` (from `rho_converges`),
 together with the simplex constraints (assignments and target both sum to `1`), the proportions
 converge a.s. to the target: `N_{n,k}/n → u_k` for all arms `k` simultaneously. The per-arm
@@ -160,17 +165,17 @@ lemma consistency_ae [Fintype ι] {Y r : ℕ → Ω → ι → ℝ} {u : Ω → 
     match_proportion_ae k (hpos k) (neg_part_vanishes_ae hY hr hpos_all k) (hru k)
   exact ae_all_iff.mpr hmatch
 
-/-- **Generic conditions imply a.s. consistency** (blueprint `thm:generic_main`, consistency
-direction). This is the modular main theorem: under the generic conditions (`hℓle`, `hgen`,
-`hgs` — the a.s. forms of Definition `def:generic_cond`) and the plug-in-target convergence
-`hru` (from `rho_converges`), the vanishing normalized martingale `hM` (from the assignment
-martingale, `assignMG_path_div_ae_tendsto_zero`), and the simplex constraints, the allocation
-proportions converge a.s. to the target for every arm: `N_{n,k}/n → u_k`. The positive gaps
-vanish arm-by-arm via `pos_part_vanishes_ae`, and `consistency_ae` closes the argument. The
-generic conditions themselves are discharged separately for each design (e.g. aRTS, via
-`preliminary_ineq`/`preliminary_small`), so this theorem never uses the specific form of the
-procedure. -/
-theorem consistency_of_generic_ae [Fintype ι] {Y pp r : ℕ → Ω → ι → ℝ} {u : Ω → ι → ℝ} {α C : ℝ}
+/-- **Generic conditions imply a.s. consistency**, the consistency direction of the paper's
+Lemma 4.4. This is the modular main step: under the generic conditions (`hℓle`, `hgen`,
+`hgs` — the a.s. forms of that lemma's conditions, with only `ℓ k ω n ≤ n` required of `ℓ`)
+and the plug-in-target convergence `hru` (from `rho_converges`), the vanishing normalized
+martingale `hM` (from the assignment martingale, `assignMG_path_div_ae_tendsto_zero`), and the
+simplex constraints, the allocation proportions converge a.s. to the target for every arm:
+`N_{n,k}/n → u_k`. The positive gaps vanish arm-by-arm via `pos_part_vanishes_ae`, and
+`consistency_ae` closes the argument. The generic conditions themselves are discharged
+separately for each design (e.g. aRTS, via `preliminary_ineq`/`preliminary_small`), so this
+lemma never uses the specific form of the procedure. -/
+lemma consistency_of_generic_ae [Fintype ι] {Y pp r : ℕ → Ω → ι → ℝ} {u : Ω → ι → ℝ} {α C : ℝ}
     {ℓ : ι → Ω → ℕ → ℕ} (hα : α ∈ Set.Icc (0 : ℝ) 1)
     (hY : ∀ᵐ ω ∂μ, ∀ j, ∑ k, Y j ω k = 1) (hr : ∀ᵐ ω ∂μ, ∀ n, ∑ k, r n ω k = 1)
     (hℓle : ∀ k, ∀ᵐ ω ∂μ, ∀ n, ℓ k ω n ≤ n)

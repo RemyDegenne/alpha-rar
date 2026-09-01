@@ -56,9 +56,9 @@ mention these lemmas, because a `ProbabilityMeasure` bundles the pushforward mea
 Listing them as targets makes comparator verify their statements and proofs the same way, while
 the challenge files leave them `sorry`.
 
-The sparse-rate challenge states `AlphaRAR.aRTSFE_sparse_rate_of_isARTSFE`, blueprint
-`thm:sparse_rate` from the history-level design predicate `IsARTSFE` (the same packaging as the
-other headline results). That packaging is what makes the statement challengeable at all: a form
+The sparse-rate challenge states `AlphaRAR.aRTSFE_sparse_rate_of_isARTSFE`, Theorem 5.2 of the
+paper, from the history-level design predicate `IsARTSFE` (the same packaging as the other
+headline results). That packaging is what makes the statement challengeable at all: a form
 taking the process-level throttle as a hypothesis would mention LML's history filtration
 `IsAlgEnvSeq.filtration`, whose definition rests on a *module-private* auxiliary constant (see
 *Maintenance*) that no restatement outside LML can reproduce — so such a form cannot be challenged

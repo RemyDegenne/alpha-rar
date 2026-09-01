@@ -15,9 +15,10 @@ public import AlphaRAR.Mathlib.MartingaleSLLN
 
 The assignment martingale `M` (the martingale part of a `[0,1]`-valued assignment
 count process) has increments bounded by `1`. Feeding this into the bounded-increment
-rate bound `isBigOpOne_of_bdd_increments` gives `M n = O_p(√n)` (blueprint `lem:M_Op`),
-and into the martingale strong law `martingale_div_atTop_ae_tendsto_zero_of_bdd` gives
-`M n / n → 0` a.e. (blueprint `lem:M_lln`).
+rate bound `isBigOpOne_of_bdd_increments` gives `M n = O_p(√n)`, into the martingale
+strong law `martingale_div_atTop_ae_tendsto_zero_of_bdd` gives `M n / n → 0` a.e., and
+into the unconditional bounded-increment loglog LIL
+`ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd` gives `|M n| = O(√(n log log n))` a.s.
 -/
 
 @[expose] public section
@@ -31,7 +32,7 @@ namespace AlphaRAR
 variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
   {ℱ : Filtration ℕ m0} {X : ℕ → Ω → ℝ}
 
-/-- **The assignment martingale is `O_p(√n)`** (blueprint `lem:M_Op`).
+/-- **The assignment martingale is `O_p(√n)`.**
 For a `[0,1]`-valued adapted integrable assignment indicator `X`, the assignment
 martingale `M` satisfies `M n / √n = O_p(1)`. -/
 lemma isBigOpOne_assignMart_div_sqrt [IsFiniteMeasure μ]
@@ -47,7 +48,7 @@ lemma isBigOpOne_assignMart_div_sqrt [IsFiniteMeasure μ]
     simpa only [Pi.sub_apply] using h
   exact isBigOpOne_of_bdd_increments (martingale_assignMart hX hX_int) hM0 1 hΔ
 
-/-- **LLN for the assignment martingale** (blueprint `lem:M_lln`). For a `[0,1]`-valued adapted
+/-- **LLN for the assignment martingale.** For a `[0,1]`-valued adapted
 integrable assignment indicator `X` on a probability space, the assignment martingale `M` satisfies
 `M n / n → 0` almost everywhere. The increments are bounded by `1`, so the martingale strong law of
 large numbers `martingale_div_atTop_ae_tendsto_zero_of_bdd` applies. -/
@@ -60,7 +61,7 @@ lemma assignMart_div_atTop_ae_tendsto_zero [IsProbabilityMeasure μ]
     simpa only [Pi.sub_apply] using h
   exact martingale_div_atTop_ae_tendsto_zero_of_bdd (martingale_assignMart hX hX_int) hΔ
 
-/-- **Loglog LIL for the assignment martingale** (blueprint `thm:lil_bounded` applied to `M_{·,k}`).
+/-- **Loglog LIL for the assignment martingale.**
 For a `[0,1]`-valued adapted integrable assignment indicator `X` on a probability space, the
 assignment martingale `M` satisfies `|M_n| = O(√(n log log n))` almost surely. The increments are
 bounded by `1`, so the *unconditional* bounded-increment loglog LIL

@@ -16,7 +16,7 @@ public import Mathlib.Tactic.Ring
 
 For a unit vector `s` (`sᵀ s = 1`), the matrix `I - s sᵀ` is an orthogonal
 projection: it is idempotent and symmetric. This is the linear-algebra core of the
-Pearson chi-square calibration (blueprint `lem:projection`); the rank `K - 1`
+Pearson chi-square calibration of the paper's Lemma 6.1; the rank `K - 1`
 statement is not formalized here.
 
 ## Main result
@@ -30,9 +30,9 @@ open Matrix
 
 namespace AlphaRAR
 
-/-- **`I - s sᵀ` is an orthogonal projection** (blueprint `lem:projection`).
+/-- **`I - s sᵀ` is an orthogonal projection.**
 For a unit vector `s` (`s ⬝ᵥ s = 1`), the matrix `1 - s sᵀ` is idempotent and
-symmetric. (The rank `K - 1` claim of the blueprint is not formalized here.) -/
+symmetric. (The rank `K - 1` claim is not formalized here.) -/
 lemma isProjection_one_sub_vecMulVec {K : ℕ} (s : Fin K → ℝ) (hs : s ⬝ᵥ s = 1) :
     IsIdempotentElem (1 - vecMulVec s s) ∧ (1 - vecMulVec s s).IsSymm := by
   -- `(s sᵀ)(s sᵀ) = (sᵀ s) (s sᵀ) = s sᵀ`.

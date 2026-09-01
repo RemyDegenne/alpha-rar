@@ -18,38 +18,43 @@ public meta import LeanSpec
 /-!
 # The i.i.d. Hartman–Wintner law of the iterated logarithm
 
-This file develops the finite-variance (i.i.d.) case of the loglog LIL (blueprint chapter
-`chap:pre_llil`, section "Application: the i.i.d. Hartman–Wintner LIL"). A sum of i.i.d. centred
-increments with only a second moment is split into three levels — low `|Y|≤b_i`, medium
-`b_i<|Y|≤√i`, high `|Y|>√i` — with the `log`-level cutoff `b_i = √(i/log(i+2))`. The main
-(low) part satisfies the growing-increment hypothesis of `LILLogLog.lean` and gets the loglog rate;
-the high part vanishes eventually; the drift and medium parts are `o(√(n log log n))`.
+This file develops the finite-variance (i.i.d.) case of the loglog LIL (Hartman–Wintner 1941).
+A sum of i.i.d. centred increments with only a second moment is split into three levels — low
+`|Y|≤b_i`, medium `b_i<|Y|≤√i`, high `|Y|>√i` — with the `log`-level cutoff `b_i = √(i/log(i+2))`.
+The main (low) part satisfies the growing-increment hypothesis of `LILLogLog.lean` and gets the
+loglog rate; the high part vanishes eventually; the drift and medium parts are `o(√(n log log n))`.
 
-## Main results (in progress)
+## Main results
 
 * `AlphaRAR.abs_sum_integral_truncation_le`: the drift bound `|∑_{j<m} ∫ trunc(X,√j)| ≤ 2(∫X²)√m`
-  for centred `X` (blueprint `lem:hw_drift`, deterministic core), from `abs_integral_truncation_le`
-  and `sum_one_div_sqrt_le`.
+  for centred `X`, from `abs_integral_truncation_le` and `sum_one_div_sqrt_le`.
 * `AlphaRAR.integral_sq_truncation_le`: `∫ trunc(X,A)² ≤ ∫ X²`, the low-part second-moment bound.
-* `AlphaRAR.ae_eventually_abs_le_sqrt_of_identDistrib`: the high part vanishes eventually
-  (blueprint `lem:hw_high`): for identically distributed `Y` with finite second moment, a.s.
-  `|Y_j| ≤ √j` for all large `j`.
+* `AlphaRAR.ae_eventually_abs_le_sqrt_of_identDistrib`: the high part vanishes eventually: for
+  identically distributed `Y` with finite second moment, a.s. `|Y_j| ≤ √j` for all large `j`.
 * `AlphaRAR.natFiltLT`: the "strictly before `n`" natural filtration `σ(Y_0,…,Y_{n-1})`.
 * `AlphaRAR.martingale_iidSum`: partial sums of independent centred variables form a martingale for
-  `natFiltLT` (blueprint `lem:hw_martingale`).
+  `natFiltLT`.
 * `AlphaRAR.predQuadVar_iidSum_succ_sub`, `AlphaRAR.predQuadVar_iidSum_le`,
   `AlphaRAR.predQuadVar_iidSum_ge`: the quadratic-variation increment `⟨S⟩_{n+1}-⟨S⟩_n = E[Y_n²]`
-  and the two-sided linear bounds `w·n ≤ ⟨S⟩_n ≤ v·n` (blueprint `lem:hw_qv`).
+  and the two-sided linear bounds `w·n ≤ ⟨S⟩_n ≤ v·n`.
 * `AlphaRAR.ae_eventually_abs_sum_le_sqrt_nat_mul_loglog_of_bounded`: the loglog LIL
-  `|S_n| = O(√(n log log n))` for bounded independent centred increments with `E[Y_i²] ≥ w > 0`
-  (blueprint `cor:hw_bounded`), the bounded case of Hartman–Wintner, assembled from the above and
-  the bounded-increment engine `ae_eventually_abs_le_sqrt_nat_mul_loglog`.
-* The low-part (centred-truncation) scaffold (blueprint `lem:hw_low_H`):
+  `|S_n| = O(√(n log log n))` for bounded independent centred increments with `E[Y_i²] ≥ w > 0`,
+  the bounded case of Hartman–Wintner, assembled from the above and the bounded-increment engine
+  `ae_eventually_abs_le_sqrt_nat_mul_loglog`.
+* The low-part (centred-truncation) ingredients:
   `AlphaRAR.iIndepFun_truncation_sub_const`, `AlphaRAR.martingale_centeredTruncation` (the
   martingale `S̃_n = ∑(Y_j^L - E Y_j^L)`), `AlphaRAR.predQuadVar_centeredTruncation_le`
   (`⟨S̃⟩_n ≤ v·n`),
   `AlphaRAR.abs_truncation_sub_integral_le` (increment bound `|ΔS̃_j| ≤ 2 b_j`), and
-  `AlphaRAR.integral_truncation_sub_integral_sq_le` (`Var(Y^L) ≤ σ²`).
+  `AlphaRAR.integral_truncation_sub_integral_sq_le` (`Var(Y^L) ≤ σ²`), assembled into the sharp
+  low-part LIL `AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation_sharp`.
+* `AlphaRAR.medium_variance_summable_seq` and `AlphaRAR.ae_medium_div_weight_tendsto_zero`: the
+  medium band has a summable weighted variance series, hence is `o(√(m log log m))`.
+* `AlphaRAR.hw_drift_bound`: the deterministic drift bound
+  `∑_{j<m}(E Y_j^L + E Y_j^M) ≤ 2σ²√m + E|Y_0|`.
+* `AlphaRAR.iid_hartmanWintner_limsup_le_one`: the upper half of the Hartman–Wintner LIL, a.s.
+  `limsup_m (∑_{j<m} Y_j) / √(2σ² m log log m) ≤ 1` for i.i.d. centred `L²` increments with
+  `σ² = E[Y_0²] > 0` (eventual, coboundedness-free form: `AlphaRAR.hw_eventually`).
 -/
 
 @[expose] public section
@@ -62,10 +67,10 @@ namespace AlphaRAR
 
 variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
 
-/-- **Drift bound** (blueprint `lem:hw_drift`, deterministic core). For a centred `X` with `X²`
-integrable, `|∑_{j<m} ∫ trunc(X,√j)| ≤ 2 (∫X²) √m`. Each summand is bounded by `(∫X²)/√j`
+/-- **Drift bound**, the deterministic core. For a centred `X` with `X²` integrable,
+`|∑_{j<m} ∫ trunc(X,√j)| ≤ 2 (∫X²) √m`. Each summand is bounded by `(∫X²)/√j`
 (`abs_integral_truncation_le`) and `∑_{j<m} 1/√j ≤ 2√m` (`sum_one_div_sqrt_le`). The truncated mean
-at level `√j` is exactly `E[Y 𝟙_{|Y|≤√j}]`, so this bounds the Hartman–Wintner drift `Dr_m`. -/
+at level `√j` is `E[X 𝟙_{-√j < X ≤ √j}]`, so this bounds the Hartman–Wintner drift. -/
 lemma abs_sum_integral_truncation_le [IsFiniteMeasure μ] {X : Ω → ℝ}
     (hX2 : MemLp X 2 μ) (hX0 : ∫ ω, X ω ∂μ = 0) (m : ℕ) :
     |∑ j ∈ Finset.range m, ∫ ω, truncation X (√(j : ℝ)) ω ∂μ|
@@ -140,9 +145,9 @@ lemma integral_truncation_sub_integral_sq_le [IsProbabilityMeasure μ] {X : Ω �
         variance_le_expectation_sq hint.aestronglyMeasurable.truncation
     _ ≤ ∫ ω, X ω ^ 2 ∂μ := integral_sq_truncation_le hX2 A
 
-/-- **High part is eventually zero** (blueprint `lem:hw_high`). For an identically distributed
-sequence `Y` with finite second moment, almost surely `|Y j| ≤ √j` for all large `j`; hence the
-high part `Y_j 𝟙{|Y_j|>√j}` vanishes eventually and `H_m = ∑_{j≤m} Y_j 𝟙{|Y_j|>√j}` is `O(1)`.
+/-- **High part is eventually zero.** For an identically distributed sequence `Y` with finite second
+moment, almost surely `|Y j| ≤ √j` for all large `j`; hence the high part `Y_j 𝟙{|Y_j|>√j}` vanishes
+eventually and `H_m = ∑_{j≤m} Y_j 𝟙{|Y_j|>√j}` is `O(1)`.
 The tail sum `∑_j P(|Y_j|>√j) = ∑_j ρ{|x|>√j}` (with `ρ` the common law) is finite by the
 layer-cake bound (`tsum_measure_abs_sub_gt_sqrt_ne_top` at `θ = 0`), and Borel–Cantelli
 (`ae_eventually_abs_le_of_tsum_ne_top`) gives the eventual bound. Needs only identical
@@ -463,8 +468,7 @@ lemma memLp_two_truncation_sub_const [IsProbabilityMeasure μ] {Y : ℕ → Ω �
 
 /-- **The low-part (centred-truncation) martingale.** For independent `Y`, the centred truncations
 `Y_j^L - E Y_j^L = truncation(Y_j, b_j) - E[truncation(Y_j, b_j)]` sum to a martingale
-`S̃_n = ∑_{j<n}(Y_j^L - E Y_j^L)`, via `martingale_iidSum` (blueprint `lem:hw_low_H`, martingale
-part). -/
+`S̃_n = ∑_{j<n}(Y_j^L - E Y_j^L)`, via `martingale_iidSum`. -/
 lemma martingale_centeredTruncation [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
     (hY : ∀ i, StronglyMeasurable (Y i)) (hindep : iIndepFun Y μ) (b : ℕ → ℝ) :
     Martingale
@@ -481,8 +485,8 @@ lemma martingale_centeredTruncation [IsProbabilityMeasure μ] {Y : ℕ → Ω �
       rw [integral_sub (hY i).aestronglyMeasurable.integrable_truncation (integrable_const _)]
       simp)
 
-/-- **Linear quadratic-variation bound for the low part** (blueprint `lem:hw_low_H`/`lem:hw_qv`).
-Since `Var(Y_j^L) ≤ E[Y_j²] ≤ v`, the centred-truncation martingale has `⟨S̃⟩_n ≤ v·n` a.s. -/
+/-- **Linear quadratic-variation bound for the low part.** Since `Var(Y_j^L) ≤ E[Y_j²] ≤ v`, the
+centred-truncation martingale has `⟨S̃⟩_n ≤ v·n` a.s. -/
 lemma predQuadVar_centeredTruncation_le [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
     (hY : ∀ i, StronglyMeasurable (Y i)) (hindep : iIndepFun Y μ)
     (hint2 : ∀ i, MemLp (Y i) 2 μ)
@@ -899,8 +903,8 @@ truncated-band second moments summed with the LIL weight are `≤ C·E[X²]`:
 finite-sum linearity `∑_{j<n} … = ∫ X²·∑_{j<n}𝟙{…}/(j log log j)`, the inner sum is `≤ C` pointwise
 (`medium_inner_tsum_le` at `t = X(ω)²`, since `√(j/log(j+2)) < |x| ≤ √j ⟺ x² ≤ j < x² log(j+2)`), so
 each partial sum is `≤ C·∫X²`; `summable_of_sum_range_le` / `Real.tsum_le_of_sum_range_le` finish.
-With `Var(Y_j^M) ≤ E[(Y_j^M)²] = E[X² 𝟙{…}]` (identical distribution) this gives
-`lem:hw_medium_var`. -/
+With `Var(Y_j^M) ≤ E[(Y_j^M)²] = E[X² 𝟙{…}]` (identical distribution) this gives the summability of
+the medium-band variance series. -/
 lemma medium_variance_series_le {X : Ω → ℝ} (hX : Measurable X)
     (hX2 : MemLp X 2 μ) :
     ∃ C : ℝ, 0 ≤ C ∧
@@ -992,7 +996,7 @@ lemma medium_variance_series_le {X : Ω → ℝ} (hX : Measurable X)
     rwa [integral_const_mul] at h2
   exact ⟨C, hC0, summable_of_sum_range_le hFnn hbound, Real.tsum_le_of_sum_range_le hFnn hbound⟩
 
-/-- **Medium variance series is summable** (blueprint `lem:hw_medium_var`, representative form).
+/-- **Medium variance series is summable**, in the single-variable form.
 `∑_{j≥3} Var(X 𝟙{√(j/log(j+2)) < |X| ≤ √j})/(j log log j) < ∞` under only `X² ∈ L¹`. Reduces to
 `medium_variance_series_le` by `Var(X 𝟙_S) ≤ E[(X 𝟙_S)²] = E[X² 𝟙_S]` (`variance_le_expectation_sq`,
 `(X 𝟙_S)² = X² 𝟙_S`) and comparison of nonnegative series. With identical distribution
@@ -1133,8 +1137,8 @@ set_option maxHeartbeats 400000 in
 -- The medium SLLN threads the weighted-series martingale, the discrete Itô isometry and the
 -- variance-summability comparison through the general-weight SLLN; the accumulated elaboration
 -- exceeds the default heartbeat budget.
-/-- **The medium part is negligible** (blueprint `lem:hw_medium`). For i.i.d. `Y` with a bare second
-moment, `W_m = ∑_{j<m}(Y_j^{\mathrm M} − 𝔼 Y_j^{\mathrm M}) = o(√(m log log m))` a.s.: precisely,
+/-- **The medium part is negligible.** For i.i.d. `Y` with a bare second moment,
+`W_m = ∑_{j<m}(Y_j^{\mathrm M} − 𝔼 Y_j^{\mathrm M}) = o(√(m log log m))` a.s.: precisely,
 `W_m / √(2(m+3) log log(m+3)) → 0` (and `√(2(m+3)L(m+3)) ∼ √(2m L(m))`). The medium martingale
 `martingale_centeredMedium`, its `L²`-boundedness from the summable variance series
 (`medium_variance_summable_seq`, discrete Itô isometry), and the general-weight SLLN
@@ -1367,7 +1371,8 @@ lemma le_lowMedHigh {bj sj x : ℝ} (hb : 0 ≤ bj) (hbs : bj ≤ sj) :
 
 /-- **Pointwise low+medium bound.** With `0 ≤ bj ≤ sj`, the low `(-bj,bj]`-truncation plus the
 medium `{bj<|·|≤sj}`-part is at most the `(-sj,sj]`-truncation plus a boundary atom `bj` at `x=-bj`.
-Integrating gives the Hartman–Wintner drift `c_j+e_j ≤ ∫trunc(Y,√j) + b_j μ{Y=-b_j}`. -/
+Integrating gives the Hartman–Wintner drift bound
+`∫trunc(Y,b_j) + ∫Y^M ≤ ∫trunc(Y,√j) + b_j μ{Y=-b_j}`. -/
 lemma lowMed_le {bj sj x : ℝ} (hb : 0 ≤ bj) (hbs : bj ≤ sj) :
     (Set.Ioc (-bj) bj).indicator id x + ({y : ℝ | bj < |y| ∧ |y| ≤ sj}).indicator id x
       ≤ (Set.Ioc (-sj) sj).indicator id x + (if x = -bj then bj else 0) := by
@@ -1522,7 +1527,7 @@ lemma cutoff_le_sqrt (j : ℕ) : hwCutoff j ≤ √(j : ℝ) := by
     rw [div_le_iff₀ (by linarith : (0 : ℝ) < log ((j : ℝ) + 2))]
     nlinarith
 
--- === ratio helpers (proved by subagent in HWRatios) ===
+-- === ratio helpers ===
 lemma tendsto_loglog_atTop : Tendsto (fun m : ℕ ↦ log (log (m : ℝ))) atTop atTop := by
   simpa [Function.comp_def] using
     Real.tendsto_log_atTop.comp (Real.tendsto_log_atTop.comp tendsto_natCast_atTop_atTop)
@@ -1836,7 +1841,7 @@ lemma hw_eventually [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : ∀
         + (β - β₁) * √(2 * σ2 * (m : ℝ) * log (log (m : ℝ))) := by linarith
     _ = β * √(2 * σ2 * (m : ℝ) * log (log (m : ℝ))) := by ring
 
-/-- **Sharp i.i.d. Hartman–Wintner LIL, upper half** (blueprint `thm:hw`). For an i.i.d., centred,
+/-- **Sharp i.i.d. Hartman–Wintner LIL, upper half** (Hartman–Wintner 1941). For an i.i.d., centred,
 `L²` sequence with `σ² = 𝔼[Y_0²] > 0`, almost surely
 `limsup_m (∑_{j<m} Y_j) / √(2σ² m log log m) ≤ 1`. Assembled from the coboundedness-free eventual
 bound `hw_eventually` applied to `Y` (upper bound) and to `-Y` (lower bound, giving coboundedness of

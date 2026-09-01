@@ -13,8 +13,8 @@ public meta import LeanSpec
 /-!
 # The a.s. `O(√(n log log n))` proportion-deviation bound for the aRTS design
 
-This file proves the almost-sure loglog part of blueprint `lem:prop_dev` / `thm:normality` part (i):
-for every arm `k`,
+This file proves the almost-sure loglog part of Theorem 4.2 (i) of the paper, equations (6)
+and (7): for every arm `k`,
 `|N_{n,k} - n ρ̂_{n,k}| = O(√(n log log n))` a.s. and `N_{n,k} - n v_k = O(√(n log log n))` a.s.
 
 Unlike the `o_p(√n)` half (`aRTS_prop_dev`), the a.s. bound avoids the entire `ell_rho_control` /
@@ -192,8 +192,8 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
 
 /-- **Per-arm one-sided a.s. loglog bound on the deviation, at an abstract hitting time.** The
 abstract-hitting-time generalisation of `aRTS_dev_upper`: for arm `k'`, given the estimator
-consistency `hθconv`, the plug-in-target loglog rate `hρrate` (`ρ̂ - v = O(√(log log/·))`), the
-throttle `hthrottle`, and the smallness upper bound `hsmall_upper`
+consistency `hθconv`, the plug-in-target loglog rate `hρrate` (`ρ̂_n - v = O(√(n log log n)/n)`),
+the throttle `hthrottle`, and the smallness upper bound `hsmall_upper`
 (`N_ℓ - ℓ ρ̂_ℓ = O(√(n loglog n))` at the hitting time), the deviation `N_{n,k'} - n ρ̂_{n,k'}`
 is `≤ C · √(n log log n)` eventually. The chain: `generic_ineq_of_hitting` gives
 `Dev ≤ 1 + small + Uincr`; the `U`-increment decomposes (`diff_U_decomp`, `ε = (1-α)v/2`) as
@@ -354,9 +354,9 @@ lemma dev_upper_of_hitting [DecidableEq 𝓐]
   nlinarith [hDev, hone, sqrt_nonneg ((n : ℝ) * log (log n))]
 
 /-- **Per-arm one-sided a.s. loglog deviation bound for the aRTS design.** The `aRTS`
-instantiation of `dev_upper_of_hitting` at the last under-sampling time: the estimator consistency,
-loglog rate and throttle are the `aRTS_LLN` bundle (`aRTS_theta_consistent`, `aRTS_rho_rate`,
-`throttle_of_isARTS`), and the smallness is automatic — at the last under-sampling time
+instantiation of `dev_upper_of_hitting` at the last under-sampling time: the estimator consistency
+and loglog rate come from the `aRTS_LLN` bundle (`aRTS_theta_consistent`, `aRTS_rho_rate`), the
+throttle from `throttle_of_isARTS`, and the smallness is automatic — at the last under-sampling time
 `N_ℓ - ℓ ρ̂_ℓ ≤ 0` (`preliminary_small`), so it is trivially `O(√(n log log n))`. -/
 lemma aRTS_dev_upper [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
@@ -380,7 +380,7 @@ lemma aRTS_dev_upper [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
         (fun m hm ↦ by rwa [count_indicator_eq_pullCount])⟩)
 
 /-- **A.s. loglog deviation between proportions and plug-in target at an abstract hitting time**
-(blueprint `lem:prop_dev`, `thm:normality` part (i), `O(√(n log log n))` a.s. half, generic form).
+(Theorem 4.2 (i) of the paper, equation (6), generic form).
 The abstract-hitting-time generalisation of `aRTS_prop_dev_ae`: from the per-arm one-sided bounds
 `dev_upper_of_hitting` (for *all* arms) via the simplex reverse step
 `isBigO_of_forall_upper_of_sum_zero`, whose `∑_k Dev_k = 0` input is `sum_count_sub_smul_eq_zero`.
@@ -424,14 +424,14 @@ lemma prop_dev_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (by simp only [aRTSTarget]; exact hTsum _) n
 
 /-- **A.s. loglog deviation between proportions and plug-in target for the aRTS design**
-(blueprint `lem:prop_dev`, `thm:normality` part (i), `O(√(n log log n))` a.s. half). For every arm
-`k`, almost surely `N_{n,k} - n ρ̂_{n,k} = O(√(n log log n))`.
+(Theorem 4.2 (i) of the paper, equation (6)). For every arm `k`, almost surely
+`N_{n,k} - n ρ̂_{n,k} = O(√(n log log n))`.
 
-The `aRTS` instantiation of `prop_dev_ae_of_hitting`: the estimator consistency, throttle and loglog
-rate are the `aRTS_LLN` bundle, and the smallness is automatic (`N_ℓ - ℓ ρ̂_ℓ ≤ 0`,
-`preliminary_small`). Condition **A** (`hνk`) and the Condition **B** differentiability
-`hT_diff` feed the loglog rate `aRTS_rho_rate`. -/
-lemma aRTS_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+The `aRTS` instantiation of `prop_dev_ae_of_hitting`: the estimator consistency and loglog rate
+come from the `aRTS_LLN` bundle, the throttle from `throttle_of_isARTS`, and the smallness is
+automatic (`N_ℓ - ℓ ρ̂_ℓ ≤ 0`, `preliminary_small`). Condition **A** (`hνk`) and the Condition
+**B** differentiability `hT_diff` feed the loglog rate `aRTS_rho_rate`. -/
+theorem aRTS_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -452,8 +452,8 @@ lemma aRTS_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace �
         (fun m hm ↦ by rwa [count_indicator_eq_pullCount])⟩) k
 
 /-- **A.s. loglog deviation between the count and the target proportion at an abstract hitting
-time** (blueprint `lem:prop_dev`, `thm:normality` part (i), last line, generic form). For every arm
-`k`, almost surely `N_{n,k} - n v_k = O(√(n log log n))`. Writing
+time** (Theorem 4.2 (i) of the paper, equation (7), generic form). For every arm `k`, almost surely
+`N_{n,k} - n v_k = O(√(n log log n))`. Writing
 `N_{n,k} - n v_k = (N_{n,k} - n ρ̂_{n,k}) + n(ρ̂_{n,k} - v_k)`, the first term is
 `prop_dev_ae_of_hitting` and the second is `n · O(√(n log log n)/n) = O(√(n log log n))` by the
 loglog rate `hρrate` and `isBigO_natMul_sqrt_mul_log_log`. -/
@@ -487,10 +487,10 @@ lemma count_sub_smul_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
   simp only [aRTSTarget]; ring
 
 /-- **A.s. loglog deviation between the count and the target proportion for the aRTS design**
-(blueprint `lem:prop_dev`, `thm:normality` part (i), last line). For every arm `k`, almost surely
+(Theorem 4.2 (i) of the paper, equation (7)). For every arm `k`, almost surely
 `N_{n,k} - n v_k = O(√(n log log n))`, where `v_k = T ν.means k` is the limiting proportion.
 The `aRTS` instantiation of `count_sub_smul_ae_of_hitting`. -/
-lemma aRTS_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
+theorem aRTS_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)

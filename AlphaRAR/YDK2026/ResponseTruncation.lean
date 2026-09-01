@@ -13,9 +13,9 @@ public meta import LeanSpec
 /-!
 # The truncated response martingale
 
-For the finite-variance law of the iterated logarithm (blueprint `lem:lil_truncation`) we need the
-response martingale with *truncated* increments. Both the response martingale and its truncated
-version are instances of a **general functional response martingale**
+For the finite-variance law of the iterated logarithm we need the response martingale with
+*truncated* increments. Both the response martingale and its truncated version are instances of a
+**general functional response martingale**
 `genRespMart ν A Y k g n = ∑_{m<n} 𝟙{A m = k} (g m (Y m) - (ν k)[g m])`,
 parametrised by a sequence of functions `g : ℕ → ℝ → ℝ`. The martingale property holds for any
 `g` (with `g n` measurable and `g n (Y n)` integrable), by exactly the argument for `respMart`
@@ -23,22 +23,23 @@ parametrised by a sequence of functions `g : ℕ → ℝ → ℝ`. The martingal
 `𝟙{A i = k}((ν (A i))[g i] - (ν k)[g i]) = 0` on `{A i = k}`.
 
 The **truncated response martingale** is the instance
-`g i = truncation (· - ν.means k) (√i)` (blueprint `lem:trunc_mart`, the centred truncated
-increments `ξ̃_i = truncation(ξ_i, √i) - m_i`).
+`g i = truncation (· - ν.means k) (√i)`: the increment functions are the centred truncated
+increments `ξ̃_i = truncation(ξ_i, √i) - m_i`, which enter weighted by `𝟙{A i = k}`.
 
 ## Main results
 
 * `AlphaRAR.martingale_genRespMart`: the general functional response martingale is a martingale.
-* `AlphaRAR.martingale_truncRespMart`: the truncated response martingale is a martingale
-  (blueprint `lem:trunc_mart`).
+* `AlphaRAR.martingale_truncRespMart`: the truncated response martingale is a martingale.
 * `AlphaRAR.predQuadVar_genRespMart_eq`: its quadratic variation is the weighted assignment sum
   `∑_{i<n} variance (g i) (ν k) · 𝟙{A i = k}`.
-* `AlphaRAR.predQuadVar_truncRespMart_eq`: the truncated case `⟨M̃⟩_n = ∑_{i<n} v_i 𝟙{A i = k}`
-  (blueprint `lem:trunc_qv`).
+* `AlphaRAR.predQuadVar_truncRespMart_eq`: the truncated case `⟨M̃⟩_n = ∑_{i<n} v_i 𝟙{A i = k}`.
 * `AlphaRAR.abs_truncMean_le`, `AlphaRAR.abs_truncDrift_le`: `|m_i| ≤ V_k/√i` and the drift bound
-  `|Dr_n| ≤ 2 V_k √n` (blueprint `lem:trunc_drift`).
+  `|Dr_n| ≤ 2 V_k √n`.
 * `AlphaRAR.truncVar_le_variance`, `AlphaRAR.predQuadVar_truncRespMart_le`: `v_i ≤ V_k` and hence
-  `⟨M̃⟩_n ≤ V_k N_{n,k}` (blueprint `lem:trunc_qv_le`).
+  `⟨M̃⟩_n ≤ V_k N_{n,k}`.
+* `AlphaRAR.ae_eventually_abs_respMart_le_sqrt_nat_mul_log`: assembling the truncated
+  decomposition `Q_n = M̃_n + R_n + Dr_n`, the response martingale itself satisfies
+  `|Q_{n,k}| ≤ C √(n log n)` eventually, almost surely.
 -/
 
 @[expose] public section
@@ -247,7 +248,7 @@ lemma memLp_genRespMart (hA : ∀ n, Measurable (A n)) {g : ℕ → ℝ → ℝ}
 /-- **The quadratic variation of the general-functional martingale** is the weighted assignment
 sum `⟨M⟩_n = ∑_{i<n} variance (g i) (ν k) · 𝟙{A i = k}`. For `respMart` (`g = id`, constant variance
 `Var[id; ν k]`) this collapses to `V_k · N`; for the truncated martingale the varying variances
-`v_i = variance (g i) (ν k)` are retained (blueprint `lem:trunc_qv`). -/
+`v_i = variance (g i) (ν k)` are retained. -/
 @[specifies genRespMart "the clock is again the arm's own indicator: variance accrues only at \
 rounds where arm `k` is pulled, at the step-`i` rate `variance (g i) (ν k)`. Specializing `g = id` \
 recovers `⟨respMart⟩ = V_k N`, which is how the general form is checked against the concrete one"]
@@ -297,7 +298,7 @@ lemma predQuadVar_genRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
 
 /-- The **truncated response martingale** of arm `k`: the general functional martingale with
 `g i = truncation(· - θ_k, √i)`, i.e. increments `𝟙{A i = k}(truncation(Y i - θ_k, √i) - m_i)`
-with `m_i = (ν k)[truncation(· - θ_k, √i)]` (blueprint `lem:trunc_mart`). -/
+with `m_i = (ν k)[truncation(· - θ_k, √i)]`. -/
 noncomputable def truncRespMart (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (k : 𝓐) :
     ℕ → Ω → ℝ :=
   genRespMart ν A Y k (fun i ↦ truncation (fun y ↦ y - ν.means k) (√i))
@@ -308,8 +309,8 @@ lemma stronglyMeasurable_truncation_sub_const (θ A : ℝ) :
     StronglyMeasurable (truncation (fun y : ℝ ↦ y - θ) A) :=
   (stronglyMeasurable_id.indicator measurableSet_Ioc).comp_measurable (measurable_id.sub_const θ)
 
-/-- The truncated increment function `truncation (· - θ) (√i)` applied to `Y i` is integrable
-(it is bounded by `√i`). -/
+/-- The truncated increment function `truncation (· - θ) (√n)` applied to `Y n` is integrable
+(it is bounded by `√n`). -/
 @[fun_prop]
 lemma integrable_truncation_comp (hint : ∀ n, Integrable (Y n) P) (θ : ℝ) (n : ℕ) :
     Integrable (fun ω ↦ truncation (fun y : ℝ ↦ y - θ) (√n) (Y n ω)) P := by
@@ -335,7 +336,7 @@ lemma memLp_truncation_comp (hint : ∀ n, Integrable (Y n) P) (θ : ℝ) (n : �
   rw [Real.norm_eq_abs]
   exact (abs_truncation_le_bound _ _ _).trans (le_of_eq (abs_of_nonneg (sqrt_nonneg _)))
 
-/-- **The truncated response martingale is a martingale** (blueprint `lem:trunc_mart`).
+/-- **The truncated response martingale is a martingale.**
 Instance of `martingale_genRespMart` with `g i = truncation(· - θ_k, √i)`. -/
 lemma martingale_truncRespMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) :
@@ -377,7 +378,7 @@ lemma truncVar_le_variance (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)
         exact mul_self_le_mul_self (abs_nonneg _) (abs_truncation_le_abs_self _ _ _)
     _ = (x - ν.means k) ^ 2 := sq_abs _
 
-/-- **The quadratic variation of the truncated response martingale** (blueprint `lem:trunc_qv`):
+/-- **The quadratic variation of the truncated response martingale**:
 `⟨M̃⟩_n = ∑_{i<n} v_i 𝟙{A i = k}`, with `v_i = truncVar ν k i`. Instance of
 `predQuadVar_genRespMart_eq`. -/
 lemma predQuadVar_truncRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
@@ -391,7 +392,7 @@ lemma predQuadVar_truncRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P
 
 /-- **The truncated quadratic variation is bounded by `V_k N`**: `⟨M̃⟩_n ≤ V_k · N_{n,k}` a.e.,
 since each `v_i ≤ V_k` (`truncVar_le_variance`). This is the `⟨M̃⟩ ≲ σ² N` bound the LIL block
-argument needs (the upper half of blueprint `lem:trunc_var_conv`). -/
+argument needs. -/
 @[specifies truncRespMart "truncation buys the increment bound without paying in variance: `⟨M̃⟩` \
 is still dominated by the untruncated `V_k N_{n,k}`"]
 lemma predQuadVar_truncRespMart_le (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
@@ -432,13 +433,13 @@ lemma abs_truncMean_le (k : 𝓐) (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) (i
     have h := abs_integral_truncation_le hX2 hX0 hipos
     rwa [Kernel.means_apply, ← variance_id_eq_integral] at h
 
-/-- The truncated **drift** process `Dr_n = ∑_{i<n} m_i 𝟙{A i = k}` (blueprint `lem:trunc_drift`),
-the accumulated centering. Deterministic coefficients `m_i` times the arm-`k` indicators. -/
+/-- The truncated **drift** process `Dr_n = ∑_{i<n} m_i 𝟙{A i = k}`, the accumulated centering.
+Deterministic coefficients `m_i` times the arm-`k` indicators. -/
 noncomputable def truncDrift (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → 𝓐) (k : 𝓐) (n : ℕ) : Ω → ℝ :=
   ∑ i ∈ Finset.range n, fun ω ↦ truncMean ν k i * actionIndicator A k i ω
 
 omit [MeasurableSingletonClass 𝓐] in
-/-- **The drift is `O(√n)`** (blueprint `lem:trunc_drift`): `|Dr_n| ≤ 2 V_k √n`, from
+/-- **The drift is `O(√n)`**: `|Dr_n| ≤ 2 V_k √n`, from
 `|m_i| ≤ V_k/√i` (`abs_truncMean_le`) and `∑_{i<n} 1/√i ≤ 2√n` (`sum_one_div_sqrt_le`). -/
 @[specifies truncDrift "what the accumulated bias costs: `O(√n)`, hence negligible against the \
 `√(n log log n)` scale the LIL works at — the reason the drift can be discarded"]
@@ -582,7 +583,7 @@ lemma ae_predQuadVar_truncRespMart_le_nat (h : IsAlgEnvSeq A Y alg (stationaryEn
         · rw [actionIndicator, Set.indicator_of_notMem hω]; norm_num
     _ = (n : ℝ) := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul, mul_one]
 
-/-- **Per-block Freedman bound for the truncated martingale** (blueprint `lem:trunc_block`).
+/-- **Per-block Freedman bound for the truncated martingale.**
 With horizon `2^j`, increment bound `c_j = 2√(2^j)`, and the *constrained* exponential parameter
 `θ_j = 1/c_j` (the true optimizer `λ/(2v)` is inadmissible), the Freedman inequality on the
 martingale stopped at `2^j` (`measure_exists_ge_le_exp_horizon`) gives, for `λ_j = C√(2^j j)` and
@@ -602,11 +603,11 @@ lemma measure_exists_truncRespMart_block (h : IsAlgEnvSeq A Y alg (stationaryEnv
     (truncRespMart_zero_ae k) (integrable_truncRespMart_sq h hint k) (by norm_num : (0 : ℝ) < 2)
     (ae_abs_truncRespMart_increment_le k) (Var[id; ν k]) C j
 
-/-- **Block Borel–Cantelli for the truncated martingale** (blueprint `lem:trunc_mart_lil`, first
-half). The per-block bounds `P(s_j) ≤ exp(-(C/2)√j + V_k/4)` (`measure_exists_truncRespMart_block`)
-are summable in `j` (`summable_exp_neg_mul_sqrt`), so the first Borel–Cantelli lemma
-(`ae_eventually_notMem`) gives that a.s. only finitely many blocks are bad: for a.e. `ω`, for all
-large `j` and every `m ≤ 2^j`, `⟨M̃⟩_m ω ≤ V_k 2^j ⇒ M̃_m ω < C√(2^j j)`. -/
+/-- **Block Borel–Cantelli for the truncated martingale.** The per-block bounds
+`P(s_j) ≤ exp(-(C/2)√j + V_k/4)` (`measure_exists_truncRespMart_block`) are summable in `j`
+(`summable_exp_neg_mul_sqrt`), so the first Borel–Cantelli lemma (`ae_eventually_notMem`) gives
+that a.s. only finitely many blocks are bad: for a.e. `ω`, for all large `j` and every `m ≤ 2^j`,
+`⟨M̃⟩_m ω ≤ V_k 2^j ⇒ M̃_m ω < C√(2^j j)`. -/
 lemma ae_eventually_truncRespMart_lt_block (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) {C : ℝ} (hC : 0 < C) :
     ∀ᵐ ω ∂P, ∀ᶠ (j : ℕ) in atTop, ∀ m ≤ 2 ^ j,
@@ -618,18 +619,17 @@ lemma ae_eventually_truncRespMart_lt_block (h : IsAlgEnvSeq A Y alg (stationaryE
     (truncRespMart_zero_ae k) (integrable_truncRespMart_sq h hint k) (by norm_num : (0 : ℝ) < 2)
     (ae_abs_truncRespMart_increment_le k) (Var[id; ν k]) hC
 
-/-- **`O(√(n log n))` LIL for the truncated martingale** (formalized content of blueprint
-`lem:trunc_mart_lil`). From the block exceedance (`ae_eventually_truncRespMart_lt_block`) and the
-quadratic-variation bound `⟨M̃⟩_n ≤ V_k N_{n,k} ≤ V_k n` (`predQuadVar_truncRespMart_le`), almost
-surely `M̃_n ≤ C' √(n log n)` eventually. For each large `n`, take the least `j` with `n ≤ 2^j` (so
+/-- **`O(√(n log n))` LIL for the truncated martingale.** From the block exceedance
+(`ae_eventually_truncRespMart_lt_block`) and the quadratic-variation bound
+`⟨M̃⟩_n ≤ V_k N_{n,k} ≤ V_k n` (`predQuadVar_truncRespMart_le`), almost surely
+`M̃_n ≤ C' √(n log n)` eventually. For each large `n`, take the least `j` with `n ≤ 2^j` (so
 `2^j ≤ 2n` and `j ≤ log₂ n + 1`); then `⟨M̃⟩_n ≤ V_k n ≤ V_k 2^j`, so the block bound applies at
 `m = n ≤ 2^j`, giving `M̃_n < √(2^j j) ≤ C' √(n log n)`.
 
-The horizon restriction `m ≤ 2^j` yields the `n`-scale rather than the `⟨M̃⟩_n`-scale of the
-blueprint's displayed statement: time-blocking controls `M̃_n` on the scale of the time `n`, which
-is what the growing increment bound `2√i` permits. When arm `k` is sampled a positive fraction of
-the time (`N_{n,k} ≍ n`, the regime of interest) this coincides with the `√(⟨M̃⟩_n log⟨M̃⟩_n)`
-form. -/
+The horizon restriction `m ≤ 2^j` yields the `n`-scale rather than the `⟨M̃⟩_n`-scale:
+time-blocking controls `M̃_n` on the scale of the time `n`, which is what the growing increment
+bound `2√i` permits. When arm `k` is sampled a positive fraction of the time (`N_{n,k} ≍ n`, the
+regime of interest) this coincides with the `√(⟨M̃⟩_n log⟨M̃⟩_n)` form. -/
 lemma ae_eventually_truncRespMart_le_sqrt_nat_mul_log
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hint : ∀ n, Integrable (Y n) P) (k : 𝓐)
     (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) :
@@ -710,8 +710,7 @@ lemma truncDrift_succ_sub (k : 𝓐) (n : ℕ) (ω : Ω) :
     rw [truncDrift, Finset.sum_apply]
   rw [h1, h2, Finset.sum_range_succ]; ring
 
-/-- The **tail remainder** `R_n = Q_n - M̃_n - Dr_n` of the truncated decomposition
-(blueprint `def:lil_trunc`, the `R` term). -/
+/-- The **tail remainder** `R_n = Q_n - M̃_n - Dr_n` of the truncated decomposition. -/
 noncomputable def tailRespPart (ν : Kernel 𝓐 ℝ) [IsMarkovKernel ν] (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ)
     (k : 𝓐) (n : ℕ) : Ω → ℝ :=
   respMart ν A Y k n - truncRespMart ν A Y k n - truncDrift ν A k n
@@ -826,11 +825,10 @@ lemma tsum_measure_action_and_tail_ne_top (h : IsAlgEnvSeq A Y alg (stationaryEn
   refine ne_top_of_le_ne_top (tsum_measure_abs_sub_ge_sqrt_ne_top (ν.means k) hν2) ?_
   exact ENNReal.tsum_le_tsum fun n ↦ measure_action_and_tail_le h k n
 
-/-- **The tail remainder is eventually constant** (blueprint `lem:trunc_tail_const`, sampled form).
-By the first Borel–Cantelli lemma applied to the summable sampled tail events
-(`tsum_measure_action_and_tail_ne_top`), almost surely for all large `n` the tail-remainder
-increment `𝟙{A n = k}((Y n - θ_k) - truncation(Y n - θ_k, √n))` vanishes, so `R_n` is eventually
-constant, hence `R_n = O(1)` a.s. -/
+/-- **The tail remainder is eventually constant.** By the first Borel–Cantelli lemma applied to
+the summable sampled tail events (`tsum_measure_action_and_tail_ne_top`), almost surely for all
+large `n` the tail-remainder increment `𝟙{A n = k}((Y n - θ_k) - truncation(Y n - θ_k, √n))`
+vanishes, so `R_n` is eventually constant, hence `R_n = O(1)` a.s. -/
 lemma ae_eventually_tailRespPart_const (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) :
     ∀ᵐ ω ∂P, ∀ᶠ n in atTop, tailRespPart ν A Y k (n + 1) ω = tailRespPart ν A Y k n ω := by
@@ -845,9 +843,9 @@ lemma ae_eventually_tailRespPart_const (h : IsAlgEnvSeq A Y alg (stationaryEnv �
     rw [htail, mul_zero]
   · rw [actionIndicator, Set.indicator_of_notMem (show ω ∉ {ω | A n ω = k} from hak), zero_mul]
 
-/-- **The response martingale is two-sided `O(√(n log n))`** (blueprint `lem:lil_truncation`).
-Assembling the truncated decomposition `Q_n = M̃_n + R_n + Dr_n` (Definition `def:lil_trunc`): the
-truncated martingale is two-sided `O(√(n log n))` (an instance of the general growing-increment LIL,
+/-- **The response martingale is two-sided `O(√(n log n))`.**
+Assembling the truncated decomposition `Q_n = M̃_n + R_n + Dr_n`: the truncated martingale is
+two-sided `O(√(n log n))` (an instance of the general growing-increment LIL,
 `ae_eventually_abs_truncRespMart_le_sqrt_nat_mul_log`), the tail remainder is `O(1)`
 (`ae_eventually_tailRespPart_const`), and the drift is `O(√n)` (`abs_truncDrift_le`); the last two
 are `o(√(n log n))`, so almost surely `|Q_{n,k}| ≤ C √(n log n)` eventually. -/
@@ -892,8 +890,8 @@ lemma ae_eventually_abs_respMart_le_sqrt_nat_mul_log
         + 2 * Var[id; ν k] * √((n : ℝ) * log n) := add_le_add (add_le_add ht' hn1) hd'
     _ = (C₁ + C₂ + 2 * Var[id; ν k]) * √((n : ℝ) * log n) := by ring
 
-/-- **The response martingale is `O(√(n log n))`** (blueprint `lem:lil_truncation`), the one-sided
-consequence of `ae_eventually_abs_respMart_le_sqrt_nat_mul_log` via `Q_n ≤ |Q_n|`. -/
+/-- **The response martingale is `O(√(n log n))`**, the one-sided consequence of
+`ae_eventually_abs_respMart_le_sqrt_nat_mul_log` via `Q_n ≤ |Q_n|`. -/
 lemma ae_eventually_respMart_le_sqrt_nat_mul_log
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hint : ∀ n, Integrable (Y n) P) (k : 𝓐)
     (hν2 : MemLp (fun x : ℝ ↦ x) 2 (ν k)) :

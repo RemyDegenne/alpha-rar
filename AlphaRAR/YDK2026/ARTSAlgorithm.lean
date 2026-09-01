@@ -11,10 +11,10 @@ public meta import LeanSpec
 /-!
 # The aRTS design family as a property of an `Algorithm`
 
-`aRTS_consistency` (blueprint `cor:aRTS_consistency`) proves consistency of the aRTS proportions
-*given* a process-level throttle hypothesis on the selection probabilities. This file expresses that
-throttle as a property `IsARTS` of the driving `Algorithm` itself — a membership condition for the
-aRTS *family* — and bridges it back to the consistency theorem.
+`aRTS_consistency` proves consistency of the aRTS proportions *given* a process-level throttle
+hypothesis on the selection probabilities. This file expresses that throttle as a property `IsARTS`
+of the driving `Algorithm` itself — a membership condition for the aRTS *family* — and bridges it
+back to the consistency theorem.
 
 An `Algorithm 𝓐 ℝ` chooses the next action from a history `h : Iic n → 𝓐 × ℝ` via a Markov kernel
 `alg.policy n`. The selection probability of arm `k` for patient `n+1` given the history is
@@ -23,16 +23,21 @@ An `Algorithm 𝓐 ℝ` chooses the next action from a history `h : Iic n → �
 counts are computed from the history via the finite-action bookkeeping of `LeanMachineLearning`
 (`pullCount'`, `sumRewards'`).
 
-The bridge `aRTS_consistency_of_isARTS` shows that any `IsARTS` algorithm satisfies the throttle
-hypothesis of `aRTS_consistency`, and hence its allocation proportions converge a.s. The linchpin is
-that the process selection probability `P[𝟙{A_{n+1}=k} | ℱ_n]` equals `(policy n (history n) {k})`
-a.e. — a conditional-expectation-from-conditional-distribution computation
+The bridge is in two steps: `throttle_of_isARTS` shows that any `IsARTS` algorithm satisfies the
+throttle hypothesis of `aRTS_consistency`, and `aRTS_consistency_of_isARTS` concludes that its
+allocation proportions converge a.s. The linchpin is that the process selection probability
+`P[𝟙{A_{n+1}=k} | ℱ_n]` equals `(policy n (history n) {k})` a.e. — a
+conditional-expectation-from-conditional-distribution computation
 (`HasCondDistrib.condExp_comp_eq`, via the algorithm's `hasCondDistrib_action`).
 
 ## Main results
 
 * `AlphaRAR.IsARTS`: the aRTS family membership predicate on an `Algorithm`.
 * `AlphaRAR.aRTS_consistency_of_isARTS`: an `IsARTS` algorithm's proportions converge a.s.
+* `AlphaRAR.aRTS_theta_consistent`: under the non-sparsity of Condition **B**, the sequential
+  estimator of an `IsARTS` algorithm converges a.s. to the true parameter.
+* `AlphaRAR.aRTS_proportion_tendsto`: under the same hypotheses, its allocation proportions
+  converge a.s. to the deterministic target `v_k = T(θ)_k`.
 -/
 
 @[expose] public section
@@ -49,9 +54,9 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
   {P : Measure Ω} [IsProbabilityMeasure P]
   {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
--- `[StandardBorelSpace 𝓐] [Nonempty 𝓐]` are needed only by the two lemmas passing through
--- `HasCondDistrib.condExp_comp_eq` on the action, and `[Fintype 𝓐]` only by the final corollary;
--- they are attached to those declarations rather than the whole file.
+-- `[StandardBorelSpace 𝓐] [Nonempty 𝓐]` are needed only by the lemmas passing through
+-- `HasCondDistrib.condExp_comp_eq` on the action and their consequences, and `[Fintype 𝓐]` only by
+-- the consistency corollaries; they are attached to those declarations rather than the whole file.
 
 /-! ### History-level plug-in target and the family predicate -/
 
@@ -63,8 +68,8 @@ noncomputable def histTarget (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐
     (h : Iic n → 𝓐 × ℝ) : ℝ :=
   T (fun k' ↦ (sumRewards' n h k' + θ₀ k') / ((pullCount' n h k' : ℝ) + 1)) k
 
-/-- **The aRTS design family** (blueprint `def:aRTS`, algorithm form). An algorithm `alg` is an
-`α`-throttled aRTS design with offsets `θ₀` and target map `T` if its policy throttles every
+/-- **The aRTS design family**, algorithm form (Definition 3.1 of the paper). An algorithm `alg` is
+an `α`-throttled aRTS design with offsets `θ₀` and target map `T` if its policy throttles every
 over-sampled arm: for any history `h : Iic n → 𝓐 × ℝ`, if arm `k` is over-sampled
 (`N_{n+1,k}(h) > (n+1) ρ̂_k(h)`), then the probability the policy assigns to arm `k` for the next
 patient is at most `α ρ̂_k(h)`. -/
@@ -179,12 +184,11 @@ lemma throttle_of_isARTS [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     push_cast at hlt ⊢
     linarith
 
-/-- **Consistency of an aRTS algorithm** (blueprint `cor:aRTS_consistency`, algorithm form). If
-`alg` is an aRTS design (`IsARTS alg θ₀ T α`) driving an algorithm–environment sequence under a
-stationary environment with `Y_n ∈ L²` (Condition **A**) and continuous simplex-valued target map
-`T`, then almost surely the allocation proportions and plug-in targets converge to a common limit:
-`N_{n,k}/n → u_k` and `ρ̂_{n,k} → u_k` for every arm `k`. This is `aRTS_consistency` with its
-throttle hypothesis discharged by `throttle_of_isARTS`. -/
+/-- **Consistency of an aRTS algorithm.** If `alg` is an aRTS design (`IsARTS alg θ₀ T α`) driving
+an algorithm–environment sequence under a stationary environment with `Y_n ∈ L²` (Condition **A**)
+and continuous simplex-valued target map `T`, then almost surely the allocation proportions and
+plug-in targets converge to a common limit: `N_{n,k}/n → u_k` and `ρ̂_{n,k} → u_k` for every arm
+`k`. This is `aRTS_consistency` with its throttle hypothesis discharged by `throttle_of_isARTS`. -/
 @[specifies IsARTS "the membership condition is strong enough to be worth having: it alone (plus \
 Condition **A** and a simplex-valued continuous `T`) forces the allocation proportions to converge"]
 lemma aRTS_consistency_of_isARTS [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
@@ -197,14 +201,12 @@ lemma aRTS_consistency_of_isARTS [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonem
         ∧ Tendsto (fun n ↦ aRTSTarget A Y θ₀ T n ω k) atTop (𝓝 (u k)) :=
   aRTS_consistency h hνk θ₀ T hT hTnn hTsum α hα (fun k ↦ throttle_of_isARTS h hARTS k)
 
-/-- **aRTS allocation proportions in pull-count form** (blueprint `cor:aRTS_consistency`). Restates
-the aRTS consistency limit `N_{n,k}/n → u_k` (`aRTS_consistency_of_isARTS`) with the pull count
-`pullCount A k n` — the `N_{n,k}` vocabulary of the LIL and CLT rate lemmas — in place of
-`count (𝟙{A · = k})`: almost surely there is a common limit vector `u` with
-`(pullCount A k n)/n → u_k` for every arm `k`. This is exactly the proportion input `hN` of the
-loglog estimator rate `abs_estimator_sub_le_rate_loglog_of_proportion` (blueprint `lem:theta_LIL`);
-the only piece still needed to pin the limiting proportion `v_k := u_k` is its strict positivity
-`u_k > 0` (the non-sparsity of Condition **B**, deferred). -/
+/-- **aRTS allocation proportions alone.** The proportion half of `aRTS_consistency_of_isARTS`,
+with the plug-in-target limit `ρ̂_{n,k} → u_k` dropped: almost surely there is a common limit
+vector `u` with `(pullCount A k n)/n → u_k` for every arm `k`. It feeds the proportion input `hN`
+of the loglog estimator rate `abs_estimator_sub_le_rate_loglog_of_proportion` once the per-`ω`
+limit `u_k` is named as a function of `ω` and its strict positivity `u_k > 0` (the non-sparsity
+of Condition **B**) is supplied. -/
 lemma aRTS_pullCount_div_ae_tendsto [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
@@ -216,15 +218,15 @@ lemma aRTS_pullCount_div_ae_tendsto [Fintype 𝓐] [StandardBorelSpace 𝓐] [No
   obtain ⟨u, hu⟩ := hω
   exact ⟨u, fun k ↦ (hu k).1⟩
 
-/-- **Estimator consistency for an aRTS algorithm** (blueprint `lem:theta_consistent`). Under
-Condition **B**'s non-sparsity — `hTpos`, i.e. `T` maps the product of the attainable sets
-(`attainableSet`) into the positive orthant — an aRTS design's sequential estimator converges a.s.
-to the true parameter: `θ̂_n → θ = (ν.means k)_k`. The aRTS consistency `aRTS_consistency_of_isARTS`
-supplies the joint limit `N_{n,k}/n → u_k` together with `ρ̂_{n,k} → u_k` (its plug-in target
-`aRTSTarget` is by definition `T(θ̂_n)`); `theta_consistent_pi_of_condB` then makes the shared limit
-`u` positive — so every arm is sampled infinitely often — and identifies each estimator limit as its
-arm mean. This is `lem:theta_consistent` with Condition **B**'s non-sparsity as the only extra
-hypothesis. -/
+/-- **Estimator consistency for an aRTS algorithm** (the consistency step behind Theorem 4.1 of the
+paper). Under Condition **B**'s non-sparsity — `hTpos`, i.e. `T` maps the product of the attainable
+sets (`attainableSet`) into the positive orthant — an aRTS design's sequential estimator converges
+a.s. to the true parameter: `θ̂_n → θ = (ν.means k)_k`. The aRTS consistency
+`aRTS_consistency_of_isARTS` supplies the joint limit `N_{n,k}/n → u_k` together with
+`ρ̂_{n,k} → u_k` (its plug-in target `aRTSTarget` is by definition `T(θ̂_n)`);
+`theta_consistent_pi_of_condB` then makes the shared limit `u` positive — so every arm is sampled
+infinitely often — and identifies each estimator limit as its arm mean. `hTpos` is the only
+hypothesis beyond those of `aRTS_consistency_of_isARTS`. -/
 lemma aRTS_theta_consistent [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
@@ -238,8 +240,8 @@ lemma aRTS_theta_consistent [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty �
   obtain ⟨u, hu⟩ := hω
   exact ⟨u, hu⟩
 
-/-- **Allocation proportions converge to the target** (blueprint `thm:LLN`, first conclusion). For
-an aRTS design, under Condition **B** the allocation proportion converges a.s. to the
+/-- **Allocation proportions converge to the target** (the first conclusion of Theorem 4.1 of the
+paper). For an aRTS design, under Condition **B** the allocation proportion converges a.s. to the
 *deterministic* target `N_{n,k}/n → v_k = T(θ)_k`. Combining `aRTS_theta_consistent` (`θ̂_n → θ`, so
 `ρ̂_{n,k} = T(θ̂_n)_k → T(θ)_k` by continuity) with the joint aRTS consistency (`N_{n,k}/n` and
 `ρ̂_{n,k}` share the limit `u_k`) identifies `u_k = T(θ)_k = v_k`. -/

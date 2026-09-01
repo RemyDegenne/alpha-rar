@@ -15,26 +15,25 @@ public meta import LeanSpec
 
 This file develops the order-one stochastic Landau symbols used throughout the
 asymptotic analysis: `o_p(1)` (convergence to `0` in probability) and `O_p(1)`
-(boundedness in probability, i.e. uniform tightness). It corresponds to the
-`def:op_Op` calculus of the blueprint, which the paper reduces to order one.
+(boundedness in probability, i.e. uniform tightness). These are the order-one case of the
+`o_p(·)` and `O_p(·)` notation introduced in Section 2 of the paper.
 
 ## Main definitions
 
-* `AlphaRAR.IsLittleOpOne`: `Y = o_p(1)` (blueprint `def:op_Op`).
-* `AlphaRAR.IsBigOpOne`: `Y = O_p(1)` (blueprint `def:op_Op`).
+* `AlphaRAR.IsLittleOpOne`: `Y = o_p(1)`.
+* `AlphaRAR.IsBigOpOne`: `Y = O_p(1)`.
 
 ## Main results
 
-* `AlphaRAR.isLittleOpOne_of_tendsto_ae`: a.e. convergence gives `o_p(1)`
-  (blueprint `lem:op_of_tendsto`).
+* `AlphaRAR.isLittleOpOne_of_tendsto_ae`: a.e. convergence gives `o_p(1)`.
 * `AlphaRAR.isBigOpOne_iff_isTightMeasureSet`: `O_p(1)` is exactly tightness of the family of
   laws, in the sense of `MeasureTheory.IsTightMeasureSet`.
-* The arithmetic of the two orders (blueprint `lem:op_arith`): `AlphaRAR.IsLittleOpOne.add`,
-  `AlphaRAR.IsBigOpOne.add`, `AlphaRAR.IsLittleOpOne.add_bigOpOne`, `AlphaRAR.IsBigOpOne.mul`,
+* The arithmetic of the two orders: `AlphaRAR.IsLittleOpOne.add`, `AlphaRAR.IsBigOpOne.add`,
+  `AlphaRAR.IsLittleOpOne.add_bigOpOne`, `AlphaRAR.IsBigOpOne.mul`,
   `AlphaRAR.IsBigOpOne.mul_littleOp`, `AlphaRAR.IsBigOpOne.bdd_mul`, together with
   `AlphaRAR.IsLittleOpOne.isBigOpOne` for the implication `o_p(1) ⟹ O_p(1)`.
 * `AlphaRAR.isBigOpOne_of_lintegral_le` and `AlphaRAR.isBigOpOne_of_lintegral_sq_le`: a bounded
-  first or second moment gives `O_p` (blueprint `lem:expectation_to_O`, `lem:sq_expectation_to_O`).
+  first or second moment gives `O_p` (Lemma C.2 of the paper and its `L²` form).
 * Closure properties: `AlphaRAR.IsLittleOpOne.of_eventually_abs_le` (domination, with the
   pointwise and a.e. specializations `of_abs_le` / `of_abs_le_ae`), `AlphaRAR.IsLittleOpOne.abs`,
   `AlphaRAR.IsLittleOpOne.const_mul`, `AlphaRAR.isLittleOpOne_finset_sum`, and the basic instances
@@ -61,13 +60,12 @@ namespace AlphaRAR
 
 variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
 
-/-- `Y = o_p(1)`: the sequence `Y` converges to `0` in probability, i.e. in measure
-(blueprint `def:op_Op`, order one). -/
+/-- `Y = o_p(1)`: the sequence `Y` converges to `0` in probability, i.e. in measure. -/
 def IsLittleOpOne (μ : Measure Ω) (Y : ℕ → Ω → ℝ) : Prop :=
   TendstoInMeasure μ Y atTop 0
 
-/-- `Y = O_p(1)`: the sequence `Y` is bounded in probability, i.e. uniformly tight
-(blueprint `def:op_Op`, order one; stated with uniform-in-`n` tightness). -/
+/-- `Y = O_p(1)`: the sequence `Y` is bounded in probability, i.e. uniformly tight;
+stated as a tail bound uniform in `n`. -/
 def IsBigOpOne (μ : Measure Ω) (Y : ℕ → Ω → ℝ) : Prop :=
   ∀ ε : ℝ≥0∞, 0 < ε → ∃ M : ℝ, ∀ n, μ {ω | M < |Y n ω|} ≤ ε
 
@@ -125,15 +123,15 @@ lemma isLittleOpOne_of_tendsto_abs {Y : ℕ → Ω → ℝ}
     IsLittleOpOne μ Y :=
   tendstoInMeasure_iff_norm.2 fun ε hε ↦ by simpa using h ε hε
 
-/-- **Convergence in probability gives `o_p`** (blueprint `lem:op_of_tendsto`, first
-part). If `Y n → 0` almost everywhere on a finite measure, then `Y = o_p(1)`. -/
+/-- **Almost everywhere convergence gives `o_p`.**
+If `Y n → 0` almost everywhere on a finite measure, then `Y = o_p(1)`. -/
 lemma isLittleOpOne_of_tendsto_ae [IsFiniteMeasure μ] {Y : ℕ → Ω → ℝ}
     (hmeas : ∀ n, AEStronglyMeasurable (Y n) μ)
     (h : ∀ᵐ ω ∂μ, Tendsto (Y · ω) atTop (𝓝 0)) :
     IsLittleOpOne μ Y :=
   tendstoInMeasure_of_tendsto_ae hmeas h
 
-/-- **`o_p(1) + o_p(1) = o_p(1)`** (blueprint `lem:op_arith` (i)).
+/-- **`o_p(1) + o_p(1) = o_p(1)`.**
 The sum of two sequences converging to `0` in probability converges to `0` in
 probability. -/
 lemma IsLittleOpOne.add {X Y : ℕ → Ω → ℝ} (hX : IsLittleOpOne μ X)
@@ -158,12 +156,12 @@ lemma IsLittleOpOne.neg {Y : ℕ → Ω → ℝ} (hY : IsLittleOpOne μ Y) :
     IsLittleOpOne μ (fun n ω ↦ -Y n ω) :=
   isLittleOpOne_of_tendsto_abs fun ε hε ↦ by simpa using hY.tendsto_abs hε
 
-/-- **`o_p(1) - o_p(1) = o_p(1)`** (blueprint `lem:op_arith` (i)). -/
+/-- **`o_p(1) - o_p(1) = o_p(1)`.** -/
 lemma IsLittleOpOne.sub {X Y : ℕ → Ω → ℝ} (hX : IsLittleOpOne μ X)
     (hY : IsLittleOpOne μ Y) : IsLittleOpOne μ (fun n ω ↦ X n ω - Y n ω) := by
   simpa [sub_eq_add_neg] using hX.add hY.neg
 
-/-- **`O_p(1) + O_p(1) = O_p(1)`** (blueprint `lem:op_arith` (i)).
+/-- **`O_p(1) + O_p(1) = O_p(1)`.**
 The sum of two sequences bounded in probability is bounded in probability. -/
 lemma IsBigOpOne.add {X Y : ℕ → Ω → ℝ} (hX : IsBigOpOne μ X) (hY : IsBigOpOne μ Y) :
     IsBigOpOne μ (fun n ω ↦ X n ω + Y n ω) := by
@@ -186,8 +184,7 @@ lemma IsBigOpOne.add {X Y : ℕ → Ω → ℝ} (hX : IsBigOpOne μ X) (hY : IsB
     _ ≤ ε / 2 + ε / 2 := add_le_add (hMx n) (hMy n)
     _ = ε := ENNReal.add_halves ε
 
-/-- **`o_p(1) ⟹ O_p(1)`**: convergence in probability implies boundedness in
-probability (blueprint `lem:op_arith`, used for (ii)). -/
+/-- **`o_p(1) ⟹ O_p(1)`**: convergence in probability implies boundedness in probability. -/
 @[specifies IsBigOpOne "places `O_p` correctly relative to `o_p`: the tightness condition is weak \
 enough to be implied by convergence in probability, which rules out an accidentally too-strong \
 definition"]
@@ -213,13 +210,13 @@ lemma IsLittleOpOne.isBigOpOne [IsFiniteMeasure μ] {Y : ℕ → Ω → ℝ}
     simp only [Set.mem_ofPred_eq] at hω ⊢
     linarith
 
-/-- **`o_p(1) + O_p(1) = O_p(1)`** (blueprint `lem:op_arith` (ii)). -/
+/-- **`o_p(1) + O_p(1) = O_p(1)`.** -/
 lemma IsLittleOpOne.add_bigOpOne [IsFiniteMeasure μ] {X Y : ℕ → Ω → ℝ}
     (hX : IsLittleOpOne μ X) (hmeas : ∀ n, AEMeasurable (X n) μ) (hY : IsBigOpOne μ Y) :
     IsBigOpOne μ (fun n ω ↦ X n ω + Y n ω) :=
   (hX.isBigOpOne hmeas).add hY
 
-/-- **`O_p(1) · o_p(1) = o_p(1)`** (blueprint `lem:op_arith` (iii)).
+/-- **`O_p(1) · o_p(1) = o_p(1)`.**
 The product of a bounded-in-probability sequence and a sequence converging to `0`
 in probability converges to `0` in probability. -/
 @[specifies IsBigOpOne "the absorption law that makes `O_p` usable, and the direction that rules \
@@ -294,7 +291,7 @@ lemma isBigOpOne_const {c : ℕ → ℝ} {B : ℝ} (hc : ∀ n, |c n| ≤ B) :
     exact hc n
   simp [hempty]
 
-/-- **A bounded multiple preserves `O_p(1)`** (blueprint `lem:op_arith` (iv)).
+/-- **A bounded multiple preserves `O_p(1)`.**
 If `|c n| ≤ B` for all `n` and `X = O_p(1)`, then `c n · X n = O_p(1)`. -/
 lemma IsBigOpOne.bdd_mul {X : ℕ → Ω → ℝ} {c : ℕ → ℝ} {B : ℝ}
     (hc : ∀ n, |c n| ≤ B) (hX : IsBigOpOne μ X) :
@@ -468,7 +465,7 @@ lemma isBigOpOne_iff_isTightMeasureSet {Y : ℕ → Ω → ℝ} (hY : ∀ n, AEM
     simp only [Metric.mem_closedBall, Real.dist_eq, sub_zero] at hball
     linarith
 
-/-- **Bounded expectation gives `O_p`** (blueprint `lem:expectation_to_O`).
+/-- **Bounded expectation gives `O_p`** (Lemma C.2 of the paper).
 If `∫⁻ ‖X n‖ₑ ≤ C · u n` for all `n` (with `u n > 0`, `C ≥ 0`), then
 `X n / u n = O_p(1)`, i.e. `X n = O_p(u n)`. -/
 lemma isBigOpOne_of_lintegral_le {X : ℕ → Ω → ℝ} {u : ℕ → ℝ} {C : ℝ}
@@ -507,7 +504,7 @@ lemma isBigOpOne_of_lintegral_le {X : ℕ → Ω → ℝ} {u : ℕ → ℝ} {C :
         rw [← ENNReal.ofReal_div_of_pos hMun, mul_div_mul_right _ _ (hu n).ne']
     _ ≤ ε := hle
 
-/-- **Bounded second moment gives `O_p`** (blueprint `lem:sq_expectation_to_O`).
+/-- **Bounded second moment gives `O_p`** (the `L²` form of Lemma C.2 of the paper).
 If `∫⁻ ‖X n‖ₑ² ≤ C · (u n)²` for all `n` (with `u n > 0`, `C ≥ 0`), then
 `X n / u n = O_p(1)`, i.e. `X n = O_p(u n)`. This is Chebyshev's inequality: it
 reduces to the `L¹` bound `isBigOpOne_of_lintegral_le` applied to `X²` with rate

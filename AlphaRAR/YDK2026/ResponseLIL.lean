@@ -15,17 +15,23 @@ public import AlphaRAR.YDK2026.ResponseConsistency
 Combining Doob optional skipping (`AlphaRAR.iIndepFun_sampledResponse`,
 `AlphaRAR.map_sampledResponse_eq`) with the i.i.d. Hartman–Wintner LIL
 (`AlphaRAR.iid_hartmanWintner_limsup_le_one`), we obtain the sharp loglog rate for the response
-martingale `Q_k n = ∑_{m<n} 𝟙{A m = k}(Y m − θ_k)` of a fixed arm `k` (blueprint
-`cor:subsampled_lil`).
+martingale `Q_k n = ∑_{m<n} 𝟙{A m = k}(Y m − θ_k)` of a fixed arm `k`.
 
 The response martingale is a *predictably subsampled* i.i.d. sum: reindexing the pulls of arm `k`,
 `Q_k n = ∑_{i < N_{n,k}} (Y_{τ_i} − θ_k)` with `N_{n,k}` the number of pulls before `n` and
 `(Y_{τ_i})` the i.i.d. responses at those pulls. Hartman–Wintner applies to the latter, and the
 time-change `N_{n,k} → ∞` transports the `limsup` bound to `Q_k`.
 
-## Main results (in progress)
+## Main results
 
 * `AlphaRAR.respMart_eq_sum_sampledSeq`: the reindexing `Q_k n = ∑_{i<N_{n,k}} (Y_{τ_i} − θ_k)`.
+* `AlphaRAR.abs_respMart_le_sqrt_nat_mul_loglog`: the subsampled loglog LIL, a.s. for every
+  `β > 1`, eventually `|Q_k n| ≤ β √(2 · Var[id; ν k] · N_{n,k} · log log N_{n,k})`.
+* `AlphaRAR.ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog_of_proportion`: its `n`-indexed
+  form `Q_k n = O(√(n log log n))` a.s., under a positive pull proportion `N_{n,k}/n → v_k > 0`.
+* `AlphaRAR.abs_estimator_sub_le_rate_loglog_of_proportion` and
+  `AlphaRAR.abs_estimator_sub_le_rate_loglog_of_pos_count`: the resulting estimator rate
+  `θ̂_{n,k} - θ_k = O(√(log log n / n))` a.s., the second conclusion of the paper's Theorem 4.1.
 -/
 
 @[expose] public section
@@ -93,10 +99,9 @@ lemma hitCount_actionIndicator_eq_pullCount (k : 𝓐) (n : ℕ) (ω : Ω) :
 variable [MeasurableSingletonClass 𝓐]
   {P : Measure Ω} [IsProbabilityMeasure P] {alg : Algorithm 𝓐 ℝ}
 
-/-- **Loglog LIL for the response martingale** (blueprint `cor:subsampled_lil`). For an
-algorithm–environment sequence in a stationary environment, if arm `k` is pulled infinitely often
-a.s. and its reward law `ν k` is in `L²` (Condition **A**), then
-almost surely, for every `β > 1`, eventually
+/-- **Loglog LIL for the response martingale.** For an algorithm–environment sequence in a
+stationary environment, if arm `k` is pulled infinitely often a.s. and its reward law `ν k` is in
+`L²` (Condition **A**), then almost surely, for every `β > 1`, eventually
 `|Q_k n| ≤ β √(2 · Var[id; ν k] · N_{n,k} · log log N_{n,k})`, where `N_{n,k}` is the number of
 pulls of arm `k` before `n`. In particular `Q_k n = O(√(N_{n,k} log log N_{n,k}))`. -/
 lemma abs_respMart_le_sqrt_nat_mul_loglog
@@ -199,15 +204,14 @@ lemma abs_respMart_le_sqrt_nat_mul_loglog
   rw [Finset.sum_neg_distrib] at hn_lo
   exact abs_le.mpr ⟨by linarith [hn_lo], hn_up⟩
 
-/-- **Response martingale is `O(√(n log log n))` end-to-end** (blueprint `cor:subsampled_lil`,
-`n`-indexed form). Discharging the `hQ` input of
-`ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog` with the subsampled loglog LIL
+/-- **Response martingale is `O(√(n log log n))` end-to-end**, `n`-indexed form. Discharging the
+`hQ` input of `ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog` with the subsampled loglog LIL
 `abs_respMart_le_sqrt_nat_mul_loglog`, the response martingale is a.s.
-`|Q_{n,k}| ≤ C√(n log log n)` eventually, provided the pull proportion `N_{n,k}/n → v_k > 0`
-(blueprint `lem:match`). Arm `k` being pulled infinitely often (`lem:all_arms_infinite`) is
-*derived* from that positive proportion (`infinite_setOf_eq_of_tendsto_div`), so the only remaining
-hypothesis is the reward-law moment condition `ν k ∈ L²` (Condition **A**). No positivity of
-`Var[id; ν k]` is needed — a zero-variance arm has `Q_k ≡ 0`. -/
+`|Q_{n,k}| ≤ C√(n log log n)` eventually, provided the pull proportion `N_{n,k}/n → v_k > 0`.
+Arm `k` being pulled infinitely often is *derived* from that positive proportion
+(`infinite_setOf_eq_of_tendsto_div`), so the only remaining hypothesis is the reward-law moment
+condition `ν k ∈ L²` (Condition **A**). No positivity of `Var[id; ν k]` is needed — a zero-variance
+arm has `Q_k ≡ 0`. -/
 lemma ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog_of_proportion
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hνk : MemLp id 2 (ν k))
@@ -221,15 +225,14 @@ lemma ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog_of_proportion
   exact ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog k hv hN
     (abs_respMart_le_sqrt_nat_mul_loglog h k hk_inf hνk)
 
-/-- **Loglog LIL rate for the estimator, end-to-end** (blueprint `lem:theta_LIL`, loglog form). The
-sequential estimator error is a.s. `O(√(log log n / n))`:
-`|θ̂_{n,k} - θ_k| ≤ C'·√(n log log n)/n` eventually. This is the `log log`, sharp-constant upgrade
-of the `log`-rate `abs_estimator_sub_le_rate_ae`, obtained by feeding the end-to-end subsampled
-loglog bound (`ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog_of_proportion`) through the exact
-estimator error identity (blueprint `lem:estimator_bahadur`). Its only probabilistic input is the
-pull proportion `N_{n,k}/n → v_k > 0` (`lem:match`) — infinitely-many pulls
-(`lem:all_arms_infinite`) is derived from it — together with the reward-law moment conditions
-(Condition **A**). -/
+/-- **Loglog LIL rate for the estimator, end-to-end.** The sequential estimator error is a.s.
+`O(√(log log n / n))`: `|θ̂_{n,k} - θ_k| ≤ C'·√(n log log n)/n` eventually, the
+`Θ̂ₙ - Θ = O(√(log log n / n))` rate of the paper's Theorem 4.1. It refines the `log`-rate
+`abs_estimator_sub_le_rate_ae`, and is obtained by feeding the end-to-end subsampled loglog bound
+(`ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog_of_proportion`) into the estimator error
+estimate `abs_estimator_sub_le_rate_loglog_ae`. Its only probabilistic input is the pull proportion
+`N_{n,k}/n → v_k > 0` — infinitely-many pulls of arm `k` is derived from it — together with the
+reward-law moment condition `ν k ∈ L²` (Condition **A**). -/
 lemma abs_estimator_sub_le_rate_loglog_of_proportion
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
     (hνk : MemLp id 2 (ν k))
@@ -243,12 +246,11 @@ lemma abs_estimator_sub_le_rate_loglog_of_proportion
     (ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog_of_proportion h k hνk hv hN)
 
 omit [DecidableEq 𝓐] in
-/-- **Loglog estimator rate from a positive proportion, count form** (blueprint `lem:theta_LIL`).
-A convenience wrapper on `abs_estimator_sub_le_rate_loglog_of_proportion` that (i) takes the
-positive
-allocation proportion as a per-`ω` existential `∃ u_k > 0, N_{n,k}/n → u_k` — the shape produced by
-the consistency layer — instead of a globally-named limit, and (ii) states it with the assignment
-count `count (𝟙{A · = k})` in place of `pullCount`, so callers need no `Decidable`/`Classical`
+/-- **Loglog estimator rate from a positive proportion, count form.** A convenience wrapper on
+`abs_estimator_sub_le_rate_loglog_of_proportion` that (i) takes the positive allocation proportion
+as a per-`ω` existential `∃ u_k > 0, N_{n,k}/n → u_k` — the shape produced by the consistency
+layer — instead of a globally-named limit, and (ii) states it with the assignment count
+`count (𝟙{A · = k})` in place of `pullCount`, so callers need no `Decidable`/`Classical`
 instance for the pull count (the two agree by `count_indicator_eq_pullCount`). This is the form
 consumed when discharging `rho_rate`'s per-arm rate hypothesis for a concrete design. -/
 lemma abs_estimator_sub_le_rate_loglog_of_pos_count

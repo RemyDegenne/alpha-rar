@@ -13,10 +13,10 @@ public import Mathlib.Analysis.Calculus.FDeriv.Basic
 
 The plug-in target is `ρ̂_{n,k} = T(θ̂_n)_k`, the (Condition **B**) target map `T` applied to the
 vector of sequential estimators `θ̂_n = (θ̂_{n,k'})_{k'}`. This file transports the almost-sure
-loglog rate of the estimator (`abs_estimator_sub_le_rate_loglog_of_proportion`, blueprint
-`lem:theta_LIL`) to the plug-in target via the **delta method** (blueprint `lem:rho_rate`): a
-first-order expansion of `T` at `θ` shows that a differentiable map preserves the `O(r_n)` rate,
-`T(θ̂_n) - T(θ) = O(‖θ̂_n - θ‖) = O(r_n)`.
+loglog rate of the estimator (`abs_estimator_sub_le_rate_loglog_of_proportion`) to the plug-in
+target via the **delta method**: a first-order expansion of `T` at `θ` shows that a differentiable
+map preserves the `O(r_n)` rate, `T(θ̂_n) - T(θ) = O(‖θ̂_n - θ‖) = O(r_n)`. Its loglog instance is
+the third conclusion of Theorem 4.1 of the paper.
 
 ## Main results
 
@@ -25,8 +25,9 @@ first-order expansion of `T` at `θ` shows that a differentiable map preserves t
 * `AlphaRAR.isBigO_target_sub_of_tendsto`: the vector-to-target rate — if the estimator vector
   converges to `θ` with each component `O(r_n)` and `T` is differentiable at `θ`, then every
   coordinate `T(θ̂_n)_k - T(θ)_k = O(r_n)`.
-* `AlphaRAR.rho_rate` (blueprint `lem:rho_rate`): the almost-sure loglog rate of the plug-in target,
-  `ρ̂_{n,k} - v_k = O(√(log log n / n))`, given estimator consistency and the loglog estimator rate.
+* `AlphaRAR.rho_rate`: the almost-sure rate of the plug-in target in abstract-rate form — from
+  estimator consistency and a componentwise rate `θ̂_{n,k} - θ_k = O(r_n)` a.s. it gives
+  `ρ̂_{n,k} - v_k = O(r_n)` a.s.
 -/
 
 @[expose] public section
@@ -39,7 +40,7 @@ namespace AlphaRAR
 
 /-- **Delta-method estimate.** A map `f` differentiable at `x₀` preserves big-`O` rates through a
 sequence converging to `x₀`: if `g n → x₀` then `f (g n) - f x₀ = O(g n - x₀)`. This is
-`HasFDerivAt.isBigO_sub` (the difference is `O` of the increment) composed with `g → x₀`. -/
+`DifferentiableAt.isBigO_sub` (the difference is `O` of the increment) composed with `g → x₀`. -/
 lemma isBigO_sub_comp_of_differentiableAt {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
     [NormedAddCommGroup F] [NormedSpace ℝ F] {f : E → F} {x₀ : E} (hf : DifferentiableAt ℝ f x₀)
     {ι : Type*} {l : Filter ι} {g : ι → E} (hg : Tendsto g l (𝓝 x₀)) :
@@ -76,9 +77,8 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
   {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
 omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] [IsProbabilityMeasure P] in
-/-- **Loglog rate of the plug-in target** (blueprint `lem:rho_rate`), abstract-rate form. Given the
-estimator vector `θ̂_n → θ` a.s. (blueprint `lem:theta_consistent`), each component at the rate
-`θ̂_{n,k} - θ_k = O(r_n)` a.s. (blueprint `lem:theta_LIL`), and the target map `T` differentiable at
+/-- **Rate for the plug-in target**, abstract-rate form. Given the estimator vector `θ̂_n → θ` a.s.,
+each component at the rate `θ̂_{n,k} - θ_k = O(r_n)` a.s., and the target map `T` differentiable at
 `θ` (Condition **B**), the plug-in target `ρ̂_{n,k} = T(θ̂_n)_k` converges to `v_k = T(θ)_k` at the
 same rate: `ρ̂_{n,k} - v_k = O(r_n)` a.s. for every arm `k`. -/
 lemma rho_rate {θ : 𝓐 → ℝ} {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : DifferentiableAt ℝ T θ)

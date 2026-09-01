@@ -16,7 +16,7 @@ public import AlphaRAR.Mathlib.MartingaleCLT
 For an i.i.d. sequence `X : ℕ → Ω → ℝ` with finite variance `v = Var[X 0]`, write
 `S_m = ∑_{j<m}(X_j - μ)` for the centered partial sums (`μ = 𝔼[X 0]`). The classical CLT gives
 `S_n/√n ⇒ 𝒩(0, v)` along the *deterministic* index `n`. **Anscombe's theorem** upgrades this to a
-*random* index: if `N : ℕ → Ω → ℕ` satisfies the regularity `N_n/c_n → 1` in probability for some
+*random* index: if `N : ℕ → Ω → ℕ` satisfies the regularity `N_n/c_n → 1` almost surely for some
 deterministic `c_n → ∞`, then the self-normalized random-time sum still converges,
 `S_{N_n}/√(N_n) ⇒ 𝒩(0, v)`.
 
@@ -40,13 +40,12 @@ Decompose `S_{N_n}/√(N_n) = (S_{c_n}/√(c_n)) · √(c_n/N_n) + (S_{N_n} - S_
 
 ## Main results
 
-* `AlphaRAR.tendsto_map_anscombe_iid` : **Anscombe's theorem** for an i.i.d. sequence
-  (blueprint `lem:anscombe_clt`). Under the regularity `N_n/c_n → 1` in probability with
-  `c_n → ∞`, the randomly indexed self-normalized sum `S_{N_n}/√(N_n)` converges in
-  distribution to `𝒩(0, Var[X 0])`.
-* `AlphaRAR.tendstoInMeasure_window` : the window estimate that drives the proof — the maximal
-  fluctuation of a martingale over `|m - c_n| ≤ ε c_n`, normalized by `√(c_n)`, is small in
-  probability for small `ε`.
+* `AlphaRAR.tendsto_map_anscombe_iid` : **Anscombe's theorem** for an i.i.d. sequence. Under the
+  regularity `N_n/c_n → 1` almost surely with `c_n → ∞`, the randomly indexed self-normalized sum
+  `S_{N_n}/√(N_n)` converges in distribution to `𝒩(0, Var[X 0])`.
+* `AlphaRAR.tendstoInMeasure_window` : the window estimate that drives the proof — the increment
+  `S_{N_n} - S_{c_n}`, normalized by `√(N_n)`, tends to `0` in probability, via the maximal
+  fluctuation of the martingale over `|m - c_n| ≤ ε c_n`.
 * `AlphaRAR.tendsto_map_clt_comp` : the deterministic-index CLT precomposed with a subsequence
   `c_n → ∞`, the base term of the decomposition.
 * `AlphaRAR.tendsto_map_add_of_tendstoInMeasure_zero` : the Slutsky step absorbing the window
@@ -114,8 +113,7 @@ regularity `N_n/c_n → 1` a.s., the self-normalized increment across the window
 The window `|m - c_n| ≤ ε c_n` is controlled by the Doob maximal inequality (`mart_maximal`)
 anchored at `c_n + ⌊ε c_n⌋`: the maximal increment there is `O(√(ε c_n))` in `L¹`, so after
 dividing by `√((1-ε) c_n)` and applying Markov it is `O(√ε)`, uniformly in `n`. Letting `ε → 0`
-(after the good
-event `|N_n - c_n| ≤ ε c_n` has probability `→ 1`) gives the claim. -/
+(after the good event `|N_n - c_n| ≤ ε c_n` has probability `→ 1`) gives the claim. -/
 lemma tendstoInMeasure_window {S : ℕ → Ω → ℝ} {𝒢 : Filtration ℕ mΩ} (hM : Martingale S 𝒢 P)
     (hM2 : ∀ n, MemLp (S n) 2 P)
     {v : ℝ} (hv0 : 0 ≤ v) (hinc : ∀ n, ∫ ω, (S (n + 1) ω - S n ω) ^ 2 ∂P ≤ v)

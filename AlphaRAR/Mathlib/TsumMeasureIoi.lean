@@ -27,7 +27,7 @@ This belongs upstream in Mathlib (a `μ`-general version of `tsum_prob_mem_Ioi_l
 * `AlphaRAR.tsum_measure_abs_sub_gt_sqrt_ne_top` and
   `AlphaRAR.tsum_measure_abs_sub_ge_sqrt_ne_top`: the `√i` truncation tails
   `∑' i, ρ {√i < |· - θ|}` and `∑' i, ρ {√i ≤ |· - θ|}` are finite for a law with finite second
-  central moment (blueprint `lem:trunc_tail_summable`).
+  central moment.
 -/
 
 @[expose] public section
@@ -77,9 +77,8 @@ lemma tsum_measure_Ioi_ne_top {Ω : Type*} {mΩ : MeasurableSpace Ω} {μ : Meas
     ← ofReal_integral_eq_lintegral_ofReal hint (Eventually.of_forall hnn)]
   exact ENNReal.add_ne_top.mpr ⟨ENNReal.ofReal_ne_top, measure_ne_top _ _⟩
 
-/-- **Summable truncation tail** at the law level (blueprint `lem:trunc_tail_summable`).
-For a finite measure `ρ` on `ℝ` with finite second moment,
-`∑' i, ρ {x : √i < |x - θ|} < ∞`. Since `√i < |x-θ| ⟺ i < (x-θ)²`, this is
+/-- **Summable truncation tail** at the law level. For a finite measure `ρ` on `ℝ` with finite
+second moment, `∑' i, ρ {x : √i < |x - θ|} < ∞`. Since `√i < |x-θ| ⟺ i < (x-θ)²`, this is
 `tsum_measure_Ioi_ne_top` for `X = (· - θ)²`. Applied to a reward law `ρ = ν k` (with
 `θ = θ_k`) this bounds `∑_i ν_k(|· - θ_k| > √i)`. -/
 lemma tsum_measure_abs_sub_gt_sqrt_ne_top {ρ : Measure ℝ} [IsFiniteMeasure ρ] (θ : ℝ)

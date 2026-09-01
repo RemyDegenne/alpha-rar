@@ -15,7 +15,8 @@ public meta import LeanSpec
 
 For a finite family `M` of square-integrable martingales with uniformly bounded increment second
 moments, the Euclidean-norm increment `‖(M_{k,n} - M_{k,ℓ})_k‖` over a window `ℓ ≤ n` is
-`o_p(1)·(n - ℓ) + o_p(√n)`. This is the probabilistic core of blueprint `lem:QM_increments`.
+`o_p(1)·(n - ℓ) + o_p(√n)`. This is the increment bound established in the proof of Lemma A.3
+of the paper.
 
 The argument fixes the dyadic window `L = ⌊√n⌋` and controls the increment by two maxima
 (`vmaxSeq`, `wmaxSeq`) via the deterministic `norm_sub_le_increment_control`; the maxima are then
@@ -321,8 +322,8 @@ lemma isBigOpOne_sup'_abs_div_sqrt (hN : Martingale N ℱ μ)
 
 /-- **Scalar increment maxima are `o_p(1)` and `o_p(√n)` for a bounded-increment martingale.**
 For a martingale `N` with `N 0 = 0` and `|ΔN| ≤ c` a.e., the increment maxima of the singleton
-family `fun _ : Unit ↦ N` are `o_p(1)` and `o_p(√n)`. Provides the `M`-side of blueprint
-`lem:QM_increments` (the assignment martingale has `|ΔM| ≤ 1`). -/
+family `fun _ : Unit ↦ N` are `o_p(1)` and `o_p(√n)`. This is the form used for the assignment
+martingale, whose increments satisfy `|ΔM| ≤ 1`. -/
 lemma qm_increments_of_bdd (hN : Martingale N ℱ μ) (hN0 : N 0 =ᵐ[μ] 0) {c : ℝ}
     (hΔ : ∀ n, ∀ᵐ ω ∂μ, |N (n + 1) ω - N n ω| ≤ c) :
     IsLittleOpOne μ (vmaxSeq (fun _ : Unit ↦ N)) ∧

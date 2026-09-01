@@ -14,10 +14,9 @@ public meta import LeanSpec
 # The self-normalized central limit theorem for the response martingale
 
 Applying the abstract martingale CLT (`AlphaRAR.MartDiffArray.mart_clt`) to the per-arm response
-martingale `Q_{n,k} = ∑_{m<n} 𝟙{A m = k}(Y m - θ_k)`, we obtain the componentwise
-self-normalized CLT (blueprint `cor:mart_clt_componentwise`, univariate form):
-`Q_{n,k}/√(V_k N_{n,k}) ⇒ 𝒩(0,1)`, where `V_k = Var[id; ν k]` is the arm variance and
-`N_{n,k} = ∑_{m<n} 𝟙{A m = k}` the assignment count.
+martingale `Q_{n,k} = ∑_{m<n} 𝟙{A m = k}(Y m - θ_k)`, we obtain the univariate (per-arm) form of
+the componentwise self-normalized CLT `Q_{n,k}/√(V_k N_{n,k}) ⇒ 𝒩(0,1)`, where
+`V_k = Var[id; ν k]` is the arm variance and `N_{n,k} = ∑_{m<n} 𝟙{A m = k}` the assignment count.
 
 The key device (which avoids the Anscombe / random-time-change argument) is to normalize by the
 **deterministic** `a_n = V_k v_k n`, where `v_k` is the limiting proportion `N_{n,k}/n → v_k`. Then:
@@ -292,11 +291,11 @@ lemma lindeberg_respArray_ae [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryE
         = count (fun j ↦ actionIndicator A k j ω) n from rfl]
     ring
 
-/-- **The conditional Lindeberg condition holds** (the `lindeberg` hypothesis of `thm:mart_clt`).
-Since `L_n(ε) = (a_n)⁻¹ h_n(ε) N_{n,k}` (a.e.) with `0 ≤ N_{n,k} ≤ n`, we have
-`0 ≤ L_n(ε) ≤ h_n(ε)/(V_k v_k)`, and `h_n(ε) = ∫(x-θ)²𝟙{|x-θ|>ε√a_n} dν_k → 0` because `√a_n → ∞`
-and `ν_k` has finite second moment (dominated convergence, `tendsto_integral_sq_indicator_gt`).
-So `L_n(ε) → 0` a.s., hence in measure. -/
+/-- **The conditional Lindeberg condition holds** (the `hLindeberg` hypothesis of
+`MartDiffArray.mart_clt`). Since `L_n(ε) = (a_n)⁻¹ h_n(ε) N_{n,k}` (a.e.) with `0 ≤ N_{n,k} ≤ n`,
+we have `0 ≤ L_n(ε) ≤ h_n(ε)/(V_k v_k)`, and `h_n(ε) = ∫(x-θ)²𝟙{|x-θ|>ε√a_n} dν_k → 0` because
+`√a_n → ∞` and `ν_k` has finite second moment (dominated convergence,
+`tendsto_integral_sq_indicator_gt`). So `L_n(ε) → 0` a.s., hence in measure. -/
 lemma tendstoInMeasure_lindeberg_respArray [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (k : 𝓐) (vk : ℝ) (hvk : 0 < vk) (hVk : 0 < Var[id; ν k]) :
     ∀ ε, 0 < ε → TendstoInMeasure P (fun n ↦ (respArray h hνk k vk).lindeberg n ε) atTop 0 := by
@@ -364,8 +363,8 @@ lemma tendstoInMeasure_lindeberg_respArray [Finite 𝓐] (h : IsAlgEnvSeq A Y al
                 field_simp
     exact Tendsto.congr (fun n ↦ by rw [hT n]; exact (hω n).symm) hgoal
 
-/-- **The predictable variation converges to `1` in probability** (the `predVar` hypothesis of
-`thm:mart_clt`). Since `predVar n = N_{n,k}/(v_k n)` (a.e.) and `N_{n,k}/n → v_k` a.s.
+/-- **The predictable variation converges to `1` in probability** (the `hV` hypothesis of
+`MartDiffArray.mart_clt`). Since `predVar n = N_{n,k}/(v_k n)` (a.e.) and `N_{n,k}/n → v_k` a.s.
 (consistency), we get `predVar n → 1` a.s., hence in measure. -/
 lemma tendstoInMeasure_predVar_respArray [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (k : 𝓐) (vk : ℝ) (hvk : 0 < vk) (hVk : 0 < Var[id; ν k])
@@ -413,13 +412,12 @@ lemma measurable_respMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : �
     (measurable_const.indicator ((h.measurable_action i) (measurableSet_singleton k))).mul
       ((h.measurable_feedback i).sub measurable_const)
 
-/-- **The deterministic-normalizer central limit theorem for the response martingale**
-(blueprint `cor:mart_clt_componentwise`, per-arm deterministic form). Normalizing `Q_{n,k}` by the
-*deterministic* `√(V_k v_k n)` (with `v_k` the limiting assignment proportion), the law of
-`Q_{n,k}/√(V_k v_k n)` converges weakly to the standard Gaussian `𝒩(0,1)`. This is
-`AlphaRAR.MartDiffArray.mart_clt` applied to `respArray`, whose predictable variation tends to `1`
-(`tendstoInMeasure_predVar_respArray`) and which satisfies the conditional Lindeberg condition
-(`tendstoInMeasure_lindeberg_respArray`). -/
+/-- **The deterministic-normalizer central limit theorem for the response martingale.**
+Normalizing `Q_{n,k}` by the *deterministic* `√(V_k v_k n)` (with `v_k` the limiting assignment
+proportion), the law of `Q_{n,k}/√(V_k v_k n)` converges weakly to the standard Gaussian `𝒩(0,1)`.
+This is `AlphaRAR.MartDiffArray.mart_clt` applied to `respArray`, whose predictable variation tends
+to `1` (`tendstoInMeasure_predVar_respArray`) and which satisfies the conditional Lindeberg
+condition (`tendstoInMeasure_lindeberg_respArray`). -/
 lemma respMart_div_sqrt_tendsto_gaussianReal [Finite 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (k : 𝓐) (vk : ℝ) (hvk : 0 < vk) (hVk : 0 < Var[id; ν k])
@@ -437,12 +435,12 @@ lemma respMart_div_sqrt_tendsto_gaussianReal [Finite 𝓐]
   simp only [rowSum_respArray, Real.toNNReal_one] at hmart
   exact hmart
 
-/-- **The self-normalized componentwise CLT for the response martingale** (blueprint
-`cor:mart_clt_componentwise`, per-arm form). The law of `Q_{n,k}/√(V_k N_{n,k})` — the response
-martingale normalized by the *random* observed variation `√(V_k N_{n,k})` — converges weakly to the
-standard Gaussian `𝒩(0,1)`. This follows from the deterministic-normalizer CLT
-(`respMart_div_sqrt_tendsto_gaussianReal`) and Slutsky
-(`tendsto_map_mul_of_tendstoInMeasure_one`), since the ratio
+/-- **The self-normalized per-arm CLT for the response martingale.** The law of
+`Q_{n,k}/√(V_k N_{n,k})` — the response martingale normalized by the *random* observed variation
+`√(V_k N_{n,k})` — converges weakly to the standard Gaussian `𝒩(0,1)`. This is the univariate
+form of the componentwise self-normalized CLT, under a positive limiting proportion `0 < v_k`. It
+follows from the deterministic-normalizer CLT (`respMart_div_sqrt_tendsto_gaussianReal`) and
+Slutsky (`tendsto_map_mul_of_tendstoInMeasure_one`), since the ratio
 `√(V_k v_k n)/√(V_k N_{n,k}) = √(v_k n/N_{n,k}) → 1` in probability (from `N_{n,k}/n → v_k`). -/
 lemma respMart_selfNorm_tendsto_gaussianReal [Finite 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)

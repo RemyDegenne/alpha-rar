@@ -13,10 +13,9 @@ public meta import LeanSpec
 # The joint central limit theorem for proportions and plug-in targets
 
 Assembling the marginal plug-in-target CLT `√n(ρ̂_n - v) ⇒ 𝒩(0, GVGᵀ)` (`clt_rho`) with the
-proportion-deviation fact `√n(N_n/n - ρ̂_n) →ₚ 0` (blueprint `lem:prop_dev`, taken here as a
-hypothesis) into the joint statement (blueprint `thm:normality` part (ii))
-`(√n(N_n/n - v), √n(ρ̂_n - v)) ⇒ 𝒩(0, Ω)`, where `Ω` is the `2×2` block matrix with every block
-equal to `GVGᵀ`.
+proportion-deviation fact `√n(N_n/n - ρ̂_n) →ₚ 0` (taken here as a hypothesis) into the joint
+statement `(√n(N_n/n - v), √n(ρ̂_n - v)) ⇒ 𝒩(0, Ω)`, equation (9) of the paper, where `Ω` is the
+`2×2` block matrix with every block equal to `GVGᵀ`.
 
 The two components are asymptotically equal (both `√n(ρ̂_n - v) + o_p(1)`), so the joint vector is
 the image of `√n(ρ̂_n - v)` under the *duplication* map `x ↦ (x, x)` up to an `o_p(1)` remainder.
@@ -75,10 +74,10 @@ lemma norm_toLp_sumElim_zero (r : EuclideanSpace ℝ 𝓐) :
   congr 1
   simp [Sum.elim_inl, Sum.elim_inr]
 
-/-- **Joint CLT for proportions and plug-in targets** (blueprint `thm:normality` part (ii)).
-Given the plug-in-target CLT hypotheses (differentiability `hTderiv` from Condition **B**, a.s.
-consistency `hcons` from Theorem `thm:LLN`) and the proportion-deviation fact
-`√n(N_n/n - ρ̂_n) →ₚ 0` (`hprop`, blueprint `lem:prop_dev`), the joint vector
+/-- **Joint CLT for proportions and plug-in targets**, equation (9) of Theorem 4.2 (ii) of the
+paper. Given the plug-in-target CLT hypotheses (differentiability `hTderiv` from Condition **B**,
+a.s. consistency `hcons` from Theorem 4.1 of the paper) and the proportion-deviation fact
+`√n(N_n/n - ρ̂_n) →ₚ 0` (`hprop`, equation (5) of the paper), the joint vector
 `(√n(N_n/n - v), √n(ρ̂_n - v))` converges weakly to `𝒩(0, Ω)`, where `Ω` is the block matrix with
 every block equal to `G · diag(V_k/v_k) · Gᵀ`.
 
@@ -93,9 +92,9 @@ the limit's all-blocks-equal covariance is the check that the two halves are asy
 *same* Gaussian — which is the content of stacking them at all",
   specifies propSqrtNVec "puts the proportion deviation on the same `√n` scale and comparable \
 centring as `targetSqrtNVec`, so that their difference vanishing in probability is exactly \
-blueprint `lem:prop_dev`, and the first diagonal block of the limit is the proportion's own \
+equation (5) of the paper, and the first diagonal block of the limit is the proportion's own \
 Gaussian"]
-theorem clt_joint
+lemma clt_joint
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp id 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / (n : ℝ))

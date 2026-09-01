@@ -12,20 +12,21 @@ public import AlphaRAR.YDK2026.PropDevARTS
 # The joint central limit theorem for the aRTS design
 
 This file assembles the fully self-contained joint central limit theorem for the concrete aRTS
-design (blueprint `thm:normality` part (ii)): the `√n`-scaled proportion and plug-in-target
-deviations converge jointly to the block-Gaussian `𝒩(0, Ω)`, where every block of `Ω` equals
-`G · diag(V_k / v_k) · Gᵀ`.
+design, equation (9) of Theorem 4.2 (ii) of the paper: the `√n`-scaled proportion and
+plug-in-target deviations converge jointly to the block-Gaussian `𝒩(0, Ω)`, where every block of
+`Ω` equals `G · diag(V_k / v_k) · Gᵀ`.
 
 The generic `AlphaRAR.clt_joint` takes the proportion-deviation fact `√n(N_n/n - ρ̂_n) →ₚ 0` as a
-hypothesis; here it is *discharged* from `AlphaRAR.aRTS_prop_dev` (the `o_p(√n)` deviation bound of
-`thm:normality` part (i)). The bridge is a generic fact — coordinatewise `o_p(1)` implies vector
-convergence in measure — and the exact `√n`-scaling identity relating the coordinate deviation
-`(propSqrtNVec - targetSqrtNVec)_k` to the `aRTS_prop_dev` quantity `(N_{n,k} - n ρ̂_{n,k})/√n`.
+hypothesis; here it is *discharged* from `AlphaRAR.aRTS_prop_dev` (the `o_p(√n)` deviation bound
+of equation (5) of Theorem 4.2 (i) of the paper). The bridge is a generic fact — coordinatewise
+`o_p(1)` implies vector convergence in measure — and the exact `√n`-scaling identity relating the
+coordinate deviation `(propSqrtNVec - targetSqrtNVec)_k` to the `aRTS_prop_dev` quantity
+`(N_{n,k} - n ρ̂_{n,k})/√n`.
 
 The only Condition-**B** input beyond the `aRTS_prop_dev` bundle is the first-order
 differentiability of the target `T` at `θ` (the Jacobian matrix `G`), exactly as for `clt_rho`;
-the `thm:LLN`
-consistencies `N/n → v`, `θ̂ → θ` and the non-sparsity `0 < v_k` are all derived from the bundle.
+the consistencies `N/n → v`, `θ̂ → θ` and the non-sparsity `0 < v_k` are all derived from the
+bundle.
 
 ## Main results
 
@@ -77,15 +78,16 @@ lemma tendstoInMeasure_toLp_of_forall_isLittleOpOne {ι : Type*} [Fintype ι]
         Real.sqrt_le_sqrt (Finset.sum_sq_le_sq_sum_of_nonneg (fun i _ ↦ abs_nonneg _))
     _ = ∑ k, |D k n ω| := Real.sqrt_sq (Finset.sum_nonneg (fun i _ ↦ abs_nonneg _))
 
-/-- **Joint central limit theorem at an abstract hitting time** (blueprint `thm:normality` part
-(ii), generic form). The abstract-hitting-time generalisation of `aRTS_clt_joint`: from Condition
-**A** (`hY2`, `hνk`), a `LipschitzWith K` simplex-valued target `T`, `α ∈ [0,1)`, the non-sparsity
-`hTpos`, the differentiability `hTderiv`, a measurable hitting predicate `Q` with throttle
-`hthrottle`, consistency smallness `hgs` and `o_p`-smallness `hsmall_op`, the `√n`-scaled joint
-vector `(√n(N_n/n - v), √n(ρ̂_n - v))` converges weakly to the block-Gaussian `𝒩(0, Ω)`. The
-`thm:LLN` consistencies `θ̂ → θ` (`theta_consistent_of_hitting`), `N/n → v`
+/-- **Joint central limit theorem at an abstract hitting time** (equation (9) of Theorem 4.2 (ii)
+of the paper, generic form). The abstract-hitting-time generalisation of `aRTS_clt_joint`: from
+Condition **A** (`hνk`), a `LipschitzWith K` simplex-valued target `T`, `α ∈ [0,1)`, the
+non-sparsity `hTpos`, the differentiability `hTderiv`, a measurable hitting predicate `Q` with
+throttle `hthrottle`, consistency smallness `hgs` and `o_p`-smallness `hsmall_op`, the `√n`-scaled
+joint vector `(√n(N_n/n - v), √n(ρ̂_n - v))` converges weakly to the block-Gaussian `𝒩(0, Ω)`. The
+consistencies `θ̂ → θ` (`theta_consistent_of_hitting`), `N/n → v`
 (`proportion_tendsto_of_hitting`) and the non-sparsity are derived, and the proportion-deviation
-`√n(N_n/n - ρ̂_n) →ₚ 0` is discharged from `prop_dev_of_hitting` (part (i)). -/
+`√n(N_n/n - ρ̂_n) →ₚ 0` is discharged from `prop_dev_of_hitting` (part (i) of the same
+theorem). -/
 lemma clt_joint_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
@@ -122,7 +124,7 @@ lemma clt_joint_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
           inferInstance⟩) := by
   have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
   have hT : Continuous T := hlip.continuous
-  -- The `thm:LLN` consistencies at the hitting time.
+  -- The consistencies at the hitting time.
   have hcons : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
       (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means) :=
     theta_consistent_of_hitting h hνk θ₀ T hT hTnn hTsum α hα Q hthrottle hgs hTpos
@@ -173,9 +175,9 @@ lemma clt_joint_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
   exact clt_joint (v := T ν.means)
     h θ₀ hνk hv hNconv hT G hTderiv hcons hprop
 
-/-- **Joint central limit theorem for the aRTS design** (blueprint `thm:normality` part (ii)),
-fully self-contained. From the `aRTS` design bundle — an `IsAlgEnvSeq` sequence, Condition **A**
-(`hY2` and the kernel `L²` bound `hνk`), a simplex-valued target `T` that is `LipschitzWith K`
+/-- **Joint central limit theorem for the aRTS design**, equation (9) of Theorem 4.2 (ii) of the
+paper, fully self-contained. From the `aRTS` design bundle — an `IsAlgEnvSeq` sequence, Condition
+**A** (the kernel `L²` bound `hνk`), a simplex-valued target `T` that is `LipschitzWith K`
 (Condition **B**), the algorithm-level predicate `IsARTS`, `α ∈ [0,1)`, the non-sparsity `hTpos`,
 and the first-order differentiability of `T` at `θ` with Jacobian `G` (`hTderiv`) — the `√n`-scaled
 joint vector `(√n(N_n/n - v), √n(ρ̂_n - v))` converges weakly to the block-Gaussian `𝒩(0, Ω)`, with
@@ -183,8 +185,9 @@ every block equal to `G · diag(V_k / v_k) · Gᵀ` with `V_k = Var[id; ν k]`, 
 `v_k = T ν.means k`.
 
 The `aRTS` instantiation of `clt_joint_of_hitting` at the last under-sampling time: the throttle is
-`throttle_of_isARTS` (from `IsARTS`), the consistency smallness is `generic_small_of_hitting`, and
-the `o_p`-smallness is automatic (`N_ℓ - ℓ ρ̂_ℓ ≤ 0`, `preliminary_small`). -/
+`throttle_of_isARTS` (from `IsARTS`), the consistency smallness is `aRTS_smallness_all`, and the
+`o_p`-smallness is `aRTS_smallness_op`, both automatic because `N_ℓ - ℓ ρ̂_ℓ ≤ 0` at that time
+(`preliminary_small`). -/
 theorem aRTS_clt_joint [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)

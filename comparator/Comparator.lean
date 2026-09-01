@@ -7,7 +7,7 @@ Authors: Rémy Degenne
 /-! # Comparator library root
 
 Stub root module of the `Comparator` lake library. The library's actual content — the
-`Challenge_*` statements, the `ChallengeVendor_*` vendored dependencies and the `Solution`
-module — is listed through `globs` in `lakefile.toml`, deliberately NOT imported here: tools that
-import every library root of the workspace (`checkdecls`, referee) must not load the challenges,
-which redeclare project and LML names. See `comparator/README.md`. -/
+self-contained `Challenge_*` statements and the `Solution` module — is listed through `globs` in
+`lakefile.toml`, deliberately NOT imported here: tools that import every library root of the
+workspace (`checkdecls`, referee) must not load the challenges, which redeclare project and LML
+names. See `comparator/README.md`. -/

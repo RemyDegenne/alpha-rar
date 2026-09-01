@@ -119,8 +119,8 @@ status:
   size:
     # Counted over the development, `AlphaRAR/**/*.lean`; the comparator challenges are excluded.
     # `definitions` counts def/abbrev/structure/inductive.
-    lean_lines: 23593
-    theorems_and_lemmas: 721
+    lean_lines: 23635
+    theorems_and_lemmas: 723
     definitions: 87
   main_results:
     - declaration: "AlphaRAR.aRTS_LLN"
@@ -128,7 +128,9 @@ status:
       source_statement: "Theorem 4.1 — strong consistency and rates"
       note: >-
         Under Conditions A–B, for an α-throttled αRTS design and every arm k, almost surely:
-        N_{n,k}/n → v_k, θ̂_{n,k} → θ_k, and ρ̂_{n,k} − v_k = O(√(log log n / n)).
+        N_{n,k}/n → v_k, θ̂_{n,k} → θ_k, θ̂_{n,k} − θ_k = O(√(log log n / n)) and
+        ρ̂_{n,k} − v_k = O(√(log log n / n)) — the last two being the paper's
+        Θ̂_n − Θ = O(√(log log n / n)) and n(ρ̂_n − v) = O(√(n log log n)).
       sorry_count: 0
       axioms: ["propext", "Classical.choice", "Quot.sound"]
       comparator_config: "comparator/aRTS_LLN.json"

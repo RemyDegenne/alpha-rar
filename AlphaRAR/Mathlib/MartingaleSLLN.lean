@@ -14,8 +14,8 @@ public meta import LeanSpec
 /-!
 # Strong law of large numbers for martingales
 
-If a square-integrable martingale `M` has `M 0 = 0` and increment variances summable against `k⁻²`
-(in particular for uniformly bounded increments), then `M n / n → 0` almost everywhere. Mathlib has
+If a square-integrable martingale `M` has increment variances summable against `k⁻²` (in particular
+for uniformly bounded increments), then `M n / n → 0` almost everywhere. Mathlib has
 the i.i.d. strong law but no martingale version; the classical route below is Kolmogorov's: reduce
 to the a.s. convergence of the weighted series `∑ ΔM_k / k` via the `L²` martingale convergence
 theorem, then apply Kronecker's lemma (`AlphaRAR.kronecker`).
@@ -23,6 +23,11 @@ theorem, then apply Kronecker's lemma (`AlphaRAR.kronecker`).
 ## Main results
 
 * `AlphaRAR.martingale_ae_tendsto_of_eLpNorm_two_le`: an `L²`-bounded martingale converges a.e.
+* `AlphaRAR.martingale_div_atTop_ae_tendsto_zero`: the martingale SLLN `M n / n → 0`, with the
+  bounded-increment form `AlphaRAR.martingale_div_atTop_ae_tendsto_zero_of_bdd` and the
+  general-normalizer form `AlphaRAR.martingale_div_weight_ae_tendsto_zero`.
+* `AlphaRAR.martingale_div_predQuadVar_ae_tendsto_zero`: the bracket-normalized strong law,
+  `M n / ⟨M⟩_n → 0` almost surely on `{⟨M⟩_n → ∞}`.
 -/
 
 @[expose] public section
@@ -35,7 +40,7 @@ namespace AlphaRAR
 variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
   {ℱ : Filtration ℕ m0} {M S : ℕ → Ω → ℝ}
 
-/-- **An `L²`-bounded martingale converges almost everywhere** (blueprint `lem:slln_l2_conv`).
+/-- **An `L²`-bounded martingale converges almost everywhere.**
 If `S` is a martingale with `eLpNorm (S n) 2 μ ≤ C` for all `n`, then `S n` converges a.e. to a
 (finite) limit. This is the `L²`- (hence `L¹`-) bounded martingale convergence theorem: on a
 probability space `‖·‖₁ ≤ ‖·‖₂`, so the uniform `L²` bound gives a uniform `L¹` bound, and Mathlib's
@@ -47,9 +52,10 @@ lemma martingale_ae_tendsto_of_eLpNorm_two_le [IsProbabilityMeasure μ]
     le_trans (eLpNorm_le_eLpNorm_of_exponent_le (p := 1) (q := 2) one_le_two
       ((hS.stronglyMeasurable n).mono (ℱ.le n)).aestronglyMeasurable) (hbdd n)
 
-/-- Integral form of `lem:slln_l2_conv`: a martingale `S` with square-integrable values and
-`∫ (S n)² ∂μ ≤ C` for all `n` converges a.e. to a finite limit. The uniform second-moment bound
-gives `eLpNorm (S n) 2 μ ≤ √C`, so `martingale_ae_tendsto_of_eLpNorm_two_le` applies. -/
+/-- Integral form of `martingale_ae_tendsto_of_eLpNorm_two_le`: a martingale `S` with
+square-integrable values and `∫ (S n)² ∂μ ≤ C` for all `n` converges a.e. to a finite limit. The
+uniform second-moment bound gives `eLpNorm (S n) 2 μ ≤ √C`, so
+`martingale_ae_tendsto_of_eLpNorm_two_le` applies. -/
 lemma martingale_ae_tendsto_of_integral_sq_le [IsProbabilityMeasure μ]
     (hS : Martingale S ℱ μ) (hS2 : ∀ n, MemLp (S n) 2 μ)
     {C : ℝ} (hbdd : ∀ n, ∫ ω, (S n ω) ^ 2 ∂μ ≤ C) :
@@ -65,8 +71,7 @@ lemma martingale_ae_tendsto_of_integral_sq_le [IsProbabilityMeasure μ]
   exact ENNReal.ofReal_le_ofReal (Real.sqrt_le_sqrt (hbdd n))
 
 /-- The **weighted increment series** `S n = ∑_{k<n} (M (k+1) − M k)/w k` of a martingale `M`, for
-an arbitrary deterministic weight `w`, is itself a martingale (part of blueprint
-`lem:slln_weighted`).
+an arbitrary deterministic weight `w`, is itself a martingale.
 Each increment `ΔS_n = ΔM_n/w n` is a scaled martingale difference, so
 `𝔼[ΔS_n ∣ ℱ_n] = (w n)⁻¹ 𝔼[ΔM_n ∣ ℱ_n] = 0`. The classical case is `w k = k+1`. -/
 lemma martingale_weightedSeries [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (w : ℕ → ℝ) :
@@ -104,9 +109,9 @@ lemma martingale_weightedSeries [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) 
   rw [ha, Pi.add_apply, congrFun hself ω, h2, Pi.zero_apply, add_zero]
 
 /-- **Martingale SLLN** (the a.e. convergence `M n / n → 0`), given a uniform second-moment bound on
-the weighted increment series `S n = ∑_{k<n} (M (k+1) − M k)/(k+1)`. Blueprint `thm:mart_slln`,
-modulo the identity `∫ (S n)² = ∑_{k<n} 𝔼[(ΔM_k)²]/(k+1)²` (which turns the summability hypothesis
-into the bound `hbdd` below). By `martingale_weightedSeries` and
+the weighted increment series `S n = ∑_{k<n} (M (k+1) − M k)/(k+1)`. The classical summability
+hypothesis `∑ 𝔼[(ΔM_k)²]/(k+1)² < ∞` yields that bound through the identity
+`∫ (S n)² = ∑_{k<n} 𝔼[(ΔM_k)²]/(k+1)²`. By `martingale_weightedSeries` and
 `martingale_ae_tendsto_of_integral_sq_le`, `S n` converges a.e.; Kronecker's lemma
 (`AlphaRAR.kronecker'`, applied pathwise with `x_k = ΔM_k/(k+1)`) then gives `M n / n → 0`, since
 `∑_{k<n} (k+1)·x_k = ∑_{k<n} ΔM_k = M n - M 0` and the initial value is washed out by `n → ∞`. -/
@@ -138,8 +143,8 @@ monotone, unbounded weight `a` (`a n ↑ ∞`), if the weighted increment series
 almost everywhere. `martingale_weightedSeries` (general weight) gives the martingale,
 `martingale_ae_tendsto_of_integral_sq_le` its a.e. convergence, and Kronecker's lemma
 (`kronecker_general` with `b = a`, since `a (k+1)·(ΔM_k/a (k+1)) = ΔM_k`) telescopes to `M n / a n`.
-This is the `a n = n` case (`martingale_div_atTop_ae_tendsto_zero`) with a general normalizer, used
-for the loglog-scale weight `a n = √(2 n log log n)` of the Hartman–Wintner medium part. -/
+This generalizes `martingale_div_atTop_ae_tendsto_zero` (the case `a n = n`), and is used for the
+loglog-scale weight `a n = √(2 n log log n)` of the Hartman–Wintner medium part. -/
 lemma martingale_div_weight_ae_tendsto_zero [IsProbabilityMeasure μ]
     (hM : Martingale M ℱ μ) {a : ℕ → ℝ}
     (ha_pos : ∀ n, 0 < a n) (ha_mono : Monotone a) (ha_top : Tendsto a atTop atTop)
@@ -163,9 +168,8 @@ lemma martingale_div_weight_ae_tendsto_zero [IsProbabilityMeasure μ]
   rw [add_zero] at hsum
   exact hsum.congr fun n ↦ by ring
 
-/-- **Martingale SLLN for bounded increments** (blueprint `cor:mart_slln_bounded`). If `M` is a
-martingale with a.e. uniformly bounded increments `|M (k+1) − M k| ≤ c`, then
-`M n / n → 0` almost everywhere.
+/-- **Martingale SLLN for bounded increments.** If `M` is a martingale with a.e. uniformly bounded
+increments `|M (k+1) − M k| ≤ c`, then `M n / n → 0` almost everywhere.
 
 The bounded increments make everything square-integrable, and give the orthogonality bound
 `∫ (S n)² = ∑_{k<n} ∫ (ΔM_k / (k+1))² ≤ c² ∑_{k<n} (k+1)⁻² ≤ c² ∑' (k+1)⁻² < ∞`
@@ -246,15 +250,14 @@ lemma martingale_div_atTop_ae_tendsto_zero_of_bdd [IsProbabilityMeasure μ]
 /-- The **bracket-weighted increment series** `T n = ∑_{k<n} (M(k+1) − M k)/(1 + ⟨M⟩_{k+1})` of a
 square-integrable martingale `M`. The weights `1/(1+⟨M⟩_{k+1})` are `ℱ_k`-measurable (`⟨M⟩` is
 predictable) and lie in `(0,1]`, so `T` is a martingale (below) and `L²`-bounded, and its a.s. limit
-delivers `M_n/⟨M⟩_n → 0` (blueprint `lem:slln_bracket_weighted`, `thm:mart_slln_bracket`). -/
+delivers `M_n/⟨M⟩_n → 0`. -/
 noncomputable def bracketSeries (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) :
     ℕ → Ω → ℝ :=
   fun n ω ↦ ∑ k ∈ range n, (M (k + 1) ω - M k ω) / (1 + predQuadVar M ℱ μ (k + 1) ω)
 
-/-- **The bracket-weighted increment series is a martingale** (part of blueprint
-`lem:slln_bracket_weighted`). Each increment `ΔT_n = ΔM_n/(1+⟨M⟩_{n+1})` is a predictably-weighted
-martingale difference: the weight `1/(1+⟨M⟩_{n+1})` is `ℱ_n`-measurable, so
-`𝔼[ΔT_n ∣ ℱ_n] = (1+⟨M⟩_{n+1})⁻¹ 𝔼[ΔM_n ∣ ℱ_n] = 0`. -/
+/-- **The bracket-weighted increment series is a martingale.** Each increment
+`ΔT_n = ΔM_n/(1+⟨M⟩_{n+1})` is a predictably-weighted martingale difference: the weight
+`1/(1+⟨M⟩_{n+1})` is `ℱ_n`-measurable, so `𝔼[ΔT_n ∣ ℱ_n] = (1+⟨M⟩_{n+1})⁻¹ 𝔼[ΔM_n ∣ ℱ_n] = 0`. -/
 @[specifies bracketSeries "the first of the two things the weight `1/(1+⟨M⟩_{k+1})` is chosen for: \
 indexing the bracket at `k+1` keeps the weight predictable, so the weighted sum is still a \
 martingale — an off-by-one to `⟨M⟩_k` would break this"]
@@ -360,8 +363,8 @@ lemma memLp_bracketSeries (hM : Martingale M ℱ μ)
     (hM2 : ∀ n, MemLp (M n) 2 μ) (n : ℕ) : MemLp (bracketSeries M ℱ μ n) 2 μ :=
   memLp_finsetSum _ fun k _ ↦ memLp_bracketSeries_term hM hM2 k
 
-/-- **The bracket series has quadratic variation `≤ 1`** (the `L²`-bound of blueprint
-`lem:slln_bracket_weighted`). Each increment of `⟨T⟩` is `𝔼[(ΔT_k)² ∣ ℱ_k] = w_k²·Δ⟨M⟩_k`
+/-- **The bracket series has quadratic variation `≤ 1`**, the `L²`-bound behind the
+bracket-normalized strong law. Each increment of `⟨T⟩` is `𝔼[(ΔT_k)² ∣ ℱ_k] = w_k²·Δ⟨M⟩_k`
 (with `w_k = 1/(1+⟨M⟩_{k+1})`), bounded by the telescoping quantity
 `1/(1+⟨M⟩_k) − 1/(1+⟨M⟩_{k+1})`; summing gives `⟨T⟩_n ≤ 1/(1+⟨M⟩_0) − 1/(1+⟨M⟩_n) ≤ 1`. -/
 @[specifies bracketSeries "the second thing the weight is chosen for, and the one that makes the \
@@ -440,9 +443,8 @@ lemma predQuadVar_bracketSeries_le_one [IsProbabilityMeasure μ] (hM : Martingal
         simp only [add_zero, inv_one]
         linarith
 
-/-- **Bracket-normalized martingale SLLN** (blueprint `thm:mart_slln_bracket`). For a
-square-integrable martingale `M`, almost surely on the event `{⟨M⟩_n → ∞}` one has
-`M_n / ⟨M⟩_n → 0`.
+/-- **Bracket-normalized martingale SLLN.** For a square-integrable martingale `M`, almost surely
+on the event `{⟨M⟩_n → ∞}` one has `M_n / ⟨M⟩_n → 0`.
 
 The bracket transform `T` is `L²`-bounded (`∫ (T n)² = ∫ ⟨T⟩_n ≤ 1`), so it converges a.s.; the
 general Kronecker lemma applied pathwise with weights `b_k = 1 + ⟨M⟩_k` turns this into

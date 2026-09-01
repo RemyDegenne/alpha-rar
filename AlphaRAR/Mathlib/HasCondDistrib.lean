@@ -10,10 +10,10 @@ public import LeanMachineLearning.ForMathlib.Probability.HasCondDistrib
 /-!
 # Moment bounds from a conditional distribution
 
-If `Y` has conditional distribution `κ` given `X` (`HasCondDistrib Y X κ P`), then `Y ∈ L²` as
-soon as the conditional laws `κ x` have uniformly bounded second moments. (The companion statement
-`HasCondDistrib.condExp_comp_eq`, the conditional expectation of `g ∘ Y` given `σ(X)`, now lives
-upstream in `LeanMachineLearning.SequentialLearning.Means`.)
+If a real-valued `Y` has conditional distribution `κ` given `X` (`HasCondDistrib Y X κ P`) and `P`
+is finite, then `Y ∈ L²` as soon as the conditional laws `κ x` have uniformly bounded second
+moments. (The companion statement `HasCondDistrib.condExp_comp_eq`, the conditional expectation of
+`g ∘ Y` given `σ(X)`, lives in `LeanMachineLearning.SequentialLearning.Means`.)
 
 This belongs in Mathlib next to `HasCondDistrib`.
 
@@ -38,7 +38,7 @@ variable {Ω β 𝓨 : Type*} {mΩ : MeasurableSpace Ω} {mβ : MeasurableSpace 
 
 /-- **A conditionally-distributed real random variable is in `L²` as soon as its conditional laws
 have uniformly bounded second moments.** Disintegrating,
-`∫⁻ ‖f‖ₑ² dP = ∫⁻ x, (∫⁻ ‖y‖ₑ² dκ x) d(P.map X) ≤ C`, since `P.map X` is a probability measure. -/
+`∫⁻ ‖f‖ₑ² dP = ∫⁻ x, (∫⁻ ‖y‖ₑ² dκ x) d(P.map X) ≤ C * P univ`, which is finite as `P` is. -/
 lemma memLp_two_of_hasCondDistrib {𝓧 : Type*} [MeasurableSpace 𝓧]
     {f : Ω → ℝ} {X : Ω → 𝓧} {κ : Kernel 𝓧 ℝ} [IsSFiniteKernel κ] {C : ℝ≥0∞} (hC : C ≠ ⊤)
     (hcd : HasCondDistrib f X κ P) (hf : AEStronglyMeasurable f P)

@@ -12,15 +12,24 @@ public import Mathlib.Algebra.Ring.IsFormallyReal
 public meta import LeanSpec
 
 /-!
-# Consistency of the sequential estimator on `{N → ∞}`
+# Consistency of the sequential estimator
 
 This file connects the bracket-normalized martingale strong law
 (`martingale_div_predQuadVar_ae_tendsto_zero`) to the sequential estimator of the
-response model. It formalizes the first branch of the blueprint dichotomy
-`lem:theta_limit_dichotomy`: **on the event that arm `k` is sampled infinitely
-often, the estimator `θ̂_{n,k}` converges a.s. to the arm mean `θ_k = ν.means k`.**
+response model. Its core is the convergence dichotomy for the estimator: **on the
+event that arm `k` is sampled infinitely often, the estimator `θ̂_{n,k}` converges
+a.s. to the arm mean `θ_k = ν.means k`**, and off that event the estimator is
+eventually constant, hence converges too (`estimator_ae_tendsto`,
+`estimator_ae_tendsto_pi`). Continuity of the target map `T` carries this to the
+plug-in target `ρ̂_n = T(θ̂_n)` (`rho_converges`), and Condition **B** — positivity
+of `T` on the attainable sets (`attainableSet`) — makes the shared limit positive
+(`rho_converges_pos`, `proportion_pos_of_condB`), which identifies the estimator
+limit as the true parameter, `θ̂_n → θ` (`theta_consistent`). The log and log-log
+LIL bounds for the response martingale give the a.s. estimator rates
+`O(√(log n / n))` (`abs_estimator_sub_le_rate_ae`) and `O(√(log log n / n))`
+(`abs_estimator_sub_le_rate_loglog_ae`).
 
-The argument is:
+The argument for the first branch is:
 
 * `⟨Q_k⟩_n = V_k N_{n,k}` (`predQuadVar_respMart_eq`), so on `{N_{n,k} → ∞}` the
   quadratic variation `⟨Q_k⟩` tends to `∞` (when `V_k > 0`), and the bracket SLLN
@@ -66,8 +75,8 @@ lemma respMG_indicator_eq_respMart (k : 𝓐) (n : ℕ) (ω : Ω) :
 
 /-! ### The bracket SLLN applied to the response martingale -/
 
-/-- **`Q_{n,k}/N_{n,k} → 0` a.s. on `{N_{n,k} → ∞}`** (branch 1 of `lem:theta_limit_dichotomy`,
-probabilistic core). This is the bracket-normalized martingale strong law
+/-- **`Q_{n,k}/N_{n,k} → 0` a.s. on `{N_{n,k} → ∞}`** (probabilistic core of the first branch
+of the dichotomy). This is the bracket-normalized martingale strong law
 (`martingale_div_predQuadVar_ae_tendsto_zero`) transported to the response martingale via
 `⟨Q_k⟩_n = V_k N_{n,k}` (`predQuadVar_respMart_eq`).
 
@@ -118,7 +127,7 @@ lemma respMart_div_pullCount_ae_tendsto_zero [Finite 𝓐]
 
 /-! ### Consistency of the estimator on `{N → ∞}` -/
 
-/-- **Estimator consistency on `{N_{n,k} → ∞}`** (branch 1 of `lem:theta_limit_dichotomy`).
+/-- **Estimator consistency on `{N_{n,k} → ∞}`** (first branch of the dichotomy).
 On the event that arm `k` is sampled infinitely often, the sequential estimator converges
 a.s. to the arm mean `θ_k = ν.means k`:
 `θ̂_{n,k} = (∑_{j<n} 𝟙{A j = k} Y j + θ₀)/(N_{n,k}+1) → ν.means k` a.s.
@@ -191,9 +200,9 @@ lemma estimator_ae_tendsto_of_pullCount_atTop [Finite 𝓐]
 /-! ### Estimator convergence on `{sup N < ∞}` and the full dichotomy -/
 
 omit [MeasurableSingletonClass 𝓐] in
-/-- **Estimator eventually constant on `{\sup_n N_{n,k} < \infty\}`** (branch 2 of
-`lem:theta_limit_dichotomy`). For a fixed path `ω`, if the count `N_{n,k}(ω)` does not tend to
-`∞`, then the sequential estimator is eventually constant, hence converges.
+/-- **Estimator eventually constant on `{\sup_n N_{n,k} < \infty\}`** (second branch of the
+dichotomy). For a fixed path `ω`, if the count `N_{n,k}(ω)` does not tend to `∞`, then the
+sequential estimator is eventually constant, hence converges.
 
 Since `N_{\cdot,k}` is a nondecreasing `ℕ`-valued sequence, `N_{n,k}\not\to\infty` forces it to
 be bounded, and thus eventually constant at its supremum `N_{N_0,k}`. For `n \ge N_0` no further
@@ -239,12 +248,12 @@ lemma exists_tendsto_estimator_of_not_pullCount_atTop (k : 𝓐) (θ₀ : ℝ) (
   simp only [estimator, hden, hnum]
 
 omit [DecidableEq 𝓐] in
-/-- **The sequential estimator converges a.s.** (the convergence content of
-`lem:theta_limit_dichotomy`). For each arm `k`, `\hat\theta_{n,k}` converges almost surely: to
-the arm mean `θ_k = ν.means k` on `\{N_{n,k}\to\infty\}` (Lemma
-`estimator_ae_tendsto_of_pullCount_atTop`), and to an eventually-attained value on
-`\{\sup_n N_{n,k}<\infty\}` (Lemma `exists_tendsto_estimator_of_not_pullCount_atTop`). The
-dichotomy is exhaustive because `N_{n,k}` is monotone in `n`. -/
+/-- **The sequential estimator converges a.s.** (the convergence content of the dichotomy). For
+each arm `k`, `\hat\theta_{n,k}` converges almost surely: to the arm mean `θ_k = ν.means k` on
+`\{N_{n,k}\to\infty\}` (Lemma `estimator_ae_tendsto_of_pullCount_atTop`), and to an
+eventually-attained value on `\{\sup_n N_{n,k}<\infty\}` (Lemma
+`exists_tendsto_estimator_of_not_pullCount_atTop`). The dichotomy is exhaustive because `N_{n,k}`
+is monotone in `n`. -/
 lemma estimator_ae_tendsto [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : ℝ) :
     ∀ᵐ ω ∂P, ∃ L, Tendsto (fun n ↦ estimator
@@ -257,11 +266,11 @@ lemma estimator_ae_tendsto [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv
   · exact exists_tendsto_estimator_of_not_pullCount_atTop k θ₀ ω hlim
 
 omit [DecidableEq 𝓐] in
-/-- **The estimator vector converges a.s.** (vector form of `lem:theta_converges`, feeding
-`lem:rho_converges`). With finitely (or countably) many arms, the per-arm a.s. limits combine
+/-- **The estimator vector converges a.s.** (vector form of `estimator_ae_tendsto`, feeding
+`rho_converges`). With finitely (or countably) many arms, the per-arm a.s. limits combine
 into a single a.s. limit vector `z : 𝓐 → ℝ`: almost surely there is `z` with
 `\hat\theta_{n,k}\to z_k` for every arm `k` simultaneously. This is the a.s. convergence
-`\hat\Params_n \to z` that Condition **B** then transports through the (continuous) target map. -/
+`\hat\Theta_n \to z` that Condition **B** then transports through the (continuous) target map. -/
 lemma estimator_ae_tendsto_pi [Finite 𝓐] [Countable 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) :
     ∀ᵐ ω ∂P, ∃ z : 𝓐 → ℝ, ∀ k, Tendsto (fun n ↦ estimator
@@ -273,10 +282,10 @@ lemma estimator_ae_tendsto_pi [Finite 𝓐] [Countable 𝓐]
 
 /-! ### Identifying the limit as the true parameter (Condition B non-sparsity) -/
 
-/-- **Estimator consistency to the true mean** (blueprint `lem:theta_consistent`, per-arm core).
+/-- **Estimator consistency to the true mean** (per-arm core of the paper's Theorem 4.1).
 If the allocation proportion converges to a *positive* limit, `N_{n,k}/n → u_k > 0` a.s. (the
-positivity `u_k > 0` is the non-sparsity of Condition **B**, blueprint `lem:rho_converges`), then
-arm `k` is sampled infinitely often (`all_arms_infinite`), so the dichotomy's first branch
+positivity `u_k > 0` is the non-sparsity of Condition **B**), then arm `k` is sampled infinitely
+often (`all_arms_infinite`), so the dichotomy's first branch
 (`estimator_ae_tendsto_of_pullCount_atTop`) identifies the estimator limit as the true arm mean:
 `θ̂_{n,k} → θ_k = ν.means k` a.s. -/
 lemma theta_consistent [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
@@ -292,7 +301,7 @@ lemma theta_consistent [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν)
     (hmω.congr fun n ↦ by rw [count_indicator_eq_pullCount])
   exact hcount.congr fun n ↦ count_indicator_eq_pullCount k n ω
 
-/-- **Estimator vector consistency** (blueprint `lem:theta_consistent`, vector form). Under a
+/-- **Estimator vector consistency** (vector form of `theta_consistent`). Under a
 positive allocation-proportion limit for every arm, the estimator vector converges a.s. to the true
 parameter: `θ̂_n → θ = (ν.means k)_k`. Bundles `theta_consistent` over the finitely many arms via
 `ae_all_iff` and `tendsto_pi_nhds`. This is the a.s. consistency the delta-method rate `rho_rate`
@@ -306,10 +315,10 @@ lemma theta_consistent_pi [Finite 𝓐] [Countable 𝓐] (h : IsAlgEnvSeq A Y al
   filter_upwards [ae_all_iff.mpr fun k ↦ theta_consistent h hνk θ₀ hmatch hpos k] with ω hω
   exact tendsto_pi_nhds.mpr hω
 
-/-- **Attainable set of the estimator** (blueprint `def:attainable`, closure form). The closure of
-all values `θ̂_{n,k}(ω)` of the sequential estimator for arm `k`, over times `n` and outcomes `ω`.
-Every pointwise limit of `θ̂_{·,k}` lies in it (`estimator_limit_mem_attainableSet`), so Condition
-**B**'s positivity requirement on this set transfers to the plug-in-target limit `u_k = T(z)_k`. -/
+/-- **Attainable set of the estimator.** The closure of all values `θ̂_{n,k}(ω)` of the sequential
+estimator for arm `k`, over times `n` and outcomes `ω`. Every pointwise limit of `θ̂_{·,k}` lies
+in it (`estimator_limit_mem_attainableSet`), so Condition **B**'s positivity requirement on this
+set transfers to the plug-in-target limit `u_k = T(z)_k`. -/
 def attainableSet (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : ℝ) (k : 𝓐) : Set ℝ :=
   closure (Set.range fun p : ℕ × Ω ↦
     estimator (fun j ↦ actionIndicator A k j p.2) (Y · p.2) θ₀ p.1)
@@ -327,15 +336,14 @@ lemma estimator_limit_mem_attainableSet (k : 𝓐) (θ₀ : ℝ) {ω : Ω} {L : 
   mem_closure_of_tendsto hL (Eventually.of_forall fun n ↦ ⟨(n, ω), rfl⟩)
 
 omit [DecidableEq 𝓐] in
-/-- **Non-sparse convergence of the plug-in target** (blueprint `lem:rho_converges`). Under
-Condition **B**'s non-sparsity — the target `T` maps the product of attainable sets into the
-positive orthant (`hTpos`) — the plug-in target `ρ̂_{n,k} = T(θ̂_n)_k` converges a.s. to a
-*positive* limit: almost surely there is `u` with `u_k > 0` and `ρ̂_{n,k} → u_k` for every arm. The
-limit is
-`u = T(z)` with `z` the a.s. estimator-vector limit (`estimator_ae_tendsto_pi`), whose coordinates
-lie in the attainable sets (`estimator_limit_mem_attainableSet`); `hTpos` makes `u` positive and
-continuity of `T` transports the convergence. This is the non-sparse refinement supplying the
-positivity `u_k > 0` identifying the estimator limit as the true parameter (`theta_consistent`). -/
+/-- **Non-sparse convergence of the plug-in target.** Under Condition **B**'s non-sparsity — the
+target `T` maps the product of attainable sets into the positive orthant (`hTpos`) — the plug-in
+target `ρ̂_{n,k} = T(θ̂_n)_k` converges a.s. to a *positive* limit: almost surely there is `u`
+with `u_k > 0` and `ρ̂_{n,k} → u_k` for every arm. The limit is `u = T(z)` with `z` the a.s.
+estimator-vector limit (`estimator_ae_tendsto_pi`), whose coordinates lie in the attainable sets
+(`estimator_limit_mem_attainableSet`); `hTpos` makes `u` positive and continuity of `T` transports
+the convergence. This is the non-sparse refinement supplying the positivity `u_k > 0` identifying
+the estimator limit as the true parameter (`theta_consistent`). -/
 lemma rho_converges_pos [Finite 𝓐] [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTpos : ∀ z : 𝓐 → ℝ, (∀ k, z k ∈ attainableSet A Y (θ₀ k) k) → ∀ k, 0 < T z k) :
@@ -378,10 +386,10 @@ lemma proportion_pos_of_condB [Finite 𝓐] [Countable 𝓐] (h : IsAlgEnvSeq A 
   rw [huz k]
   exact hTpos z (fun k' ↦ estimator_limit_mem_attainableSet k' (θ₀ k') (hz k')) k
 
-/-- **Estimator consistency from a positive proportion limit** (`lem:theta_consistent`, per-arm,
-existential form). Same as `theta_consistent` but taking the positive proportion limit as a per-`ω`
-existential `∃ u_k > 0, N_{n,k}/n → u_k`, which is the shape `proportion_pos_of_condB` produces —
-avoiding a global choice of the (random) limit. -/
+/-- **Estimator consistency from a positive proportion limit** (per-arm, existential form). Same
+as `theta_consistent` but taking the positive proportion limit as a per-`ω` existential
+`∃ u_k > 0, N_{n,k}/n → u_k`, which is the shape `proportion_pos_of_condB` produces — avoiding a
+global choice of the (random) limit. -/
 lemma theta_consistent_of_pos [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : ℝ) (k : 𝓐)
     (hpp : ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧
@@ -395,11 +403,11 @@ lemma theta_consistent_of_pos [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationary
     (hlim.congr fun n ↦ by rw [count_indicator_eq_pullCount])
   exact hcount.congr fun n ↦ count_indicator_eq_pullCount k n ω
 
-/-- **Estimator vector consistency under Condition B** (`lem:theta_consistent`, vector form,
-discharged). From the joint consistency `hjoint` and Condition **B**, the estimator vector converges
-a.s. to the true parameter `θ̂_n → θ = (ν.means k)_k`: `proportion_pos_of_condB` makes the shared
-proportion limit positive, then `theta_consistent_of_pos` identifies each arm's limit as its
-mean. -/
+/-- **Estimator vector consistency under Condition B** (vector form, with the positivity
+hypothesis discharged). From the joint consistency `hjoint` and Condition **B**, the estimator
+vector converges a.s. to the true parameter `θ̂_n → θ = (ν.means k)_k`: `proportion_pos_of_condB`
+makes the shared proportion limit positive, then `theta_consistent_of_pos` identifies each arm's
+limit as its mean. -/
 lemma theta_consistent_pi_of_condB [Finite 𝓐] [Countable 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
@@ -422,13 +430,13 @@ lemma theta_consistent_pi_of_condB [Finite 𝓐] [Countable 𝓐]
   exact tendsto_pi_nhds.mpr hω
 
 omit [DecidableEq 𝓐] in
-/-- **Convergence of the plug-in target** (blueprint `lem:rho_converges`, continuity form).
-For any continuous target map `T : (𝓐 → ℝ) → (𝓐 → ℝ)`, the plug-in target
-`\hat\rho_n = T(\hat\Params_n)` converges a.s.: almost surely there is `u : 𝓐 → ℝ` with
-`\hat\rho_{n,k} \to u_k` for every arm `k`. Here `u = T z`, where `z` is the a.s. limit of the
-estimator vector (`estimator_ae_tendsto_pi`); continuity of `T` transports the convergence
-`\hat\Params_n \to z` (in the product topology) to `T(\hat\Params_n) \to T z`. The blueprint's
-non-sparse refinement `u \in (0,1)^K` needs the rest of Condition **B** and is deferred. -/
+/-- **Convergence of the plug-in target** (continuity form). For any continuous target map
+`T : (𝓐 → ℝ) → (𝓐 → ℝ)`, the plug-in target `\hat\rho_n = T(\hat\Theta_n)` converges a.s.: almost
+surely there is `u : 𝓐 → ℝ` with `\hat\rho_{n,k} \to u_k` for every arm `k`. Here `u = T z`, where
+`z` is the a.s. limit of the estimator vector (`estimator_ae_tendsto_pi`); continuity of `T`
+transports the convergence `\hat\Theta_n \to z` (in the product topology) to
+`T(\hat\Theta_n) \to T z`. The non-sparse refinement `u_k > 0`, which additionally uses Condition
+**B**'s positivity of `T` on the attainable sets, is `rho_converges_pos`. -/
 lemma rho_converges [Finite 𝓐] [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T) :
     ∀ᵐ ω ∂P, ∃ u : 𝓐 → ℝ, ∀ k, Tendsto (fun n ↦ T (fun k' ↦ estimator
@@ -443,9 +451,9 @@ lemma rho_converges [Finite 𝓐] [Countable 𝓐] (h : IsAlgEnvSeq A Y alg (sta
   exact tendsto_pi_nhds.mp ((hT.tendsto z).comp hvec) k
 
 omit [MeasurableSingletonClass 𝓐] [IsProbabilityMeasure P] in
-/-- **LIL rate for the estimator, a.s.** (blueprint `lem:theta_LIL`, a.s. form). Given the
-proportion limit `N_{n,k}/n → v_k > 0` a.s. (from `match_proportion_ae` via the count-indexing
-bridge) and the two-sided LIL bound `|Q_{n,k}| ≤ C√(n log n)` eventually a.s. (from
+/-- **LIL rate for the estimator, a.s.** (`√(log n / n)` form). Given the proportion limit
+`N_{n,k}/n → v_k > 0` a.s. (from `match_proportion_ae` via the count-indexing bridge) and the
+two-sided LIL bound `|Q_{n,k}| ≤ C√(n log n)` eventually a.s. (from
 `ae_eventually_abs_respMart_le_sqrt_nat_mul_log`), the estimator error is `O(√(log n / n))` a.s.:
 `|θ̂_{n,k} - θ_k| ≤ C'·√(n log n)/n` for large `n`. Each is the pathwise `abs_estimator_sub_le_rate`
 after the bridges `count(𝟙{A·=k}) = N_{n,k}` and `respMG(𝟙{A·=k}) = Q_{n,k}`; the (random) LIL
@@ -476,10 +484,10 @@ lemma abs_estimator_sub_le_rate_ae (k : 𝓐) (θ₀ : ℝ) {v : Ω → ℝ}
 /-! ### The loglog rate for the estimator -/
 
 omit [MeasurableSingletonClass 𝓐] [IsProbabilityMeasure P] in
-/-- **The response martingale is `O(√(n log log n))`** (the `n`-indexed form of the loglog LIL
-`cor:subsampled_lil`). The sharp subsampled LIL `abs_respMart_le_sqrt_nat_mul_loglog` bounds
-`|Q_{n,k}|` by `β√(2 V_k N_{n,k} log log N_{n,k})` in terms of the *pull count* `N_{n,k}`; combined
-with the proportion limit `N_{n,k}/n → v_k > 0` — which gives `N_{n,k} ≤ 2 v_k n` and
+/-- **The response martingale is `O(√(n log log n))`** (the `n`-indexed form of the loglog LIL for
+a predictably-sampled i.i.d. sum). The sharp subsampled LIL `abs_respMart_le_sqrt_nat_mul_loglog`
+bounds `|Q_{n,k}|` by `β√(2 V_k N_{n,k} log log N_{n,k})` in terms of the *pull count* `N_{n,k}`;
+combined with the proportion limit `N_{n,k}/n → v_k > 0` — which gives `N_{n,k} ≤ 2 v_k n` and
 `log log N_{n,k} ≤ 2 log log n` eventually — it becomes a bound in the *time index* `n`:
 `|Q_{n,k}| ≤ C√(n log log n)` eventually, a.s. This is the loglog analogue of
 `ae_eventually_abs_respMart_le_sqrt_nat_mul_log`, and the `hQ` input of
@@ -574,14 +582,14 @@ lemma ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog (k : 𝓐) {v : Ω → �
         rw [hsplit]; ring
 
 omit [MeasurableSingletonClass 𝓐] [IsProbabilityMeasure P] in
-/-- **Loglog LIL rate for the estimator, a.s.** (blueprint `lem:theta_LIL`, loglog form). Given the
-proportion limit `N_{n,k}/n → v_k > 0` a.s. (from `match_proportion_ae`) and the loglog LIL bound
-`|Q_{n,k}| ≤ C√(n log log n)` eventually a.s. (from
-`ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog`, itself the subsampled LIL
-`abs_respMart_le_sqrt_nat_mul_loglog`), the estimator error is
-`O(√(log log n / n))` a.s.: `|θ̂_{n,k} - θ_k| ≤ C'·√(n log log n)/n` for large `n`. This is the
-`log log`, sharp-constant upgrade of `abs_estimator_sub_le_rate_ae`, obtained through the same
-deterministic core `abs_estimator_sub_le_rate_gen` with the rate `r n = √(n log log n)`. -/
+/-- **Loglog LIL rate for the estimator, a.s.** (the `Θ̂ₙ - Θ = O(√(log log n / n))` rate of the
+paper's Theorem 4.1). Given the proportion limit `N_{n,k}/n → v_k > 0` a.s. (from
+`match_proportion_ae`) and the loglog LIL bound `|Q_{n,k}| ≤ C√(n log log n)` eventually a.s.
+(from `ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog`, itself the subsampled LIL
+`abs_respMart_le_sqrt_nat_mul_loglog`), the estimator error is `O(√(log log n / n))` a.s.:
+`|θ̂_{n,k} - θ_k| ≤ C'·√(n log log n)/n` for large `n`. This is the `log log`, sharp-constant
+upgrade of `abs_estimator_sub_le_rate_ae`, obtained through the same deterministic core
+`abs_estimator_sub_le_rate_gen` with the rate `r n = √(n log log n)`. -/
 lemma abs_estimator_sub_le_rate_loglog_ae (k : 𝓐) (θ₀ : ℝ) {v : Ω → ℝ}
     (hv : ∀ᵐ ω ∂P, 0 < v ω)
     (hN : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω)))

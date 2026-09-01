@@ -11,8 +11,8 @@ public import AlphaRAR.Mathlib.Tactic.Tendsto
 # Regression tests for the `tendsto` tactic
 
 Each `example` mirrors a hand-written limit-algebra idiom found in the project's asymptotic
-proofs (see `AlphaRAR/Mathlib/StochasticOrder.lean`, `ResponseConsistency.lean`,
-`LILLogLog.lean`, `ResponseCLT.lean`).
+proofs (see `AlphaRAR/Mathlib/StochasticOrder.lean`, `AlphaRAR/Mathlib/LILLogLog.lean`,
+`AlphaRAR/YDK2026/ResponseConsistency.lean`, `AlphaRAR/YDK2026/ResponseCLT.lean`).
 -/
 
 @[expose] public section

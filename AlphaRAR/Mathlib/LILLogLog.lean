@@ -13,32 +13,32 @@ public import Mathlib.Analysis.Complex.ExponentialBounds
 /-!
 # A general martingale law of the iterated logarithm at the `log log` rate
 
-This file formalizes the blueprint chapter `chap:pre_llil`, which sharpens the one-sided LIL of
-`AlphaRAR/Mathlib/LIL.lean` from the `log` rate to the true `log log` rate, and packages it as a
-general martingale statement (no bandit or i.i.d. structure).
+This file sharpens the one-sided LIL of `AlphaRAR/Mathlib/LIL.lean` from the `log` rate to the true
+`log log` rate, and packages it as a general martingale statement (no bandit or i.i.d. structure).
 
-The engine — the exponential supermartingale, Ville's inequality, the optimized Freedman bound
-`measure_exists_ge_le_exp_all`, and the Borel–Cantelli step — is reused verbatim from `LIL.lean`.
-The only change in the bounded-increment case is the block threshold: `λ_k = κ √(2^k · log(k+2))`
-(versus `K √(2^k (k+1))`), which turns the geometric tail series into a *p-series* `(k+2)^{-κ²/4}`,
-summable exactly when `κ > 2`. Because the optimizer `θ_k → 0`, admissibility holds only eventually
-in `k`, so the Borel–Cantelli step is used through its eventual-admissibility variant.
+The engine — the exponential supermartingale, Ville's inequality and the optimized Freedman bound
+`measure_exists_ge_le_exp_all` — is reused verbatim from `LIL.lean`. The bounded-increment case
+differs only in the block threshold: `λ_k = κ √(2^k · log(k+2))` (versus `K √(2^k (k+1))`), which
+turns the geometric tail series into a *p-series* `(k+2)^{-κ²/4}`, summable exactly when `κ > 2`.
+Because the optimizer `θ_k → 0`, admissibility holds only eventually in `k`, so the Borel–Cantelli
+step is used through its eventual-admissibility variant.
 
 ## Main results
 
-* `AlphaRAR.summable_exp_neg_mul_log_add`: the p-series `∑_k exp(-p log(k+2)) < ∞` for `1 < p`
-  (blueprint `lem:llil_tail_summable`).
+* `AlphaRAR.summable_exp_neg_mul_log_add`: the p-series `∑_k exp(-p log(k+2)) < ∞` for `1 < p`.
 * `AlphaRAR.ae_eventually_forall_lt_of_summable_eventually`: the Borel–Cantelli step with only
-  eventual admissibility (blueprint `lem:llil_evt_adm`).
-* `AlphaRAR.ae_eventually_forall_lt_dyadic_loglog`: the dyadic loglog exceedance
-  (blueprint `lem:llil_bounded_block`).
+  eventual admissibility.
+* `AlphaRAR.ae_eventually_forall_lt_dyadic_loglog`: the dyadic loglog exceedance.
 * `AlphaRAR.ae_eventually_le_sqrt_predQuadVar_mul_loglog`: the consumable
-  `M_n ≤ C √(⟨M⟩_n log log⟨M⟩_n)` bound (blueprint `thm:llil_bounded`).
-* `AlphaRAR.ae_eventually_abs_le_sqrt_predQuadVar_mul_loglog`: its two-sided form
-  (blueprint `cor:llil_norm`).
+  `M_n ≤ C √(⟨M⟩_n log log⟨M⟩_n)` bound.
+* `AlphaRAR.ae_eventually_abs_le_sqrt_predQuadVar_mul_loglog`: its two-sided form.
 * `AlphaRAR.ae_eventually_le_sqrt_nat_mul_loglog`,
   `AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog`: the `√(n log log n)`-scale forms, the second
-  two-sided (blueprint `cor:llil_nat`), used for the bounded assignment martingale.
+  two-sided, both under the hypothesis `⟨M⟩_n → ∞`.
+* `AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growing`: the same `√(n log log n)` bound
+  for a martingale whose increment bound grows with the horizon, from a linear bound on `⟨M⟩`.
+* `AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd`: the unconditional bounded-increment
+  form, with no hypothesis on `⟨M⟩`, used for the bounded assignment martingale.
 -/
 
 @[expose] public section
@@ -52,7 +52,7 @@ namespace AlphaRAR
 variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
   {ℱ : Filtration ℕ m0} {M : ℕ → Ω → ℝ}
 
-/-- **p-series summability of the loglog block tails** (blueprint `lem:llil_tail_summable`).
+/-- **p-series summability of the loglog block tails.**
 For `1 < p`, `∑_k exp(-p · log(k+2)) < ∞`, because `exp(-p log(k+2)) = ((k+2)^p)⁻¹`, a convergent
 `p`-series (Mathlib `Real.summable_nat_rpow_inv`). Applied with `p = κ²/4 > 1` to the block tail
 bounds `exp(-λ_k²/(4 v_k)) = exp(-(κ²/4) log(k+2))`. -/
@@ -68,7 +68,7 @@ lemma summable_exp_neg_mul_log_add {p : ℝ} (hp : 1 < p) :
   congr 1
   ring
 
-/-- **Borel–Cantelli step with eventual admissibility** (blueprint `lem:llil_evt_adm`).
+/-- **Borel–Cantelli step with eventual admissibility.**
 A version of `ae_eventually_forall_lt_of_summable` whose positivity and admissibility hypotheses
 hold only *eventually* in `k`. This is what the loglog schedule needs: its optimizer
 `θ_k = λ_k/(2 v_k) → 0`, so admissibility `λ_k c ≤ 2 v_k` fails on a finite prefix. There the
@@ -124,7 +124,7 @@ lemma eventually_mul_add_two_le_two_pow (a : ℝ) :
   rw [← mul_div_assoc, div_lt_one h2k] at hk
   exact hk.le
 
-/-- **Dyadic loglog exceedance** (blueprint `lem:llil_bounded_block`).
+/-- **Dyadic loglog exceedance.**
 For a bounded-increment martingale (`|ΔM_i| ≤ c`, `c > 0`) and any `κ > 2`, almost surely for all
 large `k` and every `n`, `⟨M⟩_n ≤ 2^k ⇒ M_n < κ √(2^k · log(k+2))`. The schedule is `v_k = 2^k`,
 `λ_k = κ √(2^k log(k+2))`, whose tail bound `exp(-λ_k²/(4 v_k)) = exp(-(κ²/4) log(k+2))` is the
@@ -182,10 +182,10 @@ lemma ae_eventually_forall_lt_dyadic_loglog [IsProbabilityMeasure μ] (hM : Mart
       _ ≤ (2 * (2 : ℝ) ^ k) ^ 2 := by nlinarith [mul_self_nonneg ((2 : ℝ) ^ k)]
   exact ae_eventually_forall_lt_of_summable_eventually hM hM0 hM2 hb hadm hsum
 
-/-- **General bounded-increment loglog LIL, normalized `O`-rate** (blueprint `thm:llil_bounded`,
-consumable form `cor:llil_norm`). If `M` is an `L²`-martingale with `M 0 = 0`, `|ΔM_i| ≤ c`, and
-`⟨M⟩_n → ∞` a.s., then almost surely `M_n ≤ C √(⟨M⟩_n · log log⟨M⟩_n)` for all large `n`, with a
-deterministic `C`. Repackages `ae_eventually_forall_lt_dyadic_loglog`: for large `n` take the least
+/-- **General bounded-increment loglog LIL, normalized `O`-rate.** If `M` is an `L²`-martingale
+with `M 0 = 0`, `|ΔM_i| ≤ c`, and `⟨M⟩_n → ∞` a.s., then almost surely
+`M_n ≤ C √(⟨M⟩_n · log log⟨M⟩_n)` for all large `n`, with an a.s. finite random constant `C`.
+Repackages `ae_eventually_forall_lt_dyadic_loglog`: for large `n` take the least
 `k` with `⟨M⟩_n ≤ 2^k`; minimality gives `2^k ≤ 2⟨M⟩_n` and `k ≤ log₂⟨M⟩_n + 1`, so
 `log(k+2) ≤ C'' log log⟨M⟩_n`, whence `κ√(2^k log(k+2)) ≤ C√(⟨M⟩_n log log⟨M⟩_n)`. -/
 lemma ae_eventually_le_sqrt_predQuadVar_mul_loglog [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
@@ -302,10 +302,10 @@ lemma ae_eventually_le_sqrt_nat_mul_loglog [IsProbabilityMeasure μ] (hM : Marti
         mul_le_mul_of_nonneg_left hsqrt (abs_nonneg C)
     _ = |C| * √(2 * c ^ 2) * √((n : ℝ) * log (log n)) := by ring
 
-/-- **Bounded-increment loglog LIL at scale `√(n log log n)`, two-sided** (blueprint
-`cor:llil_nat`). Applying the one-sided bound to `M` and `-M` (same quadratic variation, same
-increment bound) gives `|M_n| ≤ C √(n log log n)` eventually, a.s. This is the consumable form for
-the bounded assignment martingale. -/
+/-- **Bounded-increment loglog LIL at scale `√(n log log n)`, two-sided.** Applying the one-sided
+bound to `M` and `-M` (same quadratic variation, same increment bound) gives
+`|M_n| ≤ C √(n log log n)` eventually, a.s. This is the consumable form for the bounded i.i.d.
+case of the Hartman–Wintner LIL. -/
 lemma ae_eventually_abs_le_sqrt_nat_mul_loglog [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c : ℝ} (hc : 0 < c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
@@ -337,7 +337,7 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_loglog [IsProbabilityMeasure μ] (hM : M
   rw [abs_le]
   exact ⟨by linarith, hu⟩
 
-/-- **General bounded-increment loglog LIL, two-sided normalized form** (blueprint `cor:llil_norm`).
+/-- **General bounded-increment loglog LIL, two-sided normalized form.**
 `|M_n| ≤ C √(⟨M⟩_n log log⟨M⟩_n)` eventually, a.s., by applying
 `ae_eventually_le_sqrt_predQuadVar_mul_loglog` to `M` and `-M`. -/
 lemma ae_eventually_abs_le_sqrt_predQuadVar_mul_loglog [IsProbabilityMeasure μ]
@@ -539,8 +539,9 @@ lemma ae_eventually_le_sqrt_nat_mul_loglog_of_growing [IsProbabilityMeasure μ]
 
 /-- **Two-sided `√(n log log n)` LIL for a growing-increment martingale.** Applying the one-sided
 `ae_eventually_le_sqrt_nat_mul_loglog_of_growing` to `M` and `-M` (same increment bound and
-quadratic variation, `predQuadVar_neg`) gives `|M_n| ≤ C'√(n log log n)` eventually, a.s. Reusable —
-growing-increment loglog LIL — the engine for the truncated main part of the i.i.d. case. -/
+quadratic variation, `predQuadVar_neg`) gives `|M_n| ≤ C'√(n log log n)` eventually, a.s. This is
+the engine behind the unconditional bounded-increment form
+`ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd`. -/
 lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growing [IsProbabilityMeasure μ]
     (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
     {v C α : ℝ} (hα : 0 < α) (c : ℕ → ℝ) (hc0 : ∀ j, 0 ≤ c j) (hp : 1 < α * C - α ^ 2 * v)
@@ -576,10 +577,11 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growing [IsProbabilityMeasure 
   simp only [Pi.neg_apply] at hl
   rw [abs_le]; exact ⟨by linarith, hu⟩
 
-/-- **Unconditional bounded-increment loglog LIL at scale `√(n log log n)`.** For an `L²`-martingale
-`M` with `M 0 = 0` and `|ΔM_i| ≤ c` a.s. (`c > 0`), almost surely `|M_n| ≤ C √(n log log n)` for all
-large `n`, with a deterministic `C`. Unlike `ae_eventually_abs_le_sqrt_nat_mul_loglog`, this needs
-**no** hypothesis `⟨M⟩_n → ∞`: it applies the deterministic-horizon growing-increment engine
+/-- **Unconditional bounded-increment loglog LIL at scale `√(n log log n)`.** For a martingale `M`
+with `M 0 = 0` and `|ΔM_i| ≤ c` a.s. (`c > 0`), almost surely `|M_n| ≤ C √(n log log n)` for all
+large `n`, with an a.s. finite random constant `C`. Unlike
+`ae_eventually_abs_le_sqrt_nat_mul_loglog`, this needs **no** hypothesis `⟨M⟩_n → ∞`: it applies
+the deterministic-horizon growing-increment engine
 `ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growing`, whose only quadratic-variation input is the
 *linear* bound `⟨M⟩_n ≤ c² n` (`predQuadVar_le_of_bound`), valid unconditionally for bounded
 increments. This is the form the (possibly degenerate) assignment martingale needs: a design that

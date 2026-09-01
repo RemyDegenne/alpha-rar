@@ -34,7 +34,7 @@ instantiated at the stationary environment `stationaryEnv ν`, whose step means 
 upstream `IsAlgEnvSeq.martingale_noiseSum` and friends; what is specific to the stationary model is
 the quadratic variation `⟨Q k⟩ = V_k N_k`.
 
-This resolves the filtration-convention issue behind blueprint `lem:Q_martingale`:
+The two martingales of the model rest on different filtration conventions:
 `M` (the assignment martingale) is a martingale because the *assignment* `A (n+1)`
 is fresh randomness given the history `ℱ n`, while `Q` is a martingale because the
 *response* `Y (n+1)` is fresh given the history **and** the current assignment
@@ -44,8 +44,13 @@ information at each step, made rigorous here by the tower property through
 
 ## Main results
 
-* `AlphaRAR.condExp_feedback_stationaryEnv`: `𝔼[Y n | filtrationAction n] = ν.means (A n)`.
-* `AlphaRAR.memLp_feedback`: `Y n ∈ L²(P)` as soon as every arm's reward distribution is in `L²`.
+* `AlphaRAR.respMart`: the centered response martingale `Q k`.
+* `AlphaRAR.martingale_respMart`: `Q k` is a martingale for `filtrationAction`.
+* `AlphaRAR.predQuadVar_respMart_eq`: `⟨Q k⟩_n = V_k N_{n,k}`, with `V_k = Var[id; ν k]`.
+* `AlphaRAR.integral_respMart_sq_eq`: `𝔼[Q_{n,k}²] = V_k 𝔼[N_{n,k}]`.
+* `AlphaRAR.martingale_respMart_mul`: `Q k · Q j` is a martingale for `k ≠ j`, so the cross
+  variation vanishes.
+* `AlphaRAR.isBigOpOne_respMart_div_sqrt`: `Q_{n,k} = O_p(√n)`.
 -/
 
 @[expose] public section
@@ -130,14 +135,13 @@ lemma condExp_respMart_increment (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
   have h' := h.condExp_noiseSum_increment k i hint
   rwa [respMart_increment_eq'] at h'
 
-/-- **Conditional second moment of the response-martingale increment** (blueprint
-`lem:Q_quad_var`, per-step form). Conditioning on the action-augmented filtration
-`𝒢 i = filtrationAction i` (the history and the current assignment `A i`), the squared increment
-`(𝟙{A i = k}(Y i - θ_k))²` has conditional expectation `𝟙{A i = k} · V_k`, where
-`V_k = Var[id; ν k]` is the variance of arm `k`. The indicator squares to itself, and on the event
-`{A i = k}` the response's conditional second central moment is exactly the arm variance.
-Retaining the (`𝒢`-measurable) indicator is what turns the summed second moments into
-`V_k N_{n,k}`. -/
+/-- **Conditional second moment of the response-martingale increment**, per step.
+Conditioning on the action-augmented filtration `𝒢 i = filtrationAction i` (the history and the
+current assignment `A i`), the squared increment `(𝟙{A i = k}(Y i - θ_k))²` has conditional
+expectation `𝟙{A i = k} · V_k`, where `V_k = Var[id; ν k]` is the variance of arm `k`. The
+indicator squares to itself, and on the event `{A i = k}` the response's conditional second
+central moment is exactly the arm variance. Retaining the (`𝒢`-measurable) indicator is what
+turns the summed second moments into `V_k N_{n,k}`. -/
 lemma condExp_respMart_increment_sq [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (k : 𝓐) (i : ℕ) (hνk : ∀ a, MemLp id 2 (ν a)) :
     P[fun ω ↦ (actionIndicator A k i ω * (Y i ω - ν.means k)) ^ 2
@@ -231,7 +235,7 @@ lemma stronglyAdapted_respMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k
     StronglyAdapted h.filtrationAction (respMart ν A Y k) :=
   h.stronglyAdapted_noiseSum k
 
-/-- **The response martingale is a martingale** (blueprint `lem:Q_martingale`).
+/-- **The response martingale is a martingale.**
 For arm `k`, `Q k` is a martingale for the action-augmented filtration
 `𝒢 n = filtrationAction n = ℱ (n-1) ⊔ σ(A n)` — the history up to the previous patient together
 with the current assignment. The increment `𝟙{A i = k}(Y i - ν.means k)` has zero conditional
@@ -277,14 +281,15 @@ lemma memLp_respMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hY2 : ∀ n
     MemLp (respMart ν A Y k n) 2 P :=
   h.memLp_noiseSum one_le_two ENNReal.ofNat_ne_top hY2 k n
 
-/-- **The quadratic variation of `Q` is `V_k N`** (blueprint `lem:Q_quad_var`).
+/-- **The quadratic variation of `Q` is `V_k N`.**
 For the action-augmented filtration `𝒢 = filtrationAction` — for which `Q k` is a martingale
 (`martingale_respMart`) — the ordinary predictable quadratic variation of `Q k` is `V_k` times the
 assignment count of arm `k`: `⟨Q k⟩_n = V_k N_{n,k}` a.e. The compensator increments are the
 `𝒢`-conditional second moments `V_k X_{m,k}` (`condExp_respMart_increment_sq`), which sum to
-`V_k N` because the indicator is retained. The only hypothesis is Condition **A**: the responses
-are square-integrable (`hY2 : MemLp (Y n) 2 P`); the integrability of `Q`, its increments, and its
-increment products (feeding the discrete Doob decomposition) are all derived from it. -/
+`V_k N` because the indicator is retained. The only hypothesis is Condition **A**: every arm's
+reward distribution is square-integrable (`hνk : ∀ a, MemLp id 2 (ν a)`); the integrability of
+`Q`, its increments, and its increment products (feeding the discrete Doob decomposition) are all
+derived from it. -/
 @[specifies respMart "the sharpest check on the construction: `Q k` accumulates variance at rate \
 `V_k` per *pull of arm `k`*, so `⟨Q k⟩_n = V_k N_{n,k}` exactly — not `V_k n`. This is what \
 makes the clock of `Q k` the arm's own count and drives every rate downstream"]
@@ -346,9 +351,9 @@ lemma predQuadVar_respMart_eq [DecidableEq 𝓐] [Finite 𝓐]
     linarith [hk, hih']
 
 /-- **`Q² - ⟨Q⟩` is a martingale** for the action-augmented filtration `𝒢 = filtrationAction`
-(`lem:qv_mart` for `Q`). Together with `predQuadVar_respMart_eq` (`⟨Q⟩ = V_k N`) this is the
-compensated response martingale. The only hypothesis is Condition **A** (`hνk`),
-from which the square-integrability of `Q` is derived. -/
+(`martingale_sq_sub_predQuadVar` for `Q`). Together with `predQuadVar_respMart_eq`
+(`⟨Q⟩ = V_k N`) this is the compensated response martingale. The only hypothesis is
+Condition **A** (`hνk`), from which the square-integrability of `Q` is derived. -/
 lemma martingale_sq_sub_predQuadVar_respMart [Finite 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (k : 𝓐) (hνk : ∀ a, MemLp id 2 (ν a)) :
@@ -361,9 +366,9 @@ lemma martingale_sq_sub_predQuadVar_respMart [Finite 𝓐]
   martingale_sq_sub_predQuadVar (stronglyAdapted_respMart h k)
     (fun n ↦ memLp_respMart h (fun n ↦ h.memLp_feedback hνk n) k n)
 
-/-- **The second moment of `Q` is `V_k` times the expected assignment count** (blueprint
-`lem:Q_second_moment`): `𝔼[Q_{n,k}²] = V_k · 𝔼[N_{n,k}]`. This is the discrete Itô isometry
-(`integral_sq_eq_integral_predQuadVar`, `lem:qv_second_moment`) specialized to `Q`, using
+/-- **The second moment of `Q` is `V_k` times the expected assignment count**:
+`𝔼[Q_{n,k}²] = V_k · 𝔼[N_{n,k}]`. This is the discrete Itô isometry
+(`integral_sq_eq_integral_predQuadVar`) specialized to `Q`, using
 `⟨Q_k⟩ = V_k N` (`predQuadVar_respMart_eq`): `𝔼[Q²] = 𝔼[⟨Q⟩] = V_k 𝔼[N]`. The only hypothesis is
 Condition **A**. -/
 lemma integral_respMart_sq_eq [DecidableEq 𝓐] [Finite 𝓐]
@@ -376,7 +381,7 @@ lemma integral_respMart_sq_eq [DecidableEq 𝓐] [Finite 𝓐]
       (by filter_upwards with ω; simp [respMart]) n,
     integral_congr_ae (predQuadVar_respMart_eq h k hνk n), integral_const_mul]
 
-/-- **The cross variation of `Q_k` and `Q_j` vanishes for `k ≠ j`** (blueprint `lem:Q_cross_var`):
+/-- **The cross variation of `Q_k` and `Q_j` vanishes for `k ≠ j`**:
 `Q_k · Q_j` is a martingale (for the action-augmented filtration `𝒢 = filtrationAction`), hence its
 predictable compensator — the cross variation `⟨Q_k, Q_j⟩` — is `0`. The orthogonality is not
 merely conditional: since each patient is assigned to exactly one arm, the increment indicators
@@ -398,8 +403,8 @@ lemma martingale_respMart_mul [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationary
 /-- **The increment second moment of `Q` is bounded by the arm variance `V_k`.**
 `∫ (ΔQ_{n+1})² ∂P = V_k · P{A n = k} ≤ V_k`: the `𝒢`-conditional second moment is `𝟙{A n = k}·V_k`
 (`condExp_respMart_increment_sq`), so by the tower property the integral is `V_k` times the
-probability of assigning arm `k`, which is `≤ 1`. This is the increment bound feeding `cor:mart_Op`
-(`isBigOpOne_respMart_div_sqrt`). -/
+probability of assigning arm `k`, which is `≤ 1`. This is the increment bound feeding
+`isBigOpOne_respMart_div_sqrt`. -/
 lemma integral_respMart_increment_sq_le [Finite 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ)
     (hνk : ∀ a, MemLp id 2 (ν a)) :
@@ -423,15 +428,15 @@ lemma integral_respMart_increment_sq_le [Finite 𝓐]
     rw [← ENNReal.toReal_one]; exact ENNReal.toReal_mono ENNReal.one_ne_top prob_le_one
   exact mul_le_of_le_one_left hσ2 hprob
 
-/-- **The response martingale is `O_p(√n)`** (blueprint `cor:mart_Op` applied to `Q`).
-For each arm `k`, under Condition **A** (square-integrable responses, `hY2 : MemLp (Y n) 2 P`),
-`Q_{n,k} / √n = O_p(1)`, i.e. `Q_{n,k} = O_p(√n)`.
+/-- **The response martingale is `O_p(√n)`.**
+For each arm `k`, under Condition **A** (square-integrable arm rewards,
+`hνk : ∀ a, MemLp id 2 (ν a)`), `Q_{n,k} / √n = O_p(1)`, i.e. `Q_{n,k} = O_p(√n)`.
 
 `Q k` is a martingale for the action-augmented filtration `𝒢 = filtrationAction`
 (`martingale_respMart`) with `Q k 0 = 0`, and its increment second moments are bounded by the arm
 variance: `∫ (ΔQ)² ≤ V_k`. Indeed the `𝒢`-conditional second moment is `𝟙{A n = k}·V_k`
 (`condExp_respMart_increment_sq`), so by the tower property `∫ (ΔQ)² = V_k · P{A n = k} ≤ V_k`.
-Then `isBigOpOne_martingale_div_sqrt` (`cor:mart_Op`) applies with `σ² = V_k`. -/
+Then `isBigOpOne_martingale_div_sqrt` applies with `σ² = V_k`. -/
 lemma isBigOpOne_respMart_div_sqrt [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (k : 𝓐) :
     IsBigOpOne P (fun n ω ↦ respMart ν A Y k n ω / √n) := by

@@ -235,9 +235,10 @@ section
 open Filter Finset MeasureTheory Learning
 namespace AlphaRAR
 
-/-- Allocation count of a fixed arm, `N n = ∑_{j<n} X j` (blueprint `def:counts`). Stated for a
-general `AddCommMonoid` so it serves both the deterministic per-path counts (`X : ℕ → ℝ`) and the
-process-level count (`X : ℕ → Ω → ℝ`, the assignment count process of `Assignment.lean`). -/
+/-- Allocation count of a fixed arm, `N n = ∑_{j<n} X j`, the counts `N_{n,k}` of Section 2 of the
+paper. Stated for a general `AddCommMonoid` so it serves both the deterministic per-path counts
+(`X : ℕ → ℝ`) and the process-level count (`X : ℕ → Ω → ℝ`, the assignment count process of
+`Assignment.lean`). -/
 def count {M : Type*} [AddCommMonoid M] (X : ℕ → M) (n : ℕ) : M := ∑ j ∈ range n, X j
 
 end AlphaRAR
@@ -250,7 +251,7 @@ open scoped Topology
 namespace AlphaRAR
 variable (X p ρ : ℕ → ℝ) (α : ℝ)
 
-/-- Sequential estimator of a fixed arm (blueprint `def:estimator`),
+/-- Sequential estimator of a fixed arm, as in Section 3 of the paper,
 `θ̂ n = (∑_{j<n} X j ξ j + θ₀) / (N n + 1)`, with initial value `θ₀` and the `+1`
 regularization in the denominator. -/
 noncomputable def estimator (ξ : ℕ → ℝ) (θ₀ : ℝ) (n : ℕ) : ℝ :=
@@ -304,9 +305,9 @@ open scoped Topology ENNReal NNReal Matrix
 namespace AlphaRAR
 variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐} [MeasurableSingletonClass 𝓐] {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν] {P : Measure Ω} [IsProbabilityMeasure P] {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
-/-- An **exploration schedule** (blueprint `def:exploration_schedule`, in the weakened form): a
-nondecreasing threshold `h(m)` with `h(m) → ∞` and `h(m) = o(m)`. Monotonicity is a harmless
-convenience that lets `h(ℓ) ≤ h(n)` for `ℓ ≤ n`.
+/-- An **exploration schedule**: a nondecreasing threshold `h(m)` with `h(m) → ∞` and
+`h(m) = o(m)`. This is the function `h` of Definition 5.1 of the paper with its condition (ii)
+weakened. Monotonicity is a harmless convenience that lets `h(ℓ) ≤ h(n)` for `ℓ ≤ n`.
 
 The paper additionally requires `h(m) = o(√m)`; that is `IsSqrtSmall` below, deliberately *not* a
 field here, and in fact assumed by *no* result of this development. It would only ever be used by
@@ -326,9 +327,9 @@ structure IsExplorationSchedule (hsched : ℕ → ℝ) : Prop where
   /-- The schedule is `o(m)`. -/
   div_tendsto_zero : Tendsto (fun m ↦ hsched m / (m : ℝ)) atTop (𝓝 0)
 
-/-- **The forced-exploration aRTS design family** (blueprint `def:aRTSFE`, algorithm form) — the
-`IsARTS` analogue for `aRTSFE`. An algorithm is an `α`-throttled forced-exploration aRTS design with
-offsets `θ₀`, target map `T` and schedule `h` when its policy obeys two rules:
+/-- **The forced-exploration aRTS design family** (Definition 5.1 of the paper, in algorithm form) —
+the `IsARTS` analogue for `aRTSFE`. An algorithm is an `α`-throttled forced-exploration aRTS design
+with offsets `θ₀`, target map `T` and schedule `h` when its policy obeys two rules:
 
 * **forced exploration takes priority**: if some arm is under-explored (`N_{n+1,j} ≤ h(n+1)`), then
   all of the policy's mass sits on the *least-sampled* under-explored arms — every other arm gets
@@ -359,15 +360,14 @@ structure IsARTSFE [DecidableEq 𝓐] (alg : Algorithm 𝓐 ℝ) (θ₀ : 𝓐 �
           (pullCount' n hist j : ℝ) < (pullCount' n hist k : ℝ)) →
         alg.policy n hist {k} = 0
 
-/-- **The sparse componentwise CLT for `aRTSFE`, with the `FEfed` hypothesis discharged.** This is
-the capstone of `maths/sparse-clt-fix.md`: `aRTSFE_sparse_clt` assumes that each sparse arm is
-eventually fed only by forced exploration; here that assumption is *proved*, from
+/-- **The sparse componentwise CLT for `aRTSFE`, with the `FEfed` hypothesis discharged.**
+`aRTSFE_sparse_clt` assumes that each sparse arm is eventually fed only by forced exploration;
+here that assumption is *proved*, from
 
 * `hstar` — the reversed schedule condition `(⋆) : m log log m = o(h(m)²)`, which replaces the
   paper's `h(m) = o(√m)` and is satisfiable exactly where the paper's condition fails
   (`sched23_star`, `not_isSqrtSmall_sched23`);
-* `hT2` — the target is `C²` at `Θ` on the sparse arms.
-. -/
+* `hT2` — the target is `C²` at `Θ` on the sparse arms. -/
 theorem aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
     [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)

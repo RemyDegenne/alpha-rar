@@ -327,7 +327,8 @@ the positive proportion as hypothesis.)
 \begin{lemma}[LIL rate for the estimator]\label{lem:theta_LIL}
 \lean{AlphaRAR.abs_estimator_sub_le_rate_loglog_of_proportion,
 AlphaRAR.abs_estimator_sub_le_rate_loglog_ae, AlphaRAR.abs_estimator_sub_le_rate,
-AlphaRAR.abs_estimator_sub_le_rate_ae}\leanok
+AlphaRAR.abs_estimator_sub_le_rate_ae, AlphaRAR.theta_rate_of_hitting,
+AlphaRAR.aRTS_theta_rate}\leanok
 \uses{def:estimator}
 Under the same hypotheses,
 $\estParams_n - \Params = O\!\big(\sqrt{\tfrac{\log\log n}{n}}\big)$ a.s. (the sharp $\log\log$ rate;
@@ -405,8 +406,10 @@ $k\in[K]$, as $n\to\infty$,
 \uses{lem:theta_consistent, lem:theta_LIL, lem:rho_rate}
 Combine Lemma~\ref{lem:theta_consistent} (first statement), Lemma~\ref{lem:theta_LIL}
 (second) and Lemma~\ref{lem:rho_rate} (third). The formalization \texttt{AlphaRAR.aRTS\_LLN} bundles
-the three conclusions for an aRTS design: $N_{n,k}/n\to v_k$ (\texttt{aRTS\_proportion\_tendsto}),
-$\hat\theta_{n,k}\to\theta_k$ (\texttt{aRTS\_theta\_consistent}) and $\hat\rho_{n,k}-v_k=
-O(\sqrt{\log\log n/n})$ (\texttt{aRTS\_rho\_rate}), under the aRTS design hypotheses and
-Conditions~\textbf{A}--\textbf{B}.
+the conclusions for an aRTS design: $N_{n,k}/n\to v_k$ (\texttt{aRTS\_proportion\_tendsto}),
+$\hat\theta_{n,k}\to\theta_k$ (\texttt{aRTS\_theta\_consistent}),
+$\hat\theta_{n,k}-\theta_k=O(\sqrt{\log\log n/n})$ (\texttt{aRTS\_theta\_rate}, the
+Lemma~\ref{lem:theta_LIL} rate instantiated for aRTS through the positive allocation proportion)
+and $\hat\rho_{n,k}-v_k=O(\sqrt{\log\log n/n})$ (\texttt{aRTS\_rho\_rate}), under the aRTS design
+hypotheses and Conditions~\textbf{A}--\textbf{B}.
 \end{proof}

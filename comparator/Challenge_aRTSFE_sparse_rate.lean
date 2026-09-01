@@ -235,9 +235,10 @@ section
 open Filter Finset MeasureTheory Learning
 namespace AlphaRAR
 
-/-- Allocation count of a fixed arm, `N n = ∑_{j<n} X j` (blueprint `def:counts`). Stated for a
-general `AddCommMonoid` so it serves both the deterministic per-path counts (`X : ℕ → ℝ`) and the
-process-level count (`X : ℕ → Ω → ℝ`, the assignment count process of `Assignment.lean`). -/
+/-- Allocation count of a fixed arm, `N n = ∑_{j<n} X j`, the `N_{n,k}` of Section 2 of the paper.
+Stated for a general `AddCommMonoid` so it serves both the deterministic per-path counts
+(`X : ℕ → ℝ`) and the process-level count (`X : ℕ → Ω → ℝ`, the assignment count process of
+`Assignment.lean`). -/
 def count {M : Type*} [AddCommMonoid M] (X : ℕ → M) (n : ℕ) : M := ∑ j ∈ range n, X j
 
 end AlphaRAR
@@ -250,7 +251,7 @@ open scoped Topology
 namespace AlphaRAR
 variable (X p ρ : ℕ → ℝ) (α : ℝ)
 
-/-- Sequential estimator of a fixed arm (blueprint `def:estimator`),
+/-- Sequential estimator of a fixed arm, equation (1) of the paper:
 `θ̂ n = (∑_{j<n} X j ξ j + θ₀) / (N n + 1)`, with initial value `θ₀` and the `+1`
 regularization in the denominator. -/
 noncomputable def estimator (ξ : ℕ → ℝ) (θ₀ : ℝ) (n : ℕ) : ℝ :=
@@ -284,19 +285,19 @@ open scoped Topology ENNReal NNReal Matrix
 namespace AlphaRAR
 variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐} [MeasurableSingletonClass 𝓐] {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν] {P : Measure Ω} [IsProbabilityMeasure P] {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
-/-- An **exploration schedule** (blueprint `def:exploration_schedule`, in the weakened form): a
-nondecreasing threshold `h(m)` with `h(m) → ∞` and `h(m) = o(m)`. Monotonicity is a harmless
-convenience that lets `h(ℓ) ≤ h(n)` for `ℓ ≤ n`.
+/-- An **exploration schedule**, in the weakened form this development uses: a nondecreasing
+threshold `h(m)` with `h(m) → ∞` and `h(m) = o(m)`. Monotonicity is a harmless convenience that
+lets `h(ℓ) ≤ h(n)` for `ℓ ≤ n`.
 
-The paper additionally requires `h(m) = o(√m)`; that is `IsSqrtSmall` below, deliberately *not* a
-field here, and in fact assumed by *no* result of this development. It would only ever be used by
-the `√n`-scaled normality results, and there it is unnecessary
-(`underExplored_eventually_empty`: under Condition **B** forced exploration switches itself off,
-so any `h(m) = o(m)` does — see `aRTSFE_smallness_op` and `aRTSFE_smallness_upper`). Dropping it is
-what makes schedules with `h(m) ≫ √m` available — and those are exactly the ones under which forced
-exploration, rather than the data-dependent targeting rule, decides a *sparse* arm's sample size,
-which is what earns the sparse componentwise CLT (`pullCount_div_sched_tendsto_one`,
-`aRTSFE_sparse_clt`). -/
+The paper additionally requires `h(m) = o(√m)`, condition (ii) of its Definition 5.1; that
+condition is deliberately *not* a field here, and is in fact assumed by *no* result of this
+development. It would only ever be used by the `√n`-scaled normality results, and there it is
+unnecessary (`underExplored_eventually_empty`: under Condition **B** forced exploration switches
+itself off, so any `h(m) = o(m)` does — see `aRTSFE_smallness_op` and `aRTSFE_smallness_upper`).
+Dropping it is what makes schedules with `h(m) ≫ √m` available — and those are exactly the ones
+under which forced exploration, rather than the data-dependent targeting rule, decides a *sparse*
+arm's sample size, which is what earns the sparse componentwise CLT
+(`pullCount_div_sched_tendsto_one`, `aRTSFE_sparse_clt`). -/
 structure IsExplorationSchedule (hsched : ℕ → ℝ) : Prop where
   /-- The schedule is nondecreasing. -/
   mono : Monotone hsched
@@ -306,9 +307,9 @@ structure IsExplorationSchedule (hsched : ℕ → ℝ) : Prop where
   /-- The schedule is `o(m)`. -/
   div_tendsto_zero : Tendsto (fun m ↦ hsched m / (m : ℝ)) atTop (𝓝 0)
 
-/-- **The forced-exploration aRTS design family** (blueprint `def:aRTSFE`, algorithm form) — the
-`IsARTS` analogue for `aRTSFE`. An algorithm is an `α`-throttled forced-exploration aRTS design with
-offsets `θ₀`, target map `T` and schedule `h` when its policy obeys two rules:
+/-- **The forced-exploration aRTS design family** (Definition 5.1 of the paper, algorithm form) —
+the `IsARTS` analogue for `aRTSFE`. An algorithm is an `α`-throttled forced-exploration aRTS design
+with offsets `θ₀`, target map `T` and schedule `h` when its policy obeys two rules:
 
 * **forced exploration takes priority**: if some arm is under-explored (`N_{n+1,j} ≤ h(n+1)`), then
   all of the policy's mass sits on the *least-sampled* under-explored arms — every other arm gets
@@ -339,11 +340,14 @@ structure IsARTSFE [DecidableEq 𝓐] (alg : Algorithm 𝓐 ℝ) (θ₀ : 𝓐 �
           (pullCount' n hist j : ℝ) < (pullCount' n hist k : ℝ)) →
         alg.policy n hist {k} = 0
 
-/-- **Consistency and rate for sparse targets, from the design predicate** (blueprint
-`thm:sparse_rate`). The `IsARTSFE` form of `aRTSFE_sparse_rate`: the process-level throttle and
-forced-exploration hypotheses are discharged from the history-level design predicate through
-`throttle_of_isARTSFE` and `fe_of_isARTSFE`, so — like the other headline results — the statement
-mentions only the design, the environment and the schedule. -/
+/-- **Consistency and rate for sparse targets, from the design predicate** (Theorem 5.2 of the
+paper). Under Condition **A** only (no non-sparsity), every arm `k` satisfies almost surely:
+`N_{n,k} → ∞`; `N_{n,k}/n → v_k = T(θ)_k` (allowing `v_k = 0`); and
+`|θ̂_{n,k} - θ_k| = O(√(log log N_{n,k} / N_{n,k}))`, the estimator LIL scaled by the arm's *own*
+sample count. The process-level throttle and forced-exploration hypotheses are discharged from the
+history-level design predicate `IsARTSFE` through `throttle_of_isARTSFE` and `fe_of_isARTSFE`, so —
+like the other headline results — the statement mentions only the design, the environment and the
+schedule. -/
 theorem aRTSFE_sparse_rate_of_isARTSFE [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
     [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))

@@ -23,10 +23,6 @@ turn maximal martingale bounds into pointwise increment bounds.
 ## Main result
 
 * `AlphaRAR.norm_sub_le_increment_control`: the increment-control inequality.
-
-## Blueprint reference
-
-Lemma `lem:increment_control` in the technical chapter of the blueprint.
 -/
 
 @[expose] public section
@@ -35,7 +31,7 @@ open Finset
 
 namespace AlphaRAR
 
-/-- **Increment control from maximal bounds** (blueprint `lem:increment_control`).
+/-- **Increment control from maximal bounds** (Lemma C.6 of the paper).
 
 For any sequence `Q` in a seminormed additive group, any `ℓ ≤ n` and any
 `1 ≤ L < n`,

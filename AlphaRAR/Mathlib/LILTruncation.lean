@@ -13,24 +13,24 @@ public import Mathlib.Probability.StrongLaw
 # Ingredients for the finite-variance law of the iterated logarithm
 
 This file collects self-contained ingredients for the finite-variance case of the one-sided law
-of the iterated logarithm (blueprint chapter `chap:pre_lil`, section "the finite-variance case via
-truncation", `lem:lil_truncation`). For a martingale `M_n = ∑_{i<n} ξ_i D_i` with `ξ_i` i.i.d.
-centred, `E[ξ_0²] < ∞`, and `D_i ∈ {0,1}` predictable, one truncates `ξ_i` at level `b_i = √i` and
-controls the tail, drift, and centred-truncated pieces separately.
+of the iterated logarithm, reached by truncation. For a martingale `M_n = ∑_{i<n} ξ_i D_i` with
+`ξ_i` i.i.d. centred, `E[ξ_0²] < ∞`, and `D_i ∈ {0,1}` predictable, one truncates `ξ_i` at level
+`b_i = √i` and controls the tail, drift, and centred-truncated pieces separately.
 
 ## Main results
 
-* `AlphaRAR.ae_eventually_abs_le_of_tsum_ne_top`: the Borel–Cantelli "eventually bounded" step
-  (blueprint `lem:trunc_tail_const`): if `∑_i μ{|ξ_i| > b_i} < ∞` then a.s. `|ξ_i| ≤ b_i` for all
-  large `i`.
+* `AlphaRAR.ae_eventually_abs_le_of_tsum_ne_top`: the Borel–Cantelli "eventually bounded" step:
+  if `∑_i μ{|ξ_i| > b_i} < ∞` then a.s. `|ξ_i| ≤ b_i` for all large `i`.
 * `AlphaRAR.summable_exp_neg_mul_sqrt`: `∑_k exp(-a √k) < ∞` for `a > 0`.
-* `AlphaRAR.summable_block_bound`: `∑_k exp(-(C/2)√k + σ²/4) < ∞` (blueprint
-  `lem:trunc_block_summable`), the summability of the per-block Freedman tail bounds.
+* `AlphaRAR.summable_block_bound`: `∑_k exp(-(C/2)√k + σ²/4) < ∞`, the summability of the
+  per-block Freedman tail bounds.
 * `AlphaRAR.abs_truncation_sub_le`: the pointwise bound `|truncation f A x - f x| ≤ (f x)²/A`.
-* `AlphaRAR.abs_integral_truncation_le`: `|∫ truncation X A| ≤ (∫ X²)/A` for centred `X`
-  (blueprint `lem:trunc_mean_bound`).
+* `AlphaRAR.abs_integral_truncation_le`: `|∫ truncation X A| ≤ (∫ X²)/A` for centred `X`.
 * `AlphaRAR.sum_one_div_sqrt_le`: `∑_{i<n} 1/√i ≤ 2√n`, the deterministic core of the drift
-  bound (blueprint `lem:trunc_drift`).
+  bound.
+* `AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_log_of_growing`: a two-sided `O(√(n log n))` LIL
+  for a martingale whose increments grow like `√i` and whose predictable quadratic variation is
+  at most `v·n`.
 -/
 
 @[expose] public section
@@ -43,7 +43,7 @@ namespace AlphaRAR
 
 variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
 
-/-- **Borel–Cantelli: eventually bounded** (blueprint `lem:trunc_tail_const`, the substance).
+/-- **Borel–Cantelli: eventually bounded.**
 If `∑' i, μ {ω : b i < |ξ i ω|} < ∞`, then almost surely `|ξ i ω| ≤ b i` for all large `i`.
 Applied with `b_i = √i` and `∑_i P(|ξ_i| > √i) < ∞`, the truncation remainder
 `ξ_i 𝟙{|ξ_i| > b_i}` vanishes eventually. -/
@@ -107,7 +107,7 @@ lemma abs_truncation_sub_le {α : Type*} (f : α → ℝ) {A : ℝ} (hA : 0 < A)
     rw [le_div_iff₀ hA, ← sq_abs (f x), pow_two]
     exact mul_le_mul_of_nonneg_left hAle (abs_nonneg _)
 
-/-- **Bound on the truncated mean** (blueprint `lem:trunc_mean_bound`).
+/-- **Bound on the truncated mean.**
 If `X` is centred (`∫ X = 0`) with `X²` integrable, then `|∫ truncation X A| ≤ (∫ X²)/A` for
 `A > 0`. Applied to `ξ_i` with `A = √i` and `∫ ξ_i² = σ²`, this gives `|m_i| ≤ σ²/√i`.
 The point is that `∫ truncation X A = ∫(truncation X A - X)` (using `∫ X = 0`) and the pointwise
@@ -128,8 +128,8 @@ lemma abs_integral_truncation_le [IsFiniteMeasure μ] {X : Ω → ℝ}
     _ = (∫ ω, X ω ^ 2 ∂μ) / A := integral_div A _
 
 /-- `∑_{i<n} 1/√i ≤ 2√n` (with the convention `1/√0 = 0`). The deterministic core of the drift
-bound `lem:trunc_drift`: since `|m_i| ≤ σ²/√i`, the drift `∑ m_i D_i` is `O(√n)` (and `O(√N)`
-after restricting to the sampled indices). The key step is `1/√(x+1) ≤ 2(√(x+1) - √x)`. -/
+bound: since `|m_i| ≤ σ²/√i`, the drift `∑ m_i D_i` is `O(√n)` (and `O(√N)` after restricting to
+the sampled indices). The key step is `1/√(x+1) ≤ 2(√(x+1) - √x)`. -/
 lemma sum_one_div_sqrt_le (n : ℕ) :
     ∑ i ∈ Finset.range n, 1 / √i ≤ 2 * √n := by
   have hkey : ∀ x : ℝ, 0 ≤ x → 1 / √(x + 1) ≤ 2 * (√(x + 1) - √x) := by
@@ -156,9 +156,9 @@ lemma sum_one_div_sqrt_le (n : ℕ) :
     push_cast at this ⊢
     linarith
 
-/-- **Summability of the per-block Freedman bounds** (blueprint `lem:trunc_block_summable`).
+/-- **Summability of the per-block Freedman bounds.**
 For `C > 0`, `∑_k exp(-(C/2)√k + σ²/4) < ∞`; this is what makes Borel–Cantelli applicable in the
-core step `lem:trunc_block` of the finite-variance LIL. -/
+per-block Freedman step of the finite-variance LIL. -/
 lemma summable_block_bound {C σ : ℝ} (hC : 0 < C) :
     Summable (fun k : ℕ ↦ Real.exp (-(C / 2) * √k + σ ^ 2 / 4)) :=
   ((summable_exp_neg_mul_sqrt (a := C / 2) (by positivity)).mul_right

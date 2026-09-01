@@ -10,24 +10,20 @@ public import Mathlib.Topology.MetricSpace.Pseudo.Lemmas
 /-!
 # A positive-part convergence lemma
 
-This file formalizes the analytic convergence lemma from the technical appendix
+This file formalizes the analytic convergence lemma of Appendix C (Lemma C.5)
 of the paper *On Response-Adaptive Targeting Strategies for Multi-Treatment
 Experiments* (Yagouti, Degenne, Kaufmann).
 
-If `X n / n → -α v` with `α, v ∈ [0,1]`, and `a n ≤ n` is non-decreasing, then
-for any error sequence `ε n` whose limsup is `≤ 0`, the positive part of
+If `X n / n → -α v` with `α, v ∈ [0,1]` and `a n ≤ n`, then for any error
+sequence `ε n` whose limsup is `≤ 0`, the positive part of
 `ε n + (X n - X (a n)) / n` tends to `0`. The point is that the "backward"
 contribution `- X (a n) / n` cannot exceed `α v` asymptotically, so the whole
-expression is asymptotically `≤ 0`.
+expression is asymptotically `≤ 0`. The hypothesis `limsup ε ≤ 0` is used in its
+operational form `∀ δ > 0, ∀ᶠ n, ε n < δ`.
 
 ## Main result
 
 * `AlphaRAR.tendsto_posPart_sub_div`.
-
-## Blueprint reference
-
-Lemma `lem:convergence` in the technical chapter of the blueprint. The hypothesis
-`limsup ε ≤ 0` is formalized in its operational form `∀ δ > 0, ∀ᶠ n, ε n < δ`.
 -/
 
 @[expose] public section
@@ -36,15 +32,15 @@ open Filter Topology Finset
 
 namespace AlphaRAR
 
-/-- **Positive-part convergence** (blueprint `lem:convergence`).
+/-- **Positive-part convergence**.
 
-Let `a` be non-decreasing with `a n ≤ n`, let `α, v ∈ [0,1]`, and let `X` satisfy
+Let `a` satisfy `a n ≤ n`, let `α, v ∈ [0,1]`, and let `X` satisfy
 `X n / n → -(α v)`. Then for any `ε` with `∀ δ > 0, ∀ᶠ n, ε n < δ` (the meaning
 of `limsup ε ≤ 0`),
 `max (ε n + (X n - X (a n)) / n) 0 → 0`.
 
-The blueprint states this with `a` non-decreasing, but the argument only needs
-`a n ≤ n`, so the monotonicity hypothesis is dropped here. -/
+Only `a n ≤ n` is assumed, which is all the argument needs; the paper's
+Lemma C.5 also asks that `a` be non-decreasing. -/
 lemma tendsto_posPart_sub_div {a : ℕ → ℕ} {X ε : ℕ → ℝ} {α v : ℝ}
     (ha_le : ∀ n, a n ≤ n)
     (hα : α ∈ Set.Icc (0 : ℝ) 1) (hv : v ∈ Set.Icc (0 : ℝ) 1)

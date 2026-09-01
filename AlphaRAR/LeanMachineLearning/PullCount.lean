@@ -11,9 +11,9 @@ public import LeanMachineLearning.SequentialLearning.FiniteActions
 # Pull counts
 
 General facts about the pull counts of the `LeanMachineLearning` sequential-learning framework:
-the process-level count `pullCount A a t ω = #{s < t : A s ω = a}` and its history-level form
-`pullCount' n h a`. Nothing here is specific to a design or to a probabilistic model — these are
-the counting identities every allocation argument needs.
+the process-level count `pullCount A a t ω = #{s < t : A s ω = a}`. Nothing here is specific to a
+design or to a probabilistic model — these are the pathwise counting facts every allocation
+argument needs.
 
 ## Main results
 

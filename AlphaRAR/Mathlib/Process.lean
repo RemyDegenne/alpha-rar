@@ -15,8 +15,8 @@ every uniqueness statement about one is a statement up to `Indistinguishable`: a
 two processes agree at every time.
 
 This is the relation the `@[characterization uniqueness]` theorems of such processes are stated
-up to — `AlphaRAR.predQuadVar` and `AlphaRAR.assignMart` among them — which is why it lives in a
-file of its own rather than beside any one of them.
+up to — `AlphaRAR.predQuadVar` among them — which is why it lives in a file of its own rather
+than beside any one of them.
 -/
 
 @[expose] public section

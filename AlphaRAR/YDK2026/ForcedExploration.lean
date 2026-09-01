@@ -13,20 +13,20 @@ public meta import LeanSpec
 /-!
 # Forced exploration and sparse targets
 
-This file develops the forced-exploration variant `aRTSFE` of the aRTS family (blueprint
-`chap:forced`, Section 4 of the paper). Forced exploration samples the least-explored arms whenever
-some arm has been pulled fewer than `h(m)` times (`h` an *exploration schedule*), which guarantees
-every arm is sampled infinitely often.
+This file develops the forced-exploration variant `aRTSFE` of the aRTS family (Section 5 of the
+paper). Forced exploration samples the least-explored arms whenever some arm has been pulled fewer
+than `h(m)` times (`h` an *exploration schedule*), which guarantees every arm is sampled infinitely
+often.
 
 The whole point of the generic-conditions modularisation is that the asymptotic theory needs
 **nothing** design-specific beyond a hitting time `ℓ_{n,k}` satisfying the generic conditions. The
 `aRTSFE` design satisfies them with the forced-exploration hitting time — the last time arm `k` was
-either under-sampled *or* under-explored (`count ≤ h(m)`). Both `thm:LLN` (consistency) and
-`thm:normality` (deviation bounds and the joint CLT) then follow by reusing the
-abstract-hitting-time theorems (`consistency_of_hitting`, `prop_dev_of_hitting`,
-`prop_dev_ae_of_hitting`,
-`count_sub_smul_ae_of_hitting`, `clt_joint_of_hitting`), the *only* new ingredients being the
-smallness bounds on `N_ℓ - ℓ ρ̂_ℓ`: `≤ (h(ℓ))^+ = o(n)` for consistency, and — under Condition
+either under-sampled *or* under-explored (`count ≤ h(m)`). Both the strong consistency of the
+paper's Theorem 4.1 and the normality of its Theorem 4.2 (deviation bounds and the joint CLT) then
+follow by reusing the abstract-hitting-time theorems (`consistency_of_hitting`,
+`prop_dev_of_hitting`, `prop_dev_ae_of_hitting`, `count_sub_smul_ae_of_hitting`,
+`clt_joint_of_hitting`), the *only* new ingredients being the smallness bounds on
+`N_ℓ - ℓ ρ̂_ℓ`: `≤ (h(ℓ))^+ = o(n)` for consistency, and — under Condition
 **B**, where forced exploration eventually switches itself off — `≤ C(ω)` for the `√n`-scaled
 deviations, so `o(√n)` and `O(√(n log log n))`. Only `h(m) = o(m)` is ever used; the paper's
 `h(m) = o(√m)` is not needed anywhere (see `IsSqrtSmall`).
@@ -38,7 +38,7 @@ deviations, so `o(√n)` and `O(√(n log log n))`. Only `h(m) = o(m)` is ever u
   `AlphaRAR.throttle_of_isARTSFE` and `AlphaRAR.fe_of_isARTSFE` transport it to the process.
 * `AlphaRAR.aRTSFE_proportion_tendsto` — a.s. `N_{n,k}/n → v_k`, `ρ̂_{n,k} → v_k` for `aRTSFE`.
 * `AlphaRAR.aRTSFE_prop_dev`, `AlphaRAR.aRTSFE_prop_dev_ae`, `AlphaRAR.aRTSFE_count_sub_smul_ae`,
-  `AlphaRAR.aRTSFE_clt_joint` — `thm:normality` for `aRTSFE`.
+  `AlphaRAR.aRTSFE_clt_joint` — Theorem 4.2 of the paper, for `aRTSFE`.
 * `AlphaRAR.aRTSFE_sparse_clt` — the sparse componentwise CLT, given `FEfed`.
 * `AlphaRAR.aRTSFE_sparse_clt_of_contDiffAt` — the same conclusion with `FEfed` *discharged*, from
   `C²` smoothness of the target and the reversed schedule condition
@@ -59,9 +59,9 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
   {P : Measure Ω} [IsProbabilityMeasure P]
   {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
-/-- An **exploration schedule** (blueprint `def:exploration_schedule`, in the weakened form): a
-nondecreasing threshold `h(m)` with `h(m) → ∞` and `h(m) = o(m)`. Monotonicity is a harmless
-convenience that lets `h(ℓ) ≤ h(n)` for `ℓ ≤ n`.
+/-- An **exploration schedule**, in the weakened form this development uses: a nondecreasing
+threshold `h(m)` with `h(m) → ∞` and `h(m) = o(m)`. Monotonicity is a harmless convenience that
+lets `h(ℓ) ≤ h(n)` for `ℓ ≤ n`.
 
 The paper additionally requires `h(m) = o(√m)`; that is `IsSqrtSmall` below, deliberately *not* a
 field here, and in fact assumed by *no* result of this development. It would only ever be used by
@@ -81,8 +81,8 @@ structure IsExplorationSchedule (hsched : ℕ → ℝ) : Prop where
   /-- The schedule is `o(m)`. -/
   div_tendsto_zero : Tendsto (fun m ↦ hsched m / (m : ℝ)) atTop (𝓝 0)
 
-/-- The paper's stronger schedule condition `h(m) = o(√m)` (`def:exploration_schedule` (ii)). No
-result here assumes it: it is kept only to *record* the paper's condition and to state that the
+/-- The paper's stronger schedule condition `h(m) = o(√m)` (condition (ii) of its Definition 5.1).
+No result here assumes it: it is kept only to *record* the paper's condition and to state that the
 sparse regime lies outside it (`not_isSqrtSmall_sched23`,
 `sched23_satisfies_schedule_hypotheses`). See `IsExplorationSchedule`. -/
 def IsSqrtSmall (hsched : ℕ → ℝ) : Prop :=
@@ -124,8 +124,7 @@ lemma eventually_sched_lt_pullCount [DecidableEq 𝓐] {hsched : ℕ → ℝ}
 
 /-- The **forced-exploration hitting predicate**: arm `k` is either *under-sampled*
 (`N_{m,k} ≤ m ρ̂_{m,k}`) or *under-explored* (`N_{m,k} ≤ h(m)`). Its last occurrence before `n` is
-the forced-exploration hitting time (blueprint `def:hitting_fe`); the generic conditions hold with
-it. -/
+the forced-exploration hitting time; the generic conditions hold with it. -/
 def aRTSFEUnder [DecidableEq 𝓐] (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ)
     (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hsched : ℕ → ℝ) (k : 𝓐) (ω : Ω) (m : ℕ) : Prop :=
   (pullCount A k m ω : ℝ) ≤ (m : ℝ) * aRTSTarget A Y θ₀ T m ω k
@@ -134,9 +133,9 @@ def aRTSFEUnder [DecidableEq 𝓐] (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω →
 noncomputable instance [DecidableEq 𝓐] {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} {hsched : ℕ → ℝ}
     {k : 𝓐} {ω : Ω} : DecidablePred (aRTSFEUnder A Y θ₀ T hsched k ω) := Classical.decPred _
 
-/-- **The forced-exploration aRTS design family** (blueprint `def:aRTSFE`, algorithm form) — the
-`IsARTS` analogue for `aRTSFE`. An algorithm is an `α`-throttled forced-exploration aRTS design with
-offsets `θ₀`, target map `T` and schedule `h` when its policy obeys two rules:
+/-- **The forced-exploration aRTS design family** (Definition 5.1 of the paper, algorithm form) —
+the `IsARTS` analogue for `aRTSFE`. An algorithm is an `α`-throttled forced-exploration aRTS design
+with offsets `θ₀`, target map `T` and schedule `h` when its policy obeys two rules:
 
 * **forced exploration takes priority**: if some arm is under-explored (`N_{n+1,j} ≤ h(n+1)`), then
   all of the policy's mass sits on the *least-sampled* under-explored arms — every other arm gets
@@ -178,11 +177,10 @@ lemma measurableSet_aRTSFEUnder [DecidableEq 𝓐] [Finite 𝓐]
   exact measurableSet_le (measurable_count_actionIndicator h k m) measurable_const
 
 /-- **The forced-exploration gap bound.** At the forced-exploration hitting time the gap
-`N_ℓ - ℓ ρ̂_ℓ` is bounded by `(h(ℓ))^+ ≤ (h(n))^+` (blueprint `def:hitting_fe` (iii)): if `ℓ = 0`
-the gap is `≤ 0`; otherwise the hitting predicate holds at `ℓ`, so either arm `k` is under-sampled
-(gap `≤ 0`) or under-explored (`N_ℓ ≤ h(ℓ)`, and `ℓ ρ̂_ℓ ≥ 0`), and monotonicity lifts `h(ℓ)` to
-`h(n)`. This single deterministic bound feeds all three smallness conditions (`o(n)`, `o(√n)`,
-`O(√(n log log n))`). -/
+`N_ℓ - ℓ ρ̂_ℓ` is bounded by `(h(ℓ))^+ ≤ (h(n))^+`: if `ℓ = 0` the gap is `≤ 0`; otherwise the
+hitting predicate holds at `ℓ`, so either arm `k` is under-sampled (gap `≤ 0`) or under-explored
+(`N_ℓ ≤ h(ℓ)`, and `ℓ ρ̂_ℓ ≥ 0`), and monotonicity lifts `h(ℓ)` to `h(n)`. This single
+deterministic bound feeds all three smallness conditions (`o(n)`, `o(√n)`, `O(√(n log log n))`). -/
 lemma aRTSFE_gap_le [DecidableEq 𝓐] (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hTnn : ∀ z k, 0 ≤ T z k)
     {hsched : ℕ → ℝ} (hmono : Monotone hsched) (k : 𝓐) (ω : Ω) (n : ℕ) :
     (pullCount A k (hitting (aRTSFEUnder A Y θ₀ T hsched k ω) n) ω : ℝ)
@@ -245,9 +243,9 @@ lemma aRTSFE_gap_le_sum_of_not_underExplored [DecidableEq 𝓐] (θ₀ : 𝓐 �
       · linarith
       · exact absurd hsmall (not_le.mpr (hoff _ hge))
 
-/-- **Forced-exploration consistency smallness** (blueprint `def:hitting_fe` (iii), the `aRTSFE`
-form of `generic_small_of_hitting`). At the forced-exploration hitting time the gap is `≤ (h(n))^+`
-(`aRTSFE_gap_le`), which is `o(n)` since `h(n) = o(√n) = o(n)`, so it vanishes divided by `n`. -/
+/-- **Forced-exploration consistency smallness** (the `aRTSFE` form of `generic_small_of_hitting`).
+At the forced-exploration hitting time the gap is `≤ (h(n))^+` (`aRTSFE_gap_le`), which is `o(n)`
+because the schedule is, so it vanishes divided by `n`. -/
 lemma aRTSFE_smallness [DecidableEq 𝓐] (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hTnn : ∀ z k, 0 ≤ T z k)
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched) (k : 𝓐) (ω : Ω) (δ : ℝ) (hδ : 0 < δ) :
     ∀ᶠ n in atTop,
@@ -366,11 +364,10 @@ lemma aRTSFE_smallness_upper [DecidableEq 𝓐] (θ₀ : 𝓐 → ℝ) (T : (�
 Forced exploration guarantees every arm is sampled infinitely often, with no assumption on the
 target — the key ingredient that extends the theory to sparse targets (`v_k = 0`). -/
 
-/-- **Forced exploration prevents starvation, pathwise** (blueprint `lem:fe_no_starvation`, the
-deterministic core). Fix a path `ω`. If the schedule diverges (`hsched → ∞`) and the path obeys the
-action-level forced-exploration rule `hfe` — whenever some arm is under-explored
-(`N_{m,j} ≤ h(m)` for some `j`), the chosen arm `A_m` is a *least-sampled under-explored* arm — then
-every arm's pull count diverges: `N_{n,k} → ∞`.
+/-- **Forced exploration prevents starvation, pathwise** (the deterministic core). Fix a path `ω`.
+If the schedule diverges (`hsched → ∞`) and the path obeys the action-level forced-exploration rule
+`hfe` — whenever some arm is under-explored (`N_{m,j} ≤ h(m)` for some `j`), the chosen arm `A_m`
+is a *least-sampled under-explored* arm — then every arm's pull count diverges: `N_{n,k} → ∞`.
 
 The proof is the potential-function argument: were arm `k` to stall (`N_{n,k} ≤ B` for all `n`),
 then for `n` large enough that `h(n) ≥ B` the arm `k` is under-explored, so `A_n` is least-sampled
@@ -422,12 +419,12 @@ lemma no_starvation_pathwise [Finite 𝓐] [DecidableEq 𝓐] (ω : Ω) {hsched 
   omega
 
 omit [IsProbabilityMeasure P] in
-/-- **Forced exploration prevents starvation** (blueprint `lem:fe_no_starvation`). For any
-forced-exploration design — given here through the a.s. action-level rule `hfe`: whenever some arm
-is under-explored, the next action `A_m` is a least-sampled arm among the under-explored ones — with
-a diverging schedule (`hsched → ∞`), every arm is sampled infinitely often, `N_{n,k} → ∞` a.s., with
-*no assumption on the target*. This is the key ingredient enabling sparse targets (`v_k = 0`); it is
-the a.s. wrapper of `no_starvation_pathwise`. -/
+/-- **Forced exploration prevents starvation** (the no-starvation half of the paper's
+Theorem 5.2). For any forced-exploration design — given here through the a.s. action-level rule
+`hfe`: whenever some arm is under-explored, the next action `A_m` is a least-sampled arm among the
+under-explored ones — with a diverging schedule (`hsched → ∞`), every arm is sampled infinitely
+often, `N_{n,k} → ∞` a.s., with *no assumption on the target*. This is the key ingredient enabling
+sparse targets (`v_k = 0`); it is the a.s. wrapper of `no_starvation_pathwise`. -/
 lemma aRTSFE_no_starvation [Finite 𝓐] [DecidableEq 𝓐] {hsched : ℕ → ℝ}
     (hh : Tendsto hsched atTop atTop)
     (hfe : ∀ᵐ ω ∂P, ∀ m, (∃ j, (pullCount A j m ω : ℝ) ≤ hsched m) →
@@ -444,14 +441,14 @@ omit [IsProbabilityMeasure P] in
 *positive* limiting proportion `N_{n,k}/n → v_k > 0` and the schedule is `o(n)`, then eventually no
 arm is under-explored: `U_n = ∅`.
 
-This shows the hypothesis `h(n) = o(√n)` of `def:exploration_schedule` is **not necessary** for the
-non-sparse theory. Under Condition **B** the design eventually coincides with a plain `aRTS` design,
+This shows the paper's schedule condition `h(n) = o(√n)` is **not necessary** for the non-sparse
+theory. Under Condition **B** the design eventually coincides with a plain `aRTS` design,
 so the deviation gap is eventually `0` and every smallness condition holds trivially — for *any*
 schedule with `h(n) = o(n)`, no matter how large. The consistency input `N_{n,k}/n → v_k` itself
 needs only `h(n) = o(n)` (`IsExplorationSchedule.div_tendsto_zero`), so there is no circularity.
 
-In particular D-Tracking's own `h(n) = (√n - K/2)^+`, which `def:exploration_schedule` currently has
-to exclude, becomes admissible. And schedules with `h(n) ≫ √n` — which are what make forced
+In particular D-Tracking's own `h(n) = (√n - K/2)^+`, which the paper's condition (ii) has to
+exclude, becomes admissible. And schedules with `h(n) ≫ √n` — which are what make forced
 exploration, rather than the data-dependent targeting rule, decide a *sparse* arm's sample size
 (see `pullCount_div_sched_tendsto_one`) — become available. -/
 lemma underExplored_eventually_empty [Finite 𝓐] [DecidableEq 𝓐] {hsched : ℕ → ℝ}
@@ -472,10 +469,10 @@ needs more than `N_{n,k} → ∞`: it needs the **regularity** `N_{n,k}/c_{k,n} 
 *deterministic* schedule `h` itself as `c` — for arms whose pulls eventually all come from the
 forced-exploration mechanism.
 
-The restriction is genuine. Since `h(n) = o(√n)` while a target-chasing design gives a sparse arm
-`N_{n,k} ≈ n·T(θ̂_n)_k ≍ √n` (as `T ≥ 0` and `T(θ)_k = 0` force `∇T_k(θ) = 0`, so
-`T(θ̂_n)_k = O(‖θ̂_n-θ‖²) = O(1/N_{n,k})`), forced exploration does **not** set the scale for such
-designs. It does for designs that stop feeding an arm they have identified as sparse. -/
+The restriction is genuine. Under the paper's `h(n) = o(√n)` a target-chasing design gives a sparse
+arm `N_{n,k} ≈ n·T(θ̂_n)_k ≍ √n` (as `T ≥ 0` and `T(θ)_k = 0` force `∇T_k(θ) = 0`, so
+`T(θ̂_n)_k = O(‖θ̂_n-θ‖²) = O(1/N_{n,k})`), so forced exploration does **not** set the scale for
+such designs. It does for designs that stop feeding an arm they have identified as sparse. -/
 
 omit [IsProbabilityMeasure P] in
 /-- **A forced-exploration pull leaves the count at most one above the schedule** (pathwise upper
@@ -609,7 +606,8 @@ firing — which itself means every count already exceeds `h`.
 The bound is **unconditional** on the design (only forced exploration's own rule `hfe` is used), and
 its right-hand side is a *deterministic* function of `n`. That is what makes it usable as the `L` of
 `exists_decay_of_contDiffAt`, where the loglog rate must be measured against something that does not
-depend on ω. The `hshift` hypothesis says exactly that this floor is `h(n)` to first order.
+depend on ω. The `hshift` hypothesis of `pullCount_div_sched_tendsto_one` says exactly that this
+floor is `h(n)` to first order.
 
 The window fits inside `[0, n]` eventually because `h(n) = o(n)`. -/
 lemma eventually_schedShift_le_pullCount [Fintype 𝓐] [DecidableEq 𝓐] (ω : Ω)
@@ -979,7 +977,7 @@ lemma fe_of_isARTSFE [Finite 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] 
     obtain ⟨j, hj1, hj2⟩ := h2
     exact Or.inr ⟨j, hj1, by exact_mod_cast hj2⟩
 
-/-- **A.s. consistency of the `aRTSFE` allocation proportions** (blueprint `thm:forced_valid`,
+/-- **A.s. consistency of the `aRTSFE` allocation proportions** (Theorem 5.1 of the paper,
 consistency direction). For a forced-exploration design — given here by the history-level design
 predicate `IsARTSFE`, whose throttle is transported to the process by `throttle_of_isARTSFE` —
 with an exploration schedule `hsched`, the allocation proportions converge a.s. to the common
@@ -1008,18 +1006,19 @@ theorem aRTSFE_proportion_tendsto [DecidableEq 𝓐] [Fintype 𝓐] [StandardBor
 
 /-! ### Asymptotic normality under forced exploration (non-sparse targets)
 
-The `thm:normality` (blueprint `thm:forced_valid`, normality direction) for the `aRTSFE` family.
-Each result is a *direct reuse* of the corresponding abstract-hitting-time theorem with the
-forced-exploration predicate `aRTSFEUnder`: the design enters as `IsARTSFE` — the process-level
-throttle is `throttle_of_isARTSFE` — and the new ingredients are the forced-exploration smallness
-lemmas (`aRTSFE_smallness_all`/`_op`/`_upper`) discharging the generic conditions.
+Theorem 5.1 of the paper, normality direction: the conclusions of the paper's Theorem 4.2 for the
+`aRTSFE` family. Each result is a *direct reuse* of the corresponding abstract-hitting-time theorem
+with the forced-exploration predicate `aRTSFEUnder`: the design enters as `IsARTSFE` — the
+process-level throttle is `throttle_of_isARTSFE` — and the new ingredients are the
+forced-exploration smallness lemmas (`aRTSFE_smallness_all`/`_op`/`_upper`) discharging the generic
+conditions.
 
 Like the `aRTS` results, these state their design hypothesis as the history-level predicate rather
 than as a process-level throttle, so they mention only the design, the environment and the
 schedule. That is why this section sits after `throttle_of_isARTSFE`. -/
 
-/-- **`o_p(√n)` proportion deviation under forced exploration** (blueprint `thm:forced_valid`,
-`thm:normality` part (i), `o_p` half). `|N_{n,k} - n ρ̂_{n,k}| = o_p(√n)` for the `aRTSFE` family.
+/-- **`o_p(√n)` proportion deviation under forced exploration** (Theorem 5.1 of the paper, carrying
+equation (5) of Theorem 4.2 (i)). `|N_{n,k} - n ρ̂_{n,k}| = o_p(√n)` for the `aRTSFE` family.
 A direct reuse of `prop_dev_of_hitting`; the `o_p`-smallness is `aRTSFE_smallness_op`, whose
 Condition **B** input (`hv`, `hNconv`) is the consistency this theorem already establishes. -/
 @[specifies IsExplorationSchedule "the three retained fields are enough for the `√n`-scaled \
@@ -1048,8 +1047,8 @@ theorem aRTSFE_prop_dev [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace �
     (aRTSFEUnder A Y θ₀ T hsched) (fun k m ↦ measurableSet_aRTSFEUnder h θ₀ hT hsched k m)
     hthrottle (fun k' ↦ aRTSFE_smallness_op h θ₀ hT hh k' (hv k') (hNconv k')) k
 
-/-- **A.s. `O(√(n log log n))` proportion deviation under forced exploration** (blueprint
-`thm:forced_valid`, `thm:normality` part (i), a.s. half). `N_{n,k} - n ρ̂_{n,k} = O(√(n log log n))`
+/-- **A.s. `O(√(n log log n))` proportion deviation under forced exploration** (Theorem 5.1 of the
+paper, carrying equation (6) of Theorem 4.2 (i)). `N_{n,k} - n ρ̂_{n,k} = O(√(n log log n))`
 a.s. for the `aRTSFE` family. A direct reuse of `prop_dev_ae_of_hitting`; the loglog rate is
 `rho_rate_of_hitting` and the smallness is `aRTSFE_smallness_upper`, whose Condition **B** input
 is the consistency this theorem already establishes. -/
@@ -1077,9 +1076,10 @@ theorem aRTSFE_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace
       hthrottle hgs hTpos hT_diff k')
     (fun k' ↦ aRTSFE_smallness_upper θ₀ T hh k' (hv k') (hNconv k')) k
 
-/-- **A.s. `O(√(n log log n))` count-versus-target deviation under forced exploration** (blueprint
-`thm:forced_valid`, `thm:normality` part (i), last line). `N_{n,k} - n v_k = O(√(n log log n))` a.s.
-for the `aRTSFE` family. A direct reuse of `count_sub_smul_ae_of_hitting`. -/
+/-- **A.s. `O(√(n log log n))` count-versus-target deviation under forced exploration**
+(Theorem 5.1 of the paper, carrying equation (7) of Theorem 4.2 (i)).
+`N_{n,k} - n v_k = O(√(n log log n))` a.s. for the `aRTSFE` family. A direct reuse of
+`count_sub_smul_ae_of_hitting`. -/
 theorem aRTSFE_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
@@ -1104,11 +1104,11 @@ theorem aRTSFE_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBore
       hthrottle hgs hTpos hT_diff k')
     (fun k' ↦ aRTSFE_smallness_upper θ₀ T hh k' (hv k') (hNconv k')) k
 
-/-- **Joint central limit theorem under forced exploration** (blueprint `thm:forced_valid`,
-`thm:normality` part (ii)). The `√n`-scaled joint deviation vector `(√n(N_n/n - v), √n(ρ̂_n - v))`
-converges weakly to the block-Gaussian `𝒩(0, Ω)` for the `aRTSFE` family. A direct reuse of
-`clt_joint_of_hitting`; the smallness conditions are `aRTSFE_smallness_all` and
-`aRTSFE_smallness_op`. -/
+/-- **Joint central limit theorem under forced exploration** (Theorem 5.1 of the paper, carrying
+equation (9) of Theorem 4.2 (ii)). The `√n`-scaled joint deviation vector
+`(√n(N_n/n - v), √n(ρ̂_n - v))` converges weakly to the block-Gaussian `𝒩(0, Ω)` for the `aRTSFE`
+family. A direct reuse of `clt_joint_of_hitting`; the smallness conditions are
+`aRTSFE_smallness_all` and `aRTSFE_smallness_op`. -/
 theorem aRTSFE_clt_joint [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
@@ -1146,8 +1146,8 @@ theorem aRTSFE_clt_joint [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace �
     (aRTSFEUnder A Y θ₀ T hsched) (fun k m ↦ measurableSet_aRTSFEUnder h θ₀ hT hsched k m)
     hthrottle hgs (fun k' ↦ aRTSFE_smallness_op h θ₀ hT hh k' (hv k') (hNconv k'))
 
-/-- **For `α = 0` the throttle forbids throttled pulls outright** (Step 4, `α = 0`, in its correct
-pathwise form). Whenever arm `k` is neither under-sampled nor under-explored, it is a.s. not pulled.
+/-- **For `α = 0` the throttle forbids throttled pulls outright** (Step 4, `α = 0`, pathwise).
+Whenever arm `k` is neither under-sampled nor under-explored, it is a.s. not pulled.
 
 This needs **no decay hypothesis at all**: the conditioning event `{¬ aRTSFEUnder}` is itself
 previous-history measurable
@@ -1215,7 +1215,7 @@ omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] [IsProbabilityMeasure P
 For a *sparse* arm `k` one has `T(Θ)_k = v_k = 0` while `T ≥ 0` everywhere (the target takes values
 in the simplex), so `Θ` is a global minimum of `x ↦ T(x)_k`. Fermat's theorem kills the linear term
 of the Taylor expansion, and `C²` smoothness turns the remainder into `K‖x - Θ‖²`
-(`IsLocalMin.exists_eventually_sub_le_mul_sq`) — no Hessian is ever named. Consistency `θ̂_m → Θ`
+(`exists_eventually_sub_le_mul_sq_of_isLocalMin`) — no Hessian is ever named. Consistency `θ̂_m → Θ`
 puts the plug-in point inside that neighbourhood eventually.
 
 The sup norm of `𝓐 → ℝ` is converted to the coordinatewise sum by `sq_norm_le_sum_sq`, which is the
@@ -1407,7 +1407,7 @@ noncomputable def throttledIndicator [DecidableEq 𝓐] (A : ℕ → Ω → 𝓐
   {ω | ¬ aRTSFEUnder A Y θ₀ T hsched k ω i}.indicator (actionIndicator A k i)
 
 /-- **The throttled pulls are `o(h)`** (Step 4 of `maths/sparse-clt-fix.md`, the general `α > 0`
-case, in its correct pathwise form). Their count satisfies `E_n/h(n) → 0` a.s.
+case, pathwise). Their count satisfies `E_n/h(n) → 0` a.s.
 
 Doob-decompose `E_n = M_n + ∑_{i<n} P[𝟙 | ℱ_{i-1}]`. The conditioning event
 `{¬ aRTSFEUnder i}` is previous-history measurable (`measurableSet_shiftDown_aRTSFEUnder`), so
@@ -1415,20 +1415,15 @@ Doob-decompose `E_n = M_n + ∑_{i<n} P[𝟙 | ℱ_{i-1}]`. The conditioning eve
 `P[𝟙 | ℱ_{i-1}] ≤ α ρ̂_{i,k}` for *every* `i`; the martingale part is `O(√(n log log n))` by
 `ae_eventually_abs_assignMart_le_sqrt_nat_mul_loglog`.
 
-Compare the deterministic-bound version this replaces: because the loglog decay of `ρ̂_{i,k}`
-carries
-a *random* constant (the LIL constant — see `aRTSTarget_le_loglog_of_quadratic`), a hypothesis
-"`ρ̂ ≤ g` for a deterministic `g`" is not dischargeable. Here the compensator is compared against
-the
-*random* `∑ α ρ̂_{i,k}(ω)` instead, and `hsum` asks only that this be `o(h(n))` almost surely —
-which
-is harmless, since a random constant is fine inside an a.s. limit. The hypotheses `m₀`, `g`, `hgh`
-and `hdecay` all disappear.
+The compensator is compared against the *random* `∑ α ρ̂_{i,k}(ω)`, and `hsum` asks only that this
+be `o(h(n))` almost surely. That is what makes the statement usable: the loglog decay of `ρ̂_{i,k}`
+carries a *random* constant (the LIL constant — see `aRTSTarget_le_loglog_of_quadratic`), so a
+hypothesis "`ρ̂ ≤ g` for a deterministic `g`" would not be dischargeable, whereas a random constant
+is harmless inside an a.s. limit.
 
 Step 3 (`not_aRTSFEUnder_of_sched_lt`) is what relates this count to the one
 `pullCount_le_sched_of_fe_except` consumes: pathwise, and eventually, a pull at a round where arm
-`k`
-is not under-explored *is* a throttled pull. -/
+`k` is not under-explored *is* a throttled pull. -/
 @[specifies throttledIndicator "what the indicator is built to count, and that the count is \
 negligible: pulls the design was free *not* to make are `o(h(n))`, so forced exploration alone \
 fixes a sparse arm's sample size to first order"]
@@ -1524,7 +1519,7 @@ lemma throttled_count_div_sched_tendsto_zero [DecidableEq 𝓐] [Finite 𝓐]
     · exact hppω n
 
 
-/-- **The sparse componentwise CLT for `aRTSFE`** (blueprint `cor:sparse_clt`), with the regularity
+/-- **The sparse componentwise CLT for `aRTSFE`** (Corollary 5.3 of the paper), with the regularity
 input discharged by forced exploration. With `D_n = diag(√N_{n,1},…,√N_{n,K})`,
 `D_n(θ̂_n - θ) ⇒ 𝒩(0, diag(V_1,…,V_K))`.
 
@@ -1605,8 +1600,8 @@ lemma aRTSFE_sparse_clt [Fintype 𝓐] [DecidableEq 𝓐]
   exact estimatorError_joint_tendsto_multivariateGaussian h θ₀ hνk hc hc_atTop
     (v := fun _ ↦ 1) (fun _ ↦ one_pos) hNconv
 
-/-- **The `N`-scaled loglog estimator rate** (the analytic core of `thm:sparse_rate`). If arm `k`'s
-pull count diverges a.s. (which forced exploration guarantees), then under Condition **A** the
+/-- **The `N`-scaled loglog estimator rate** (the analytic core of the paper's Theorem 5.2). If arm
+`k`'s pull count diverges a.s. (which forced exploration guarantees), then under Condition **A** the
 estimator error is `O(√(log log N_{n,k} / N_{n,k}))` a.s. — normalized by the arm's *own* sample
 count `N_{n,k}`, so meaningful even for sparse arms. Unlike the `√n`-scaled rate `aRTS_rho_rate`,
 this uses *only* `N_{n,k} → ∞` (no positive proportion). Via the exact Bahadur identity
@@ -1678,7 +1673,7 @@ lemma abs_estimator_sub_le_rate_loglog_N [DecidableEq 𝓐]
     rw [mul_assoc]; exact mul_le_mul_of_nonneg_left hprodge hann
   nlinarith [h1, h2]
 
-/-- **Consistency and rate for sparse targets** (blueprint `thm:sparse_rate`). Under Condition **A**
+/-- **Consistency and rate for sparse targets** (Theorem 5.2 of the paper). Under Condition **A**
 only (no non-sparsity), any forced-exploration design satisfies, for every arm `k`, almost surely:
 `N_{n,k} → ∞`; `N_{n,k}/n → v_k = T(θ)_k` (allowing `v_k = 0`); and
 `|θ̂_{n,k} - θ_k| = O(√(log log N_{n,k} / N_{n,k}))` (the estimator LIL scaled by the arm's *own*
@@ -1908,7 +1903,7 @@ lemma sched23_star :
   rw [h43, mul_div_mul_left _ _ hnR.ne']
 
 /-- **The schedule hypotheses of `aRTSFE_sparse_clt_of_contDiffAt` are jointly satisfiable** — and
-satisfiable only outside the paper's `def:exploration_schedule` (ii). `h(n) = n^{2/3}` supplies all
+satisfiable only outside condition (ii) of the paper's Definition 5.1. `h(n) = n^{2/3}` supplies all
 three (`hh`, `hshift`, `hstar`) while failing `IsSqrtSmall`, so the capstone is not vacuous. -/
 @[specifies sched23 "the exponent `2/3` is chosen to sit strictly between the two constraints: \
 large enough that `√(m log log m) ≪ h(m)` (condition `(⋆)`), small enough that `h(m) = o(m)`. \
@@ -2113,8 +2108,7 @@ eventually fed only by forced exploration; here that assumption is *proved*, fro
 * `hstar` — the reversed schedule condition `(⋆) : m log log m = o(h(m)²)`, which replaces the
   paper's `h(m) = o(√m)` and is satisfiable exactly where the paper's condition fails
   (`sched23_star`, `not_isSqrtSmall_sched23`);
-* `hT2` — the target is `C²` at `Θ` on the sparse arms.
-. -/
+* `hT2` — the target is `C²` at `Θ` on the sparse arms. -/
 theorem aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
     [Nonempty 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)

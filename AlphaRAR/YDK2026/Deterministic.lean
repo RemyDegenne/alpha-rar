@@ -16,26 +16,25 @@ public meta import LeanSpec
 /-!
 # Deterministic core of the auxiliary processes
 
-Several lemmas in the model and auxiliary chapters of the blueprint are purely
-algebraic identities about the counting and martingale processes: they hold
-pathwise and do not use any probability. This file isolates that deterministic
-core.
+Several of the lemmas about the counting and martingale processes of the model
+are purely algebraic identities: they hold pathwise and do not use any
+probability. This file isolates that deterministic core.
 
 For a fixed arm we work with real sequences `X` (assignment indicator), `p`
-(selection probability) and `ρ` (plug-in target), and define the count `N`, the
-assignment martingale `M`, and the auxiliary process `U` by their defining sums.
+(selection probability) and `ρ` (plug-in target), and with the count `N`, the
+assignment martingale `M`, and the auxiliary process `U` given by their defining
+sums.
 
 Indexing follows the `IsAlgEnvSeq` convention: patient `0` is the first patient,
 so all processes sum over `Finset.range n` = patients `0, …, n-1`.
 
 ## Main results
 
-* `AlphaRAR.count_eq`: count decomposition `N n = ∑ p + M n` (blueprint
-  `lem:count_decomp`).
-* `AlphaRAR.counts_sum`: the counts sum to the time index (blueprint
-  `lem:counts_sum`).
+* `AlphaRAR.count_eq`: count decomposition `N n = ∑ p + M n`.
+* `AlphaRAR.auxU_telescope`: the telescoping identity for the auxiliary
+  process `U`.
 * `AlphaRAR.hitting_basic`: the last under-sampling time is non-decreasing and
-  bounded by `n` (blueprint `lem:hitting_basic`).
+  bounded by `n`.
 -/
 
 @[expose] public section
@@ -48,12 +47,10 @@ namespace AlphaRAR
 
 variable (X p ρ : ℕ → ℝ) (α : ℝ)
 
-/-- Assignment martingale of a fixed arm, `M n = ∑_{j<n} (X j - p j)`
-(blueprint `def:M`). -/
+/-- Assignment martingale of a fixed arm, `M n = ∑_{j<n} (X j - p j)`. -/
 def assignMG (n : ℕ) : ℝ := ∑ j ∈ range n, (X j - p j)
 
-/-- **Count decomposition** (blueprint `lem:count_decomp`).
-`N n = ∑_{m<n} p m + M n`. -/
+/-- **Count decomposition**: `N n = ∑_{m<n} p m + M n`. -/
 @[specifies assignMG "pins `M` exactly (no free additive constant): it is the count minus its \
 compensator `∑ p`, which is what makes it the assignment *martingale* rather than any centring \
 of the count"]
@@ -69,11 +66,12 @@ lemma assignMG_succ (n : ℕ) :
   unfold assignMG
   rw [Finset.sum_range_succ]
 
-/-- Auxiliary process `U n = ∑_{m<n} α ρ m + M n - n ρ n` (blueprint `def:U`). The leading `α ρ`
-sum runs over `range n`, so at time `n` it uses the plug-in targets of patients `0, …, n-1`. -/
+/-- Auxiliary process `U n = ∑_{m<n} α ρ m + M n - n ρ n` of the paper's analysis. The leading
+`α ρ` sum runs over `range n`, so at time `n` it uses the plug-in targets of patients
+`0, …, n-1`. -/
 def auxU (n : ℕ) : ℝ := (∑ m ∈ range n, α * ρ m) + assignMG X p n - (n : ℝ) * ρ n
 
-/-- **Increment of the auxiliary process** (blueprint `lem:U_increment`).
+/-- **Increment of the auxiliary process**.
 
 Writing `D n := N n - n ρ n`, `U (n+1) - U n = α ρ_n - p n + (D (n+1) - D n)`. The leading term
 `α ρ_n` pairs the selection probability `p_n` with the plug-in target `ρ_n` at the same index, so
@@ -110,12 +108,12 @@ lemma sum_Ico_succ_sub (f : ℕ → ℝ) (ℓ : ℕ) :
       subst he
       simp
 
-/-- **Telescoping identity for the auxiliary process** (blueprint `lem:U_telescope`).
+/-- **Telescoping identity for the auxiliary process**.
 
 For `ℓ ≤ n`, writing `D m := N m - m ρ m`,
 `U n - U ℓ = ∑_{m=ℓ}^{n-1} (α ρ_m - p m) + (D n - D ℓ)`.
-Rearranged, this is the blueprint's identity expressing `D n` in terms of `D ℓ`,
-the summed throttling terms, and the increment of `U`. -/
+Rearranged, this expresses `D n` in terms of `D ℓ`, the summed throttling
+terms, and the increment of `U`. -/
 @[specifies auxU "what `U` is for: over any window it converts the accumulated throttle slack into \
 a bound on the gap `D`, which is the only way `U` is ever used"]
 lemma auxU_telescope (n ℓ : ℕ) (hℓn : ℓ ≤ n) :
@@ -136,14 +134,13 @@ lemma auxU_telescope (n ℓ : ℕ) (hℓn : ℓ ≤ n) :
   congr 1
   exact sum_Ico_succ_sub (fun m ↦ count X m - (m : ℝ) * ρ m) ℓ n hℓn
 
-/-- **Exact `M`-explicit `U`-increment identity** (algebraic backbone of blueprint
-`lem:diff_U_decomp`).
+/-- **Exact `M`-explicit `U`-increment identity** (algebraic backbone of the paper's Lemma A.2 (i)).
 
 For `ℓ ≤ n`, directly from the definition `U n = ∑_{m<n} α ρ_m + M n - n ρ n`,
 `U n - U ℓ = ∑_{m=ℓ}^{n-1} α ρ_m + (M n - M ℓ) + (ℓ ρ_ℓ - n ρ_n)`,
 keeping the assignment martingale `M = assignMG` explicit (unlike `auxU_telescope`, which expands it
-through the throttling increments). This is the form the normality-chapter decomposition uses, since
-the martingale LIL then applies to `M n - M ℓ`. -/
+through the throttling increments). This is the form the asymptotic-normality decomposition uses,
+since the martingale LIL then applies to `M n - M ℓ`. -/
 lemma auxU_sub (n ℓ : ℕ) (hℓn : ℓ ≤ n) :
     auxU X p ρ α n - auxU X p ρ α ℓ
       = (∑ m ∈ Ico ℓ n, α * ρ m) + (assignMG X p n - assignMG X p ℓ)
@@ -152,7 +149,7 @@ lemma auxU_sub (n ℓ : ℕ) (hℓn : ℓ ≤ n) :
   rw [Finset.sum_Ico_eq_sub _ hℓn]
   ring
 
-/-- **Windowed Cesàro drift bound** (drift-control behind blueprint `lem:diff_U_decomp`).
+/-- **Windowed Cesàro drift bound** (drift control behind the paper's Lemma A.2 (i)).
 
 If `u m → v`, then for an arbitrary window sequence `ℓ_n ≤ n` (bounded or diverging), the deviation
 sum over the window `[ℓ_n, n)` is `o(n - ℓ_n)`: for every `ε > 0`, eventually
@@ -215,7 +212,7 @@ lemma abs_sum_Ico_sub_le_of_tendsto {u : ℕ → ℝ} {v : ℝ} (hu : Tendsto u 
     _ ≤ ε / 2 * ((n : ℝ) - ℓ n) + ε / 2 * ((n : ℝ) - ℓ n) := add_le_add hbad hgood
     _ = ε * ((n : ℝ) - ℓ n) := by ring
 
-/-- **Additive decomposition of the `U`-increment** (blueprint `lem:diff_U_decomp`).
+/-- **Additive decomposition of the `U`-increment** (the paper's Lemma A.2 (i)).
 
 If the plug-in target converges, `ρ n → v`, then for an arbitrary window `ℓ_n ≤ n`, the
 `U`-increment equals its leading drift `(n - ℓ_n)(-(1-α)v)`, the increment `M_n - M_{ℓ_n}`, and the
@@ -271,12 +268,12 @@ lemma diff_U_decomp {v : ℝ} (hρ : Tendsto ρ atTop (𝓝 v)) {ℓ : ℕ → �
         mul_le_mul_of_nonneg_left (by linarith [hfactor]) hdnn
     _ = ε * ((n : ℝ) - ℓ n) := by ring
 
-/-- Last under-sampling time (blueprint `def:hitting`): the largest `m ≤ n` at
-which the arm is under-sampled, encoded via `Nat.findGreatest` (which returns `0`
-when no such `m` exists, matching the blueprint's convention). -/
+/-- Last under-sampling time: the largest `m ≤ n` at which the arm is
+under-sampled, encoded via `Nat.findGreatest`, which returns `0` when no such
+`m` exists. -/
 def hitting (P : ℕ → Prop) [DecidablePred P] (n : ℕ) : ℕ := Nat.findGreatest P n
 
-/-- **Basic properties of the hitting time** (blueprint `lem:hitting_basic`):
+/-- **Basic properties of the hitting time** (the paper's Lemma A.1 (i)):
 `n ↦ hitting P n` is non-decreasing and bounded above by `n`. -/
 @[specifies hitting "the two facts that make it usable as a random time: it never looks past the \
 horizon `n`, and enlarging the horizon can only move it forward"]
@@ -284,7 +281,7 @@ lemma hitting_basic (P : ℕ → Prop) [DecidablePred P] :
     Monotone (hitting P) ∧ ∀ n, hitting P n ≤ n := by
   refine ⟨fun a b hab ↦ Nat.findGreatest_mono_right P hab, fun n ↦ Nat.findGreatest_le n⟩
 
-/-- **Sign at the hitting time** (blueprint `lem:hitting_sign`, maximality part).
+/-- **Sign at the hitting time**, the maximality half of its defining property.
 Strictly after the last under-sampling time (and up to `n`), the arm is no longer
 under-sampled: `¬ P m` for `hitting P n < m ≤ n`. -/
 @[specifies hitting "the maximality that makes it the *last* such time rather than merely some \
@@ -341,7 +338,7 @@ lemma IsHitting.eq_hitting {P : ℕ → Prop} [DecidablePred P] {n m : ℕ} (hm 
     · exact hh.greatest _ hlt hm.le hP
     · omega
 
-/-- **Key inequality** (blueprint `lem:preliminary_ineq`).
+/-- **Key inequality** (the paper's Lemma A.1 (ii)).
 
 Whenever the throttling condition `p m ≤ α ρ_m` holds for all `ℓ+1 ≤ m ≤ n-1`,
 `p ℓ ≤ 1`, and `0 ≤ α ρ_ℓ`, the gap `D n = N n - n ρ n` is controlled by its
@@ -375,12 +372,12 @@ lemma preliminary_ineq (n ℓ : ℕ) (hℓn : ℓ ≤ n)
     subst heq
     linarith
 
-/-- **Smallness at the hitting time** (blueprint `lem:preliminary_small`).
+/-- **Smallness at the hitting time** (the paper's Lemma A.1 (iii)).
 
 If the predicate `P` implies under-sampling `N m ≤ m ρ m`, then at the last
 under-sampling time the gap is nonpositive: `N ℓ - ℓ ρ ℓ ≤ 0` for
 `ℓ = hitting P n`. (With the `Nat.findGreatest` convention this is the sharp
-`≤ 0`, stronger than the blueprint's `≤ K m₀`.) -/
+`≤ 0`, stronger than the paper's `≤ K m₀`.) -/
 lemma preliminary_small (P : ℕ → Prop) [DecidablePred P] (n : ℕ)
     (hPspec : ∀ m, P m → count X m ≤ (m : ℝ) * ρ m) :
     count X (hitting P n) - (hitting P n : ℝ) * ρ (hitting P n) ≤ 0 := by
@@ -393,8 +390,8 @@ lemma preliminary_small (P : ℕ → Prop) [DecidablePred P] (n : ℕ)
     have := hPspec _ hP
     linarith
 
-/-- **Generic key inequality from the aRTS throttle** (blueprint `eq:generic_ineq`, deterministic
-packaging of `prop:aRTS_generic`). With `ℓ_n = hitting P n` the last under-sampling time, the aRTS
+/-- **Generic key inequality from the aRTS throttle** (condition (ii) of the paper's Lemma 4.4, in
+deterministic packaging). With `ℓ_n = hitting P n` the last under-sampling time, the aRTS
 throttle `¬ P m → p_m ≤ α ρ_m` (whenever the arm is over-sampled at `m`, its selection probability
 is throttled), together with `p ≤ 1` and `0 ≤ α ρ`, gives the generic inequality with constant `1`.
 From `auxU_telescope`, `D n = D ℓ + (U n - U ℓ) + ∑_{m∈[ℓ,n)} (p_m - α ρ_m)`; each summand with
@@ -435,7 +432,8 @@ lemma generic_ineq_of_hitting (P : ℕ → Prop) [DecidablePred P]
     exact Finset.sum_eq_zero fun m _ ↦ by ring
   linarith [htel, hbound, hsum0]
 
-/-- **Generic smallness from the throttle** (blueprint `eq:generic_small`, deterministic packaging).
+/-- **Generic smallness from the throttle** (the `/n` form of condition (iii) of the paper's
+Lemma 4.4, in deterministic packaging).
 If `P` implies under-sampling (`P m → N_m ≤ m ρ_m`), then at the last under-sampling time the gap
 is nonpositive (`preliminary_small`), so `(N_{ℓ_n} - ℓ_n ρ_{ℓ_n})/n < δ` eventually for `δ > 0`. -/
 lemma generic_small_of_hitting (P : ℕ → Prop) [DecidablePred P]
@@ -451,7 +449,7 @@ lemma generic_small_of_hitting (P : ℕ → Prop) [DecidablePred P]
   linarith
 
 /-- Centered response martingale of a fixed arm,
-`Q n = ∑_{j<n} X j (ξ j - θ)` (blueprint `def:Q`). -/
+`Q n = ∑_{j<n} X j (ξ j - θ)`. -/
 def respMG (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) : ℝ := ∑ j ∈ range n, X j * (ξ j - θ)
 
 /-- `Q n = ∑ X ξ - θ N n`: the response martingale rewritten via the count. -/
@@ -465,7 +463,7 @@ lemma respMG_eq (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) :
   intro j _
   ring
 
-/-- **Estimator error via `Q`** (blueprint `lem:theta_error_Q`).
+/-- **Estimator error via `Q`**.
 
 On `{N n ≠ 0}`, the leading term of the estimator error equals `Q n / N n`:
 `(∑ X ξ) / N n - θ = Q n / N n`. -/
@@ -475,19 +473,19 @@ lemma theta_error_Q (ξ : ℕ → ℝ) (θ : ℝ) (n : ℕ) (hN : count X n ≠ 
     (∑ j ∈ range n, X j * ξ j) / count X n - θ = respMG X ξ θ n / count X n := by
   rw [respMG_eq, sub_div, mul_div_assoc, div_self hN, mul_one]
 
-/-- Sequential estimator of a fixed arm (blueprint `def:estimator`),
+/-- Sequential estimator of a fixed arm, equation (1) of the paper:
 `θ̂ n = (∑_{j<n} X j ξ j + θ₀) / (N n + 1)`, with initial value `θ₀` and the `+1`
 regularization in the denominator. -/
 noncomputable def estimator (ξ : ℕ → ℝ) (θ₀ : ℝ) (n : ℕ) : ℝ :=
   ((∑ j ∈ range n, X j * ξ j) + θ₀) / (count X n + 1)
 
-/-- **Exact estimator error** (blueprint `lem:estimator_bahadur`, exact form).
+/-- **Exact estimator error**, the exact form of the Bahadur representation.
 
 The regularized estimator has the *exact* error decomposition
 `θ̂ n - θ = (Q n + (θ₀ - θ)) / (N n + 1)`, valid whenever `N n + 1 ≠ 0` (always, for
 `{0,1}`-valued assignment indicators). Since `Q n = O(√(n \log n))` and the numerator offset
-`θ₀ - θ` is constant, this is the Bahadur representation
-`θ̂ n = \tfrac1{N n}∑ X ξ + o(N n^{-1/2})` in sharp, remainder-free form. -/
+`θ₀ - θ` is constant, this is the Bahadur representation of equation (2) of the paper,
+`θ̂ n = \tfrac1{N n}∑ X ξ + o(N n^{-1/2})`, in sharp, remainder-free form. -/
 @[specifies estimator "accounts exactly for the `+θ₀` / `+1` regularization: it contributes the \
 single constant `θ₀ - θ` to the numerator and nothing else, so the regularized estimator has the \
 same error expansion as the plain sample mean with no remainder term"]
@@ -497,9 +495,9 @@ lemma estimator_sub_eq (ξ : ℕ → ℝ) (θ θ₀ : ℝ) (n : ℕ) (hN : count
   field_simp
   ring
 
-/-- **Estimator difference identity** (algebraic backbone of `lem:ell_rho_control`). The estimator
-difference at two times splits into a "reweighting" term (carrying `Q_ℓ`, scaled by the count
-increment `N_n - N_ℓ`) and an "increment" term (carrying `Q_n - Q_ℓ`):
+/-- **Estimator difference identity** (algebraic backbone of the paper's Lemma A.2 (ii)). The
+estimator difference at two times splits into a "reweighting" term (carrying `Q_ℓ`, scaled by the
+count increment `N_n - N_ℓ`) and an "increment" term (carrying `Q_n - Q_ℓ`):
 `θ̂_ℓ - θ̂_n = (Q_ℓ + (θ₀-θ))(N_n - N_ℓ)/((N_ℓ+1)(N_n+1)) - (Q_n - Q_ℓ)/(N_n+1)`. -/
 lemma estimator_diff_eq (ξ : ℕ → ℝ) (θ θ₀ : ℝ) (ℓ n : ℕ)
     (hℓ : count X ℓ + 1 ≠ 0) (hn : count X n + 1 ≠ 0) :
@@ -516,7 +514,7 @@ lemma estimator_diff_eq (ξ : ℕ → ℝ) (θ θ₀ : ℝ) (ℓ n : ℕ)
   ring
 
 /-- **Deterministic increment bound for the scaled estimator difference** (deterministic core of
-`lem:ell_rho_control`). For `{0,1}`-bounded increments `X` and `ℓ ≤ n`, the scaled difference
+the paper's Lemma A.2 (ii)). For `{0,1}`-bounded increments `X` and `ℓ ≤ n`, the scaled difference
 `ℓ|θ̂_ℓ - θ̂_n|` splits into a reweighting part `∝ (n-ℓ)` and an increment part `∝ |Q_n - Q_ℓ|`:
 `ℓ|θ̂_ℓ - θ̂_n| ≤ ℓ(|Q_ℓ|+|θ₀-θ|)/((N_ℓ+1)(N_n+1))·(n-ℓ) + ℓ/(N_n+1)·|Q_n - Q_ℓ|`. -/
 lemma abs_estimator_diff_le (hX0 : ∀ j, 0 ≤ X j) (hX1 : ∀ j, X j ≤ 1)
@@ -572,7 +570,7 @@ lemma abs_estimator_diff_le (hX0 : ∀ j, 0 ≤ X j) (hX1 : ∀ j, X j ≤ 1)
           * ((n : ℝ) - ℓ) + (ℓ : ℝ) / (count X n + 1) * |respMG X ξ θ n - respMG X ξ θ ℓ| :=
         add_le_add hterm1 (le_of_eq hterm2)
 
-/-- **Coefficient bound for the increment term** (deterministic core of `lem:ell_rho_control`).
+/-- **Coefficient bound for the increment term** (deterministic core of the paper's Lemma A.2 (ii)).
 If the count grows linearly, `N_n / n → v > 0`, then `n / (N_n + 1) ≤ 2/v` eventually. In particular
 `ℓ_n / (N_n + 1) ≤ 2/v` for `ℓ_n ≤ n`, so the coefficient `h_n = ℓ_n/(N_n+1)` is eventually
 bounded. -/
@@ -592,7 +590,7 @@ lemma eventually_natCast_div_add_one_le {N : ℕ → ℝ} {v : ℝ} (hv : 0 < v)
   rw [div_eq_mul_inv]; linarith
 
 /-- **Absolute estimator error bound**: `|θ̂ n - θ| ≤ (|Q n| + |θ₀ - θ|) / (N n + 1)`.
-The pathwise backbone of the LIL rate `lem:theta_LIL`: with `|Q n| = O(√(n \log n))` and
+The pathwise backbone of the LIL rate for the estimator: with `|Q n| = O(√(n \log n))` and
 `N n + 1 ≍ v_k n`, it gives `|θ̂ n - θ| = O(√(\log n / n))`. -/
 lemma abs_estimator_sub_le (ξ : ℕ → ℝ) (θ θ₀ : ℝ) (n : ℕ) (hN : 0 < count X n + 1) :
     |estimator X ξ θ₀ n - θ| ≤ (|respMG X ξ θ n| + |θ₀ - θ|) / (count X n + 1) := by
@@ -601,7 +599,7 @@ lemma abs_estimator_sub_le (ξ : ℕ → ℝ) (θ θ₀ : ℝ) (n : ℕ) (hN : 0
   exact abs_add_le _ _
 
 /-- **Generic estimator rate from an abstract martingale rate** (the shared core of the
-`log` and `log log` LIL rates for the estimator, blueprint `lem:theta_LIL`).
+`log` and `log log` LIL rates for the estimator).
 
 If the response martingale is bounded by an abstract rate `r` — `|Q_n| ≤ C·r n` eventually — with
 `1 ≤ r n` eventually (so the constant numerator offset `θ₀ - θ` is absorbed), and the allocation
@@ -642,16 +640,17 @@ lemma abs_estimator_sub_le_rate_gen (ξ : ℕ → ℝ) (θ θ₀ : ℝ) {v : ℝ
         rw [mul_one] at hkey
         linarith
 
-/-- **LIL rate for the estimator** (blueprint `lem:theta_LIL`, pathwise core).
+/-- **LIL rate for the estimator**, pathwise core.
 
 If the response martingale is `O(√(n log n))` — `|Q_n| ≤ C√(n log n)` eventually, supplied a.s. by
-`lem:lil_truncation` — and the allocation proportion converges to a positive limit `N_n/n → v > 0`
-(supplied a.s. by `lem:match`), then the estimator error is
-`|θ̂_n - θ| ≤ C' · √(n log n)/n` eventually, i.e. `O(√(log n / n))` (since `√(n log n)/n =
-√(log n / n)`). This is the `√(\log n / n)` rate of `lem:theta_LIL` (the `\log`, not `\log\log`,
-form). Combining the exact error `θ̂_n - θ = (Q_n + (θ₀-θ))/(N_n+1)` with `|Q_n| ≤ C√(n log n)` and
-`N_n + 1 ≳ (v/2) n` gives the bound with `C' = (2/v)(C + |θ₀-θ|)`. A special case of
-`abs_estimator_sub_le_rate_gen` with `r n = √(n log n)`. -/
+the law of the iterated logarithm — and the allocation proportion converges to a positive limit
+`N_n/n → v > 0` (supplied a.s. by `match_proportion`), then the estimator error is
+`|θ̂_n - θ| ≤ C' · √(n log n)/n` eventually, i.e. `O(√(log n / n))` (since
+`√(n log n)/n = √(log n / n)`). This is the `\log`, not `\log\log`, form of the rate; the
+`√(\log\log n / n)` rate of Theorem 4.1 of the paper is the same argument with
+`r n = √(n log log n)`. Combining the exact error `θ̂_n - θ = (Q_n + (θ₀-θ))/(N_n+1)` with
+`|Q_n| ≤ C√(n log n)` and `N_n + 1 ≳ (v/2) n` gives the bound with `C' = (2/v)(C + |θ₀-θ|)`.
+A special case of `abs_estimator_sub_le_rate_gen` with `r n = √(n log n)`. -/
 lemma abs_estimator_sub_le_rate (ξ : ℕ → ℝ) (θ θ₀ : ℝ) {v : ℝ} (hv : 0 < v)
     (hN : Tendsto (fun n ↦ count X n / (n : ℝ)) atTop (𝓝 v)) {C : ℝ} (hC : 0 ≤ C)
     (hQ : ∀ᶠ n in atTop, |respMG X ξ θ n| ≤ C * √((n : ℝ) * Real.log n)) :
@@ -666,14 +665,14 @@ lemma abs_estimator_sub_le_rate (ξ : ℕ → ℝ) (θ θ₀ : ℝ) {v : ℝ} (h
   rw [show (1 : ℝ) = √1 from Real.sqrt_one.symm]
   exact Real.sqrt_le_sqrt (by nlinarith)
 
-/-- **Deterministic core of the limit of `U/n`** (blueprint `lem:U_over_n`).
+/-- **Deterministic core of the limit of `U/n`**.
 
 If the plug-in target converges, `ρ n → u`, and the normalized assignment martingale vanishes,
 `M n / n → 0`, then `U n / n → -(1-α) u`. Since
 `U n / n = α · (average of ρ over the first n-1 patients) + M n / n - ρ n`, and the average tends
 to `u` by Cesàro convergence (`Filter.Tendsto.cesaro`), the limit is `α u + 0 - u = -(1-α) u`.
-Applied pathwise (with the a.s. limits from `lem:M_lln` and `lem:rho_converges`), this yields the
-almost-sure statement `lem:U_over_n`. -/
+Applied pathwise (with the a.s. limits of `M n / n` and of the plug-in target), this yields the
+almost-sure limit `U n / n → -(1-α) u`. -/
 lemma auxU_div_tendsto (u : ℝ) (hρ : Tendsto ρ atTop (𝓝 u))
     (hM : Tendsto (fun n ↦ assignMG X p n / (n : ℝ)) atTop (𝓝 0)) :
     Tendsto (fun n ↦ auxU X p ρ α n / (n : ℝ)) atTop (𝓝 (-(1 - α) * u)) := by
@@ -692,19 +691,19 @@ lemma auxU_div_tendsto (u : ℝ) (hρ : Tendsto ρ atTop (𝓝 u))
   rw [← Finset.mul_sum (range n) ρ α]
   field_simp
 
-/-- **Positive part of the proportion gap vanishes** (blueprint `lem:pos_part_vanishes`).
+/-- **Positive part of the proportion gap vanishes**.
 
 Pathwise core, for a fixed arm with assignment indicators `X`, selection probabilities `p`, plug-in
 target `ρ`, throttling parameter `α`, and last under-sampling times `ℓ` (with `ℓ n ≤ n`). Assume:
-* the plug-in target converges, `ρ n → u` with `u ∈ [0,1]` (blueprint `lem:rho_converges`);
-* the normalized assignment martingale vanishes, `M n / n → 0` (blueprint `lem:M_lln`);
-* the generic key inequality `hgen` (blueprint `eq:generic_ineq`, supplied by `preliminary_ineq`);
-* generic smallness `hgs`, the operational form of `limsup (N_ℓ - ℓ ρ_ℓ)/n ≤ 0` (blueprint
-  `eq:generic_small`, supplied by `preliminary_small`).
+* the plug-in target converges, `ρ n → u` with `u ∈ [0,1]`;
+* the normalized assignment martingale vanishes, `M n / n → 0`;
+* the generic key inequality `hgen` (supplied by `generic_ineq_of_hitting`);
+* generic smallness `hgs`, the operational form of `limsup (N_ℓ - ℓ ρ_ℓ)/n ≤ 0` (supplied by
+  `generic_small_of_hitting`).
 
 Then `(N n / n - ρ n)⁺ → 0`. The argument feeds the auxiliary-process limit `U n / n → -(1-α) u`
 (`auxU_div_tendsto`) into the analytic positive-part lemma `tendsto_posPart_sub_div`
-(blueprint `lem:convergence`), then squeezes. -/
+(the paper's Lemma C.5), then squeezes. -/
 lemma pos_part_vanishes {ℓ : ℕ → ℕ} {u C : ℝ} (hℓle : ∀ n, ℓ n ≤ n)
     (hα : α ∈ Set.Icc (0 : ℝ) 1) (hu : u ∈ Set.Icc (0 : ℝ) 1)
     (hρ : Tendsto ρ atTop (𝓝 u))
@@ -752,7 +751,7 @@ lemma pos_part_vanishes {ℓ : ℕ → ℕ} {u C : ℝ} (hℓle : ∀ n, ℓ n �
     linarith [expand, hnn]
   exact max_le_max key2 le_rfl
 
-/-- **Negative part of the proportion gap vanishes** (blueprint `lem:neg_part_vanishes`).
+/-- **Negative part of the proportion gap vanishes**.
 
 Vector form over `K` arms. If every arm's positive gap `(N_{·,j}/n - r_{·,j})⁺` vanishes
 (`pos_part_vanishes`), and both the allocation proportions and the target `r` lie on the simplex
@@ -791,7 +790,7 @@ lemma neg_part_vanishes {ι : Type*} [Fintype ι] (Y r : ℕ → ι → ℝ)
   refine max_le (Finset.sum_le_sum fun j _ ↦ le_max_left _ _)
     (Finset.sum_nonneg fun j _ ↦ le_max_right _ _)
 
-/-- **Proportions match the plug-in target** (blueprint `lem:match`).
+/-- **Proportions match the plug-in target**.
 
 Single-arm form. If both the positive gap `(N_k/n - r_k)⁺` and the negative gap `(r_k - N_k/n)⁺`
 vanish (from `pos_part_vanishes`, `neg_part_vanishes`), and the target converges `r_k → u_k`, then
@@ -819,7 +818,7 @@ lemma match_proportion {ι : Type*} (Y r : ℕ → ι → ℝ) {uk : ℝ} (k : �
   refine hlim.congr fun n ↦ ?_
   ring
 
-/-- **All arms are sampled infinitely often** (blueprint `lem:all_arms_infinite`).
+/-- **All arms are sampled infinitely often**.
 
 If the allocation proportion converges to a positive limit, `N_k/n → u_k > 0` (from
 `match_proportion`), then the count diverges, `N_k → ∞`. Writing `N_k = (N_k/n) · n`, the first

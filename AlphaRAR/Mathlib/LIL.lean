@@ -16,8 +16,7 @@ public meta import LeanSpec
 For a martingale `M` with `M 0 = 0` and increments bounded by `c`, the process
 `Z_n(θ) = exp(θ M_n - θ² ⟨M⟩_n)` is a supermartingale whenever `|θ| c ≤ 1`, where
 `⟨M⟩` is the predictable quadratic variation. This is the exponential/Freedman
-supermartingale, the starting point of the one-sided law of the iterated logarithm
-(blueprint chapter `chap:pre_lil`).
+supermartingale, the starting point of the one-sided law of the iterated logarithm.
 
 The key one-step estimate is the conditional moment-generating-function bound
 `μ[exp(θ ΔM_i) | ℱ_i] ≤ 1 + θ² μ[(ΔM_i)² | ℱ_i]`, obtained from the elementary
@@ -26,35 +25,34 @@ property `μ[ΔM_i | ℱ_i] = 0`.
 
 Everything here is proved once, in the refined form with variance proxy `1 + δ` carried by a
 hypothesis `eˣ ≤ 1 + x + ½(1+δ)x²` on `|x| ≤ η`. The crude `O`-rate engine above is recovered as
-the `δ = 1, η = 1` instance (`exp_le_one_add_add_sq`, which is Mathlib's
+the `δ = 1, η = 1` instance (`exp_le_one_add_add_sq`, which repackages Mathlib's
 `Real.abs_exp_sub_one_sub_id_le`), and `LILSharp.lean` obtains the sharp LIL constant by letting
 `δ ↓ 0`. The two variance proxies therefore share a single proof.
 
 ## Main results
 
 * `AlphaRAR.exp_le_one_add_add_half_mul_sq`: the refined elementary inequality
-  `eˣ ≤ 1 + x + ½(1+δ)x²` for `|x|` small (blueprint `lem:llil_refined_ineq`).
+  `eˣ ≤ 1 + x + ½(1+δ)x²` for `|x|` small.
 * `AlphaRAR.condExp_exp_increment_le_refined`, `AlphaRAR.expProcessRefined`,
   `AlphaRAR.supermartingale_expProcessRefined`, `AlphaRAR.measure_exists_ge_le_exp_refined`:
   the refined conditional MGF bound, exponential supermartingale and Freedman inequality, with
-  variance proxy `1+δ` (blueprint `lem:llil_refined_mgf`, `lem:llil_refined_freedman`).
+  variance proxy `1+δ`.
 * `AlphaRAR.condExp_exp_increment_le`: the conditional MGF bound (the `δ = 1` instance).
-* `AlphaRAR.predQuadVar_nonneg`: the predictable quadratic variation is nonnegative.
-* `AlphaRAR.supermartingale_expProcess`: `Z_n(θ)` is a supermartingale
-  (blueprint `lem:lil_exp_supermart`).
+* `AlphaRAR.supermartingale_expProcess`: `Z_n(θ)` is a supermartingale.
 * `AlphaRAR.smul_measure_sup_le_integral_zero`: Ville's maximal inequality for a nonnegative
   supermartingale (fills a Mathlib gap).
 * `AlphaRAR.measure_exists_ge_le_exp`, `measure_exists_ge_le_exp_optimized`,
-  `measure_exists_ge_le_exp_all`: the Freedman-type tail bound (blueprint `lem:lil_freedman`),
-  and its `θ`-optimized finite- and infinite-horizon forms (blueprint `cor:lil_freedman_opt`).
-* `AlphaRAR.ae_eventually_forall_lt_of_summable`: the Borel–Cantelli step over a block schedule
-  (blueprint `lem:lil_bc`).
+  `measure_exists_ge_le_exp_all`: the Freedman-type tail bound, and its `θ`-optimized finite- and
+  infinite-horizon forms.
+* `AlphaRAR.measure_exists_ge_le_exp_horizon`: the tail bound at an explicit `θ` when the
+  increments are bounded only up to a fixed time `N`, via the stopped process `AlphaRAR.stopMart`.
+* `AlphaRAR.ae_eventually_forall_lt_of_summable`: the Borel–Cantelli step over a block schedule.
 * `AlphaRAR.ae_eventually_forall_lt_dyadic`: the one-sided LIL upper bound with the dyadic
-  schedule (blueprint `thm:lil_bounded`).
+  schedule.
 * `AlphaRAR.ae_eventually_le_sqrt_predQuadVar_mul_log`: the consumable normalized form
-  `M_n ≤ C √(⟨M⟩_n log⟨M⟩_n)` eventually, a.s. (blueprint `cor:lil_upper`).
+  `M_n ≤ C √(⟨M⟩_n log⟨M⟩_n)` eventually, a.s.
 * `AlphaRAR.ae_eventually_le_sqrt_nat_mul_log`: the `O(√(n log n))` a.s. bound for a
-  bounded-increment martingale (blueprint `cor:lil_upper_nat`).
+  bounded-increment martingale.
 -/
 
 @[expose] public section
@@ -69,9 +67,9 @@ variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
   {ℱ : Filtration ℕ m0} {M : ℕ → Ω → ℝ}
 
 
-/-- **Refined elementary inequality** (blueprint `lem:llil_refined_ineq`). For every `δ > 0` there
-is `η > 0` such that `eˣ ≤ 1 + x + ½(1+δ)x²` for all `|x| ≤ η`. Mathlib's `Real.exp_bound` at
-`n = 3` gives `|eˣ - (1 + x + ½x²)| ≤ (2/9)|x|³`, hence
+/-- **Refined elementary inequality.** For every `δ > 0` there is `η > 0` such that
+`eˣ ≤ 1 + x + ½(1+δ)x²` for all `|x| ≤ η`. Mathlib's `Real.exp_bound` at `n = 3` gives
+`|eˣ - (1 + x + ½x²)| ≤ (2/9)|x|³`, hence
 `eˣ ≤ 1 + x + ½x² + (2/9)|x|³ ≤ 1 + x + ½(1 + (4/9)|x|)x²`; take `η = min(1, (9/4)δ)`. This is the
 one-step estimate whose variance proxy `1+δ → 1` gives the sharp LIL constant. -/
 lemma exp_le_one_add_add_half_mul_sq {δ : ℝ} (hδ : 0 < δ) :
@@ -88,12 +86,12 @@ lemma exp_le_one_add_add_half_mul_sq {δ : ℝ} (hδ : 0 < δ) :
   rw [show (1 + δ) / 2 * x ^ 2 = x ^ 2 / 2 + δ / 2 * x ^ 2 from by ring]
   linarith [le_of_abs_le hb, hstep]
 
-/-- **Refined conditional MGF bound** (blueprint `lem:llil_refined_mgf`). If `|ΔM_i| ≤ c` a.e. and
-`|θ| c ≤ η`, where `η` is admissible for the refined inequality at level `δ`
-(`hη`, e.g. from `exp_le_one_add_add_half_mul_sq`), then
-`μ[exp(θ ΔM_i) | ℱ_i] ≤ 1 + ½(1+δ)θ²(⟨M⟩_{i+1} - ⟨M⟩_i)` a.e. Same proof as the crude
-`condExp_exp_increment_le`, with the refined one-step estimate in place of `eˣ ≤ 1 + x + x²`
-(variance proxy `1+δ` instead of `2`). -/
+/-- **Refined conditional MGF bound.** If `|ΔM_i| ≤ c` a.e. and `|θ| c ≤ η`, where `η` is
+admissible for the refined inequality at level `δ` (`hη`, e.g. from
+`exp_le_one_add_add_half_mul_sq`), then
+`μ[exp(θ ΔM_i) | ℱ_i] ≤ 1 + ½(1+δ)θ²(⟨M⟩_{i+1} - ⟨M⟩_i)` a.e. The crude bound
+`condExp_exp_increment_le`, with variance proxy `2` in place of `1+δ`, is the `δ = η = 1`
+instance, where `hη` is `eˣ ≤ 1 + x + x²` on `|x| ≤ 1`. -/
 lemma condExp_exp_increment_le_refined [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     {c θ δ η : ℝ} (hη : ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2)
     (hθ : |θ| * c ≤ η) (i : ℕ) (hb : ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
@@ -167,17 +165,16 @@ lemma condExp_exp_increment_le_refined [IsProbabilityMeasure μ] (hM : Martingal
     rw [ea, Pi.add_apply, el, eq]
   exact (condExp_mono hint_exp hint_q hptwise).trans hcond_q.le
 
-/-- The **refined exponential process** `Z_n(θ) = exp(θ M_n - ½(1+δ)θ² ⟨M⟩_n)`
-(blueprint `lem:llil_refined_freedman`), the sharp-constant analogue of `expProcess`. -/
+/-- The **refined exponential process** `Z_n(θ) = exp(θ M_n - ½(1+δ)θ² ⟨M⟩_n)`, the
+sharp-constant analogue of `expProcess`. -/
 noncomputable def expProcessRefined (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω)
     (δ θ : ℝ) : ℕ → Ω → ℝ :=
   fun n ω ↦ exp (θ * M n ω - (1 + δ) / 2 * θ ^ 2 * predQuadVar M ℱ μ n ω)
 
-/-- **The refined exponential process is a supermartingale**
-(blueprint `lem:llil_refined_freedman`).
-Same proof as `supermartingale_expProcess`, with the refined MGF bound
-`condExp_exp_increment_le_refined` (variance proxy `1+δ`) in place of the crude one, so the exponent
-carries `½(1+δ)θ²⟨M⟩` instead of `θ²⟨M⟩`. -/
+/-- **The refined exponential process is a supermartingale.**
+The one-step estimate is the refined MGF bound `condExp_exp_increment_le_refined` (variance proxy
+`1+δ`), so the exponent carries `½(1+δ)θ²⟨M⟩`; `supermartingale_expProcess`, whose exponent carries
+`θ²⟨M⟩`, is the `δ = η = 1` instance. -/
 @[specifies expProcessRefined "the reason for the refined `½(1+δ)` coefficient: it is the smallest \
 compensator that still yields a supermartingale under the sharpened MGF bound, and shrinking it \
 towards the Gaussian `½` is exactly what buys the sharp LIL constant"]
@@ -281,8 +278,8 @@ lemma supermartingale_expProcessRefined [IsProbabilityMeasure μ] (hM : Martinga
 
 
 /-- The `δ = 1` case of `exp_le_one_add_add_half_mul_sq`, valid on the explicit window `η = 1`:
-`eˣ ≤ 1 + x + x²` for `|x| ≤ 1`. This is Mathlib's `Real.abs_exp_sub_one_sub_id_le`, and it is
-what specializes the refined engine below to the crude one. -/
+`eˣ ≤ 1 + x + x²` for `|x| ≤ 1`. It follows from Mathlib's `Real.abs_exp_sub_one_sub_id_le`, and
+it is what specializes the refined engine to the crude one. -/
 lemma exp_le_one_add_add_sq {x : ℝ} (hx : |x| ≤ 1) :
     Real.exp x ≤ 1 + x + (1 + 1) / 2 * x ^ 2 := by
   have := le_of_abs_le (Real.abs_exp_sub_one_sub_id_le hx)
@@ -305,8 +302,7 @@ lemma condExp_exp_increment_le [IsProbabilityMeasure μ] (hM : Martingale M ℱ 
     (Eventually.of_forall fun ω ↦ ?_)
   norm_num
 
-/-- The **exponential process** `Z_n(θ) = exp(θ M_n - θ² ⟨M⟩_n)`
-(blueprint `lem:lil_exp_supermart`). -/
+/-- The **exponential process** `Z_n(θ) = exp(θ M_n - θ² ⟨M⟩_n)`. -/
 noncomputable def expProcess (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) (θ : ℝ) :
     ℕ → Ω → ℝ :=
   fun n ω ↦ Real.exp (θ * M n ω - θ ^ 2 * predQuadVar M ℱ μ n ω)
@@ -318,7 +314,7 @@ lemma expProcessRefined_one (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (
   simp only [expProcess, expProcessRefined]
   norm_num
 
-/-- **The exponential process is a supermartingale** (blueprint `lem:lil_exp_supermart`).
+/-- **The exponential process is a supermartingale.**
 For a martingale `M` with `M 0 = 0`, square-integrable, with increments bounded by `c`, and for
 `|θ| c ≤ 1`, the process `Z_n(θ) = exp(θ M_n - θ² ⟨M⟩_n)` is a supermartingale.
 The one-step bound is `μ[Z_{i+1} | ℱ_i] = Z_i e^{-θ² Δ⟨M⟩_i} μ[e^{θ ΔM_i} | ℱ_i]
@@ -386,7 +382,7 @@ lemma smul_measure_sup_le_integral_zero [IsFiniteMeasure μ] {Z : ℕ → Ω →
     _ ≤ ENNReal.ofReal (∫ ω, stoppedValue Z τ ω ∂μ) := ENNReal.ofReal_le_ofReal h2
     _ ≤ ENNReal.ofReal (∫ ω, Z 0 ω ∂μ) := ENNReal.ofReal_le_ofReal h3
 
-/-- **Refined Freedman-type inequality** (blueprint `lem:llil_refined_freedman`, pre-optimization).
+/-- **Refined Freedman-type inequality** (before optimizing over `θ`).
 The sharp-constant analogue of `measure_exists_ge_le_exp`, with variance proxy `(1+δ)v` in place of
 `2v`: `μ{∃ k ≤ n, λ ≤ M_k, ⟨M⟩_k ≤ v} ≤ exp(-θλ + ½(1+δ)θ²v)`, via Ville's inequality on the refined
 supermartingale `expProcessRefined`. -/
@@ -437,7 +433,7 @@ lemma measure_exists_ge_le_exp_refined [IsProbabilityMeasure μ] (hM : Martingal
           rw [hadef, ← Real.exp_neg]; congr 1; ring
         rw [hexp, ENNReal.ofReal_inv_of_pos ha_pos]
 
-/-- **Freedman-type inequality** (blueprint `lem:lil_freedman`, before optimizing over `θ`).
+/-- **Freedman-type inequality** (before optimizing over `θ`).
 For a square-integrable martingale `M` with `M 0 = 0`, increments bounded by `c`, and `0 < θ` with
 `θ c ≤ 1`, and for any `λ, v`,
 `μ{ω : ∃ k ≤ n, λ ≤ M_k ω ∧ ⟨M⟩_k ω ≤ v} ≤ exp(-θλ + θ² v)`.
@@ -613,7 +609,7 @@ lemma ae_eventually_forall_lt_of_summable [IsProbabilityMeasure μ] (hM : Martin
   rw [not_lt] at hcon
   exact hk n hcon hn
 
-/-- **One-sided LIL with a dyadic schedule** (formalized content of blueprint `thm:lil_bounded`).
+/-- **One-sided LIL with a dyadic schedule.**
 Instantiating the Borel–Cantelli step (`ae_eventually_forall_lt_of_summable`) with dyadic blocks
 `v_k = 2^k` and thresholds `λ_k = K √(2^k (k+1))`, where `0 < K` and `K c ≤ 2`. Admissibility
 `λ_k c ≤ 2 v_k` then holds for *every* `k` (via `k + 1 ≤ 2^k`, so `√(2^k(k+1)) ≤ 2^k`), and the
@@ -677,12 +673,12 @@ lemma ae_eventually_forall_lt_dyadic [IsProbabilityMeasure μ] (hM : Martingale 
 
 /-- **One-sided LIL upper bound in normalized form** (the consumable `O`-rate).
 If additionally `⟨M⟩_n → ∞` a.s., then almost surely `M_n ≤ C √(⟨M⟩_n · log⟨M⟩_n)` eventually,
-for a deterministic constant `C` (depending only on `c`). This repackages the dyadic exceedance
-statement `ae_eventually_forall_lt_dyadic`: for large `n`, take the least block `k` with
-`⟨M⟩_n ≤ 2^k`; minimality gives `2^k ≤ 2⟨M⟩_n` and `k ≲ log₂⟨M⟩_n`, so
-`K√(2^k(k+1)) ≤ C√(⟨M⟩_n log⟨M⟩_n)`. This is the `O(√(⟨M⟩_n log⟨M⟩_n))` a.s. upper bound used
-downstream (blueprint `lem:U_increment_bound`, via the bounded assignment martingale) — a `log`
-rather than `log log` rate, which suffices for the `o(⟨M⟩_n)` conclusions. -/
+for some constant `C` (the proof supplies an explicit one, depending only on `c`). This repackages
+the dyadic exceedance statement `ae_eventually_forall_lt_dyadic`: for large `n`, take the least
+block `k` with `⟨M⟩_n ≤ 2^k`; minimality gives `2^k ≤ 2⟨M⟩_n` and `k ≲ log₂⟨M⟩_n`, so
+`K√(2^k(k+1)) ≤ C√(⟨M⟩_n log⟨M⟩_n)`. The rate carries a `log` rather than a `log log`, which is
+enough wherever only an `o(⟨M⟩_n)` conclusion is needed; the `log log` refinement is proved in
+`LILLogLog.lean`. -/
 lemma ae_eventually_le_sqrt_predQuadVar_mul_log [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c : ℝ} (hc : 0 < c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
@@ -757,9 +753,8 @@ lemma ae_eventually_le_sqrt_predQuadVar_mul_log [IsProbabilityMeasure μ] (hM : 
 If `M` is a square-integrable martingale with `M 0 = 0`, `|ΔM_i| ≤ c`, and `⟨M⟩_n → ∞` a.s., then
 almost surely `M_n ≤ C √(n log n)` eventually. This combines the normalized bound
 `ae_eventually_le_sqrt_predQuadVar_mul_log` with `⟨M⟩_n ≤ c² n` (`predQuadVar_le_of_bound`) and
-`log⟨M⟩_n ≤ 2 log n` (valid once `n ≥ c²`). It is the `O(√(n log n))` a.s. upper bound applied
-downstream to the bounded assignment martingale (blueprint `lem:U_increment_bound`, stated there
-with `log log`, weakened here to `log`). -/
+`log⟨M⟩_n ≤ 2 log n` (valid once `n ≥ c²`). The sharper `log log` rate, at scale `√(n log log n)`,
+is proved in `LILLogLog.lean`. -/
 lemma ae_eventually_le_sqrt_nat_mul_log [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
     (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c : ℝ} (hc : 0 < c)
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)

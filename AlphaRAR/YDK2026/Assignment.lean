@@ -36,7 +36,7 @@ probability, and `M` is a martingale for `ℱ.shiftDown`. At `n = 0` there is no
 
 ## Main results
 
-* `AlphaRAR.martingale_assignMart`: `M` is a martingale (blueprint `lem:M_martingale`).
+* `AlphaRAR.martingale_assignMart`: `M` is a martingale.
 * `AlphaRAR.assignMart_succ_sub`: the increment `M (n+1) - M n = X n - μ[X n | ℱ (n-1)]`.
 -/
 
@@ -50,12 +50,12 @@ variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
   {ℱ : Filtration ℕ m0} {X : ℕ → Ω → ℝ}
 
 /-- The assignment martingale, i.e. the martingale part of the count process `N` in its Doob
-decomposition with respect to the previous-history filtration `ℱ.shiftDown` (blueprint `def:M`).
-Its increments are `X n - μ[X n | ℱ (n-1)]`. -/
+decomposition with respect to the previous-history filtration `ℱ.shiftDown`. Its increments are
+`X n - μ[X n | ℱ (n-1)]`. -/
 noncomputable def assignMart (X : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) : ℕ → Ω → ℝ :=
   martingalePart (count X) ℱ.shiftDown μ
 
-/-- **The assignment process is a martingale** (blueprint `lem:M_martingale`).
+/-- **The assignment process is a martingale**.
 For an adapted, integrable assignment indicator `X`, the martingale part `M` of the count process
 is a martingale for the previous-history filtration `ℱ.shiftDown`. -/
 @[specifies assignMart "names the filtration the martingale property actually holds for: \
@@ -66,9 +66,9 @@ lemma martingale_assignMart [IsFiniteMeasure μ]
     Martingale (assignMart X ℱ μ) ℱ.shiftDown μ :=
   martingale_martingalePart (stronglyAdapted_count hX) (integrable_count hX_int)
 
-/-- The increment of the assignment martingale is `X n - μ[X n | ℱ (n-1)]`,
-matching the blueprint's `ΔM = X - p` with `p_n = μ[X n | ℱ (n-1)]`. -/
-@[specifies assignMart "identifies the compensator as the blueprint's selection probability \
+/-- The increment of the assignment martingale is `X n - μ[X n | ℱ (n-1)]`, i.e. `ΔM = X - p`
+for the selection probability `p_n = μ[X n | ℱ (n-1)]`. -/
+@[specifies assignMart "identifies the compensator as the selection probability \
 `p_n = μ[X n | ℱ_{n-1}]` — conditioning on the history *strictly before* patient `n`, which is \
 what makes `p_n` the probability of assigning arm `k` to that patient"]
 lemma assignMart_succ_sub (n : ℕ) :
@@ -78,8 +78,8 @@ lemma assignMart_succ_sub (n : ℕ) :
   rw [predictablePart_add_one, hg, count_succ]
   abel
 
-/-- The increments of the assignment martingale are bounded by `1` (blueprint
-`lem:M_martingale`, bounded-increment part): if `0 ≤ X ≤ 1` a.e., then `|M (n+1) - M n| ≤ 1` a.e. -/
+/-- The increments of the assignment martingale are bounded by `1`: if `0 ≤ X ≤ 1` a.e., then
+`|M (n+1) - M n| ≤ 1` a.e. -/
 lemma abs_assignMart_succ_sub_le [IsFiniteMeasure μ]
     (hX_int : ∀ n, Integrable (X n) μ)
     (h0 : ∀ n, 0 ≤ᵐ[μ] X n) (h1 : ∀ n, X n ≤ᵐ[μ] fun _ ↦ (1 : ℝ)) (n : ℕ) :

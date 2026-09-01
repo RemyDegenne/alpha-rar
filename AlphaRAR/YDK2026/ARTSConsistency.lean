@@ -13,9 +13,9 @@ public meta import LeanSpec
 /-!
 # Consistency of the aRTS design family
 
-This file instantiates the modular consistency theorem `consistency_of_generic_ae`
-(blueprint `thm:generic_main`) for the aRTS design family, giving the concrete strong law of
-large numbers for the allocation proportions (blueprint `thm:LLN`, consistency direction).
+This file instantiates the modular consistency theorem `consistency_of_generic_ae` for the aRTS
+design family, giving the concrete strong law of large numbers for the allocation proportions
+(Theorem 4.1 of the paper, consistency direction).
 
 The aRTS design is specified through three derived per-arm processes of an
 `IsAlgEnvSeq` algorithm–environment sequence:
@@ -28,17 +28,17 @@ The aRTS design is specified through three derived per-arm processes of an
 
 The *design semantics* enter as a single hypothesis on these processes:
 
-* the **throttle** (blueprint `eq:throttle`): whenever arm `k` is over-sampled at time `m`
-  (`¬ aRTSUnder`, i.e. `N_{m,k} > m ρ̂_{m,k}`), its selection probability is throttled,
-  `p_{m,k} ≤ α ρ̂_{m,k}` (patient `m` uses the target `ρ̂_{m,k}` of patients `0, …, m-1`).
+* the **throttle** (condition (3) of the paper's Definition 3.1): whenever arm `k` is
+  over-sampled at time `m` (`¬ aRTSUnder`, i.e. `N_{m,k} > m ρ̂_{m,k}`), its selection
+  probability is throttled, `p_{m,k} ≤ α ρ̂_{m,k}` (patient `m` uses the target `ρ̂_{m,k}` of
+  patients `0, …, m-1`).
 
-Under this, together with Condition **A** (`hY2 : MemLp (Y n) 2`) and the target map being a
-continuous map into the simplex, the allocation proportions converge a.s. to the (random) common
-limit of the plug-in targets: `N_{n,k}/n → u_k` and `ρ̂_{n,k} → u_k`.
+Under this, together with Condition **A** (`hνk : ∀ a, MemLp id 2 (ν a)`) and the target map
+being a continuous map into the simplex, the allocation proportions converge a.s. to the
+(random) common limit of the plug-in targets: `N_{n,k}/n → u_k` and `ρ̂_{n,k} → u_k`.
 
-The throttle itself — that a concrete aRTS selection rule satisfies `eq:throttle` — is the
-design-specific step flagged in the blueprint (`prop:aRTS_generic`) and is taken here as a
-hypothesis; everything downstream of it is proved.
+The throttle itself — that a concrete aRTS selection rule satisfies it — is the design-specific
+step, taken here as a hypothesis; everything downstream of it is proved.
 
 ## Main results
 
@@ -128,15 +128,15 @@ lemma aRTS_smallness_all [DecidableEq 𝓐] (θ₀ : 𝓐 → ℝ) (T : (𝓐 �
 
 /-! ### The concrete aRTS consistency theorem -/
 
-/-- **Generic a.s. consistency of the aRTS proportions at an abstract hitting time** (blueprint
-`thm:generic_main`, consistency direction, for any design with a suitable hitting predicate). This
-generalises `aRTS_consistency` from the last under-sampling time `aRTSUnder` to an *arbitrary*
-per-arm predicate `Q` for the hitting time `ℓ_{n,k} = hitting (Q k ω) n`: only the throttle
-`¬ Q → p ≤ α ρ̂` (`hthrottle`) and the smallness `(N_ℓ - ℓ ρ̂_ℓ)/n → 0` (`hgs`) are design-specific,
-and both are taken as hypotheses. The `aRTS` and `aRTSFE` designs then instantiate it with their
-respective predicates (last under-sampling time, resp. forced-exploration hitting time). Everything
-else — the vanishing normalised martingale, the plug-in-target convergence, and the generic key
-inequality (`generic_ineq_of_hitting`, valid for *any* predicate) — is discharged uniformly. -/
+/-- **Generic a.s. consistency of the aRTS proportions at an abstract hitting time**, for any
+design with a suitable hitting predicate. This generalises `aRTS_consistency` from the last
+under-sampling time `aRTSUnder` to an *arbitrary* per-arm predicate `Q` for the hitting time
+`ℓ_{n,k} = hitting (Q k ω) n`: only the throttle `¬ Q → p ≤ α ρ̂` (`hthrottle`) and the smallness
+`(N_ℓ - ℓ ρ̂_ℓ)/n → 0` (`hgs`) are design-specific, and both are taken as hypotheses. The `aRTS`
+and `aRTSFE` designs then instantiate it with their respective predicates (last under-sampling
+time, resp. forced-exploration hitting time). Everything else — the vanishing normalised
+martingale, the plug-in-target convergence, and the generic key inequality
+(`generic_ineq_of_hitting`, valid for *any* predicate) — is discharged uniformly. -/
 lemma consistency_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
@@ -234,11 +234,11 @@ lemma consistency_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
   have hk := hcons_ω k
   rwa [(huu k).limUnder_eq] at hk
 
-/-- **Estimator consistency at an abstract hitting time** (blueprint `lem:theta_consistent`, generic
-form). The abstract-hitting-time generalisation of `aRTS_theta_consistent`: from the joint
-consistency `consistency_of_hitting` (whose throttle `hthrottle` and smallness `hgs` are the
-design-specific inputs) and Condition **B**'s non-sparsity `hTpos`, the sequential estimator
-converges a.s. to the true parameter `θ̂_n → θ = (ν.means k)_k`, via the design-independent
+/-- **Estimator consistency at an abstract hitting time**, in generic form. The
+abstract-hitting-time generalisation of `aRTS_theta_consistent`: from the joint consistency
+`consistency_of_hitting` (whose throttle `hthrottle` and smallness `hgs` are the design-specific
+inputs) and Condition **B**'s non-sparsity `hTpos`, the sequential estimator converges a.s. to the
+true parameter `θ̂_n → θ = (ν.means k)_k`, via the design-independent
 `theta_consistent_pi_of_condB`. -/
 lemma theta_consistent_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
@@ -276,8 +276,8 @@ lemma target_pos_of_theta_consistent {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) 
     exact fun k' ↦ estimator_limit_mem_attainableSet k' (θ₀ k') (tendsto_pi_nhds.mp hω k')
   exact fun k ↦ hTpos ν.means hmem k
 
-/-- **Allocation proportions converge to the target at an abstract hitting time** (blueprint
-`thm:LLN`, first conclusion, generic form). The abstract-hitting-time generalisation of
+/-- **Allocation proportions converge to the target at an abstract hitting time** (Theorem 4.1 of
+the paper, first conclusion, generic form). The abstract-hitting-time generalisation of
 `aRTS_proportion_tendsto`: combining the joint consistency `consistency_of_hitting`
 (`N_{n,k}/n` and `ρ̂_{n,k}` share the random limit `u_k`) with the estimator consistency
 `theta_consistent_of_hitting` (so `ρ̂_{n,k} → T(θ)_k` by continuity) identifies the limit as the
@@ -308,11 +308,12 @@ lemma proportion_tendsto_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
   rw [← huk]
   exact (hu k).1
 
-/-- **Consistency of the aRTS allocation proportions** (blueprint `thm:LLN`, consistency direction).
-The `aRTS` instantiation of `consistency_of_hitting` at the last under-sampling time
-`hitting (aRTSUnder …)`: whenever arm `k` is over-sampled its selection probability is throttled
-(`hthrottle`), so the smallness `N_{ℓ} - ℓ ρ̂_{ℓ} ≤ 0` is automatic (`generic_small_of_hitting`).
-Almost surely there is a common limit `u` with `N_{n,k}/n → u_k`, `ρ̂_{n,k} → u_k` for every `k`. -/
+/-- **Consistency of the aRTS allocation proportions**, the matching step behind the first
+conclusion of Theorem 4.1 of the paper. The `aRTS` instantiation of `consistency_of_hitting` at
+the last under-sampling time `hitting (aRTSUnder …)`: whenever arm `k` is over-sampled its
+selection probability is throttled (`hthrottle`), so the smallness `N_{ℓ} - ℓ ρ̂_{ℓ} ≤ 0` is
+automatic (`generic_small_of_hitting`). Almost surely there is a common limit `u` with
+`N_{n,k}/n → u_k`, `ρ̂_{n,k} → u_k` for every `k`. -/
 lemma aRTS_consistency [Fintype 𝓐] [DecidableEq 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)

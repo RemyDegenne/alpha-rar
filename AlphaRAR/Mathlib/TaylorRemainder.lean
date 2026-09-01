@@ -17,11 +17,11 @@ If a map `f` is differentiable on a convex set `s` with derivative `f'` that is 
 base point `θ` (`‖f' z - f' θ‖ ≤ K‖z - θ‖`), then the first-order Taylor remainder is controlled
 quadratically: `‖f x - f θ - f' θ (x - θ)‖ ≤ K‖x - θ‖²`.
 
-This packages the mean-value inequality `norm_image_sub_le_of_norm_hasFDerivWithin_le'` applied on
-the segment `[θ, x]`, where the derivative deviation `‖f' z - f' θ‖ ≤ K‖z - θ‖ ≤ K‖x - θ‖` provides
-the constant. It is the multivariate first-order expansion with an explicit quadratic bound
-(blueprint `lem:taylor_rho`), obtained from a Lipschitz bound on the derivative (which
-Condition **B** supplies via the bounded second derivative).
+This packages the mean-value inequality
+`Convex.norm_image_sub_le_of_norm_hasFDerivWithin_le'` applied on the segment `[θ, x]`, where the
+derivative deviation `‖f' z - f' θ‖ ≤ K‖z - θ‖ ≤ K‖x - θ‖` provides the constant. It is the
+multivariate first-order expansion with an explicit quadratic bound, obtained from a Lipschitz
+bound on the derivative.
 
 A `C²` map supplies that Lipschitz bound by itself, since `fderiv ℝ f` is then `C¹` and hence
 locally Lipschitz: this gives `exists_eventually_norm_sub_fderiv_le_mul_sq`. At a *minimum* the

@@ -217,9 +217,9 @@ section
 open Filter Finset MeasureTheory Learning
 namespace AlphaRAR
 
-/-- Allocation count of a fixed arm, `N n = ∑_{j<n} X j` (blueprint `def:counts`). Stated for a
-general `AddCommMonoid` so it serves both the deterministic per-path counts (`X : ℕ → ℝ`) and the
-process-level count (`X : ℕ → Ω → ℝ`, the assignment count process of `Assignment.lean`). -/
+/-- Allocation count of a fixed arm, `N n = ∑_{j<n} X j`. Stated for a general `AddCommMonoid` so
+it serves both the deterministic per-path counts (`X : ℕ → ℝ`) and the process-level count
+(`X : ℕ → Ω → ℝ`, the assignment count process of `Assignment.lean`). -/
 def count {M : Type*} [AddCommMonoid M] (X : ℕ → M) (n : ℕ) : M := ∑ j ∈ range n, X j
 
 end AlphaRAR
@@ -232,7 +232,7 @@ open scoped Topology
 namespace AlphaRAR
 variable (X p ρ : ℕ → ℝ) (α : ℝ)
 
-/-- Sequential estimator of a fixed arm (blueprint `def:estimator`),
+/-- Sequential estimator of a fixed arm, equation (1) of the paper:
 `θ̂ n = (∑_{j<n} X j ξ j + θ₀) / (N n + 1)`, with initial value `θ₀` and the `+1`
 regularization in the denominator. -/
 noncomputable def estimator (ξ : ℕ → ℝ) (θ₀ : ℝ) (n : ℕ) : ℝ :=
@@ -248,10 +248,10 @@ open scoped Topology
 namespace AlphaRAR
 variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐} [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν] {P : Measure Ω} [IsProbabilityMeasure P] {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
-/-- **Attainable set of the estimator** (blueprint `def:attainable`, closure form). The closure of
-all values `θ̂_{n,k}(ω)` of the sequential estimator for arm `k`, over times `n` and outcomes `ω`.
-Every pointwise limit of `θ̂_{·,k}` lies in it (`estimator_limit_mem_attainableSet`), so Condition
-**B**'s positivity requirement on this set transfers to the plug-in-target limit `u_k = T(z)_k`. -/
+/-- **Attainable set of the estimator**, in closure form: the closure of all values `θ̂_{n,k}(ω)`
+of the sequential estimator for arm `k`, over times `n` and outcomes `ω`. Every pointwise limit of
+`θ̂_{·,k}` lies in it (`estimator_limit_mem_attainableSet`), so Condition **B**'s positivity
+requirement on this set transfers to the plug-in-target limit `u_k = T(z)_k`. -/
 def attainableSet (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : ℝ) (k : 𝓐) : Set ℝ :=
   closure (Set.range fun p : ℕ × Ω ↦
     estimator (fun j ↦ actionIndicator A k j p.2) (Y · p.2) θ₀ p.1)
@@ -274,8 +274,8 @@ noncomputable def histTarget (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐
     (h : Iic n → 𝓐 × ℝ) : ℝ :=
   T (fun k' ↦ (sumRewards' n h k' + θ₀ k') / ((pullCount' n h k' : ℝ) + 1)) k
 
-/-- **The aRTS design family** (blueprint `def:aRTS`, algorithm form). An algorithm `alg` is an
-`α`-throttled aRTS design with offsets `θ₀` and target map `T` if its policy throttles every
+/-- **The aRTS design family** (Definition 3.1 of the paper, algorithm form). An algorithm `alg`
+is an `α`-throttled aRTS design with offsets `θ₀` and target map `T` if its policy throttles every
 over-sampled arm: for any history `h : Iic n → 𝓐 × ℝ`, if arm `k` is over-sampled
 (`N_{n+1,k}(h) > (n+1) ρ̂_k(h)`), then the probability the policy assigns to arm `k` for the next
 patient is at most `α ρ̂_k(h)`. -/
@@ -294,13 +294,14 @@ open scoped Topology
 namespace AlphaRAR
 variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐} [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐] {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν] {P : Measure Ω} [IsProbabilityMeasure P] {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
-/-- **Strong consistency and rates for an aRTS design** (blueprint `thm:LLN`). Under Conditions
-**A** (`hνk`) and **B** (`hT`, `hTpos`, `hT_diff`, and the simplex
+/-- **Strong consistency and rates for an aRTS design** (Theorem 4.1 of the paper). Under
+Conditions **A** (`hνk`) and **B** (`hT`, `hTpos`, `hT_diff`, and the simplex
 conditions `hTnn`, `hTsum`) an `α`-throttled aRTS design satisfies, almost surely for every arm `k`:
 the allocation proportion converges to the target `N_{n,k}/n → v_k = T(θ)_k`; the estimator is
-consistent `θ̂_{n,k} → θ_k`; and the plug-in target achieves the loglog rate
-`ρ̂_{n,k} - v_k = O(√(log log n / n))`. Bundles `aRTS_proportion_tendsto`, `aRTS_theta_consistent`,
-`aRTS_rho_rate`. -/
+consistent `θ̂_{n,k} → θ_k` and achieves the loglog rate `θ̂_{n,k} - θ_k = O(√(log log n / n))`; and
+the plug-in target achieves the same rate `ρ̂_{n,k} - v_k = O(√(log log n / n))` — the last two are
+the paper's `Θ̂_n - Θ = O(√(log log n / n))` and `n(ρ̂_n - v) = O(√(n log log n))`. Bundles
+`aRTS_proportion_tendsto`, `aRTS_theta_consistent`, `aRTS_theta_rate`, `aRTS_rho_rate`. -/
 theorem aRTS_LLN (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
@@ -311,6 +312,8 @@ theorem aRTS_LLN (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
       Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (T ν.means k)) ∧
       Tendsto (fun n ↦ estimator (fun j ↦ actionIndicator A k j ω)
         (Y · ω) (θ₀ k) n) atTop (𝓝 (ν.means k)) ∧
+      (fun n ↦ estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k)
+          =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) ∧
       (fun n ↦ T (fun k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
         (Y · ω) (θ₀ k') n) k - T ν.means k)
           =O[atTop] (fun n ↦ √((n : ℝ) * log (log (n : ℝ))) / (n : ℝ)) := sorry
