@@ -350,9 +350,10 @@ jobs:
           retention-days: 90
 
       - name: Compile blueprint and documentation
-        uses: leanprover-community/docgen-action@deed0cdc44dd8e5de07a300773eb751d33e32fc8 # 2025-10-26
+        uses: leanprover-community/docgen-action@56023ee2a4b3630c1071825be5bafdb43f540bbd # 2026-08-21
         with:
           blueprint: true
+          api-docs: false
           homepage: home_page
           build-page: false
           deploy: false
