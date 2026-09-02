@@ -334,31 +334,15 @@ lemma predQuadVar_iidSum_le [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
     (hint2 : ∀ i, MemLp (Y i) 2 μ) {v : ℝ} (hv : ∀ i, ∫ ω, Y i ω ^ 2 ∂μ ≤ v) :
     ∀ᵐ ω ∂μ, ∀ n,
       predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ n ω ≤ v * n := by
-  have hint : ∀ i, Integrable (Y i) μ := fun i ↦ (hint2 i).integrable one_le_two
   have hstep : ∀ k, ∀ᵐ ω ∂μ,
       predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ (k + 1) ω
-        - predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ k ω ≤ v := by
-    intro k
+        - predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ k ω ≤ v := fun k ↦ by
     filter_upwards [predQuadVar_iidSum_succ_sub hY hindep hcent hint2 k] with ω e
-    have he : predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ (k + 1) ω
-        - predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ k ω
-        = ∫ ω, Y k ω ^ 2 ∂μ := by simpa using e
-    rw [he]; exact hv k
-  filter_upwards [ae_all_iff.mpr hstep] with ω hω n
-  have htel : ∑ k ∈ Finset.range n,
-      (predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ (k + 1) ω
-        - predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ k ω)
-      = predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ n ω := by
-    rw [Finset.sum_range_sub
-        (fun k ↦ predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ k ω) n,
-      show predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ 0 ω = 0 from by
-        rw [predQuadVar_zero]; rfl, sub_zero]
-  rw [← htel]
-  calc ∑ k ∈ Finset.range n,
-        (predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ (k + 1) ω
-          - predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ k ω)
-      ≤ ∑ _k ∈ Finset.range n, v := Finset.sum_le_sum fun k _ ↦ hω k
-    _ = v * n := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]; ring
+    simp only [Pi.sub_apply] at e
+    rw [e]
+    exact hv k
+  filter_upwards [predQuadVar_le_sum_of_succ_sub_le hstep] with ω hω n
+  exact (hω n).trans_eq (by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul, mul_comm])
 
 /-- **Linear lower bound on the quadratic variation of the i.i.d. sum.** If every increment has
 second moment `E[Y_i²] ≥ w`, then almost surely `w·n ≤ ⟨S⟩_n` for all `n`. With `w > 0` this forces
@@ -369,32 +353,16 @@ lemma predQuadVar_iidSum_ge [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
     (hint2 : ∀ i, MemLp (Y i) 2 μ) {w : ℝ} (hw : ∀ i, w ≤ ∫ ω, Y i ω ^ 2 ∂μ) :
     ∀ᵐ ω ∂μ, ∀ n,
       w * n ≤ predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ n ω := by
-  have hint : ∀ i, Integrable (Y i) μ := fun i ↦ (hint2 i).integrable one_le_two
   have hstep : ∀ k, ∀ᵐ ω ∂μ, w ≤
       predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ (k + 1) ω
-        - predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ k ω := by
-    intro k
+        - predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ k ω := fun k ↦ by
     filter_upwards [predQuadVar_iidSum_succ_sub hY hindep hcent hint2 k] with ω e
-    have he : predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ (k + 1) ω
-        - predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ k ω
-        = ∫ ω, Y k ω ^ 2 ∂μ := by simpa using e
-    rw [he]; exact hw k
-  filter_upwards [ae_all_iff.mpr hstep] with ω hω n
-  have htel : ∑ k ∈ Finset.range n,
-      (predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ (k + 1) ω
-        - predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ k ω)
-      = predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ n ω := by
-    rw [Finset.sum_range_sub
-        (fun k ↦ predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ k ω) n,
-      show predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ 0 ω = 0 from by
-        rw [predQuadVar_zero]; rfl, sub_zero]
-  rw [← htel]
-  calc w * n = ∑ _k ∈ Finset.range n, w := by
-        rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]; ring
-    _ ≤ ∑ k ∈ Finset.range n,
-        (predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ (k + 1) ω
-          - predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ k ω) :=
-        Finset.sum_le_sum fun k _ ↦ hω k
+    simp only [Pi.sub_apply] at e
+    rw [e]
+    exact hw k
+  filter_upwards [sum_le_predQuadVar_of_le_succ_sub hstep] with ω hω n
+  exact (show w * n = ∑ _k ∈ Finset.range n, w by
+    rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul, mul_comm]).trans_le (hω n)
 
 /-! ### The centred-truncation (low-part) martingale
 
@@ -1137,16 +1105,8 @@ lemma ae_medium_div_weight_tendsto_zero [IsProbabilityMeasure μ] {Y : ℕ → �
   have hSmem : ∀ n, MemLp (S n) 2 μ := fun n ↦ memLp_finsetSum (Finset.range n) fun k _ ↦ hDmem k
   -- Discrete Itô isometry: `∫ (S n)² = ∑_{k<n} ∫ (ΔS_k)²`.
   have hsqeq : ∀ n, ∫ ω, (S n ω) ^ 2 ∂μ
-      = ∑ k ∈ Finset.range n, ∫ ω, (S (k + 1) ω - S k ω) ^ 2 ∂μ := by
-    intro n
-    rw [integral_sq_eq_integral_predQuadVar hSmart.stronglyAdapted hSmem hS0 n]
-    have e : ∑ k ∈ Finset.range n, ∫ ω, (S (k + 1) ω - S k ω) ^ 2 ∂μ
-        = ∑ k ∈ Finset.range n,
-            ((∫ ω, predQuadVar S 𝒢 μ (k + 1) ω ∂μ) - ∫ ω, predQuadVar S 𝒢 μ k ω ∂μ) :=
-      Finset.sum_congr rfl fun k _ ↦
-        (integral_predQuadVar_succ_sub hSmart hSmem k).symm
-    rw [e, Finset.sum_range_sub (fun k ↦ ∫ ω, predQuadVar S 𝒢 μ k ω ∂μ) n]
-    simp [predQuadVar_zero]
+      = ∑ k ∈ Finset.range n, ∫ ω, (S (k + 1) ω - S k ω) ^ 2 ∂μ :=
+    integral_sq_eq_sum_integral_increment_sq hSmart hSmem hS0
   -- Per-increment: `∫ (ΔS_k)² = Var(Y_k^M)/a(k+1)²`.
   have hbound : ∀ k, ∫ ω, (S (k + 1) ω - S k ω) ^ 2 ∂μ
       = variance (fun ω ↦ mediumTrunc k (Y k ω)) μ / a (k + 1) ^ 2 := by

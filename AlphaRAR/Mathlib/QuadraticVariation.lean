@@ -12,18 +12,42 @@ public meta import Characterization
 /-!
 # Predictable quadratic variation
 
-For a square-integrable martingale `M` (with `M 0 = 0`), the predictable quadratic
-variation `⟨M⟩` is the predictable part of the submartingale `M²` in its Doob
-decomposition, and `M² - ⟨M⟩` is a martingale. This file records these as thin
-wrappers around Mathlib's discrete Doob decomposition.
+For a square-integrable martingale `M`, the predictable quadratic variation `⟨M⟩` is the
+predictable part of the submartingale `M²` in its Doob decomposition
+(`MeasureTheory.predictablePart`): `⟨M⟩_0 = 0` and `⟨M⟩_{n+1} - ⟨M⟩_n = μ[(M_{n+1} - M_n)² | ℱ_n]`,
+so `⟨M⟩` is nondecreasing and predictable, and `M² - ⟨M⟩` is a martingale. This file is the API of
+`⟨M⟩` for `ℕ`-indexed processes.
 
-## Main results
+## Main definitions and results
 
-* `AlphaRAR.predQuadVar`: the predictable quadratic variation.
-* `AlphaRAR.martingale_sq_sub_predQuadVar`: `M² - ⟨M⟩` is a martingale.
-* `AlphaRAR.IsPredQuadVar`: the property that characterizes `⟨M⟩` — predictable, null at `0`,
-  and compensating `M²` — together with the two theorems saying `⟨M⟩` has it and nothing else
-  does, up to indistinguishability.
+* `AlphaRAR.predQuadVar`: the predictable quadratic variation `⟨M⟩`.
+* `AlphaRAR.predQuadVar_succ_sub_eq`: the increment formula `Δ⟨M⟩_n = μ[(ΔM_n)² | ℱ_n]`, and its
+  summed form `AlphaRAR.predQuadVar_ae_eq_sum`: `⟨M⟩_n = ∑_{i<n} μ[(ΔM_i)² | ℱ_i]`.
+* `AlphaRAR.predQuadVar_mono`, `AlphaRAR.predQuadVar_nonneg`, `AlphaRAR.predQuadVar_le_of_bound`:
+  `⟨M⟩` is nondecreasing and nonnegative, and `⟨M⟩_n ≤ c² n` when `|ΔM_i| ≤ c`.
+* `AlphaRAR.stronglyAdapted_predQuadVar`, `AlphaRAR.isStronglyPredictable_predQuadVar`: `⟨M⟩` is
+  adapted and predictable.
+* `AlphaRAR.martingale_sq_sub_predQuadVar`, `AlphaRAR.submartingale_sq`: `M² - ⟨M⟩` is a
+  martingale, `M²` is a submartingale.
+* `AlphaRAR.IsPredQuadVar`: the property that characterizes `⟨M⟩` — predictable, null at `0`, and
+  compensating `M²` — with `isPredQuadVar_predQuadVar` (`⟨M⟩` has it) and
+  `IsPredQuadVar.indistinguishable_predQuadVar` (nothing else does, up to indistinguishability).
+* `AlphaRAR.integral_sq_eq_integral_predQuadVar`,
+  `AlphaRAR.integral_sq_eq_sum_integral_increment_sq`: the discrete Itô isometry
+  `E[M_n²] = E[⟨M⟩_n] = ∑_{k<n} E[(ΔM_k)²]`.
+* `AlphaRAR.martingale_mul`, `AlphaRAR.predQuadVar_add_of_martingale_mul`: the product of
+  conditionally orthogonal martingales is a martingale, and `⟨M + N⟩ = ⟨M⟩ + ⟨N⟩` for them.
+
+## Integrability hypotheses
+
+The increment formula at step `n` needs exactly `(ΔM_n)² ∈ L¹` and `M_n ΔM_n ∈ L¹`, and the
+one-step lemmas (`predQuadVar_succ_sub_eq`, `predQuadVar_le_succ`) ask for exactly that, as
+`hd2 : MemLp (ΔM_n) 2 μ` and `hprod : Integrable (M_n * ΔM_n) μ`. Both follow from
+`M_n, M_{n+1} ∈ L²` (`memLp_increment`, `integrable_mul_increment`) and from an a.e. bound on
+`ΔM_n` (`memLp_increment_of_bound`, `integrable_mul_increment_of_bound`). The lemmas about the whole
+path assume a square-integrable martingale, `hM2 : ∀ n, MemLp (M n) 2 μ`, which
+`Martingale.memLp_of_abs_increment_le` supplies for a martingale null at `0` with bounded
+increments.
 -/
 
 @[expose] public section
@@ -36,6 +60,8 @@ namespace AlphaRAR
 variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
   {ℱ : Filtration ℕ m0} {M : ℕ → Ω → ℝ}
 
+/-! ### Martingale increments -/
+
 /-- **A martingale increment has vanishing conditional expectation**: for `i ≤ j`,
 `μ[M j - M i | ℱ i] = 0` a.e. This is the martingale property (`Martingale.condExp_ae_eq`)
 restated for the increment, which is the form every computation with increments needs. -/
@@ -47,6 +73,14 @@ lemma _root_.MeasureTheory.Martingale.condExp_sub_ae_eq_zero {ι E : Type*} [Pre
     condExp_sub (hN.integrable j) (hN.integrable i) _
   filter_upwards [h1, hN.condExp_ae_eq hij, hN.condExp_ae_eq (le_refl i)] with ω e1 e2 e3
   simp only [Pi.sub_apply, Pi.zero_apply, e1, e2, e3, sub_self]
+
+/-- **A martingale has constant expectation**: `∫ N i = ∫ N j` for `i ≤ j`. This is
+`Martingale.setIntegral_eq` on the whole space. -/
+lemma _root_.MeasureTheory.Martingale.integral_eq {ι E : Type*} [Preorder ι]
+    [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E] {ℱ : Filtration ι m0}
+    [SigmaFiniteFiltration μ ℱ] {N : ι → Ω → E} (hN : Martingale N ℱ μ) {i j : ι} (hij : i ≤ j) :
+    ∫ ω, N i ω ∂μ = ∫ ω, N j ω ∂μ := by
+  simpa using hN.setIntegral_eq hij MeasurableSet.univ
 
 /-- **The cross term is integrable** for a square-integrable process: `Mₙ·ΔMₙ ∈ L¹` by
 Cauchy–Schwarz. -/
@@ -89,21 +123,40 @@ lemma _root_.MeasureTheory.Martingale.memLp_of_abs_increment_le [IsFiniteMeasure
   filter_upwards [ae_all_iff.mpr hb, hM0] with ω hbω hM0ω
   simp only [Pi.zero_apply] at hM0ω
   rw [Real.norm_eq_abs]
-  have htel : (∑ k ∈ Finset.range n, (M (k + 1) ω - M k ω)) = M n ω := by
-    rw [Finset.sum_range_sub (M · ω) n, hM0ω, sub_zero]
-  calc |M n ω| = |∑ k ∈ Finset.range n, (M (k + 1) ω - M k ω)| := by rw [htel]
-    _ ≤ ∑ k ∈ Finset.range n, |M (k + 1) ω - M k ω| := Finset.abs_sum_le_sum_abs _ _
-    _ ≤ ∑ k ∈ Finset.range n, c := Finset.sum_le_sum fun k _ ↦ hbω k
-    _ = n * c := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+  have htel : (∑ k ∈ range n, (M (k + 1) ω - M k ω)) = M n ω := by
+    rw [sum_range_sub (M · ω) n, hM0ω, sub_zero]
+  calc |M n ω| = |∑ k ∈ range n, (M (k + 1) ω - M k ω)| := by rw [htel]
+    _ ≤ ∑ k ∈ range n, |M (k + 1) ω - M k ω| := abs_sum_le_sum_abs _ _
+    _ ≤ ∑ k ∈ range n, c := sum_le_sum fun k _ ↦ hbω k
+    _ = n * c := by rw [sum_const, card_range, nsmul_eq_mul]
+
+/-! ### Definition and algebra -/
 
 /-- The **predictable quadratic variation** `⟨M⟩` of a process `M`, defined as the
 predictable part of `M²` in its Doob decomposition. -/
 noncomputable def predQuadVar (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) : ℕ → Ω → ℝ :=
   predictablePart (M · ^ 2) ℱ μ
 
+/-- `⟨M⟩_n` is the defining sum `∑_{i<n} μ[M_{i+1}² - M_i² | ℱ_i]`. For a martingale the summands
+simplify to `μ[(ΔM_i)² | ℱ_i]` (`predQuadVar_ae_eq_sum`). -/
+lemma predQuadVar_eq_sum (n : ℕ) :
+    predQuadVar M ℱ μ n
+      = ∑ i ∈ range n, μ[(fun ω ↦ M (i + 1) ω ^ 2) - fun ω ↦ M i ω ^ 2 | ℱ i] := rfl
+
 @[simp, specifies predQuadVar "fixes the additive constant, which the increment formula \
 `predQuadVar_succ_sub_eq` alone leaves free; the two together give `⟨M⟩ₙ = ∑_{i<n} μ[(ΔMᵢ)²|ℱᵢ]`"]
 lemma predQuadVar_zero : predQuadVar M ℱ μ 0 = 0 := predictablePart_zero
+
+@[simp]
+lemma predQuadVar_zero_apply (ω : Ω) : predQuadVar M ℱ μ 0 ω = 0 := by
+  rw [predQuadVar_zero, Pi.zero_apply]
+
+/-- `⟨M⟩_{n+1} = ⟨M⟩_n + μ[M_{n+1}² - M_n² | ℱ_n]`: the one-step form of the defining sum, before
+the martingale simplification of the cross term (`predQuadVar_succ_sub_eq`). -/
+lemma predQuadVar_add_one (n : ℕ) :
+    predQuadVar M ℱ μ (n + 1)
+      = predQuadVar M ℱ μ n + μ[(fun ω ↦ M (n + 1) ω ^ 2) - fun ω ↦ M n ω ^ 2 | ℱ n] :=
+  predictablePart_add_one n
 
 /-- The predictable quadratic variation is invariant under negation: `⟨-M⟩ = ⟨M⟩`, since
 `(-M)² = M²` pointwise. -/
@@ -111,14 +164,36 @@ lemma predQuadVar_zero : predQuadVar M ℱ μ 0 = 0 := predictablePart_zero
 lemma predQuadVar_neg (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) :
     predQuadVar (-M) ℱ μ = predQuadVar M ℱ μ := by simp [predQuadVar]
 
-/-- The increment of `⟨M⟩` is the conditional expectation of the increment of `M²`:
-`⟨M⟩ (n+1) - ⟨M⟩ n = μ[M (n+1)² - M n² | ℱ n]`, before the martingale simplification of the
-cross term. -/
-lemma predQuadVar_succ_sub (n : ℕ) :
-    predQuadVar M ℱ μ (n + 1) - predQuadVar M ℱ μ n
-      = μ[(fun ω ↦ M (n + 1) ω ^ 2) - fun ω ↦ M n ω ^ 2 | ℱ n] := by
-  rw [predQuadVar, predictablePart_add_one]
-  abel
+/-- **Scaling**: `⟨c • M⟩ = c² ⟨M⟩` a.e., since `(c M)² = c² M²` pointwise and the predictable part
+is linear (`predictablePart_smul`). -/
+lemma predQuadVar_const_smul (c : ℝ) (n : ℕ) :
+    predQuadVar (c • M) ℱ μ n =ᵐ[μ] c ^ 2 • predQuadVar M ℱ μ n := by
+  have h : ((c • M) · ^ 2) = c ^ 2 • (M · ^ 2) := by ext; simp [mul_pow]
+  rw [predQuadVar, h]
+  exact predictablePart_smul (c ^ 2) n
+
+/-! ### Measurability
+
+`⟨M⟩` is adapted and predictable: `⟨M⟩_{n+1}` is already `ℱ_n`-measurable, being a sum of
+conditional expectations given `ℱ_0, …, ℱ_n`. No hypothesis on `M` is needed. -/
+
+lemma stronglyAdapted_predQuadVar : StronglyAdapted ℱ (predQuadVar M ℱ μ) :=
+  stronglyAdapted_predictablePart' (f := (M · ^ 2))
+
+lemma stronglyMeasurable_predQuadVar_succ (n : ℕ) :
+    StronglyMeasurable[ℱ n] (predQuadVar M ℱ μ (n + 1)) :=
+  stronglyAdapted_predictablePart (f := (M · ^ 2)) n
+
+lemma isStronglyPredictable_predQuadVar : IsStronglyPredictable ℱ (predQuadVar M ℱ μ) :=
+  isPredictable_predictablePart (f := (M · ^ 2))
+
+/-- **`⟨M⟩ n` is integrable**, being a finite sum of conditional expectations. -/
+@[fun_prop]
+lemma integrable_predQuadVar (n : ℕ) : Integrable (predQuadVar M ℱ μ n) μ := by
+  rw [predQuadVar_eq_sum]
+  exact integrable_finsetSum' _ fun _ _ ↦ integrable_condExp
+
+/-! ### The increment formula -/
 
 /-- **Increment of the quadratic variation.**
 For a martingale `M`, the increment of `⟨M⟩` is the conditional second moment of
@@ -136,7 +211,7 @@ lemma predQuadVar_succ_sub_eq (hM : Martingale M ℱ μ) (n : ℕ)
   have hfun : ((fun ω ↦ M (n + 1) ω ^ 2) - fun ω ↦ M n ω ^ 2)
       = (fun ω ↦ (M (n + 1) ω - M n ω) ^ 2)
         + (M n * (M (n + 1) - M n) + M n * (M (n + 1) - M n)) := by ext; simp; ring
-  rw [predQuadVar_succ_sub, hfun]
+  rw [predQuadVar_add_one, add_sub_cancel_left, hfun]
   -- the cross term has conditional expectation `0`.
   have hcross : μ[M n * (M (n + 1) - M n) + M n * (M (n + 1) - M n) | ℱ n] =ᵐ[μ] 0 := by
     have hcd : μ[M (n + 1) - M n | ℱ n] =ᵐ[μ] 0 := hM.condExp_sub_ae_eq_zero (Nat.le_succ n)
@@ -158,77 +233,94 @@ lemma predQuadVar_le_succ (hM : Martingale M ℱ μ) (n : ℕ)
     (hd2 : MemLp (fun ω ↦ M (n + 1) ω - M n ω) 2 μ)
     (hprod : Integrable (M n * (M (n + 1) - M n)) μ) :
     predQuadVar M ℱ μ n ≤ᵐ[μ] predQuadVar M ℱ μ (n + 1) := by
-  have hinc := predQuadVar_succ_sub_eq hM n hd2 hprod
-  have hnn : (fun _ ↦ 0) ≤ᵐ[μ] μ[fun ω ↦ (M (n + 1) ω - M n ω) ^ 2 | ℱ n] := by
-    refine condExp_nonneg ?_
-    filter_upwards with ω
-    positivity
-  filter_upwards [hinc, hnn] with ω e hn
-  simp only [Pi.sub_apply] at e hn
+  have hnn : 0 ≤ᵐ[μ] μ[fun ω ↦ (M (n + 1) ω - M n ω) ^ 2 | ℱ n] :=
+    condExp_nonneg (by filter_upwards with ω; positivity)
+  filter_upwards [predQuadVar_succ_sub_eq hM n hd2 hprod, hnn] with ω e hn
+  simp only [Pi.sub_apply, Pi.zero_apply] at e hn
   grind
 
 /-- **`⟨M⟩` is monotone.** Almost surely the whole path `n ↦ ⟨M⟩ n ω` is nondecreasing, since
 each increment is a conditional second moment (hence nonnegative, `predQuadVar_le_succ`). -/
-lemma predQuadVar_mono (hM : Martingale M ℱ μ)
-    (hd2 : ∀ n, MemLp (fun ω ↦ M (n + 1) ω - M n ω) 2 μ)
-    (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ) :
+lemma predQuadVar_mono (hM : Martingale M ℱ μ) (hM2 : ∀ n, MemLp (M n) 2 μ) :
     ∀ᵐ ω ∂μ, Monotone (predQuadVar M ℱ μ · ω) := by
-  filter_upwards [ae_all_iff.mpr fun n ↦ predQuadVar_le_succ hM n (hd2 n) (hprod n)] with ω hω
+  filter_upwards [ae_all_iff.mpr fun n ↦ predQuadVar_le_succ hM n
+    (memLp_increment (hM2 n) (hM2 (n + 1))) (integrable_mul_increment (hM2 n) (hM2 (n + 1)))]
+    with ω hω
   exact monotone_nat_of_le_succ fun n ↦ hω n
 
 /-- **The predictable quadratic variation is nonnegative.** Since `⟨M⟩ 0 = 0` and `⟨M⟩` is
 nondecreasing (`predQuadVar_mono`), `0 ≤ ⟨M⟩ n` a.e. -/
-lemma predQuadVar_nonneg (hM : Martingale M ℱ μ)
-    (hd2 : ∀ n, MemLp (fun ω ↦ M (n + 1) ω - M n ω) 2 μ)
-    (hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ) (n : ℕ) :
+lemma predQuadVar_nonneg (hM : Martingale M ℱ μ) (hM2 : ∀ n, MemLp (M n) 2 μ) (n : ℕ) :
     0 ≤ᵐ[μ] predQuadVar M ℱ μ n := by
-  filter_upwards [predQuadVar_mono hM hd2 hprod] with ω hmono
-  have h0n : predQuadVar M ℱ μ 0 ω ≤ predQuadVar M ℱ μ n ω := hmono (Nat.zero_le n)
-  rw [show predQuadVar M ℱ μ 0 ω = 0 from by rw [predQuadVar_zero]; rfl] at h0n
-  simpa using h0n
+  filter_upwards [predQuadVar_mono hM hM2] with ω hmono
+  simpa using hmono (Nat.zero_le n)
+
+/-- **The textbook formula**: `⟨M⟩_n = ∑_{i<n} μ[(ΔM_i)² | ℱ_i]` a.e., for a square-integrable
+martingale. -/
+lemma predQuadVar_ae_eq_sum (hM : Martingale M ℱ μ) (hM2 : ∀ n, MemLp (M n) 2 μ) (n : ℕ) :
+    predQuadVar M ℱ μ n =ᵐ[μ] ∑ i ∈ range n, μ[fun ω ↦ (M (i + 1) ω - M i ω) ^ 2 | ℱ i] := by
+  rw [predQuadVar_eq_sum]
+  refine eventuallyEq_sum fun i _ ↦ ?_
+  have h := predQuadVar_succ_sub_eq hM i (memLp_increment (hM2 i) (hM2 (i + 1)))
+    (integrable_mul_increment (hM2 i) (hM2 (i + 1)))
+  rwa [predQuadVar_add_one, add_sub_cancel_left] at h
+
+/-! ### Telescoping
+
+`⟨M⟩_0 = 0`, so `⟨M⟩_n` is the sum of its increments, and a.e. bounds on the increments become
+a.s. bounds on the whole path. -/
+
+/-- `⟨M⟩_n = ∑_{k<n} (⟨M⟩_{k+1} - ⟨M⟩_k)`, pointwise. -/
+lemma predQuadVar_eq_sum_succ_sub (n : ℕ) (ω : Ω) :
+    predQuadVar M ℱ μ n ω
+      = ∑ k ∈ range n, (predQuadVar M ℱ μ (k + 1) ω - predQuadVar M ℱ μ k ω) := by
+  rw [sum_range_sub (predQuadVar M ℱ μ · ω), predQuadVar_zero_apply, sub_zero]
+
+/-- **Upper bounds on the increments bound the path**: if `⟨M⟩_{k+1} - ⟨M⟩_k ≤ v k` a.e. for
+every `k`, then a.s. `⟨M⟩_n ≤ ∑_{k<n} v k` for every `n`. -/
+lemma predQuadVar_le_sum_of_succ_sub_le {v : ℕ → Ω → ℝ}
+    (h : ∀ k, ∀ᵐ ω ∂μ, predQuadVar M ℱ μ (k + 1) ω - predQuadVar M ℱ μ k ω ≤ v k ω) :
+    ∀ᵐ ω ∂μ, ∀ n, predQuadVar M ℱ μ n ω ≤ ∑ k ∈ range n, v k ω := by
+  filter_upwards [ae_all_iff.mpr h] with ω hω n
+  rw [predQuadVar_eq_sum_succ_sub]
+  exact sum_le_sum fun k _ ↦ hω k
+
+/-- **Lower bounds on the increments bound the path**: if `v k ≤ ⟨M⟩_{k+1} - ⟨M⟩_k` a.e. for
+every `k`, then a.s. `∑_{k<n} v k ≤ ⟨M⟩_n` for every `n`. -/
+lemma sum_le_predQuadVar_of_le_succ_sub {v : ℕ → Ω → ℝ}
+    (h : ∀ k, ∀ᵐ ω ∂μ, v k ω ≤ predQuadVar M ℱ μ (k + 1) ω - predQuadVar M ℱ μ k ω) :
+    ∀ᵐ ω ∂μ, ∀ n, ∑ k ∈ range n, v k ω ≤ predQuadVar M ℱ μ n ω := by
+  filter_upwards [ae_all_iff.mpr h] with ω hω n
+  rw [predQuadVar_eq_sum_succ_sub]
+  exact sum_le_sum fun k _ ↦ hω k
 
 /-- **Linear upper bound on `⟨M⟩` for bounded increments.** If `|ΔM_i| ≤ c` a.e., then each
-increment `⟨M⟩_{k+1} - ⟨M⟩_k` equals `μ[(ΔM_k)² | ℱ_k] ≤ c²`, so telescoping from `⟨M⟩_0 = 0`
-gives `⟨M⟩_n ≤ c² n` a.e. -/
+increment `⟨M⟩_{k+1} - ⟨M⟩_k = μ[(ΔM_k)² | ℱ_k]` is at most `c²`, so `⟨M⟩_n ≤ c² n` a.s. No
+square-integrability of `M` itself is needed: the bound on `ΔM_k` supplies the integrability the
+increment formula asks for. -/
 lemma predQuadVar_le_of_bound [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) {c : ℝ}
     (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
     ∀ᵐ ω ∂μ, ∀ n, predQuadVar M ℱ μ n ω ≤ c ^ 2 * n := by
-  -- both integrability side conditions follow from the increment bound.
   have hae : ∀ n, AEStronglyMeasurable (M n) μ := fun n ↦ (hM.integrable n).aestronglyMeasurable
-  have hd2 : ∀ n, MemLp (fun ω ↦ M (n + 1) ω - M n ω) 2 μ := fun n ↦
-    memLp_increment_of_bound (hae n) (hae (n + 1)) (hb n)
-  have hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ := fun n ↦
-    integrable_mul_increment_of_bound (hM.integrable n) (hae (n + 1)) (hb n)
   have hstep : ∀ k, ∀ᵐ ω ∂μ,
-      predQuadVar M ℱ μ (k + 1) ω - predQuadVar M ℱ μ k ω ≤ c ^ 2 := by
-    intro k
-    have hinc := predQuadVar_succ_sub_eq hM k (hd2 k) (hprod k)
-    have hsqle : (fun ω ↦ (M (k + 1) ω - M k ω) ^ 2) ≤ᵐ[μ] fun _ ↦ c ^ 2 := by
-      filter_upwards [hb k] with ω h
-      exact sq_le_sq' (neg_le_of_abs_le h) (le_of_abs_le h)
+      predQuadVar M ℱ μ (k + 1) ω - predQuadVar M ℱ μ k ω ≤ c ^ 2 := fun k ↦ by
+    have hd2 : MemLp (fun ω ↦ M (k + 1) ω - M k ω) 2 μ :=
+      memLp_increment_of_bound (hae k) (hae (k + 1)) (hb k)
     have hcond : μ[fun ω ↦ (M (k + 1) ω - M k ω) ^ 2 | ℱ k] ≤ᵐ[μ] fun _ ↦ c ^ 2 := by
-      have h := condExp_mono (m := ℱ k) (hd2 k).integrable_sq (integrable_const (c ^ 2)) hsqle
+      have h := condExp_mono (m := ℱ k) hd2.integrable_sq (integrable_const (c ^ 2)) <| by
+        filter_upwards [hb k] with ω h
+        exact sq_le_sq' (neg_le_of_abs_le h) (le_of_abs_le h)
       rwa [condExp_const (ℱ.le k)] at h
-    filter_upwards [hinc, hcond] with ω e ec
-    rw [Pi.sub_apply] at e; rw [e]; exact ec
-  filter_upwards [ae_all_iff.mpr hstep] with ω hω
-  intro n
-  have htel : ∑ k ∈ Finset.range n,
-      (predQuadVar M ℱ μ (k + 1) ω - predQuadVar M ℱ μ k ω) = predQuadVar M ℱ μ n ω := by
-    rw [Finset.sum_range_sub (fun k ↦ predQuadVar M ℱ μ k ω) n]
-    have h0 : predQuadVar M ℱ μ 0 ω = 0 := by rw [predQuadVar_zero]; rfl
-    rw [h0, sub_zero]
-  rw [← htel]
-  calc ∑ k ∈ Finset.range n, (predQuadVar M ℱ μ (k + 1) ω - predQuadVar M ℱ μ k ω)
-      ≤ ∑ _k ∈ Finset.range n, c ^ 2 := Finset.sum_le_sum fun k _ ↦ hω k
-    _ = c ^ 2 * n := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]; ring
+    filter_upwards [predQuadVar_succ_sub_eq hM k hd2
+      (integrable_mul_increment_of_bound (hM.integrable k) (hae (k + 1)) (hb k)), hcond]
+      with ω e ec
+    rw [Pi.sub_apply] at e
+    rw [e]
+    exact ec
+  filter_upwards [predQuadVar_le_sum_of_succ_sub_le hstep] with ω hω n
+  exact (hω n).trans_eq (by rw [sum_const, card_range, nsmul_eq_mul, mul_comm])
 
-/-- **A martingale has constant expectation**: `∫ N n = ∫ N 0` for every `n`. -/
-lemma martingale_integral_eq [IsFiniteMeasure μ] {N : ℕ → Ω → ℝ} (hN : Martingale N ℱ μ) (n : ℕ) :
-    ∫ ω, N n ω ∂μ = ∫ ω, N 0 ω ∂μ :=
-  calc ∫ ω, N n ω ∂μ
-  _ = ∫ ω, (μ[N n | ℱ 0]) ω ∂μ := (integral_condExp (f := N n) (ℱ.le 0)).symm
-  _ = ∫ ω, N 0 ω ∂μ := integral_congr_ae (hN.condExp_ae_eq zero_le)
+/-! ### The Doob decomposition of `M²` -/
 
 /-- **`M² - ⟨M⟩` is a martingale.**
 For an adapted process `M` with square-integrable values, `M² - ⟨M⟩` is a
@@ -240,21 +332,30 @@ lemma martingale_sq_sub_predQuadVar [IsFiniteMeasure μ]
     Martingale (fun n ↦ (fun ω ↦ M n ω ^ 2) - predQuadVar M ℱ μ n) ℱ μ :=
   martingale_martingalePart (fun n ↦ (hM n).pow 2) (fun n ↦ (hM2 n).integrable_sq)
 
-/-- **`⟨M⟩ n` is integrable.** Since `M² - ⟨M⟩` is (the martingale part, hence)
-integrable and `M²` is integrable, so is `⟨M⟩`. -/
-@[fun_prop]
-lemma integrable_predQuadVar [IsFiniteMeasure μ]
-    (hM : StronglyAdapted ℱ M) (hM2 : ∀ n, MemLp (M n) 2 μ) (n : ℕ) :
-    Integrable (predQuadVar M ℱ μ n) μ := by
-  have hN := martingale_sq_sub_predQuadVar hM hM2
-  have hNk : Integrable ((fun ω ↦ M n ω ^ 2) - predQuadVar M ℱ μ n) μ := hN.integrable n
-  have hid : predQuadVar M ℱ μ n
-      = (fun ω ↦ M n ω ^ 2) - ((fun ω ↦ M n ω ^ 2) - predQuadVar M ℱ μ n) := by
-    funext ω; simp [Pi.sub_apply]
-  rw [hid]
-  exact (hM2 n).integrable_sq.sub hNk
+/-- **The square of a martingale is a submartingale.** For a square-integrable martingale `M`,
+`μ[M_{n+1}² | ℱ_n] = M_n² + μ[(ΔM_n)² | ℱ_n] ≥ M_n²`. This is Doob's `L²` submartingale, the input
+to Doob's maximal inequality. -/
+lemma submartingale_sq [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
+    (hM2 : ∀ n, MemLp (M n) 2 μ) :
+    Submartingale (fun n ω ↦ M n ω ^ 2) ℱ μ := by
+  refine submartingale_nat (fun n ↦ (hM.stronglyAdapted n).pow 2) (fun n ↦ (hM2 n).integrable_sq)
+    fun i ↦ ?_
+  -- `μ[M_{i+1}² - M_i² | ℱ_i] = Δ⟨M⟩_i = μ[(ΔM_i)² | ℱ_i] ≥ 0`.
+  have hnn : 0 ≤ᵐ[μ] μ[(fun ω ↦ M (i + 1) ω ^ 2) - fun ω ↦ M i ω ^ 2 | ℱ i] := by
+    have h := predQuadVar_succ_sub_eq hM i (memLp_increment (hM2 i) (hM2 (i + 1)))
+      (integrable_mul_increment (hM2 i) (hM2 (i + 1)))
+    rw [predQuadVar_add_one, add_sub_cancel_left] at h
+    exact (condExp_nonneg (by filter_upwards with ω; positivity)).trans h.symm.le
+  have hsub : μ[(fun ω ↦ M (i + 1) ω ^ 2) - fun ω ↦ M i ω ^ 2 | ℱ i]
+      =ᵐ[μ] μ[fun ω ↦ M (i + 1) ω ^ 2 | ℱ i] - fun ω ↦ M i ω ^ 2 := by
+    refine (condExp_sub (hM2 (i + 1)).integrable_sq (hM2 i).integrable_sq _).trans ?_
+    rw [condExp_of_stronglyMeasurable (ℱ.le i) (f := fun ω ↦ M i ω ^ 2)
+      ((hM.stronglyAdapted i).pow 2) (hM2 i).integrable_sq]
+  filter_upwards [hnn, hsub] with ω h1 h2
+  simp only [Pi.sub_apply, Pi.zero_apply] at h1 h2
+  linarith
 
-/-! ## Characterization
+/-! ### Characterization
 
 `predQuadVar` is *defined* by a formula — the Doob predictable part of `M²` — and a formula is not
 a reason to call it a quadratic variation. `IsPredQuadVar` is the property that does: `A` is
@@ -276,10 +377,11 @@ structure IsPredQuadVar (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ :
   regularity and the normalisation that turn it from something `A` happens to satisfy into a
   description of `A`. -/
   martingale_sq_sub : Martingale (fun n ↦ (fun ω ↦ M n ω ^ 2) - A n) ℱ μ
-  /-- `A` is predictable: `A (n + 1)` is already `ℱ n`-measurable. This is what makes the
-  compensator property pin `A` down. Without it there is nothing to pin: adding to `A` any
-  martingale null at `0` leaves `M² - A` a martingale and `A 0 = 0` intact. -/
-  predictable : StronglyAdapted ℱ fun n ↦ A (n + 1)
+  /-- `A` is predictable (`MeasureTheory.IsStronglyPredictable`; for `ℕ`-indexed processes, this
+  says `A (n + 1)` is `ℱ n`-measurable). This is what makes the compensator property pin `A` down.
+  Without it there is nothing to pin: adding to `A` any martingale null at `0` leaves `M² - A` a
+  martingale and `A 0 = 0` intact. -/
+  predictable : IsStronglyPredictable ℱ A
   /-- `A` starts at `0`, which fixes the additive constant the other fields leave free. -/
   zero : A 0 = 0
   /-- Each `A n` is integrable, so that `A` can sit in a Doob decomposition at all. -/
@@ -292,9 +394,9 @@ lemma isPredQuadVar_predQuadVar [IsFiniteMeasure μ] (hM : StronglyAdapted ℱ M
     (hM2 : ∀ n, MemLp (M n) 2 μ) :
     IsPredQuadVar M ℱ μ (predQuadVar M ℱ μ) where
   martingale_sq_sub := martingale_sq_sub_predQuadVar hM hM2
-  predictable := stronglyAdapted_predictablePart
+  predictable := isStronglyPredictable_predQuadVar
   zero := predQuadVar_zero
-  integrable := integrable_predQuadVar hM hM2
+  integrable := integrable_predQuadVar
 
 /-- **Nothing else compensates `M²`** — the uniqueness half of the characterization: any `A` that
 is predictable, null at `0` and compensates `M²` is indistinguishable from `⟨M⟩`. This is the
@@ -309,64 +411,37 @@ lemma IsPredQuadVar.indistinguishable_predQuadVar [IsFiniteMeasure μ] {A : ℕ 
     funext n ω
     simp
   refine .of_forall_ae_eq fun n ↦ ?_
-  have h := predictablePart_add_ae_eq (ℱ := ℱ) (μ := μ) hA.martingale_sq_sub hA.predictable
-    hA.zero hA.integrable n
+  have h := predictablePart_add_ae_eq (ℱ := ℱ) (μ := μ) hA.martingale_sq_sub
+    (fun n ↦ hA.predictable.measurable_add_one n) hA.zero hA.integrable n
   rw [hsum] at h
   exact h.symm
 
-/-- **The square of a martingale is a submartingale.** For a square-integrable martingale `M`,
-`M²` is a submartingale: `M² = (M² - ⟨M⟩) + ⟨M⟩` is the sum of the martingale `M² - ⟨M⟩` and the
-nondecreasing predictable quadratic variation `⟨M⟩`. This is Doob's `L²` submartingale, the input
-to Doob's maximal inequality. -/
-lemma submartingale_sq [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
-    (hM2 : ∀ n, MemLp (M n) 2 μ) :
-    Submartingale (fun n ω ↦ M n ω ^ 2) ℱ μ := by
-  have hd2 : ∀ n, MemLp (fun ω ↦ M (n + 1) ω - M n ω) 2 μ := fun n ↦
-    memLp_increment (hM2 n) (hM2 (n + 1))
-  have hprod : ∀ n, Integrable (M n * (M (n + 1) - M n)) μ := fun n ↦
-    integrable_mul_increment (hM2 n) (hM2 (n + 1))
-  have hN := martingale_sq_sub_predQuadVar hM.stronglyAdapted hM2
-  have hIqv := integrable_predQuadVar hM.stronglyAdapted hM2
-  refine submartingale_of_setIntegral_le_succ (fun n ↦ (hM.stronglyAdapted n).pow 2)
-    (fun n ↦ (hM2 n).integrable_sq) ?_
-  intro i s hs
-  have hNeq := hN.setIntegral_eq (Nat.le_succ i) hs
-  have hexp : ∀ j, ∫ ω in s, ((fun ω ↦ M j ω ^ 2) - predQuadVar M ℱ μ j) ω ∂μ
-      = (∫ ω in s, M j ω ^ 2 ∂μ) - ∫ ω in s, predQuadVar M ℱ μ j ω ∂μ :=
-    fun j ↦ integral_sub (hM2 j).integrable_sq.integrableOn (hIqv j).integrableOn
-  rw [hexp i, hexp (i + 1)] at hNeq
-  have hqvle : ∫ ω in s, predQuadVar M ℱ μ i ω ∂μ
-      ≤ ∫ ω in s, predQuadVar M ℱ μ (i + 1) ω ∂μ :=
-    setIntegral_mono_ae (hIqv i).integrableOn (hIqv (i + 1)).integrableOn
-      (predQuadVar_le_succ hM i (hd2 i) (hprod i))
-  linarith [hNeq, hqvle]
+/-! ### The discrete Itô isometry -/
+
+/-- **Discrete Itô isometry, general form**: `E[M_n²] = E[M_0²] + E[⟨M⟩_n]` for an adapted
+square-integrable process, since the martingale `M² - ⟨M⟩` has constant expectation and
+`⟨M⟩_0 = 0`. -/
+lemma integral_sq_eq_integral_sq_zero_add_integral_predQuadVar [IsFiniteMeasure μ]
+    (hM : StronglyAdapted ℱ M) (hM2 : ∀ n, MemLp (M n) 2 μ) (n : ℕ) :
+    ∫ ω, M n ω ^ 2 ∂μ = ∫ ω, M 0 ω ^ 2 ∂μ + ∫ ω, predQuadVar M ℱ μ n ω ∂μ := by
+  have h := (martingale_sq_sub_predQuadVar hM hM2).integral_eq (Nat.zero_le n)
+  simp only [Pi.sub_apply, predQuadVar_zero_apply, sub_zero] at h
+  rw [integral_sub (hM2 n).integrable_sq (integrable_predQuadVar n)] at h
+  linarith
 
 /-- **Expected quadratic variation equals the second moment.**
-For an adapted, square-integrable process `M` with `M 0 = 0` a.e.,
-`E[M n ²] = E[⟨M⟩ n]`. This is the discrete Itô isometry: `M² - ⟨M⟩` is a
-martingale starting at `0`, so its expectation stays `0`. -/
+For an adapted, square-integrable process `M` with `M 0 = 0` a.e., `E[M n ²] = E[⟨M⟩ n]`. This
+is the discrete Itô isometry: `M² - ⟨M⟩` is a martingale starting at `0`, so its expectation
+stays `0`. -/
 lemma integral_sq_eq_integral_predQuadVar [IsFiniteMeasure μ]
     (hM : StronglyAdapted ℱ M) (hM2 : ∀ n, MemLp (M n) 2 μ)
     (hM0 : M 0 =ᵐ[μ] 0) (n : ℕ) :
     ∫ ω, M n ω ^ 2 ∂μ = ∫ ω, predQuadVar M ℱ μ n ω ∂μ := by
-  have hN := martingale_sq_sub_predQuadVar hM hM2
-  have hIqv := integrable_predQuadVar hM hM2
-  -- `∫ (M n² - ⟨M⟩ n) = ∫ M n² - ∫ ⟨M⟩ n`.
-  have e1 : ∫ ω, ((fun ω ↦ M n ω ^ 2) - predQuadVar M ℱ μ n) ω ∂μ
-      = ∫ ω, M n ω ^ 2 ∂μ - ∫ ω, predQuadVar M ℱ μ n ω ∂μ :=
-    integral_sub (hM2 n).integrable_sq (hIqv n)
-  -- At time `0` the process is `M 0² - ⟨M⟩ 0 = 0` a.e.
-  have e0 : ∫ ω, ((fun ω ↦ M 0 ω ^ 2) - predQuadVar M ℱ μ 0) ω ∂μ = 0 := by
-    have hz : ((fun ω ↦ M 0 ω ^ 2) - predQuadVar M ℱ μ 0) =ᵐ[μ] 0 := by
-      filter_upwards [hM0] with ω hω
-      simp only [Pi.sub_apply, Pi.zero_apply] at hω ⊢
-      rw [show predQuadVar M ℱ μ 0 ω = 0 from by rw [predQuadVar_zero]; rfl, hω]
-      ring
-    rw [integral_congr_ae hz]; simp
-  have hconst := martingale_integral_eq hN n
-  have key : ∫ ω, M n ω ^ 2 ∂μ - ∫ ω, predQuadVar M ℱ μ n ω ∂μ = 0 := by
-    rw [← e1, hconst]; exact e0
-  exact sub_eq_zero.mp key
+  have h0 : ∫ ω, M 0 ω ^ 2 ∂μ = 0 := by
+    refine integral_eq_zero_of_ae ?_
+    filter_upwards [hM0] with ω hω
+    simp [hω]
+  rw [integral_sq_eq_integral_sq_zero_add_integral_predQuadVar hM hM2 n, h0, zero_add]
 
 /-- **Integrated increment of `⟨M⟩`.** The expected increment of the quadratic
 variation is the second moment of the martingale increment:
@@ -375,21 +450,36 @@ lemma integral_predQuadVar_succ_sub [IsFiniteMeasure μ] (hM : Martingale M ℱ 
     (hM2 : ∀ n, MemLp (M n) 2 μ) (n : ℕ) :
     ∫ ω, predQuadVar M ℱ μ (n + 1) ω ∂μ - ∫ ω, predQuadVar M ℱ μ n ω ∂μ
       = ∫ ω, (M (n + 1) ω - M n ω) ^ 2 ∂μ := by
-  have hd2 : MemLp (fun ω ↦ M (n + 1) ω - M n ω) 2 μ := memLp_increment (hM2 n) (hM2 (n + 1))
-  have hprod : Integrable (M n * (M (n + 1) - M n)) μ :=
-    integrable_mul_increment (hM2 n) (hM2 (n + 1))
-  have hIqv := integrable_predQuadVar hM.stronglyAdapted hM2
-  have h1 : predQuadVar M ℱ μ (n + 1) - predQuadVar M ℱ μ n
-      =ᵐ[μ] μ[fun ω ↦ (M (n + 1) ω - M n ω) ^ 2 | ℱ n] :=
-    predQuadVar_succ_sub_eq hM n hd2 hprod
+  have h1 := predQuadVar_succ_sub_eq hM n (memLp_increment (hM2 n) (hM2 (n + 1)))
+    (integrable_mul_increment (hM2 n) (hM2 (n + 1)))
   calc ∫ ω, predQuadVar M ℱ μ (n + 1) ω ∂μ - ∫ ω, predQuadVar M ℱ μ n ω ∂μ
       = ∫ ω, (predQuadVar M ℱ μ (n + 1) ω - predQuadVar M ℱ μ n ω) ∂μ :=
-        (integral_sub (hIqv (n + 1)) (hIqv n)).symm
+        (integral_sub (integrable_predQuadVar (n + 1)) (integrable_predQuadVar n)).symm
     _ = ∫ ω, (μ[fun ω ↦ (M (n + 1) ω - M n ω) ^ 2 | ℱ n]) ω ∂μ := by
         refine integral_congr_ae ?_
         filter_upwards [h1] with ω hω
         simpa [Pi.sub_apply] using hω
     _ = ∫ ω, (M (n + 1) ω - M n ω) ^ 2 ∂μ := integral_condExp (ℱ.le n)
+
+/-- **`E[⟨M⟩_n] = ∑_{k<n} E[(ΔM_k)²]`**, telescoping `integral_predQuadVar_succ_sub`. -/
+lemma integral_predQuadVar_eq_sum [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
+    (hM2 : ∀ n, MemLp (M n) 2 μ) (n : ℕ) :
+    ∫ ω, predQuadVar M ℱ μ n ω ∂μ = ∑ k ∈ range n, ∫ ω, (M (k + 1) ω - M k ω) ^ 2 ∂μ := by
+  calc ∫ ω, predQuadVar M ℱ μ n ω ∂μ
+      = ∑ k ∈ range n,
+          (∫ ω, predQuadVar M ℱ μ (k + 1) ω ∂μ - ∫ ω, predQuadVar M ℱ μ k ω ∂μ) := by
+        rw [sum_range_sub (fun k ↦ ∫ ω, predQuadVar M ℱ μ k ω ∂μ)]
+        simp
+    _ = ∑ k ∈ range n, ∫ ω, (M (k + 1) ω - M k ω) ^ 2 ∂μ :=
+        sum_congr rfl fun k _ ↦ integral_predQuadVar_succ_sub hM hM2 k
+
+/-- **Orthogonality of increments**: `E[M_n²] = ∑_{k<n} E[(ΔM_k)²]` for a square-integrable
+martingale null at `0`. -/
+lemma integral_sq_eq_sum_integral_increment_sq [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
+    (hM2 : ∀ n, MemLp (M n) 2 μ) (hM0 : M 0 =ᵐ[μ] 0) (n : ℕ) :
+    ∫ ω, M n ω ^ 2 ∂μ = ∑ k ∈ range n, ∫ ω, (M (k + 1) ω - M k ω) ^ 2 ∂μ := by
+  rw [integral_sq_eq_integral_predQuadVar hM.stronglyAdapted hM2 hM0,
+    integral_predQuadVar_eq_sum hM hM2]
 
 /-- **Martingale `L²` growth bound.**
 If every increment has second moment `≤ σ²`, then `E[M n ²] ≤ σ² n`. This is the
@@ -398,20 +488,12 @@ lemma integral_sq_le_of_increment_bound [IsFiniteMeasure μ] (hM : Martingale M 
     (hM2 : ∀ n, MemLp (M n) 2 μ) (hM0 : M 0 =ᵐ[μ] 0) (σ2 : ℝ)
     (hinc : ∀ n, ∫ ω, (M (n + 1) ω - M n ω) ^ 2 ∂μ ≤ σ2) (n : ℕ) :
     ∫ ω, M n ω ^ 2 ∂μ ≤ σ2 * n := by
-  have hqv : ∀ n, ∫ ω, predQuadVar M ℱ μ n ω ∂μ ≤ σ2 * n := by
-    intro n
-    induction n with
-    | zero => simp
-    | succ k ih =>
-      have hstep := integral_predQuadVar_succ_sub hM hM2 k
-      have heq : ∫ ω, predQuadVar M ℱ μ (k + 1) ω ∂μ
-          = ∫ ω, predQuadVar M ℱ μ k ω ∂μ + ∫ ω, (M (k + 1) ω - M k ω) ^ 2 ∂μ := by linarith
-      rw [heq]
-      have hcast : σ2 * ((k + 1 : ℕ) : ℝ) = σ2 * (k : ℝ) + σ2 := by push_cast; ring
-      rw [hcast]
-      linarith [ih, hinc k]
-  rw [integral_sq_eq_integral_predQuadVar hM.stronglyAdapted hM2 hM0 n]
-  exact hqv n
+  rw [integral_sq_eq_sum_integral_increment_sq hM hM2 hM0]
+  calc ∑ k ∈ range n, ∫ ω, (M (k + 1) ω - M k ω) ^ 2 ∂μ
+      ≤ ∑ _k ∈ range n, σ2 := sum_le_sum fun k _ ↦ hinc k
+    _ = σ2 * n := by rw [sum_const, card_range, nsmul_eq_mul, mul_comm]
+
+/-! ### Orthogonal martingales -/
 
 /-- **Product of conditionally orthogonal martingales is a martingale.**
 If `M`, `N` are martingales whose increments are conditionally orthogonal,

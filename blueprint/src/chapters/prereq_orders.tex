@@ -104,7 +104,8 @@ wrapper. The lemmas below are the basic API and are straightforward from that
 decomposition.
 
 \begin{lemma}[Increment of the quadratic variation]\label{lem:qv_incr}
-\lean{AlphaRAR.predQuadVar_succ_sub_eq}\leanok
+\lean{AlphaRAR.predQuadVar_succ_sub_eq, AlphaRAR.predQuadVar_ae_eq_sum, AlphaRAR.predQuadVar_mono,
+AlphaRAR.isStronglyPredictable_predQuadVar}\leanok
 \uses{def:pred_qv}
 For a square-integrable martingale $M$ with $M_0=0$,
 $\langle M\rangle_n - \langle M\rangle_{n-1} = \E[(\Delta M_n)^2\mid\filt_{n-1}]$,
@@ -164,7 +165,8 @@ the index set is countable, so the countably many exceptional sets union to a nu
 \end{proof}
 
 \begin{lemma}[Expected quadratic variation equals second moment]\label{lem:qv_second_moment}
-\lean{AlphaRAR.integral_sq_eq_integral_predQuadVar}\leanok
+\lean{AlphaRAR.integral_sq_eq_integral_predQuadVar,
+AlphaRAR.integral_sq_eq_sum_integral_increment_sq}\leanok
 \uses{def:pred_qv, lem:qv_mart}
 For a square-integrable martingale $M$ with $M_0 = 0$ and every $n$,
 $\E[M_n^2] = \E[\langle M\rangle_n]$.

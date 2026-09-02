@@ -35,8 +35,9 @@ suffices for `O`-rates.
 * `AlphaRAR.condExp_exp_increment_le`: the conditional MGF bound
   `μ[exp(θ ΔM_i) | ℱ_i] ≤ 1 + ½(1+δ)θ² (⟨M⟩_{i+1} - ⟨M⟩_i)`.
 * `AlphaRAR.expProcess`, `AlphaRAR.supermartingale_expProcess`: the exponential supermartingale.
-* `AlphaRAR.smul_measure_sup_le_integral_zero`: Ville's maximal inequality for a nonnegative
-  supermartingale (fills a Mathlib gap).
+* `AlphaRAR.smul_measure_sup_le_integral_zero`, `AlphaRAR.smul_measure_exists_ge_le_integral_zero`:
+  Ville's maximal inequality for a nonnegative supermartingale, over a finite horizon and over all
+  times (fills a Mathlib gap).
 * `AlphaRAR.measure_exists_ge_le_exp`, `measure_exists_ge_le_exp_optimized`,
   `measure_exists_ge_le_exp_all`: Freedman's inequality at an explicit `θ`, at the optimal `θ`,
   and over an infinite horizon.
@@ -208,12 +209,12 @@ lemma supermartingale_expProcess [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
   have hinner : ∀ n, StronglyMeasurable[ℱ n]
       (fun ω ↦ θ * M n ω - (1 + δ) / 2 * θ ^ 2 * predQuadVar M ℱ μ n ω) := fun n ↦
     ((hM.stronglyMeasurable n).const_mul θ).sub
-      ((stronglyAdapted_predictablePart' (f := fun k ↦ M k ^ 2) n).const_mul ((1 + δ) / 2 * θ ^ 2))
+      ((stronglyAdapted_predQuadVar n).const_mul ((1 + δ) / 2 * θ ^ 2))
   have hZaesm : ∀ n, AEStronglyMeasurable (expProcess M ℱ μ δ θ n) μ := fun n ↦
     ((Real.continuous_exp.comp_stronglyMeasurable (hinner n)).mono (ℱ.le n)).aestronglyMeasurable
   have hZbd : ∀ n, ∀ᵐ ω ∂μ, ‖expProcess M ℱ μ δ θ n ω‖ ≤ Real.exp (|θ| * (n * c)) := by
     intro n
-    filter_upwards [hMn n, predQuadVar_nonneg hM hd2 hprod n] with ω hMnω hqvω
+    filter_upwards [hMn n, predQuadVar_nonneg hM hM2 n] with ω hMnω hqvω
     change ‖Real.exp (θ * M n ω - (1 + δ) / 2 * θ ^ 2 * predQuadVar M ℱ μ n ω)‖ ≤ _
     rw [Real.norm_of_nonneg (Real.exp_pos _).le]
     refine Real.exp_le_exp.mpr ?_
@@ -233,8 +234,7 @@ lemma supermartingale_expProcess [IsFiniteMeasure μ] (hM : Martingale M ℱ μ)
             * (predQuadVar M ℱ μ (i + 1) ω - predQuadVar M ℱ μ i ω)))) :=
       (Real.continuous_exp.comp_stronglyMeasurable (hinner i)).mul
         (Real.continuous_exp.comp_stronglyMeasurable
-          (((stronglyAdapted_predictablePart (f := fun k ↦ M k ^ 2) i).sub
-            (stronglyAdapted_predictablePart' (f := fun k ↦ M k ^ 2) i)).const_mul
+          (((stronglyMeasurable_predQuadVar_succ i).sub (stronglyAdapted_predQuadVar i)).const_mul
               ((1 + δ) / 2 * θ ^ 2)).neg)
     set factor := fun ω ↦ Real.exp (θ * M i ω - (1 + δ) / 2 * θ ^ 2 * predQuadVar M ℱ μ i ω)
       * Real.exp (-((1 + δ) / 2 * θ ^ 2
@@ -332,6 +332,37 @@ lemma smul_measure_sup_le_integral_zero [IsFiniteMeasure μ] {Z : ℕ → Ω →
     _ ≤ ENNReal.ofReal (∫ ω, stoppedValue Z τ ω ∂μ) := ENNReal.ofReal_le_ofReal h2
     _ ≤ ENNReal.ofReal (∫ ω, Z 0 ω ∂μ) := ENNReal.ofReal_le_ofReal h3
 
+/-- **Ville's maximal inequality over all times.** For a nonnegative supermartingale `Z`,
+`ε · μ{ω : ∃ k, ε ≤ Z_k ω} ≤ E[Z_0]`. The events `{∃ k ≤ n, ε ≤ Z_k}` increase to
+`{∃ k, ε ≤ Z_k}`, so the finite-horizon bound `smul_measure_sup_le_integral_zero` passes to the
+limit by continuity from below. -/
+lemma smul_measure_exists_ge_le_integral_zero [IsFiniteMeasure μ] {Z : ℕ → Ω → ℝ}
+    (hZ : Supermartingale Z ℱ μ) (hnonneg : 0 ≤ Z) (ε : ℝ≥0) :
+    ε • μ {ω | ∃ k, (ε : ℝ) ≤ Z k ω} ≤ ENNReal.ofReal (∫ ω, Z 0 ω ∂μ) := by
+  classical
+  set A : ℕ → Set Ω := fun n ↦ {ω | ∃ k ≤ n, (ε : ℝ) ≤ Z k ω} with hA
+  have hmono : Monotone A := fun a b hab ω ⟨k, hk, h⟩ ↦ ⟨k, hk.trans hab, h⟩
+  have hUnion : (⋃ n, A n) = {ω | ∃ k, (ε : ℝ) ≤ Z k ω} := by
+    ext ω
+    simp only [hA, Set.mem_iUnion, Set.mem_ofPred_eq]
+    exact ⟨fun ⟨_, k, _, h⟩ ↦ ⟨k, h⟩, fun ⟨k, h⟩ ↦ ⟨k, k, le_rfl, h⟩⟩
+  -- Each `A n` sits inside the running-maximum event of the finite-horizon inequality.
+  have hn : ∀ n, ε • μ (A n) ≤ ENNReal.ofReal (∫ ω, Z 0 ω ∂μ) := fun n ↦ by
+    have hsub : A n ⊆ {ω | (ε : ℝ) ≤ (Finset.range (n + 1)).sup' Finset.nonempty_range_add_one
+        fun k ↦ Z k ω} := by
+      rintro ω ⟨k, hk, hkε⟩
+      exact hkε.trans (Finset.le_sup' (fun k ↦ Z k ω) (Finset.mem_range.mpr (by omega)))
+    calc ε • μ (A n)
+        ≤ ε • μ {ω | (ε : ℝ) ≤ (Finset.range (n + 1)).sup' Finset.nonempty_range_add_one
+            fun k ↦ Z k ω} := by
+          simp only [ENNReal.smul_def, smul_eq_mul]
+          gcongr
+      _ ≤ ENNReal.ofReal (∫ ω, Z 0 ω ∂μ) := smul_measure_sup_le_integral_zero hZ hnonneg n
+  rw [← hUnion, hmono.measure_iUnion]
+  simp only [ENNReal.smul_def, smul_eq_mul] at hn ⊢
+  rw [ENNReal.mul_iSup]
+  exact iSup_le hn
+
 /-- **Freedman's inequality** (before optimizing over `θ`).
 For a square-integrable martingale `M` with `M 0 = 0`, increments bounded by `c`, and `0 < θ` with
 `θ c ≤ η` (`η` a window for the one-step inequality at level `δ`), and for any `λ, v`,
@@ -355,7 +386,7 @@ lemma measure_exists_ge_le_exp [IsProbabilityMeasure μ] (hM : Martingale M ℱ 
     have hae : (fun ω ↦ Z 0 ω) =ᵐ[μ] fun _ ↦ (1 : ℝ) := by
       filter_upwards [hM0] with ω h0
       simp only [Pi.zero_apply] at h0
-      simp [hZdef, expProcess, predQuadVar_zero, h0]
+      simp [hZdef, expProcess, h0]
     rw [integral_congr_ae hae]; simp
   have hsubset : {ω | ∃ k ≤ n, t ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v}
       ⊆ {ω | a ≤ (Finset.range (n + 1)).sup' Finset.nonempty_range_add_one fun k ↦ Z k ω} := by
@@ -461,7 +492,7 @@ lemma martingale_stoppedProcess_const [IsFiniteMeasure μ] (hM : Martingale M �
 `i < m ≤ N`, where the stopped process agrees with `M` at times `i` and `i + 1`. -/
 lemma predQuadVar_stoppedProcess_const_of_le (M : ℕ → Ω → ℝ) (N : ℕ) {m : ℕ} (hmN : m ≤ N) :
     predQuadVar (stoppedProcess M fun _ ↦ (N : WithTop ℕ)) ℱ μ m = predQuadVar M ℱ μ m := by
-  simp only [predQuadVar, predictablePart]
+  simp only [predQuadVar_eq_sum]
   refine Finset.sum_congr rfl fun i hi ↦ ?_
   rw [Finset.mem_range] at hi
   rw [stoppedProcess_const_of_le M (by omega : i ≤ N),

@@ -262,39 +262,22 @@ lemma predQuadVar_genRespMart_eq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) 
   have hint : ∀ n, Integrable (fun ω ↦ g n (Y n ω)) P := fun n ↦ (hg2 n).integrable one_le_two
   have hQ2 : ∀ n, MemLp (genRespMart ν A Y k g n) 2 P :=
     memLp_genRespMart h.measurable_action hg2 k
-  have hprod : ∀ n, Integrable (genRespMart ν A Y k g n
-      * (genRespMart ν A Y k g (n + 1) - genRespMart ν A Y k g n)) P := fun n ↦
-    integrable_mul_increment (hQ2 n) (hQ2 (n + 1))
-  have hd2 : ∀ m, MemLp
-      (fun ω ↦ genRespMart ν A Y k g (m + 1) ω - genRespMart ν A Y k g m ω) 2 P :=
-    fun m ↦ memLp_increment (hQ2 m) (hQ2 (m + 1))
   have hM := martingale_genRespMart h hg hint k
+  -- The martingale increment `ΔQ` squares to the squared centered response.
   have hdiff : ∀ m, (fun ω ↦ (genRespMart ν A Y k g (m + 1) ω - genRespMart ν A Y k g m ω) ^ 2)
       = fun ω ↦ (actionIndicator A k m ω
         * (g m (Y m ω) - (ν k)[g m])) ^ 2 := by
     intro m; funext ω; rw [genRespMart_succ]; simp only [Pi.add_apply]; ring
-  have hkey : ∀ m, predQuadVar (genRespMart ν A Y k g)
-          h.filtrationAction P (m + 1)
-        - predQuadVar (genRespMart ν A Y k g)
-          h.filtrationAction P m
-      =ᵐ[P] fun ω ↦ variance (g m) (ν k) * actionIndicator A k m ω := by
-    intro m
-    have h1 := predQuadVar_succ_sub_eq hM m (hd2 m) (hprod m)
-    rw [hdiff m] at h1
-    refine h1.trans ?_
+  -- Each compensator increment `μ[(ΔQ_m)² | 𝒢_m]` is `Var(g m) · X_{m,k}`.
+  have hkey : ∀ m, P[fun ω ↦ (genRespMart ν A Y k g (m + 1) ω - genRespMart ν A Y k g m ω) ^ 2
+        | h.filtrationAction m]
+      =ᵐ[P] fun ω ↦ variance (g m) (ν k) * actionIndicator A k m ω := fun m ↦ by
+    rw [hdiff m]
     refine (condExp_genRespMart_increment_sq h k m (hg m) (hg2 m)).trans ?_
     filter_upwards with ω; ring
-  induction n with
-  | zero => filter_upwards with ω; simp [predQuadVar_zero]
-  | succ n ih =>
-    filter_upwards [ih, hkey n] with ω hih hk
-    simp only [Pi.sub_apply] at hk
-    rw [Finset.sum_range_succ]
-    have hih' : predQuadVar (genRespMart ν A Y k g)
-        h.filtrationAction P n ω
-          = ∑ i ∈ Finset.range n,
-            variance (g i) (ν k) * actionIndicator A k i ω := hih
-    linarith [hk, hih']
+  filter_upwards [predQuadVar_ae_eq_sum hM hQ2 n, ae_all_iff.mpr hkey] with ω hω hk
+  rw [hω, Finset.sum_apply]
+  exact Finset.sum_congr rfl fun i _ ↦ hk i
 
 /-- The **truncated response martingale** of arm `k`: the general functional martingale with
 `g i = truncation(· - θ_k, √i)`, i.e. increments `𝟙{A i = k}(truncation(Y i - θ_k, √i) - m_i)`

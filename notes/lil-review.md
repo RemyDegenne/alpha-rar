@@ -76,6 +76,15 @@ and `summable_exp_neg_mul_sqrt_add`, `summable_exp_neg_mul_log_add` (a `p`-serie
 `abs_integral_truncation_le`, `integral_sq_truncation_le`, `abs_truncation_sub_integral_le`,
 `integral_truncation_sub_integral_sq_le`.
 
+**Codomain of Ville's inequality (checked 2026-09-02).** Both forms are real-valued, like Mathlib's
+`maximal_ineq`, although `Supermartingale` and `expected_stoppedValue_mono` are general for ordered
+Banach spaces. A version for an ordered Banach lattice `E` (`μ.real s • ε ≤ ∫ Z 0` in `E`) is
+feasible with the existing general `setIntegral_ge_of_const_le`, `setIntegral_le_integral` and
+codomain-generic `hittingBtwn`, but needs a long typeclass list and has no application. An
+`ℝ≥0∞`-valued version is out of reach: Mathlib has no conditional expectation, hence no
+supermartingale notion, for `ℝ≥0∞`-valued processes; that would be a separate foundational project.
+Nonnegative real processes already cover `ℝ≥0`-valued ones and a.e.-finite `ℝ≥0∞` ones via `toReal`.
+
 ### L1. Quadratic variation, exponential supermartingale, Freedman
 
 The library statement is the refined one and only it: for a martingale with `|ΔM_i| ≤ c` and
@@ -386,6 +395,9 @@ Next: Stage 4 (library polish) and Stage 5 (Stout's LIL, Hartman–Wintner lower
 - **Files.** `LIL.lean` (the engine) is now `Freedman.lean`; `LILSharp.lean` (the LIL theorems)
   is now `LIL.lean`; `LILHartmanWintner.lean` is `HartmanWintner.lean`. `LILTruncation.lean` and
   `LILCommon.lean` keep their names. Imports, the root module and cross-references follow.
+- **Ville over all times.** `smul_measure_exists_ge_le_integral_zero`:
+  `ε · μ{∃ k, ε ≤ Z_k} ≤ E[Z_0]`, from the finite-horizon `smul_measure_sup_le_integral_zero` by
+  continuity from below (the finite form mirrors Mathlib's `maximal_ineq`, so both are kept).
 - **Kept deliberately.** The `@[specifies]` and `@[characterization]` annotations (the user's own
   LeanSpec tooling; they carry design intent, do not affect the mathematics, and are one-line
   deletions at PR time), and `predQuadVar_iidSum_ge` for the Stout route.
@@ -404,3 +416,45 @@ Next: Stage 4 (library polish) and Stage 5 (Stout's LIL, Hartman–Wintner lower
 Open: Stage 5 (a `HasCondBernsteinMGF`-style hypothesis structure, Stout's LIL via
 quadratic-variation stopping, the Hartman–Wintner lower half) and the upstream submissions of
 Section 5.
+
+## Status (2026-09-02, later): quadratic-variation API review
+
+`QuadraticVariation.lean` reviewed as a library file (`ℕ`-indexed only; continuous time is out of
+scope). Build green, no warnings; blueprint tags for `lem:qv_incr` and `lem:qv_second_moment`
+extended.
+
+- **Hypothesis convention, now documented in the module docstring.** One-step lemmas
+  (`predQuadVar_succ_sub_eq`, `predQuadVar_le_succ`) keep the minimal per-step integrability
+  `hd2 : MemLp (ΔM_n) 2 μ`, `hprod : Integrable (M_n ΔM_n) μ` (strictly more general than `L²`:
+  it covers `M_0 ∈ L¹` with bounded increments). Path-level lemmas (`predQuadVar_mono`,
+  `predQuadVar_nonneg`, `predQuadVar_ae_eq_sum`, `submartingale_sq`, the Itô isometries) take the
+  square-integrable martingale `hM2 : ∀ n, MemLp (M n) 2 μ`; every consumer already had it.
+- **Hypothesis-free facts made hypothesis-free.** `integrable_predQuadVar` (a finite sum of
+  conditional expectations; was asking for adaptedness and `L²`), `stronglyAdapted_predQuadVar`,
+  `stronglyMeasurable_predQuadVar_succ`, `isStronglyPredictable_predQuadVar`. The last three
+  replace five call-site leaks of `stronglyAdapted_predictablePart (f := fun n ↦ M n ^ 2)`.
+- **New API.** `predQuadVar_eq_sum` (the defining sum, `rfl`), `predQuadVar_add_one` (mirrors
+  `predictablePart_add_one`; replaces `predQuadVar_succ_sub`), `predQuadVar_zero_apply` (simp),
+  `predQuadVar_const_smul` (`⟨c • M⟩ = c² ⟨M⟩`), `predQuadVar_ae_eq_sum`
+  (`⟨M⟩_n = ∑_{i<n} μ[(ΔM_i)² | ℱ_i]`), the telescoping trio `predQuadVar_eq_sum_succ_sub`,
+  `predQuadVar_le_sum_of_succ_sub_le`, `sum_le_predQuadVar_of_le_succ_sub` (increment bounds ⇒
+  path bounds; `v : ℕ → Ω → ℝ` so random summands work), the general Itô isometry
+  `integral_sq_eq_integral_sq_zero_add_integral_predQuadVar` (`E[M_n²] = E[M_0²] + E[⟨M⟩_n]`,
+  no `M_0 = 0`), `integral_predQuadVar_eq_sum` and `integral_sq_eq_sum_integral_increment_sq`
+  (`E[M_n²] = ∑_{k<n} E[(ΔM_k)²]`), and the general `Martingale.integral_eq` (constant expectation,
+  any index/codomain; replaces `martingale_integral_eq`).
+- **`IsPredQuadVar.predictable` is now Mathlib's `IsStronglyPredictable ℱ A`** rather than the
+  hand-unfolded `StronglyAdapted ℱ fun n ↦ A (n + 1)`.
+- **Proof simplifications.** `submartingale_sq` via `submartingale_nat` and the increment formula
+  (no set-integral juggling); `predQuadVar_le_of_bound`, `integral_sq_le_of_increment_bound`
+  through the telescoping/sum lemmas.
+- **Consumers.** The hand-rolled telescoping in `predQuadVar_iidSum_le`/`_ge`
+  (`HartmanWintner.lean`), the bracket bound and the two `∫ S_n² = ∑ ∫ (ΔS_k)²` derivations
+  (`MartingaleSLLN.lean`, `HartmanWintner.lean`) and `predQuadVar_genRespMart_eq`
+  (`ResponseTruncation.lean`, induction replaced by `predQuadVar_ae_eq_sum`) now call the API;
+  net −40 lines outside the QV file.
+- **Not done, deliberately.** No predictable covariation `⟨M, N⟩` (nothing needs it yet;
+  `predQuadVar_add_of_martingale_mul` covers the orthogonal case), no martingale-transform lemma
+  `⟨H·M⟩ = H²·⟨M⟩` (would be the right home for the `bracketSeries`/weighted-series QV computations;
+  a natural next coherent area), and `predQuadVar_stoppedProcess_const_of_le` stays in
+  `Freedman.lean` with the other deterministic-horizon lemmas.

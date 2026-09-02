@@ -326,7 +326,7 @@ lemma predQuadVar_respMart_eq [DecidableEq 𝓐] [Finite 𝓐]
     refine (condExp_respMart_increment_sq h k m hνk).trans ?_
     filter_upwards with ω; ring
   induction n with
-  | zero => filter_upwards with ω; simp [predQuadVar_zero]
+  | zero => filter_upwards with ω; simp
   | succ n ih =>
     filter_upwards [ih, hkey n] with ω hih hk
     simp only [Pi.sub_apply] at hk
