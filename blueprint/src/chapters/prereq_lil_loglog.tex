@@ -77,7 +77,7 @@ $\log\log\eta^k\le0$ does not affect summability.
 \end{proof}
 
 \begin{lemma}[Borel--Cantelli with eventual admissibility]\label{lem:llil_evt_adm}
-\lean{AlphaRAR.ae_eventually_forall_lt_of_summable_eventually}\leanok
+\lean{AlphaRAR.ae_eventually_forall_lt_of_summable}\leanok
 \uses{cor:lil_freedman_opt, lem:lil_bc}
 Let $M$ be a square-integrable martingale with $M_0=0$ and $|\Delta M_i|\le c$ a.e.
 Let $(v_k),(\lambda_k)$ be positive schedules such that
@@ -102,7 +102,7 @@ Lemma~\ref{lem:lil_bc} with its ``$\forall k$'' admissibility weakened to
 \end{proof}
 
 \begin{lemma}[Bounded-increment $\log\log$ exceedance]\label{lem:llil_bounded_block}
-\lean{AlphaRAR.ae_eventually_forall_lt_dyadic_loglog}\leanok
+\lean{AlphaRAR.ae_eventually_forall_lt_pow_loglog}\leanok
 \uses{lem:llil_tail_summable, lem:llil_evt_adm}
 Let $|\Delta M_i|\le c$ a.e.\ with $c>0$. Fix $\eta>1$ and $\kappa>2$, set $v_k=\eta^k$
 and $\lambda_k=\kappa\sqrt{\eta^k\,\log\log\eta^k}$ (for $k$ large enough that
@@ -120,7 +120,7 @@ Lemma~\ref{lem:llil_tail_summable}. Apply Lemma~\ref{lem:llil_evt_adm}.
 \end{proof}
 
 \begin{theorem}[General bounded-increment LIL, $O$-rate]\label{thm:llil_bounded}
-\lean{AlphaRAR.ae_eventually_le_sqrt_predQuadVar_mul_loglog}\leanok
+\lean{AlphaRAR.ae_isBigO_sqrt_predQuadVar_mul_loglog}\leanok
 \uses{lem:llil_bounded_block}
 Let $M$ be a square-integrable martingale with $M_0=0$, $|\Delta M_i|\le c$ a.e., and
 $\langle M\rangle_n\to\infty$ a.s. Then for every constant $C>2$, almost surely
@@ -193,7 +193,7 @@ inequality). That $M^{\tau_v}$ is a martingale is Mathlib's
 monotonicity of $\langle M\rangle$ and \textbf{(H)}. The only genuinely new ingredient is
 the quadratic-variation identity $\langle M^{\tau_v}\rangle=\langle M\rangle_{\cdot\wedge
 \tau_v}$, the stopping-time analogue of the \emph{formalized} deterministic-horizon
-\texttt{predQuadVar\_stopMart\_of\_le} of Chapter~\ref{chap:pre_lil}. For the inclusion: if
+\texttt{predQuadVar\_stoppedProcess\_const\_of\_le} of Chapter~\ref{chap:pre_lil}. For the inclusion: if
 $\langle M\rangle_n\le v$ then $n\le\tau_v$, so $M^{\tau_v}_n=M_n$ and
 $\langle M^{\tau_v}\rangle_n=\langle M\rangle_n$.
 \end{proof}
@@ -272,7 +272,7 @@ $\eta_\delta:=\min(1,\tfrac94\delta)$. (So this lemma is a Mathlib one-liner, no
 \end{proof}
 
 \begin{lemma}[Refined conditional MGF bound]\label{lem:llil_refined_mgf}
-\lean{AlphaRAR.condExp_exp_increment_le_refined}\leanok
+\lean{AlphaRAR.condExp_exp_increment_le}\leanok
 \uses{lem:llil_refined_ineq, def:pred_qv}
 If $|\Delta M_i|\le c$ a.e.\ and $|\theta|c\le\eta_\delta$, then
 $\E[e^{\theta\Delta M_i}\mid\filt_i]\le\exp\!\big(\tfrac12(1+\delta)\theta^2
@@ -288,7 +288,7 @@ $\E[e^{\theta\Delta M_i}\mid\filt_i]\le1+\tfrac12(1+\delta)\theta^2
 \end{proof}
 
 \begin{lemma}[Refined exponential supermartingale and Freedman bound]\label{lem:llil_refined_freedman}
-\lean{AlphaRAR.measure_exists_ge_le_exp_all_refined}\leanok
+\lean{AlphaRAR.measure_exists_ge_le_exp_all}\leanok
 \uses{lem:llil_refined_mgf}
 Under $|\Delta M_i|\le c$ and $|\theta|c\le\eta_\delta$, the process
 $Z_n=\exp\!\big(\theta M_n-\tfrac12(1+\delta)\theta^2\langle M\rangle_n\big)$ is a
@@ -309,7 +309,7 @@ by $(1+\delta)v$.
 \end{proof}
 
 \begin{lemma}[Sharp exceedance]\label{lem:llil_sharp_block}
-\lean{AlphaRAR.ae_eventually_forall_lt_pow_loglog_sharp}\leanok
+\lean{AlphaRAR.ae_eventually_forall_lt_pow_loglog}\leanok
 \uses{lem:llil_refined_freedman, lem:llil_qv_stop, lem:llil_tail_summable}
 Let $M$ satisfy \textbf{(H)} with constant $A$ (or have bounded increments), and
 $\langle M\rangle_n\to\infty$. Fix $\eta>1$ and $\varepsilon>\delta>0$, set $v_k=\eta^k$
@@ -332,7 +332,7 @@ Borel--Cantelli finishes.
 \end{proof}
 
 \begin{theorem}[Sharp general martingale LIL]\label{thm:llil_sharp}
-\lean{AlphaRAR.ae_eventually_abs_le_sqrt_predQuadVar_mul_loglog_sharp}\leanok
+\lean{AlphaRAR.ae_forall_one_lt_eventually_abs_le_sqrt_predQuadVar_mul_loglog}\leanok
 \uses{lem:llil_sharp_block}
 Let $M$ be a square-integrable martingale with $M_0=0$, $\langle M\rangle_n\to\infty$
 a.s., satisfying \textbf{(H)} (in particular any bounded-increment martingale). Then
@@ -357,7 +357,7 @@ $j\to\infty$.
 
 \begin{theorem}[Sharp LIL for growing increments with a linear quadratic variation]
 \label{thm:llil_growth_sharp}
-\lean{AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growth_sharp_all,
+\lean{AlphaRAR.ae_forall_one_lt_eventually_abs_le_sqrt_nat_mul_loglog_of_growth,
 AlphaRAR.ae_limsup_abs_div_sqrt_nat_mul_loglog_of_growth_le_one}\leanok
 \uses{lem:llil_sharp_block, thm:llil_sharp}
 Let $M$ be a square-integrable martingale with $M_0=0$, increments bounded by a monotone
@@ -388,7 +388,7 @@ $-M$) give the $\limsup$ form.
 \label{sec:llil_forms}
 
 \begin{corollary}[Two-sided normalized bound]\label{cor:llil_norm}
-\lean{AlphaRAR.ae_eventually_abs_le_sqrt_predQuadVar_mul_loglog}\leanok
+\lean{AlphaRAR.ae_isBigO_sqrt_predQuadVar_mul_loglog}\leanok
 \uses{thm:llil_bounded}
 Under the hypotheses of Theorem~\ref{thm:llil_general} (or \ref{thm:llil_bounded}),
 almost surely $|M_n|\le C\sqrt{\langle M\rangle_n\log\log\langle M\rangle_n}$ for all
@@ -398,8 +398,7 @@ Theorem~\ref{thm:llil_general} is formalized.)
 \end{corollary}
 
 \begin{corollary}[Bound at scale $\sqrt{n\log\log n}$]\label{cor:llil_nat}
-\lean{AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog,
-AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd}\leanok
+\lean{AlphaRAR.ae_isBigO_sqrt_nat_mul_loglog_of_bdd}\leanok
 \uses{cor:llil_norm}
 If moreover $\langle M\rangle_n\le K n$ for a constant $K$ (e.g.\ $|\Delta M_i|\le c$
 gives $\langle M\rangle_n\le c^2 n$, Lemma~\ref{lem:qv_linear_bound}), then almost
@@ -507,12 +506,11 @@ gives $\langle S\rangle_n=\sum_{j<n}\E[Y_j^2]\le v\,n$. Applied with $S=\tilde S
 \end{proof}
 
 \begin{corollary}[Loglog LIL for bounded i.i.d.\ increments]\label{cor:hw_bounded}
-\lean{AlphaRAR.ae_eventually_abs_sum_le_sqrt_nat_mul_loglog_of_bounded}\leanok
 \uses{lem:hw_martingale, lem:hw_qv, cor:llil_nat}
 Let $(Y_j)$ be independent and centred with $|Y_j|\le c$ a.e.\ and second moments bounded below,
 $\E[Y_j^2]\ge w>0$. Then $S_n=\sum_{j<n}Y_j$ satisfies $|S_n|=O(\sqrt{n\log\log n})$ a.s.
 \end{corollary}
-\begin{proof}\leanok
+\begin{proof}
 $S$ is a martingale (Lemma~\ref{lem:hw_martingale}) with bounded increments $|\Delta S_j|=|Y_j|\le c$;
 its quadratic variation is $\langle S\rangle_n=\sum_{j<n}\E[Y_j^2]$ (Lemma~\ref{lem:hw_qv}), so
 $\langle S\rangle_n\ge w\,n\to\infty$. The bounded-increment loglog LIL
@@ -554,7 +552,7 @@ $\omega$ in only finitely many $\{|Y_j|>\sqrt j\}$; past that index $Y_j^{\mathr
 \end{proof}
 
 \begin{lemma}[Sharp low-part LIL]\label{lem:hw_low_H}
-\lean{AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation_sharp,
+\lean{AlphaRAR.ae_forall_one_lt_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation,
 AlphaRAR.ae_limsup_abs_div_sqrt_nat_mul_loglog_centeredTruncation_le_one}\leanok
 \uses{def:hw_trunc, thm:llil_growth_sharp, lem:hw_martingale, lem:hw_qv}
 $\tilde S$ is a martingale with $|\Delta\tilde S_j|\le2b_j$ and $\langle\tilde

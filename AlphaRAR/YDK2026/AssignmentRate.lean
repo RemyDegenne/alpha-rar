@@ -6,7 +6,7 @@ Authors: Rémy Degenne
 module
 
 public import AlphaRAR.YDK2026.Assignment
-public import AlphaRAR.Mathlib.LILLogLog
+public import AlphaRAR.Mathlib.LIL
 public import AlphaRAR.Mathlib.MartingaleRate
 public import AlphaRAR.Mathlib.MartingaleSLLN
 
@@ -18,7 +18,7 @@ count process) has increments bounded by `1`. Feeding this into the bounded-incr
 rate bound `isBigOpOne_of_bdd_increments` gives `M n = O_p(√n)`, into the martingale
 strong law `martingale_div_atTop_ae_tendsto_zero_of_bdd` gives `M n / n → 0` a.e., and
 into the unconditional bounded-increment loglog LIL
-`ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd` gives `|M n| = O(√(n log log n))` a.s.
+`ae_isBigO_sqrt_nat_mul_loglog_of_bdd` gives `|M n| = O(√(n log log n))` a.s.
 -/
 
 @[expose] public section
@@ -65,7 +65,7 @@ lemma assignMart_div_atTop_ae_tendsto_zero [IsProbabilityMeasure μ]
 For a `[0,1]`-valued adapted integrable assignment indicator `X` on a probability space, the
 assignment martingale `M` satisfies `|M_n| = O(√(n log log n))` almost surely. The increments are
 bounded by `1`, so the *unconditional* bounded-increment loglog LIL
-`ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd` applies — crucially **without** requiring
+`ae_isBigO_sqrt_nat_mul_loglog_of_bdd` applies — crucially **without** requiring
 `⟨M⟩_n → ∞`, which can fail here (a design whose selection probabilities degenerate to `{0,1}` has
 `⟨M⟩ ≡ 0`). -/
 lemma ae_eventually_abs_assignMart_le_sqrt_nat_mul_loglog [IsProbabilityMeasure μ]
@@ -78,7 +78,11 @@ lemma ae_eventually_abs_assignMart_le_sqrt_nat_mul_loglog [IsProbabilityMeasure 
   have hΔ k : ∀ᵐ ω ∂μ, |assignMart X ℱ μ (k + 1) ω - assignMart X ℱ μ k ω| ≤ 1 := by
     filter_upwards [abs_assignMart_succ_sub_le hX_int h0X h1X k] with ω h
     simpa only [Pi.sub_apply] using h
-  exact ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd (martingale_assignMart hX hX_int) hM0
-    one_pos hΔ
+  filter_upwards [ae_isBigO_sqrt_nat_mul_loglog_of_bdd (martingale_assignMart hX hX_int) hM0
+    one_pos hΔ] with ω hω
+  rw [Asymptotics.isBigO_iff] at hω
+  obtain ⟨C, hC⟩ := hω
+  exact ⟨C, hC.mono fun n hn ↦ by
+    simpa only [Real.norm_eq_abs, abs_of_nonneg (Real.sqrt_nonneg _)] using hn⟩
 
 end AlphaRAR

@@ -261,7 +261,7 @@ fidelity:
     for both αRTS (Lemma A.1) and αRTS-FE (Lemma B.1), rather than being reproved per design;
     unused hypotheses of the paper's lemmas were dropped where the Lean proof did not need them.
     The unconditional bounded-increment LIL
-    `AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog_of_bdd` replaces the appeal to the
+    `AlphaRAR.ae_isBigO_sqrt_nat_mul_loglog_of_bdd` replaces the appeal to the
     standard martingale LIL made in Appendix A.2, whose ⟨M⟩ → ∞ hypothesis is false for a
     generic αRTS design. Indexing is 0-based throughout (arm 0 first), against the paper's
     1-based convention [K] = {1, …, K}.

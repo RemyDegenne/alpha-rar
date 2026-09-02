@@ -11,7 +11,7 @@ public import AlphaRAR.Mathlib.Tactic.Tendsto
 # Regression tests for the `tendsto` tactic
 
 Each `example` mirrors a hand-written limit-algebra idiom found in the project's asymptotic
-proofs (see `AlphaRAR/Mathlib/StochasticOrder.lean`, `AlphaRAR/Mathlib/LILLogLog.lean`,
+proofs (see `AlphaRAR/Mathlib/StochasticOrder.lean`,
 `AlphaRAR/YDK2026/ResponseConsistency.lean`, `AlphaRAR/YDK2026/ResponseCLT.lean`).
 -/
 
@@ -25,7 +25,7 @@ namespace AlphaRAR.TendstoTest
 example (X Y : ℕ → ℝ) (hX : Tendsto X atTop (𝓝 0)) (hY : Tendsto Y atTop (𝓝 0)) :
     Tendsto (fun n ↦ X n + Y n) atTop (𝓝 0) := by tendsto
 
--- `const_mul` then `mul_zero` cleanup (`LILLogLog.lean:107`, `ResponseCLT.lean:302`).
+-- `const_mul` then `mul_zero` cleanup (`ResponseCLT.lean:302`).
 example (a : ℝ) (h0 : Tendsto (fun k : ℕ ↦ ((k : ℝ) + 2) / 2 ^ k) atTop (𝓝 0)) :
     Tendsto (fun k : ℕ ↦ a * (((k : ℝ) + 2) / 2 ^ k)) atTop (𝓝 0) := by tendsto
 

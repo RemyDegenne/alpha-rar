@@ -7,7 +7,7 @@ module
 
 public import Mathlib.Probability.CentralLimitTheorem
 public import AlphaRAR.Mathlib.MartingaleMaximal
-public import AlphaRAR.Mathlib.LILHartmanWintner
+public import AlphaRAR.Mathlib.HartmanWintner
 public import AlphaRAR.Mathlib.MartingaleCLT
 
 /-!

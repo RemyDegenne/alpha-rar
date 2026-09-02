@@ -111,7 +111,6 @@ $\omega$ lies in only finitely many $s_k$.
 \label{sec:pre_lil_upper}
 
 \begin{theorem}[One-sided LIL, bounded increments]\label{thm:lil_bounded}
-\lean{AlphaRAR.ae_eventually_forall_lt_dyadic}
 \uses{lem:lil_bc}
 Let $(M_n)$ be a martingale with $M_0=0$ and $|\Delta M_i|\le c$, and suppose
 $\langle M\rangle_n \to \infty$ a.s. Then
@@ -152,7 +151,6 @@ downstream uses.
 \end{proof}
 
 \begin{corollary}[Normalized one-sided upper bound]\label{cor:lil_upper}
-\lean{AlphaRAR.ae_eventually_le_sqrt_predQuadVar_mul_log}\leanok
 \uses{thm:lil_bounded}
 Under the hypotheses of Theorem~\ref{thm:lil_bounded} (in particular $\langle M\rangle_n\to\infty$
 a.s.), there is a deterministic constant $C$ (depending only on $c$) such that almost surely
@@ -163,7 +161,7 @@ This is the consumable $O(\sqrt{\langle M\rangle_n\log\langle M\rangle_n})$ a.s.
 downstream (Lemma~\ref{lem:U_increment_bound}, via the bounded assignment martingale).
 \end{corollary}
 
-\begin{proof}\leanok
+\begin{proof}
 \uses{thm:lil_bounded}
 Repackage Theorem~\ref{thm:lil_bounded}: for large $n$ let $k$ be the least index with
 $\langle M\rangle_n\le 2^k$. Minimality gives $2^k\le 2\langle M\rangle_n$ and
@@ -173,7 +171,6 @@ $C=K\sqrt{2(1/\log 2+2)}$, using $\log\langle M\rangle_n\ge1$ eventually.
 \end{proof}
 
 \begin{corollary}[Upper bound at scale $\sqrt{n\log n}$]\label{cor:lil_upper_nat}
-\lean{AlphaRAR.ae_eventually_le_sqrt_nat_mul_log}\leanok
 \uses{cor:lil_upper, lem:qv_linear_bound}
 Under the hypotheses of Corollary~\ref{cor:lil_upper}, almost surely
 $M_n \le C\sqrt{n\log n}$ for all large $n$, for a deterministic constant $C$. This is the form
@@ -181,7 +178,7 @@ $M_n = O(\sqrt{n\log n})$ a.s.\ used for the bounded assignment martingale
 $M_{\cdot,k}$ in Lemma~\ref{lem:U_increment_bound}.
 \end{corollary}
 
-\begin{proof}\leanok
+\begin{proof}
 \uses{cor:lil_upper, lem:qv_linear_bound}
 By Lemma~\ref{lem:qv_linear_bound}, $\langle M\rangle_n\le c^2 n$, hence
 $\log\langle M\rangle_n\le\log(c^2 n)\le 2\log n$ once $n\ge c^2$. Substituting into
@@ -378,7 +375,6 @@ $\theta_k^2\langle\tilde M\rangle_{2^k}\le\theta_k^2\sigma^2 2^k=\sigma^2/4$ sta
 $\theta_k\lambda_k$ grows like $\sqrt k$.
 
 \begin{lemma}[Per-block Freedman with constrained $\theta$]\label{lem:trunc_block}
-\lean{AlphaRAR.measure_exists_truncRespMart_block}\leanok
 \uses{lem:trunc_mart, lem:lil_freedman}
 Fix $C>0$ and set $\lambda_k:=C\sqrt{2^k\,k}$. For each $k$,
 \[
@@ -388,7 +384,7 @@ Fix $C>0$ and set $\lambda_k:=C\sqrt{2^k\,k}$. For each $k$,
 Here $\sigma^2=V_k$ is the arm variance and $\langle\tilde M\rangle_m\le V_k 2^k$ uses only the
 upper bound Lemma~\ref{lem:trunc_qv_le}.
 \end{lemma}
-\begin{proof}\leanok
+\begin{proof}
 \uses{lem:lil_freedman, lem:trunc_qv_le}
 Apply the Freedman inequality (Lemma~\ref{lem:lil_freedman}) to the martingale stopped at time
 $2^k$ --- whose increments are bounded by $c_k=2\sqrt{2^k}$, so $\theta_k c_k=1$ is admissible ---
@@ -404,16 +400,16 @@ The formalization packages the stopping into a reusable device
 bound (Lemma~\ref{lem:lil_freedman}) whose increment bound $|\Delta M_i|\le c$ is required only for
 $i<N$, and whose event is restricted to $m\le N$. It is proved by applying
 Lemma~\ref{lem:lil_freedman} to the deterministically stopped process
-$M^N_m:=M_{\min(m,N)}$ (\texttt{stopMart}), which is a martingale
-(\texttt{martingale\_stopMart}), whose increments vanish past $N$ hence are globally bounded by
+$M^N_m:=M_{\min(m,N)}$ (Mathlib's \texttt{stoppedProcess} at the constant time $N$), which is a martingale
+(\texttt{martingale\_stoppedProcess\_const}), whose increments vanish past $N$ hence are globally bounded by
 $c$, and whose predictable quadratic variation agrees with $\langle M\rangle$ below the horizon
-(\texttt{predQuadVar\_stopMart\_of\_le}). Here it is used with $N=2^k$, $c=c_k=2\sqrt{2^k}$, the
+(\texttt{predQuadVar\_stoppedProcess\_const\_of\_le}). Here it is used with $N=2^k$, $c=c_k=2\sqrt{2^k}$, the
 constrained $\theta_k=1/c_k$, and the increment bound $|\Delta\tilde M_i|\le2\sqrt i\le c_k$ for
 $i<2^k$ (\texttt{abs\_truncRespMart\_increment\_le}).
 \end{proof}
 
 \begin{lemma}[Block probabilities are summable]\label{lem:trunc_block_summable}
-\lean{AlphaRAR.summable_block_bound}\leanok
+\lean{AlphaRAR.summable_exp_neg_mul_sqrt_add}\leanok
 For every $C>0$, $\sum_k \exp(-\tfrac C2\sqrt k+\tfrac{\sigma^2}4)<\infty$.
 \end{lemma}
 \begin{proof}\leanok

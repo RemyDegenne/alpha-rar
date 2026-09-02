@@ -551,13 +551,6 @@ lemma truncRespMart_zero_ae (k : 𝓐) : truncRespMart ν A Y k 0 =ᵐ[P] 0 := b
   have h0 : truncRespMart ν A Y k 0 = (0 : Ω → ℝ) := by simp [truncRespMart, genRespMart]
   filter_upwards with ω; rw [h0]
 
-/-- The truncated response martingale is square-integrable. -/
-lemma integrable_truncRespMart_sq (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) (n : ℕ) :
-    MemLp (truncRespMart ν A Y k n) 2 P :=
-  memLp_genRespMart (g := fun i ↦ truncation (fun y ↦ y - ν.means k) (√i))
-    h.measurable_action (fun m ↦ memLp_truncation_comp hint (ν.means k) m) k n
-
 omit [MeasurableSingletonClass 𝓐] [IsProbabilityMeasure P] in
 /-- The truncated increments obey the `√i`-growing bound `|ΔM̃_i| ≤ 2√i` a.e.
 (`abs_truncRespMart_increment_le`). -/
@@ -583,31 +576,10 @@ lemma ae_predQuadVar_truncRespMart_le_nat (h : IsAlgEnvSeq A Y alg (stationaryEn
         · rw [actionIndicator, Set.indicator_of_notMem hω]; norm_num
     _ = (n : ℝ) := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul, mul_one]
 
-/-- **Per-block Freedman bound for the truncated martingale.**
-With horizon `2^j`, increment bound `c_j = 2√(2^j)`, and the *constrained* exponential parameter
-`θ_j = 1/c_j` (the true optimizer `λ/(2v)` is inadmissible), the Freedman inequality on the
-martingale stopped at `2^j` (`measure_exists_ge_le_exp_horizon`) gives, for `λ_j = C√(2^j j)` and
-`v = V_k 2^j`,
-`P(∃ m ≤ 2^j : M̃_m ≥ λ_j ∧ ⟨M̃⟩_m ≤ V_k 2^j) ≤ exp(-(C/2)√j + V_k/4)`.
-The exponent is `-(C/2)√j + V_k/4` because `θ_j λ_j = (C/2)√j` (the `√(2^j)` cancels) and
-`θ_j² v = V_k/4` stays bounded. -/
-lemma measure_exists_truncRespMart_block (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) (C : ℝ) (j : ℕ) :
-    P {ω | ∃ m ≤ 2 ^ j, C * √((2 : ℝ) ^ j * j) ≤ truncRespMart ν A Y k m ω
-          ∧ predQuadVar (truncRespMart ν A Y k)
-              h.filtrationAction P m ω
-            ≤ Var[id; ν k] * (2 : ℝ) ^ j}
-      ≤ ENNReal.ofReal (exp (-(C / 2) * √j + Var[id; ν k] / 4)) := by
-  rw [show Var[id; ν k] / 4 = Var[id; ν k] / (2 : ℝ) ^ 2 by norm_num]
-  exact measure_exists_ge_le_exp_block (martingale_truncRespMart h hint k)
-    (truncRespMart_zero_ae k) (integrable_truncRespMart_sq h hint k) (by norm_num : (0 : ℝ) < 2)
-    (ae_abs_truncRespMart_increment_le k) (Var[id; ν k]) C j
-
-/-- **Block Borel–Cantelli for the truncated martingale.** The per-block bounds
-`P(s_j) ≤ exp(-(C/2)√j + V_k/4)` (`measure_exists_truncRespMart_block`) are summable in `j`
-(`summable_exp_neg_mul_sqrt`), so the first Borel–Cantelli lemma (`ae_eventually_notMem`) gives
-that a.s. only finitely many blocks are bad: for a.e. `ω`, for all large `j` and every `m ≤ 2^j`,
-`⟨M̃⟩_m ω ≤ V_k 2^j ⇒ M̃_m ω < C√(2^j j)`. -/
+/-- **Block Borel–Cantelli for the truncated martingale.** The instance of the general block
+Borel–Cantelli `ae_eventually_lt_block_of_growing` (increments `2√i`, per-block Freedman bounds
+`P(s_j) ≤ exp(-(C/2)√j + V_k/4)`, summable in `j`): for a.e. `ω`, for all large `j` and every
+`m ≤ 2^j`, `⟨M̃⟩_m ω ≤ V_k 2^j ⇒ M̃_m ω < C√(2^j j)`. -/
 lemma ae_eventually_truncRespMart_lt_block (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hint : ∀ n, Integrable (Y n) P) (k : 𝓐) {C : ℝ} (hC : 0 < C) :
     ∀ᵐ ω ∂P, ∀ᶠ (j : ℕ) in atTop, ∀ m ≤ 2 ^ j,
@@ -616,7 +588,7 @@ lemma ae_eventually_truncRespMart_lt_block (h : IsAlgEnvSeq A Y alg (stationaryE
         ≤ Var[id; ν k] * (2 : ℝ) ^ j →
       truncRespMart ν A Y k m ω < C * √((2 : ℝ) ^ j * j) :=
   ae_eventually_lt_block_of_growing (martingale_truncRespMart h hint k)
-    (truncRespMart_zero_ae k) (integrable_truncRespMart_sq h hint k) (by norm_num : (0 : ℝ) < 2)
+    (truncRespMart_zero_ae k) (by norm_num : (0 : ℝ) < 2)
     (ae_abs_truncRespMart_increment_le k) (Var[id; ν k]) hC
 
 /-- **`O(√(n log n))` LIL for the truncated martingale.** From the block exceedance
@@ -637,12 +609,12 @@ lemma ae_eventually_truncRespMart_le_sqrt_nat_mul_log
       truncRespMart ν A Y k n ω ≤ C' * √(n * log n) := by
   have harm : (0 : ℝ) ≤ Var[id; ν k] := variance_nonneg _ _
   exact ae_eventually_le_sqrt_nat_mul_log_of_growing (martingale_truncRespMart h hint k)
-    (truncRespMart_zero_ae k) (integrable_truncRespMart_sq h hint k) (by norm_num : (0 : ℝ) < 2)
+    (truncRespMart_zero_ae k) (by norm_num : (0 : ℝ) < 2)
     (ae_abs_truncRespMart_increment_le k) harm (ae_predQuadVar_truncRespMart_le_nat h hint k hν2)
 
 /-- **Two-sided `O(√(n log n))` LIL for the truncated martingale.** The absolute-value companion of
 `ae_eventually_truncRespMart_le_sqrt_nat_mul_log`, obtained by instantiating the general two-sided
-bound `ae_eventually_abs_le_sqrt_nat_mul_log_of_growing` at the truncated martingale. Almost surely
+bound `ae_isBigO_sqrt_nat_mul_log_of_growing` at the truncated martingale. Almost surely
 `|M̃_n| ≤ C' √(n log n)` eventually. -/
 lemma ae_eventually_abs_truncRespMart_le_sqrt_nat_mul_log
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hint : ∀ n, Integrable (Y n) P) (k : 𝓐)
@@ -650,9 +622,13 @@ lemma ae_eventually_abs_truncRespMart_le_sqrt_nat_mul_log
     ∀ᵐ ω ∂P, ∃ C', ∀ᶠ n in atTop,
       |truncRespMart ν A Y k n ω| ≤ C' * √(n * log n) := by
   have harm : (0 : ℝ) ≤ Var[id; ν k] := variance_nonneg _ _
-  exact ae_eventually_abs_le_sqrt_nat_mul_log_of_growing (martingale_truncRespMart h hint k)
-    (truncRespMart_zero_ae k) (integrable_truncRespMart_sq h hint k) (by norm_num : (0 : ℝ) < 2)
-    (ae_abs_truncRespMart_increment_le k) harm (ae_predQuadVar_truncRespMart_le_nat h hint k hν2)
+  filter_upwards [ae_isBigO_sqrt_nat_mul_log_of_growing (martingale_truncRespMart h hint k)
+    (truncRespMart_zero_ae k) (by norm_num : (0 : ℝ) < 2) (ae_abs_truncRespMart_increment_le k)
+    harm (ae_predQuadVar_truncRespMart_le_nat h hint k hν2)] with ω hω
+  rw [Asymptotics.isBigO_iff] at hω
+  obtain ⟨C, hC⟩ := hω
+  exact ⟨C, hC.mono fun n hn ↦ by
+    simpa only [Real.norm_eq_abs, abs_of_nonneg (Real.sqrt_nonneg _)] using hn⟩
 
 /-! ### Assembling: the finite-variance LIL for the response martingale -/
 

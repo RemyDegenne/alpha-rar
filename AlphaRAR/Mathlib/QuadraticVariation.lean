@@ -77,6 +77,25 @@ lemma memLp_increment_of_bound [IsFiniteMeasure μ] {n : ℕ} {c : ℝ} {p : ℝ
     MemLp (fun ω ↦ M (n + 1) ω - M n ω) p μ :=
   .of_bound (hMn1.sub hMn) c (by filter_upwards [hb] with ω h; rwa [Real.norm_eq_abs])
 
+/-- **A martingale with `M 0 = 0` and a.e. bounded increments lies in every `Lᵖ`** on a finite
+measure: telescoping the increments, `|Mₙ| ≤ n c` a.e. This is what lets the exponential
+supermartingale and the laws of the iterated logarithm assume only the increment bound. -/
+lemma _root_.MeasureTheory.Martingale.memLp_of_abs_increment_le [IsFiniteMeasure μ]
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0) {c : ℝ}
+    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {p : ℝ≥0∞} (n : ℕ) :
+    MemLp (M n) p μ := by
+  refine MemLp.of_bound ((hM.stronglyMeasurable n).mono (ℱ.le n)).aestronglyMeasurable
+    ((n : ℝ) * c) ?_
+  filter_upwards [ae_all_iff.mpr hb, hM0] with ω hbω hM0ω
+  simp only [Pi.zero_apply] at hM0ω
+  rw [Real.norm_eq_abs]
+  have htel : (∑ k ∈ Finset.range n, (M (k + 1) ω - M k ω)) = M n ω := by
+    rw [Finset.sum_range_sub (M · ω) n, hM0ω, sub_zero]
+  calc |M n ω| = |∑ k ∈ Finset.range n, (M (k + 1) ω - M k ω)| := by rw [htel]
+    _ ≤ ∑ k ∈ Finset.range n, |M (k + 1) ω - M k ω| := Finset.abs_sum_le_sum_abs _ _
+    _ ≤ ∑ k ∈ Finset.range n, c := Finset.sum_le_sum fun k _ ↦ hbω k
+    _ = n * c := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+
 /-- The **predictable quadratic variation** `⟨M⟩` of a process `M`, defined as the
 predictable part of `M²` in its Doob decomposition. -/
 noncomputable def predQuadVar (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) : ℕ → Ω → ℝ :=

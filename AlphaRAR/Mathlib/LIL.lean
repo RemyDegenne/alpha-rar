@@ -5,54 +5,50 @@ Authors: Rémy Degenne
 -/
 module
 
-public import AlphaRAR.Mathlib.QuadraticVariation
-public import Mathlib.Order.CompletePartialOrder
-public import Mathlib.Probability.Martingale.OptionalStopping
+public import AlphaRAR.Mathlib.Freedman
 public meta import Characterization
 
 /-!
-# Exponential supermartingale for the law of the iterated logarithm
+# Martingale laws of the iterated logarithm
 
-For a martingale `M` with `M 0 = 0` and increments bounded by `c`, the process
-`Z_n(θ) = exp(θ M_n - θ² ⟨M⟩_n)` is a supermartingale whenever `|θ| c ≤ 1`, where
-`⟨M⟩` is the predictable quadratic variation. This is the exponential/Freedman
-supermartingale, the starting point of the one-sided law of the iterated logarithm.
-
-The key one-step estimate is the conditional moment-generating-function bound
-`μ[exp(θ ΔM_i) | ℱ_i] ≤ 1 + θ² μ[(ΔM_i)² | ℱ_i]`, obtained from the elementary
-inequality `eˣ ≤ 1 + x + x²` (valid for `|x| ≤ 1`) together with the martingale
-property `μ[ΔM_i | ℱ_i] = 0`.
-
-Everything here is proved once, in the refined form with variance proxy `1 + δ` carried by a
-hypothesis `eˣ ≤ 1 + x + ½(1+δ)x²` on `|x| ≤ η`. The crude `O`-rate engine above is recovered as
-the `δ = 1, η = 1` instance (`exp_le_one_add_add_sq`, which repackages Mathlib's
-`Real.abs_exp_sub_one_sub_id_le`), and `LILSharp.lean` obtains the sharp LIL constant by letting
-`δ ↓ 0`. The two variance proxies therefore share a single proof.
+The exponential supermartingale `exp(θ M − ½(1+δ)θ²⟨M⟩)`, Freedman's inequality and the block
+Borel–Cantelli steps live in `Freedman.lean`, parameterized by the variance proxy `1 + δ` and the
+window `η` of the one-step estimate `eˣ ≤ 1 + x + ½(1+δ)x²`. This file lets `δ ↓ 0` (with the
+window `η = min 1 (9δ/4)` of `exp_le_one_add_add_half_mul_sq`) and blocks geometrically with base
+`ρ ↓ 1`, to obtain the sharp constant `limsup Mₙ/√(2⟨M⟩ₙ log log⟨M⟩ₙ) ≤ 1` in two settings: bounded
+increments, normalized by the quadratic variation; and growing increments, normalized by a linear
+bound `⟨M⟩_n ≤ v n` on the quadratic variation, with deterministic time horizons in place of a
+random stopping time.
 
 ## Main results
 
-* `AlphaRAR.exp_le_one_add_add_half_mul_sq`: the refined elementary inequality
-  `eˣ ≤ 1 + x + ½(1+δ)x²` for `|x|` small.
-* `AlphaRAR.condExp_exp_increment_le_refined`, `AlphaRAR.expProcessRefined`,
-  `AlphaRAR.supermartingale_expProcessRefined`, `AlphaRAR.measure_exists_ge_le_exp_refined`:
-  the refined conditional MGF bound, exponential supermartingale and Freedman inequality, with
-  variance proxy `1+δ`.
-* `AlphaRAR.condExp_exp_increment_le`: the conditional MGF bound (the `δ = 1` instance).
-* `AlphaRAR.supermartingale_expProcess`: `Z_n(θ)` is a supermartingale.
-* `AlphaRAR.smul_measure_sup_le_integral_zero`: Ville's maximal inequality for a nonnegative
-  supermartingale (fills a Mathlib gap).
-* `AlphaRAR.measure_exists_ge_le_exp`, `measure_exists_ge_le_exp_optimized`,
-  `measure_exists_ge_le_exp_all`: the Freedman-type tail bound, and its `θ`-optimized finite- and
-  infinite-horizon forms.
-* `AlphaRAR.measure_exists_ge_le_exp_horizon`: the tail bound at an explicit `θ` when the
-  increments are bounded only up to a fixed time `N`, via the stopped process `AlphaRAR.stopMart`.
-* `AlphaRAR.ae_eventually_forall_lt_of_summable`: the Borel–Cantelli step over a block schedule.
-* `AlphaRAR.ae_eventually_forall_lt_dyadic`: the one-sided LIL upper bound with the dyadic
-  schedule.
-* `AlphaRAR.ae_eventually_le_sqrt_predQuadVar_mul_log`: the consumable normalized form
-  `M_n ≤ C √(⟨M⟩_n log⟨M⟩_n)` eventually, a.s.
-* `AlphaRAR.ae_eventually_le_sqrt_nat_mul_log`: the `O(√(n log n))` a.s. bound for a
-  bounded-increment martingale.
+* `AlphaRAR.ae_eventually_forall_lt_pow_loglog`: the exceedance bound for bounded increments,
+  `⟨M⟩_n ≤ ρ^k ⇒ M_n < √(2(1+ε)ρ^k log(k+2))` eventually.
+* `AlphaRAR.ae_eventually_le_sqrt_predQuadVar_mul_loglog_of_lt`,
+  `AlphaRAR.ae_forall_one_lt_eventually_le_sqrt_predQuadVar_mul_loglog`: the normalized bound
+  `M_n ≤ b √(2⟨M⟩_n log log⟨M⟩_n)` eventually, for a fixed block base and then for every `b > 1`;
+  the least-block repackaging keeps the `log log` cost additive, which is what preserves the
+  constant.
+* `AlphaRAR.ae_forall_one_lt_eventually_abs_le_sqrt_predQuadVar_mul_loglog`,
+  `AlphaRAR.ae_limsup_abs_div_sqrt_predQuadVar_mul_loglog_le_one`,
+  `AlphaRAR.ae_isBigO_sqrt_predQuadVar_mul_loglog`: the two-sided sharp bound, its `limsup` form
+  `limsup |M_n|/√(2⟨M⟩_n log log⟨M⟩_n) ≤ 1` a.s., and its `IsBigO` corollary.
+* `AlphaRAR.ae_eventually_lt_block_of_growing_loglog`: the block Borel–Cantelli step for
+  growing-increment martingales over an arbitrary horizon sequence `N_j`, with exponent
+  `(½(1+δ)α²v − αC) log(j+2)`.
+* `AlphaRAR.ae_eventually_le_sqrt_nat_mul_loglog_of_growing_of_lt`,
+  `AlphaRAR.ae_eventually_le_sqrt_nat_mul_loglog_of_growing`: `M_n ≤ b √(2vn log log n)`
+  eventually for a growing-increment martingale with `⟨M⟩_n ≤ v n`, from horizons `N_j = ⌈ρ^j⌉`
+  with `ρ ↓ 1` (`exists_ceil_pow_horizon`) and the block condition `c_j √(log(j+2)/N_j) → 0`.
+* `AlphaRAR.tendsto_growth_horizon`: the block condition from a base-independent increment growth
+  `g` with `g n √(log log n / n) → 0`.
+* `AlphaRAR.ae_forall_one_lt_eventually_le_sqrt_nat_mul_loglog_of_growth`,
+  `AlphaRAR.ae_forall_one_lt_eventually_abs_le_sqrt_nat_mul_loglog_of_growth`,
+  `AlphaRAR.ae_limsup_abs_div_sqrt_nat_mul_loglog_of_growth_le_one`: the sharp growing-increment
+  LIL for every `b > 1`, one- and two-sided, and as `limsup |M_n|/√(2vn log log n) ≤ 1` a.s.
+* `AlphaRAR.ae_isBigO_sqrt_nat_mul_loglog_of_bdd`: the **unconditional** bounded-increment LIL
+  `M_n = O(√(n log log n))` a.s., with no hypothesis on `⟨M⟩`, from the growing-increment engine
+  with constant growth.
 -/
 
 @[expose] public section
@@ -63,730 +59,604 @@ open scoped Topology ENNReal NNReal
 
 namespace AlphaRAR
 
-variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω}
-  {ℱ : Filtration ℕ m0} {M : ℕ → Ω → ℝ}
+variable {Ω : Type*} {m0 : MeasurableSpace Ω} {μ : Measure Ω} {ℱ : Filtration ℕ m0}
+  {M : ℕ → Ω → ℝ}
 
+/-- **Sharp exceedance for bounded increments.** With blocks `v_k = ρ^k` and sharp thresholds
+`λ_k = √(2(1+ε)ρ^k log(k+2))` (using `log(k+2) ≍ loglog ρ^k`), almost surely for all large `k`
+and every `n`, `⟨M⟩_n ≤ ρ^k ⇒ M_n < √(2(1+ε)ρ^k log(k+2))`. The refined Freedman tail is
+`exp(-((1+ε)/(1+δ)) log(k+2))`, a `p`-series with `p = (1+ε)/(1+δ) > 1`
+(`summable_exp_neg_mul_log_add`); admissibility `λ_k c ≤ (1+δ)ρ^k η_δ` holds eventually since
+`log(k+2)/ρ^k → 0`. -/
+lemma ae_eventually_forall_lt_pow_loglog [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
+    (hM0 : M 0 =ᵐ[μ] 0) {c : ℝ} (hc : 0 < c)
+    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {ρ ε δ : ℝ} (hρ : 1 < ρ) (hδ : 0 < δ)
+    (hεδ : δ < ε) :
+    ∀ᵐ ω ∂μ, ∀ᶠ (k : ℕ) in atTop, ∀ n, predQuadVar M ℱ μ n ω ≤ ρ ^ k →
+      M n ω < √(2 * (1 + ε) * ρ ^ k * log ((k : ℝ) + 2)) := by
+  obtain ⟨η, hη0, hη⟩ : ∃ η > 0, ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2 :=
+    ⟨min 1 (9 / 4 * δ), lt_min one_pos (by positivity), fun _ hx ↦
+      exp_le_one_add_add_half_mul_sq hx⟩
+  have hε0 : (0 : ℝ) < 1 + ε := by linarith
+  have hδ0 : (0 : ℝ) < 1 + δ := by linarith
+  have hlogpos : ∀ k : ℕ, (0 : ℝ) < log ((k : ℝ) + 2) := fun k ↦
+    log_pos (by have := Nat.cast_nonneg (α := ℝ) k; linarith)
+  have hvpos : ∀ k : ℕ, (0 : ℝ) < ρ ^ k := fun k ↦ pow_pos (by linarith) k
+  have hXpos : ∀ k : ℕ, (0 : ℝ) < 2 * (1 + ε) * ρ ^ k * log ((k : ℝ) + 2) := fun k ↦ by
+    have := hvpos k; have := hlogpos k; positivity
+  set lam : ℕ → ℝ := fun k ↦ √(2 * (1 + ε) * ρ ^ k * log ((k : ℝ) + 2)) with hlam_def
+  have hlam_pos : ∀ k, 0 < lam k := fun k ↦ Real.sqrt_pos.mpr (hXpos k)
+  -- Summability of the refined Freedman tail (a `p`-series with `p = (1+ε)/(1+δ) > 1`).
+  have hp1 : (1 : ℝ) < (1 + ε) / (1 + δ) := by rw [lt_div_iff₀ hδ0]; linarith
+  have hsum : Summable fun k ↦ exp (-lam k ^ 2 / (2 * (1 + δ) * ρ ^ k)) := by
+    refine (summable_exp_neg_mul_log_add hp1).congr fun k ↦ ?_
+    congr 1
+    rw [hlam_def, Real.sq_sqrt (hXpos k).le]
+    have hρk : ρ ^ k ≠ 0 := (hvpos k).ne'
+    field_simp
+  -- Eventual admissibility `λ_k c ≤ (1+δ) ρ^k η`.
+  have hadm : ∀ᶠ k in atTop, 0 < lam k ∧ 0 < ρ ^ k ∧ lam k * c ≤ (1 + δ) * ρ ^ k * η := by
+    have hη2pos : (0 : ℝ) < (1 + δ) ^ 2 * η ^ 2 := by positivity
+    have htend : Tendsto (fun k : ℕ ↦ 2 * (1 + ε) * c ^ 2 * (log ((k : ℝ) + 2) / ρ ^ k)) atTop
+        (𝓝 0) := by
+      have h := (tendsto_log_add_two_div_pow hρ).const_mul (2 * (1 + ε) * c ^ 2)
+      rwa [mul_zero] at h
+    filter_upwards [htend.eventually (gt_mem_nhds hη2pos)] with k hk
+    refine ⟨hlam_pos k, hvpos k, ?_⟩
+    -- `hk : 2(1+ε)c² · (log(k+2)/ρ^k) < (1+δ)²η²`, so `2(1+ε)c² log(k+2) < (1+δ)²η² ρ^k`.
+    rw [← mul_div_assoc, div_lt_iff₀ (hvpos k)] at hk
+    have hsq : 2 * (1 + ε) * ρ ^ k * log ((k : ℝ) + 2) * c ^ 2 ≤ ((1 + δ) * ρ ^ k * η) ^ 2 := by
+      nlinarith [mul_lt_mul_of_pos_right hk (hvpos k), hvpos k]
+    rw [hlam_def, show √(2 * (1 + ε) * ρ ^ k * log ((k : ℝ) + 2)) * c
+        = √(2 * (1 + ε) * ρ ^ k * log ((k : ℝ) + 2) * c ^ 2) from by
+      rw [Real.sqrt_mul (hXpos k).le, Real.sqrt_sq hc.le]]
+    exact Real.sqrt_le_iff.mpr ⟨by positivity, hsq⟩
+  filter_upwards [ae_eventually_forall_lt_of_summable hM hM0 hδ.le hη hb
+    (v := fun k ↦ ρ ^ k) hadm hsum] with ω hω using hω
 
-/-- **Refined elementary inequality.** For every `δ > 0` there is `η > 0` such that
-`eˣ ≤ 1 + x + ½(1+δ)x²` for all `|x| ≤ η`. Mathlib's `Real.exp_bound` at `n = 3` gives
-`|eˣ - (1 + x + ½x²)| ≤ (2/9)|x|³`, hence
-`eˣ ≤ 1 + x + ½x² + (2/9)|x|³ ≤ 1 + x + ½(1 + (4/9)|x|)x²`; take `η = min(1, (9/4)δ)`. This is the
-one-step estimate whose variance proxy `1+δ → 1` gives the sharp LIL constant. -/
-lemma exp_le_one_add_add_half_mul_sq {δ : ℝ} (hδ : 0 < δ) :
-    ∃ η > 0, ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2 := by
-  refine ⟨min 1 (9 / 4 * δ), lt_min one_pos (by positivity), fun x hx ↦ ?_⟩
-  have hx1 : |x| ≤ 1 := hx.trans (min_le_left _ _)
-  have hxδ : |x| ≤ 9 / 4 * δ := hx.trans (min_le_right _ _)
-  have hb := Real.exp_bound hx1 (n := 3) (by norm_num)
-  norm_num [Finset.sum_range_succ, Nat.factorial] at hb
-  have habs3 : |x| ^ 3 = |x| * x ^ 2 := by rw [← sq_abs x]; ring
-  have hstep : |x| ^ 3 * (2 / 9) ≤ δ / 2 * x ^ 2 := by
-    rw [habs3]
-    nlinarith [mul_nonneg (sub_nonneg.mpr hxδ) (sq_nonneg x)]
-  rw [show (1 + δ) / 2 * x ^ 2 = x ^ 2 / 2 + δ / 2 * x ^ 2 from by ring]
-  linarith [le_of_abs_le hb, hstep]
-
-/-- **Refined conditional MGF bound.** If `|ΔM_i| ≤ c` a.e. and `|θ| c ≤ η`, where `η` is
-admissible for the refined inequality at level `δ` (`hη`, e.g. from
-`exp_le_one_add_add_half_mul_sq`), then
-`μ[exp(θ ΔM_i) | ℱ_i] ≤ 1 + ½(1+δ)θ²(⟨M⟩_{i+1} - ⟨M⟩_i)` a.e. The crude bound
-`condExp_exp_increment_le`, with variance proxy `2` in place of `1+δ`, is the `δ = η = 1`
-instance, where `hη` is `eˣ ≤ 1 + x + x²` on `|x| ≤ 1`. -/
-lemma condExp_exp_increment_le_refined [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    {c θ δ η : ℝ} (hη : ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2)
-    (hθ : |θ| * c ≤ η) (i : ℕ) (hb : ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
-    (hd2 : MemLp (fun ω ↦ M (i + 1) ω - M i ω) 2 μ)
-    (hprod : Integrable (M i * (M (i + 1) - M i)) μ) :
-    μ[fun ω ↦ exp (θ * (M (i + 1) ω - M i ω)) | ℱ i]
-      ≤ᵐ[μ] fun ω ↦ 1 + (1 + δ) / 2 * θ ^ 2
-        * (predQuadVar M ℱ μ (i + 1) ω - predQuadVar M ℱ μ i ω) := by
-  have haesm_d : AEStronglyMeasurable (fun ω ↦ M (i + 1) ω - M i ω) μ := hd2.aestronglyMeasurable
-  -- Pointwise refined bound `exp(θ ΔM) ≤ 1 + θ ΔM + ½(1+δ)θ² ΔM²`.
-  have hptwise : (fun ω ↦ exp (θ * (M (i + 1) ω - M i ω)))
-      ≤ᵐ[μ] fun ω ↦ 1 + θ * (M (i + 1) ω - M i ω)
-        + (1 + δ) / 2 * θ ^ 2 * (M (i + 1) ω - M i ω) ^ 2 := by
-    filter_upwards [hb] with ω hbω
-    have hx : |θ * (M (i + 1) ω - M i ω)| ≤ η := by
-      rw [abs_mul]
-      exact le_trans (mul_le_mul_of_nonneg_left hbω (abs_nonneg _)) hθ
-    nlinarith [hη _ hx]
-  -- The quadratic bound and the exponential are integrable.
-  have hint_exp : Integrable (fun ω ↦ exp (θ * (M (i + 1) ω - M i ω))) μ := by
-    refine (MemLp.of_bound (Real.continuous_exp.comp_aestronglyMeasurable
-      (haesm_d.const_mul θ)) (exp η) ?_).integrable le_rfl
-    filter_upwards [hb] with ω hbω
-    rw [Real.norm_eq_abs, abs_of_pos (Real.exp_pos _)]
-    refine Real.exp_le_exp.mpr (le_trans (le_abs_self _) ?_)
-    rw [abs_mul]
-    exact le_trans (mul_le_mul_of_nonneg_left hbω (abs_nonneg _)) hθ
-  have hint_lin : Integrable (fun ω ↦ (1 : ℝ) + θ * (M (i + 1) ω - M i ω)) μ :=
-    (integrable_const 1).add ((hd2.integrable one_le_two).const_mul θ)
-  have hint_quad : Integrable (fun ω ↦ (1 + δ) / 2 * θ ^ 2 * (M (i + 1) ω - M i ω) ^ 2) μ :=
-    hd2.integrable_sq.const_mul _
-  have hint_q : Integrable (fun ω ↦ 1 + θ * (M (i + 1) ω - M i ω)
-      + (1 + δ) / 2 * θ ^ 2 * (M (i + 1) ω - M i ω) ^ 2) μ := hint_lin.add hint_quad
-  -- Conditional expectation of the increment is `0`.
-  have hd0 : μ[fun ω ↦ M (i + 1) ω - M i ω | ℱ i] =ᵐ[μ] 0 :=
-    hM.condExp_sub_ae_eq_zero (Nat.le_succ i)
-  -- Conditional expectation of the squared increment is `⟨M⟩_{i+1} - ⟨M⟩_i`.
-  have hd2eq : μ[fun ω ↦ (M (i + 1) ω - M i ω) ^ 2 | ℱ i]
-      =ᵐ[μ] fun ω ↦ predQuadVar M ℱ μ (i + 1) ω - predQuadVar M ℱ μ i ω :=
-    (predQuadVar_succ_sub_eq hM i hd2 hprod).symm
-  -- Conditional expectation of the quadratic bound.
-  have hcond_q : μ[fun ω ↦ 1 + θ * (M (i + 1) ω - M i ω)
-      + (1 + δ) / 2 * θ ^ 2 * (M (i + 1) ω - M i ω) ^ 2 | ℱ i]
-      =ᵐ[μ] fun ω ↦ 1 + (1 + δ) / 2 * θ ^ 2
-        * (predQuadVar M ℱ μ (i + 1) ω - predQuadVar M ℱ μ i ω) := by
-    have hlin : μ[fun ω ↦ (1 : ℝ) + θ * (M (i + 1) ω - M i ω) | ℱ i] =ᵐ[μ] fun _ ↦ 1 := by
-      have hs : μ[fun ω ↦ (1 : ℝ) + θ * (M (i + 1) ω - M i ω) | ℱ i]
-          =ᵐ[μ] μ[fun _ ↦ (1 : ℝ) | ℱ i]
-            + μ[fun ω ↦ θ * (M (i + 1) ω - M i ω) | ℱ i] :=
-        condExp_add (integrable_const 1)
-          (((hM.integrable (i + 1)).sub (hM.integrable i)).const_mul θ) _
-      rw [condExp_const (ℱ.le i)] at hs
-      have hsmul : μ[fun ω ↦ θ * (M (i + 1) ω - M i ω) | ℱ i]
-          =ᵐ[μ] θ • μ[fun ω ↦ M (i + 1) ω - M i ω | ℱ i] := condExp_smul θ _ _
-      filter_upwards [hs, hsmul, hd0] with ω es esm ed0
-      simp only [es, Pi.add_apply, esm, Pi.smul_apply, ed0, Pi.zero_apply, smul_zero, add_zero]
-    have hquad : μ[fun ω ↦ (1 + δ) / 2 * θ ^ 2 * (M (i + 1) ω - M i ω) ^ 2 | ℱ i]
-        =ᵐ[μ] fun ω ↦ (1 + δ) / 2 * θ ^ 2
-          * (predQuadVar M ℱ μ (i + 1) ω - predQuadVar M ℱ μ i ω) := by
-      have hsmul : μ[fun ω ↦ (1 + δ) / 2 * θ ^ 2 * (M (i + 1) ω - M i ω) ^ 2 | ℱ i]
-          =ᵐ[μ] ((1 + δ) / 2 * θ ^ 2) • μ[fun ω ↦ (M (i + 1) ω - M i ω) ^ 2 | ℱ i] :=
-        condExp_smul ((1 + δ) / 2 * θ ^ 2) _ _
-      filter_upwards [hsmul, hd2eq] with ω esm ed2
-      rw [esm, Pi.smul_apply, ed2, smul_eq_mul]
-    have hadd : μ[fun ω ↦ 1 + θ * (M (i + 1) ω - M i ω)
-        + (1 + δ) / 2 * θ ^ 2 * (M (i + 1) ω - M i ω) ^ 2 | ℱ i]
-        =ᵐ[μ] μ[fun ω ↦ (1 : ℝ) + θ * (M (i + 1) ω - M i ω) | ℱ i]
-          + μ[fun ω ↦ (1 + δ) / 2 * θ ^ 2 * (M (i + 1) ω - M i ω) ^ 2 | ℱ i] :=
-      condExp_add hint_lin hint_quad _
-    filter_upwards [hadd, hlin, hquad] with ω ea el eq
-    rw [ea, Pi.add_apply, el, eq]
-  exact (condExp_mono hint_exp hint_q hptwise).trans hcond_q.le
-
-/-- The **refined exponential process** `Z_n(θ) = exp(θ M_n - ½(1+δ)θ² ⟨M⟩_n)`, the
-sharp-constant analogue of `expProcess`. -/
-noncomputable def expProcessRefined (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω)
-    (δ θ : ℝ) : ℕ → Ω → ℝ :=
-  fun n ω ↦ exp (θ * M n ω - (1 + δ) / 2 * θ ^ 2 * predQuadVar M ℱ μ n ω)
-
-/-- **The refined exponential process is a supermartingale.**
-The one-step estimate is the refined MGF bound `condExp_exp_increment_le_refined` (variance proxy
-`1+δ`), so the exponent carries `½(1+δ)θ²⟨M⟩`; `supermartingale_expProcess`, whose exponent carries
-`θ²⟨M⟩`, is the `δ = η = 1` instance. -/
-@[specifies expProcessRefined "the reason for the refined `½(1+δ)` coefficient: it is the smallest \
-compensator that still yields a supermartingale under the sharpened MGF bound, and shrinking it \
-towards the Gaussian `½` is exactly what buys the sharp LIL constant"]
-lemma supermartingale_expProcessRefined [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
-    {c θ δ η : ℝ} (hδ : 0 ≤ δ)
-    (hη : ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2) (hθ : |θ| * c ≤ η)
-    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
-    Supermartingale (expProcessRefined M ℱ μ δ θ) ℱ μ := by
-  classical
-  have hd2 : ∀ i, MemLp (fun ω ↦ M (i + 1) ω - M i ω) 2 μ := fun i ↦
-    memLp_increment (hM2 i) (hM2 (i + 1))
-  have haesm_d : ∀ i, AEStronglyMeasurable (fun ω ↦ M (i + 1) ω - M i ω) μ := fun i ↦
-    (hd2 i).aestronglyMeasurable
-  have hprod : ∀ i, Integrable (M i * (M (i + 1) - M i)) μ := fun i ↦
-    integrable_mul_increment (hM2 i) (hM2 (i + 1))
-  have hMn : ∀ n, ∀ᵐ ω ∂μ, |M n ω| ≤ n * c := by
-    intro n
-    filter_upwards [ae_all_iff.mpr hb, hM0] with ω hball h0
-    simp only [Pi.zero_apply] at h0
-    have htel : (∑ j ∈ Finset.range n, (M (j + 1) ω - M j ω)) = M n ω := by
-      rw [Finset.sum_range_sub (M · ω) n, h0, sub_zero]
-    rw [← htel]
-    calc |∑ j ∈ Finset.range n, (M (j + 1) ω - M j ω)|
-        ≤ ∑ j ∈ Finset.range n, |M (j + 1) ω - M j ω| := Finset.abs_sum_le_sum_abs _ _
-      _ ≤ ∑ j ∈ Finset.range n, c := Finset.sum_le_sum fun j _ ↦ hball j
-      _ = n * c := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
-  have hinner : ∀ n, StronglyMeasurable[ℱ n]
-      (fun ω ↦ θ * M n ω - (1 + δ) / 2 * θ ^ 2 * predQuadVar M ℱ μ n ω) := fun n ↦
-    ((hM.stronglyMeasurable n).const_mul θ).sub
-      ((stronglyAdapted_predictablePart' (f := fun k ↦ M k ^ 2) n).const_mul ((1 + δ) / 2 * θ ^ 2))
-  have hZaesm : ∀ n, AEStronglyMeasurable (expProcessRefined M ℱ μ δ θ n) μ := fun n ↦
-    ((Real.continuous_exp.comp_stronglyMeasurable (hinner n)).mono (ℱ.le n)).aestronglyMeasurable
-  have hZbd : ∀ n, ∀ᵐ ω ∂μ, ‖expProcessRefined M ℱ μ δ θ n ω‖ ≤ Real.exp (|θ| * (n * c)) := by
-    intro n
-    filter_upwards [hMn n, predQuadVar_nonneg hM hd2 hprod n] with ω hMnω hqvω
-    change ‖Real.exp (θ * M n ω - (1 + δ) / 2 * θ ^ 2 * predQuadVar M ℱ μ n ω)‖ ≤ _
-    rw [Real.norm_of_nonneg (Real.exp_pos _).le]
-    refine Real.exp_le_exp.mpr ?_
-    simp only [Pi.zero_apply] at hqvω
-    have h1 : θ * M n ω ≤ |θ| * (n * c) := by
-      refine le_trans (le_abs_self _) ?_
-      rw [abs_mul]
-      exact mul_le_mul_of_nonneg_left hMnω (abs_nonneg _)
-    nlinarith [mul_nonneg (mul_nonneg (show (0 : ℝ) ≤ (1 + δ) / 2 by linarith) (sq_nonneg θ)) hqvω]
-  have hZint_n : ∀ n, Integrable (expProcessRefined M ℱ μ δ θ n) μ := fun n ↦
-    (MemLp.of_bound (hZaesm n) _ (hZbd n)).integrable le_rfl
-  refine supermartingale_nat (fun n ↦ Real.continuous_exp.comp_stronglyMeasurable (hinner n))
-    hZint_n (fun i ↦ ?_)
-  · have hfac_meas : StronglyMeasurable[ℱ i]
-        (fun ω ↦ Real.exp (θ * M i ω - (1 + δ) / 2 * θ ^ 2 * predQuadVar M ℱ μ i ω)
-          * Real.exp (-((1 + δ) / 2 * θ ^ 2
-            * (predQuadVar M ℱ μ (i + 1) ω - predQuadVar M ℱ μ i ω)))) :=
-      (Real.continuous_exp.comp_stronglyMeasurable (hinner i)).mul
-        (Real.continuous_exp.comp_stronglyMeasurable
-          (((stronglyAdapted_predictablePart (f := fun k ↦ M k ^ 2) i).sub
-            (stronglyAdapted_predictablePart' (f := fun k ↦ M k ^ 2) i)).const_mul
-              ((1 + δ) / 2 * θ ^ 2)).neg)
-    set factor := fun ω ↦ Real.exp (θ * M i ω - (1 + δ) / 2 * θ ^ 2 * predQuadVar M ℱ μ i ω)
-      * Real.exp (-((1 + δ) / 2 * θ ^ 2
-        * (predQuadVar M ℱ μ (i + 1) ω - predQuadVar M ℱ μ i ω))) with hfac
-    have hZfac : expProcessRefined M ℱ μ δ θ (i + 1)
-        = fun ω ↦ factor ω * Real.exp (θ * (M (i + 1) ω - M i ω)) := by
-      funext ω
-      simp only [expProcessRefined, hfac, ← Real.exp_add]
-      congr 1
-      ring
-    have hint_exp : Integrable (fun ω ↦ Real.exp (θ * (M (i + 1) ω - M i ω))) μ := by
-      refine (MemLp.of_bound (Real.continuous_exp.comp_aestronglyMeasurable
-        ((haesm_d i).const_mul θ)) (exp η) ?_).integrable le_rfl
-      filter_upwards [hb i] with ω hbω
-      rw [Real.norm_eq_abs, abs_of_pos (Real.exp_pos _)]
-      refine Real.exp_le_exp.mpr (le_trans (le_abs_self _) ?_)
-      rw [abs_mul]
-      exact le_trans (mul_le_mul_of_nonneg_left hbω (abs_nonneg _)) hθ
-    have hZint : Integrable (fun ω ↦ factor ω * Real.exp (θ * (M (i + 1) ω - M i ω))) μ := by
-      rw [← hZfac]; exact hZint_n (i + 1)
-    have hpull : μ[expProcessRefined M ℱ μ δ θ (i + 1) | ℱ i]
-        =ᵐ[μ] fun ω ↦ factor ω * μ[fun ω ↦ Real.exp (θ * (M (i + 1) ω - M i ω)) | ℱ i] ω := by
-      rw [hZfac]
-      exact condExp_mul_of_stronglyMeasurable_left hfac_meas hZint hint_exp
-    have hmgf := condExp_exp_increment_le_refined hM hη hθ i (hb i) (hd2 i) (hprod i)
-    have hfac_nonneg : ∀ ω, 0 ≤ factor ω := fun ω ↦ by
-      rw [hfac]; positivity
-    filter_upwards [hpull, hmgf] with ω hp hm
-    rw [hp]
-    calc factor ω * μ[fun ω ↦ Real.exp (θ * (M (i + 1) ω - M i ω)) | ℱ i] ω
-        ≤ factor ω * (1 + (1 + δ) / 2 * θ ^ 2
-            * (predQuadVar M ℱ μ (i + 1) ω - predQuadVar M ℱ μ i ω)) :=
-          mul_le_mul_of_nonneg_left hm (hfac_nonneg ω)
-      _ ≤ factor ω * Real.exp ((1 + δ) / 2 * θ ^ 2
-          * (predQuadVar M ℱ μ (i + 1) ω - predQuadVar M ℱ μ i ω)) := by
-          refine mul_le_mul_of_nonneg_left ?_ (hfac_nonneg ω)
-          have hle := Real.add_one_le_exp ((1 + δ) / 2 * θ ^ 2
-            * (predQuadVar M ℱ μ (i + 1) ω - predQuadVar M ℱ μ i ω))
-          linarith
-      _ = expProcessRefined M ℱ μ δ θ i ω := by
-          simp only [expProcessRefined, hfac, ← Real.exp_add]
-          congr 1
-          ring
-
-
-/-- The `δ = 1` case of `exp_le_one_add_add_half_mul_sq`, valid on the explicit window `η = 1`:
-`eˣ ≤ 1 + x + x²` for `|x| ≤ 1`. It follows from Mathlib's `Real.abs_exp_sub_one_sub_id_le`, and
-it is what specializes the refined engine to the crude one. -/
-lemma exp_le_one_add_add_sq {x : ℝ} (hx : |x| ≤ 1) :
-    Real.exp x ≤ 1 + x + (1 + 1) / 2 * x ^ 2 := by
-  have := le_of_abs_le (Real.abs_exp_sub_one_sub_id_le hx)
-  linarith
-
-/-- **Conditional MGF bound for a bounded martingale increment.**
-If `|ΔM_i| ≤ c` a.e. and `|θ| c ≤ 1`, then
-`μ[exp(θ ΔM_i) | ℱ_i] ≤ 1 + θ² (⟨M⟩_{i+1} - ⟨M⟩_i)` a.e.
-The proof uses `eˣ ≤ 1 + x + x²` for `|x| ≤ 1`, monotonicity of conditional expectation, the
-martingale property `μ[ΔM_i | ℱ_i] = 0`, and `μ[(ΔM_i)² | ℱ_i] = ⟨M⟩_{i+1} - ⟨M⟩_i`
-(`predQuadVar_succ_sub_eq`). -/
-lemma condExp_exp_increment_le [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ) {c θ : ℝ}
-    (hθ : |θ| * c ≤ 1) (i : ℕ) (hb : ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
-    (hd2 : MemLp (fun ω ↦ M (i + 1) ω - M i ω) 2 μ)
-    (hprod : Integrable (M i * (M (i + 1) - M i)) μ) :
-    μ[fun ω ↦ Real.exp (θ * (M (i + 1) ω - M i ω)) | ℱ i]
-      ≤ᵐ[μ] fun ω ↦ 1 + θ ^ 2 * (predQuadVar M ℱ μ (i + 1) ω - predQuadVar M ℱ μ i ω) := by
-  refine (condExp_exp_increment_le_refined (δ := 1) (η := 1) hM
-    (fun _ hx ↦ exp_le_one_add_add_sq hx) hθ i hb hd2 hprod).trans
-    (Eventually.of_forall fun ω ↦ ?_)
-  norm_num
-
-/-- The **exponential process** `Z_n(θ) = exp(θ M_n - θ² ⟨M⟩_n)`. -/
-noncomputable def expProcess (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) (θ : ℝ) :
-    ℕ → Ω → ℝ :=
-  fun n ω ↦ Real.exp (θ * M n ω - θ ^ 2 * predQuadVar M ℱ μ n ω)
-
-/-- At `δ = 1` the refined exponential process is the crude one, since `½(1 + 1) = 1`. -/
-lemma expProcessRefined_one (M : ℕ → Ω → ℝ) (ℱ : Filtration ℕ m0) (μ : Measure Ω) (θ : ℝ) :
-    expProcessRefined M ℱ μ 1 θ = expProcess M ℱ μ θ := by
-  funext n ω
-  simp only [expProcess, expProcessRefined]
-  norm_num
-
-/-- **The exponential process is a supermartingale.**
-For a martingale `M` with `M 0 = 0`, square-integrable, with increments bounded by `c`, and for
-`|θ| c ≤ 1`, the process `Z_n(θ) = exp(θ M_n - θ² ⟨M⟩_n)` is a supermartingale.
-The one-step bound is `μ[Z_{i+1} | ℱ_i] = Z_i e^{-θ² Δ⟨M⟩_i} μ[e^{θ ΔM_i} | ℱ_i]
-≤ Z_i e^{-θ² Δ⟨M⟩_i}(1 + θ² Δ⟨M⟩_i) ≤ Z_i`, using `condExp_exp_increment_le` and `1 + y ≤ eʸ`. -/
-@[specifies expProcess "the only reason to form this combination: the compensator `θ²⟨M⟩` is \
-exactly large enough to make the exponential a supermartingale in the bounded-increment regime \
-`|θ|c ≤ 1`"]
-lemma supermartingale_expProcess [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
-    {c θ : ℝ} (hθ : |θ| * c ≤ 1)
-    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
-    Supermartingale (expProcess M ℱ μ θ) ℱ μ := by
-  have h := supermartingale_expProcessRefined (δ := 1) (η := 1) hM hM0 hM2 zero_le_one
-    (fun _ hx ↦ exp_le_one_add_add_sq hx) hθ hb
-  rwa [expProcessRefined_one] at h
-
-open Finset in
-/-- **Ville's maximal inequality** for a nonnegative supermartingale. If `Z ≥ 0` is a
-supermartingale, then `ε · μ{ω : ε ≤ maxₖ≤ₙ Z_k ω} ≤ E[Z_0]`. Mathlib has Doob's maximal
-inequality for submartingales but not this supermartingale version, which controls the running
-maximum by the *initial* value; the proof stops `Z` at the first time it reaches `ε` and applies
-the optional stopping theorem to the submartingale `-Z`. -/
-lemma smul_measure_sup_le_integral_zero [IsFiniteMeasure μ] {Z : ℕ → Ω → ℝ}
-    (hZ : Supermartingale Z ℱ μ) (hnonneg : 0 ≤ Z) {ε : ℝ≥0} (n : ℕ) :
-    ε • μ {ω | (ε : ℝ) ≤ (range (n + 1)).sup' nonempty_range_add_one fun k ↦ Z k ω}
-      ≤ ENNReal.ofReal (∫ ω, Z 0 ω ∂μ) := by
-  classical
-  set s := {ω | (ε : ℝ) ≤ (range (n + 1)).sup' nonempty_range_add_one fun k ↦ Z k ω} with hs_def
-  set τ : Ω → WithTop ℕ := fun ω ↦ (hittingBtwn Z {y : ℝ | (ε : ℝ) ≤ y} 0 n ω : ℕ) with hτ_def
-  have hτ_stop : IsStoppingTime ℱ τ :=
-    hZ.stronglyAdapted.adapted.isStoppingTime_hittingBtwn measurableSet_Ici
-  have hτ_le : ∀ ω, τ ω ≤ (n : WithTop ℕ) := fun ω ↦ by
-    simp only [hτ_def]; exact WithTop.coe_le_coe.mpr (hittingBtwn_le ω)
-  have hsv_int : Integrable (stoppedValue Z τ) μ := by
-    have h := (hZ.neg).integrable_stoppedValue hτ_stop hτ_le
-    simpa [stoppedValue, Pi.neg_apply] using h.neg
-  have hsv_nonneg : (0 : Ω → ℝ) ≤ stoppedValue Z τ := fun ω ↦ hnonneg _ _
-  have hconst : ∀ ω ∈ s, (ε : ℝ) ≤ stoppedValue Z τ ω := by
-    intro ω hω
-    rw [hs_def, Set.mem_ofPred_eq, le_sup'_iff] at hω
-    obtain ⟨j, hj, hj₂⟩ := hω
-    rw [mem_range, Nat.lt_succ_iff] at hj
-    exact stoppedValue_hittingBtwn_mem ⟨j, ⟨Nat.zero_le _, hj⟩, hj₂⟩
-  have hs_meas : MeasurableSet s :=
-    measurableSet_le measurable_const
-      (measurable_range_sup'' fun k _ ↦ ((hZ.stronglyAdapted k).mono (ℱ.le k)).measurable)
-  -- `ε · μ s ≤ ofReal (∫_s Z_τ)` from the constant lower bound on `s`.
-  have h1 : ε • μ s ≤ ENNReal.ofReal (∫ ω in s, stoppedValue Z τ ω ∂μ) := by
-    have h := setIntegral_ge_of_const_le_real hs_meas (measure_ne_top _ _) hconst
-      hsv_int.integrableOn
-    rw [ENNReal.le_ofReal_iff_toReal_le, ENNReal.toReal_smul]
-    · exact h
-    · exact ENNReal.mul_ne_top (by simp) (measure_ne_top _ _)
-    · exact le_trans (mul_nonneg ε.coe_nonneg ENNReal.toReal_nonneg) h
-  -- `∫_s Z_τ ≤ ∫ Z_τ ≤ ∫ Z_0` (nonnegativity and optional stopping on `-Z`).
-  have h2 : ∫ ω in s, stoppedValue Z τ ω ∂μ ≤ ∫ ω, stoppedValue Z τ ω ∂μ :=
-    setIntegral_le_integral hsv_int (Eventually.of_forall hsv_nonneg)
-  have h3 : ∫ ω, stoppedValue Z τ ω ∂μ ≤ ∫ ω, Z 0 ω ∂μ := by
-    have hos := (hZ.neg).expected_stoppedValue_mono (isStoppingTime_const ℱ 0) hτ_stop
-      (fun _ ↦ zero_le) hτ_le
-    rw [stoppedValue_const] at hos
-    simp only [stoppedValue, Pi.neg_apply, integral_neg] at hos ⊢
-    linarith
-  calc ε • μ s ≤ ENNReal.ofReal (∫ ω in s, stoppedValue Z τ ω ∂μ) := h1
-    _ ≤ ENNReal.ofReal (∫ ω, stoppedValue Z τ ω ∂μ) := ENNReal.ofReal_le_ofReal h2
-    _ ≤ ENNReal.ofReal (∫ ω, Z 0 ω ∂μ) := ENNReal.ofReal_le_ofReal h3
-
-/-- **Refined Freedman-type inequality** (before optimizing over `θ`).
-The sharp-constant analogue of `measure_exists_ge_le_exp`, with variance proxy `(1+δ)v` in place of
-`2v`: `μ{∃ k ≤ n, λ ≤ M_k, ⟨M⟩_k ≤ v} ≤ exp(-θλ + ½(1+δ)θ²v)`, via Ville's inequality on the refined
-supermartingale `expProcessRefined`. -/
-lemma measure_exists_ge_le_exp_refined [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
-    {c θ δ η : ℝ} (hδ : 0 ≤ δ)
-    (hη : ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2) (hθc : |θ| * c ≤ η) (hθ0 : 0 < θ)
-    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) (lam v : ℝ) (n : ℕ) :
-    μ {ω | ∃ k ≤ n, lam ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v}
-      ≤ ENNReal.ofReal (exp (-θ * lam + (1 + δ) / 2 * θ ^ 2 * v)) := by
-  classical
-  set Z := expProcessRefined M ℱ μ δ θ with hZdef
-  have hZ_super : Supermartingale Z ℱ μ :=
-    supermartingale_expProcessRefined hM hM0 hM2 hδ hη hθc hb
-  have hZ_nonneg : (0 : ℕ → Ω → ℝ) ≤ Z := fun k ω ↦ (Real.exp_pos _).le
-  set a := exp (θ * lam - (1 + δ) / 2 * θ ^ 2 * v) with hadef
-  have ha_pos : 0 < a := Real.exp_pos _
-  have hZ0 : ∫ ω, Z 0 ω ∂μ = 1 := by
-    have hae : (fun ω ↦ Z 0 ω) =ᵐ[μ] fun _ ↦ (1 : ℝ) := by
-      filter_upwards [hM0] with ω h0
-      simp only [Pi.zero_apply] at h0
-      simp [hZdef, expProcessRefined, predQuadVar_zero, h0]
-    rw [integral_congr_ae hae]; simp
-  have hsubset : {ω | ∃ k ≤ n, lam ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v}
-      ⊆ {ω | a ≤ (Finset.range (n + 1)).sup' Finset.nonempty_range_add_one fun k ↦ Z k ω} := by
-    intro ω hω
-    obtain ⟨k, hk, hMk, hqvk⟩ := hω
-    have hZk : a ≤ Z k ω := by
-      rw [hadef, hZdef]
-      simp only [expProcessRefined]
-      refine Real.exp_le_exp.mpr ?_
-      nlinarith [mul_le_mul_of_nonneg_left hMk hθ0.le,
-        mul_le_mul_of_nonneg_left hqvk
-          (mul_nonneg (show (0 : ℝ) ≤ (1 + δ) / 2 by linarith) (sq_nonneg θ))]
-    exact le_trans hZk (Finset.le_sup' (Z · ω) (Finset.mem_range.mpr (by omega)))
-  have hville := smul_measure_sup_le_integral_zero hZ_super hZ_nonneg (ε := a.toNNReal) n
-  rw [hZ0, ENNReal.ofReal_one, ENNReal.smul_def, smul_eq_mul,
-    Real.coe_toNNReal a ha_pos.le] at hville
-  have hmul : μ {ω | a ≤ (Finset.range (n + 1)).sup' Finset.nonempty_range_add_one fun k ↦ Z k ω}
-      * ENNReal.ofReal a ≤ 1 := by
-    rw [mul_comm]; exact hville
-  calc μ {ω | ∃ k ≤ n, lam ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v}
-      ≤ μ {ω | a ≤ (Finset.range (n + 1)).sup' Finset.nonempty_range_add_one fun k ↦ Z k ω} :=
-        measure_mono hsubset
-    _ ≤ (ENNReal.ofReal a)⁻¹ := ENNReal.le_inv_iff_mul_le.mpr hmul
-    _ = ENNReal.ofReal (exp (-θ * lam + (1 + δ) / 2 * θ ^ 2 * v)) := by
-        have hexp : exp (-θ * lam + (1 + δ) / 2 * θ ^ 2 * v) = a⁻¹ := by
-          rw [hadef, ← Real.exp_neg]; congr 1; ring
-        rw [hexp, ENNReal.ofReal_inv_of_pos ha_pos]
-
-/-- **Freedman-type inequality** (before optimizing over `θ`).
-For a square-integrable martingale `M` with `M 0 = 0`, increments bounded by `c`, and `0 < θ` with
-`θ c ≤ 1`, and for any `λ, v`,
-`μ{ω : ∃ k ≤ n, λ ≤ M_k ω ∧ ⟨M⟩_k ω ≤ v} ≤ exp(-θλ + θ² v)`.
-On this event the exponential supermartingale `Z_k(θ) = exp(θ M_k - θ² ⟨M⟩_k)` reaches
-`exp(θλ - θ² v)`, so Ville's inequality (`smul_measure_sup_le_integral_zero`) with `E[Z_0] = 1`
-gives the bound. Optimizing `θ = λ/(2v) ∧ 1/c` yields the classical `exp(-λ²/(2(v+cλ)))`. -/
-lemma measure_exists_ge_le_exp [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ)
-    {c θ : ℝ} (hθc : |θ| * c ≤ 1) (hθ0 : 0 < θ)
-    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) (lam v : ℝ) (n : ℕ) :
-    μ {ω | ∃ k ≤ n, lam ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v}
-      ≤ ENNReal.ofReal (Real.exp (-θ * lam + θ ^ 2 * v)) := by
-  have h := measure_exists_ge_le_exp_refined (δ := 1) (η := 1) hM hM0 hM2 zero_le_one
-    (fun _ hx ↦ exp_le_one_add_add_sq hx) hθc hθ0 hb lam v n
-  convert h using 4
-  norm_num
-
-/-- **Freedman inequality with the optimal `θ = λ/(2v)`** (finite horizon).
-For a square-integrable martingale `M` with `M 0 = 0`, increments bounded by `c > 0`, and
-`0 < λ`, `0 < v` with `λ c ≤ 2 v` (so the optimizer `θ = λ/(2v)` is admissible, `θ c ≤ 1`),
-`μ{ω : ∃ k ≤ n, λ ≤ M_k ω ∧ ⟨M⟩_k ω ≤ v} ≤ exp(-λ²/(4v))`.
-This is `measure_exists_ge_le_exp` evaluated at `θ = λ/(2v)`, where
-`-θλ + θ² v = -λ²/(4v)`. The variance proxy is `2v` rather than the sharp `v` because the
-one-step bound uses `eˣ ≤ 1 + x + x²`; this costs a factor `√2` in the eventual LIL constant. -/
-lemma measure_exists_ge_le_exp_optimized [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c : ℝ}
-    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {lam v : ℝ} (hlam : 0 < lam) (hv : 0 < v)
-    (hadm : lam * c ≤ 2 * v) (n : ℕ) :
-    μ {ω | ∃ k ≤ n, lam ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v}
-      ≤ ENNReal.ofReal (Real.exp (-lam ^ 2 / (4 * v))) := by
-  set θ := lam / (2 * v) with hθdef
-  have hθ0 : 0 < θ := by rw [hθdef]; positivity
-  have hθc : |θ| * c ≤ 1 := by
-    rw [abs_of_pos hθ0, hθdef, div_mul_eq_mul_div, div_le_one (by positivity)]
-    exact hadm
-  have h := measure_exists_ge_le_exp hM hM0 hM2 hθc hθ0 hb lam v n
-  have hexp : -θ * lam + θ ^ 2 * v = -lam ^ 2 / (4 * v) := by
-    rw [hθdef]; field_simp; ring
-  rwa [hexp] at h
-
-/-- The process `M` **stopped at the deterministic time `N`**: `stopMart M N m = M (min m N)`. Since
-the horizon is a constant (not a random stopping time), we avoid Mathlib's `WithTop`-valued
-`stoppedProcess` machinery and record the elementary facts we need directly. This is the device that
-lets the Freedman bound accommodate a martingale whose increments are bounded only *up to* a fixed
-horizon (the truncated-response martingale, whose truncation level `√i` grows). -/
-noncomputable def stopMart (M : ℕ → Ω → ℝ) (N : ℕ) : ℕ → Ω → ℝ := fun m ↦ M (min m N)
-
-@[simp, specifies stopMart "the defining formula, stated so a reader never has to unfold: the \
-process is frozen at `M N` from time `N` on and agrees with `M` before it"]
-lemma stopMart_apply (M : ℕ → Ω → ℝ) (N m : ℕ) : stopMart M N m = M (min m N) := rfl
-
-/-- **The stopped process is a martingale.** For `i < N` the increment equals `M (i+1) - M i`
-(a martingale increment); for `i ≥ N` the process is frozen at `M N`, whose conditional expectation
-given `ℱ i ⊇ ℱ N` is itself. -/
-@[specifies stopMart "freezing at a deterministic horizon costs nothing: the result is still a \
-martingale for the *same* filtration, which is what makes it a legitimate substitute for `M`"]
-lemma martingale_stopMart [IsFiniteMeasure μ] (hM : Martingale M ℱ μ) (N : ℕ) :
-    Martingale (stopMart M N) ℱ μ := by
-  refine martingale_nat (fun i ↦ (hM.stronglyMeasurable (min i N)).mono (ℱ.mono (min_le_left i N)))
-    (fun i ↦ hM.integrable (min i N)) (fun i ↦ ?_)
-  by_cases hi : i < N
-  · have h1 : min i N = i := by omega
-    have h2 : min (i + 1) N = i + 1 := by omega
-    simp only [stopMart_apply, h1, h2]
-    exact (hM.condExp_ae_eq (Nat.le_succ i)).symm
-  · have hNi : N ≤ i := not_lt.mp hi
-    have h1 : min i N = N := by omega
-    have h2 : min (i + 1) N = N := by omega
-    simp only [stopMart_apply, h1, h2]
-    rw [condExp_of_stronglyMeasurable (ℱ.le i)
-      ((hM.stronglyMeasurable N).mono (ℱ.mono hNi)) (hM.integrable N)]
-
-/-- **The quadratic variation is unaffected by stopping, below the horizon.** For `m ≤ N`,
-`⟨stopMart M N⟩_m = ⟨M⟩_m`, since every increment in the defining sum has index `i < m ≤ N`, where
-`min (i+1) N = i+1` and `min i N = i`, so the compensator terms agree exactly. -/
-lemma predQuadVar_stopMart_of_le (M : ℕ → Ω → ℝ) (N : ℕ) {m : ℕ} (hmN : m ≤ N) :
-    predQuadVar (stopMart M N) ℱ μ m = predQuadVar M ℱ μ m := by
-  simp only [predQuadVar, predictablePart]
-  refine Finset.sum_congr rfl fun i hi ↦ ?_
-  rw [Finset.mem_range] at hi
-  have h1 : min i N = i := by omega
-  have h2 : min (i + 1) N = i + 1 := by omega
-  simp only [stopMart_apply, h1, h2]
-
-/-- **Freedman inequality with a horizon-local increment bound.** Same conclusion as
-`measure_exists_ge_le_exp` (the pre-optimization form, with an *explicit* `θ`), but the increment
-bound `|ΔM_i| ≤ c` is required only up to the horizon `N` (`∀ i < N`), and the event restricted to
-times `m ≤ N`. This is what makes the bound applicable to a martingale with *growing* increments
-(bounded only below `N`): apply the bound to the process stopped at `N`, whose increments are
-globally bounded by `c` (they vanish past `N`) and whose value and quadratic variation agree with
-`M`'s at every time `m ≤ N`. The pre-optimization form is essential here: the block LIL uses the
-*constrained* `θ = 1/c` (the true optimizer `λ/(2v)` is inadmissible), so `measure_exists_ge_le_exp`
-rather than `measure_exists_ge_le_exp_optimized` is what stops at the horizon. -/
-lemma measure_exists_ge_le_exp_horizon [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c θ : ℝ} (hc : 0 ≤ c)
-    (hθc : |θ| * c ≤ 1) (hθ0 : 0 < θ) (lam v : ℝ) (N : ℕ)
-    (hb : ∀ i < N, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
-    μ {ω | ∃ m ≤ N, lam ≤ M m ω ∧ predQuadVar M ℱ μ m ω ≤ v}
-      ≤ ENNReal.ofReal (Real.exp (-θ * lam + θ ^ 2 * v)) := by
-  have hM'0 : stopMart M N 0 =ᵐ[μ] 0 := by
-    have : stopMart M N 0 = M 0 := by rw [stopMart_apply, Nat.zero_min]
-    rw [this]; exact hM0
-  have hM'2 : ∀ n, MemLp (stopMart M N n) 2 μ := fun n ↦ by
-    simpa only [stopMart_apply] using hM2 (min n N)
-  -- Increments of the stopped process are globally bounded by `c`.
-  have hb' : ∀ i, ∀ᵐ ω ∂μ, |stopMart M N (i + 1) ω - stopMart M N i ω| ≤ c := fun i ↦ by
-    by_cases hi : i < N
-    · have h1 : min i N = i := by omega
-      have h2 : min (i + 1) N = i + 1 := by omega
-      simpa only [stopMart_apply, h1, h2] using hb i hi
-    · have hNi : N ≤ i := not_lt.mp hi
-      have h1 : min i N = N := by omega
-      have h2 : min (i + 1) N = N := by omega
-      filter_upwards with ω
-      simp only [stopMart_apply, h1, h2, sub_self, abs_zero]; exact hc
-  have hmain := measure_exists_ge_le_exp (martingale_stopMart hM N) hM'0 hM'2 hθc hθ0 hb'
-    lam v N
-  -- Below the horizon the two events coincide.
-  have hset : {ω | ∃ m ≤ N, lam ≤ M m ω ∧ predQuadVar M ℱ μ m ω ≤ v}
-      = {ω | ∃ m ≤ N, lam ≤ stopMart M N m ω ∧ predQuadVar (stopMart M N) ℱ μ m ω ≤ v} := by
-    ext ω
-    simp only [Set.mem_ofPred_eq]
-    refine exists_congr fun m ↦ and_congr_right fun hm ↦ ?_
-    rw [stopMart_apply, min_eq_left hm, predQuadVar_stopMart_of_le M N hm]
-  rw [hset]; exact hmain
-
-/-- **Freedman inequality with the optimal `θ`, infinite horizon.**
-Taking `n → ∞` in `measure_exists_ge_le_exp_optimized` (the events increase with `n`):
-`μ{ω : ∃ k, λ ≤ M_k ω ∧ ⟨M⟩_k ω ≤ v} ≤ exp(-λ²/(4v))`. This is the form fed to Borel–Cantelli
-in the one-sided law of the iterated logarithm. -/
-lemma measure_exists_ge_le_exp_all [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c : ℝ}
-    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {lam v : ℝ} (hlam : 0 < lam) (hv : 0 < v)
-    (hadm : lam * c ≤ 2 * v) :
-    μ {ω | ∃ k, lam ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v}
-      ≤ ENNReal.ofReal (Real.exp (-lam ^ 2 / (4 * v))) := by
-  set A : ℕ → Set Ω := fun n ↦ {ω | ∃ k ≤ n, lam ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v} with hA
-  have hmono : Monotone A := fun a b hab ω ⟨k, hk, h⟩ ↦ ⟨k, hk.trans hab, h⟩
-  have hUnion : (⋃ n, A n) = {ω | ∃ k, lam ≤ M k ω ∧ predQuadVar M ℱ μ k ω ≤ v} := by
-    ext ω
-    simp only [hA, Set.mem_iUnion, Set.mem_ofPred_eq]
-    exact ⟨fun ⟨_, k, _, h⟩ ↦ ⟨k, h⟩, fun ⟨k, h⟩ ↦ ⟨k, k, le_rfl, h⟩⟩
-  rw [← hUnion, hmono.measure_iUnion]
-  exact iSup_le fun n ↦ measure_exists_ge_le_exp_optimized hM hM0 hM2 hb hlam hv hadm n
-
-/-- **Borel–Cantelli step of the one-sided LIL.**
-Given a block schedule `(v_k)`, `(λ_k)` of thresholds with `λ_k c ≤ 2 v_k` (admissibility) whose
-optimized Freedman tail bounds are summable, `∑_k exp(-λ_k²/(4 v_k)) < ∞`, almost surely only
-finitely many blocks are "bad": for a.e. `ω`, eventually in `k`, no time `n` has both
-`M_n ≥ λ_k` and `⟨M⟩_n ≤ v_k`. Equivalently, for large `k`, `⟨M⟩_n ≤ v_k ⇒ M_n < λ_k` for all `n`.
-This is the first Borel–Cantelli lemma (`ae_eventually_notMem`) applied to the sets
-`s_k = {∃ n, M_n ≥ λ_k ∧ ⟨M⟩_n ≤ v_k}`, whose measures are bounded via
-`measure_exists_ge_le_exp_all`. -/
-lemma ae_eventually_forall_lt_of_summable [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c : ℝ}
-    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) {lam v : ℕ → ℝ} (hlam : ∀ k, 0 < lam k)
-    (hv : ∀ k, 0 < v k) (hadm : ∀ k, lam k * c ≤ 2 * v k)
-    (hsum : Summable fun k ↦ Real.exp (-lam k ^ 2 / (4 * v k))) :
-    ∀ᵐ ω ∂μ, ∀ᶠ k in atTop, ∀ n, predQuadVar M ℱ μ n ω ≤ v k → M n ω < lam k := by
-  set s : ℕ → Set Ω := fun k ↦ {ω | ∃ n, lam k ≤ M n ω ∧ predQuadVar M ℱ μ n ω ≤ v k} with hs_def
-  have hμs : ∀ k, μ (s k) ≤ ENNReal.ofReal (Real.exp (-lam k ^ 2 / (4 * v k))) := fun k ↦
-    measure_exists_ge_le_exp_all hM hM0 hM2 hb (hlam k) (hv k) (hadm k)
-  have hfin : (∑' k, μ (s k)) ≠ ∞ := by
-    have h1 : (∑' k, μ (s k)) ≤ ∑' k, ENNReal.ofReal (Real.exp (-lam k ^ 2 / (4 * v k))) :=
-      ENNReal.tsum_le_tsum hμs
-    rw [← ENNReal.ofReal_tsum_of_nonneg (fun k ↦ (Real.exp_pos _).le) hsum] at h1
-    exact ne_top_of_le_ne_top ENNReal.ofReal_ne_top h1
-  filter_upwards [ae_eventually_notMem hfin] with ω hω
-  filter_upwards [hω] with k hk
-  simp only [hs_def, Set.mem_ofPred_eq, not_exists, not_and] at hk
-  intro n hn
-  by_contra hcon
-  rw [not_lt] at hcon
-  exact hk n hcon hn
-
-/-- **One-sided LIL with a dyadic schedule.**
-Instantiating the Borel–Cantelli step (`ae_eventually_forall_lt_of_summable`) with dyadic blocks
-`v_k = 2^k` and thresholds `λ_k = K √(2^k (k+1))`, where `0 < K` and `K c ≤ 2`. Admissibility
-`λ_k c ≤ 2 v_k` then holds for *every* `k` (via `k + 1 ≤ 2^k`, so `√(2^k(k+1)) ≤ 2^k`), and the
-tail bounds telescope to a geometric series,
-`exp(-λ_k²/(4 v_k)) = exp(-K²(k+1)/4)`. Conclusion: almost surely, for all large `k` and every
-time `n`, `⟨M⟩_n ≤ 2^k ⇒ M_n < K √(2^k (k+1))`. Since on the block `⟨M⟩_n ∈ (2^{k-1}, 2^k]` one has
-`√(2^k(k+1)) ≍ √(⟨M⟩_n log ⟨M⟩_n)`, this is the `O(√(⟨M⟩_n log ⟨M⟩_n))` upper bound — a `log`
-(not `log log`) rate, which suffices for the `o(⟨M⟩_n)` uses downstream. -/
-lemma ae_eventually_forall_lt_dyadic [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c K : ℝ} (hc : 0 ≤ c)
-    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) (hK : 0 < K) (hKc : K * c ≤ 2) :
-    ∀ᵐ ω ∂μ, ∀ᶠ (k : ℕ) in atTop, ∀ n, predQuadVar M ℱ μ n ω ≤ (2 : ℝ) ^ k →
-      M n ω < K * √((2 : ℝ) ^ k * ((k : ℝ) + 1)) := by
-  have hv : ∀ k : ℕ, (0 : ℝ) < (2 : ℝ) ^ k := fun k ↦ by positivity
-  have hkle : ∀ k : ℕ, (k : ℝ) + 1 ≤ (2 : ℝ) ^ k := fun k ↦ by
-    have h : k + 1 ≤ 2 ^ k := k.lt_two_pow_self
-    calc (k : ℝ) + 1 = ((k + 1 : ℕ) : ℝ) := by push_cast; ring
-      _ ≤ ((2 ^ k : ℕ) : ℝ) := by exact_mod_cast h
-      _ = (2 : ℝ) ^ k := by push_cast; ring
-  have hlam : ∀ k : ℕ, 0 < K * √((2 : ℝ) ^ k * ((k : ℝ) + 1)) := fun k ↦
-    mul_pos hK (Real.sqrt_pos.mpr (by positivity))
-  have hadm : ∀ k : ℕ, K * √((2 : ℝ) ^ k * ((k : ℝ) + 1)) * c ≤ 2 * (2 : ℝ) ^ k :=
-    fun k ↦ by
-      have hsqrt_le : √((2 : ℝ) ^ k * ((k : ℝ) + 1)) ≤ (2 : ℝ) ^ k := by
-        calc √((2 : ℝ) ^ k * ((k : ℝ) + 1))
-            ≤ √((2 : ℝ) ^ k * (2 : ℝ) ^ k) :=
-              Real.sqrt_le_sqrt (mul_le_mul_of_nonneg_left (hkle k) (hv k).le)
-          _ = (2 : ℝ) ^ k := Real.sqrt_mul_self (hv k).le
-      calc K * √((2 : ℝ) ^ k * ((k : ℝ) + 1)) * c
-          ≤ K * (2 : ℝ) ^ k * c :=
-            mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hsqrt_le hK.le) hc
-        _ = K * c * (2 : ℝ) ^ k := by ring
-        _ ≤ 2 * (2 : ℝ) ^ k := mul_le_mul_of_nonneg_right hKc (hv k).le
-  have hsum : Summable fun k : ℕ ↦
-      Real.exp (-(K * √((2 : ℝ) ^ k * ((k : ℝ) + 1))) ^ 2 / (4 * (2 : ℝ) ^ k)) := by
-    have hkey : ∀ k : ℕ,
-        Real.exp (-(K * √((2 : ℝ) ^ k * ((k : ℝ) + 1))) ^ 2 / (4 * (2 : ℝ) ^ k))
-          = Real.exp (-(K ^ 2 / 4)) ^ (k + 1) := by
-      intro k
-      have hsq : (K * √((2 : ℝ) ^ k * ((k : ℝ) + 1))) ^ 2
-          = K ^ 2 * ((2 : ℝ) ^ k * ((k : ℝ) + 1)) := by
-        rw [mul_pow, Real.sq_sqrt (by positivity)]
-      rw [hsq, ← Real.exp_nat_mul]
-      congr 1
-      push_cast
-      rw [div_eq_iff (by positivity : (0 : ℝ) < 4 * 2 ^ k).ne']
-      ring
-    rw [summable_congr hkey]
-    have hr1 : Real.exp (-(K ^ 2 / 4)) < 1 := by
-      rw [Real.exp_lt_one_iff]
-      have : 0 < K ^ 2 := by positivity
-      linarith
-    have hgeo : Summable fun k : ℕ ↦ Real.exp (-(K ^ 2 / 4)) ^ k :=
-      summable_geometric_of_lt_one (Real.exp_pos _).le hr1
-    exact (hgeo.mul_right (Real.exp (-(K ^ 2 / 4)))).congr fun k ↦ (pow_succ _ k).symm
-  refine ae_eventually_forall_lt_of_summable hM hM0 hM2 hb ?_ ?_ ?_ ?_
-  · exact hlam
-  · exact hv
-  · exact hadm
-  · exact hsum
-
-/-- **One-sided LIL upper bound in normalized form** (the consumable `O`-rate).
-If additionally `⟨M⟩_n → ∞` a.s., then almost surely `M_n ≤ C √(⟨M⟩_n · log⟨M⟩_n)` eventually,
-for some constant `C` (the proof supplies an explicit one, depending only on `c`). This repackages
-the dyadic exceedance statement `ae_eventually_forall_lt_dyadic`: for large `n`, take the least
-block `k` with `⟨M⟩_n ≤ 2^k`; minimality gives `2^k ≤ 2⟨M⟩_n` and `k ≲ log₂⟨M⟩_n`, so
-`K√(2^k(k+1)) ≤ C√(⟨M⟩_n log⟨M⟩_n)`. The rate carries a `log` rather than a `log log`, which is
-enough wherever only an `o(⟨M⟩_n)` conclusion is needed; the `log log` refinement is proved in
-`LILLogLog.lean`. -/
-lemma ae_eventually_le_sqrt_predQuadVar_mul_log [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c : ℝ} (hc : 0 < c)
-    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
-    (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
-    ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop,
-      M n ω ≤ C * √(predQuadVar M ℱ μ n ω * Real.log (predQuadVar M ℱ μ n ω)) := by
-  classical
-  set K : ℝ := 2 / c with hKdef
-  have hK : 0 < K := by rw [hKdef]; positivity
-  have hKc : K * c = 2 := by rw [hKdef]; field_simp
-  have hlog2 : 0 < Real.log 2 := Real.log_pos one_lt_two
-  filter_upwards [ae_eventually_forall_lt_dyadic hM hM0 hM2 hc.le hb hK hKc.le, hV]
+/-- **Sharp normalized bound for fixed block base.** For bounded increments with `⟨M⟩_n → ∞`, if
+`b² > (1+ε)ρ` then almost surely eventually
+`M_n ≤ b √(2 ⟨M⟩_n log log⟨M⟩_n)`. Repackaging the sharp block via the least `k` with `⟨M⟩_n ≤ ρ^k`:
+`ρ^k ≤ ρ⟨M⟩_n` and, crucially, the loglog bound is kept **additive**,
+`log(k+2) ≤ D_ρ + log log⟨M⟩_n` (with `D_ρ = log(1/log ρ + 1)`), so no constant `> 1` multiplies the
+leading term; the additive `D_ρ` is absorbed since `log log⟨M⟩_n → ∞`. Taking `ρ ↓ 1`, `ε ↓ 0`,
+`b ↓ 1` gives the sharp constant `limsup ≤ 1`. -/
+lemma ae_eventually_le_sqrt_predQuadVar_mul_loglog_of_lt [IsProbabilityMeasure μ]
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0)
+    {c : ℝ} (hc : 0 < c) (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
+    (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop)
+    {ρ ε δ b : ℝ} (hρ : 1 < ρ) (hδ : 0 < δ) (hεδ : δ < ε) (hb0 : 0 < b)
+    (hbA : (1 + ε) * ρ < b ^ 2) :
+    ∀ᵐ ω ∂μ, ∀ᶠ n in atTop, M n ω ≤ b * √(2 * predQuadVar M ℱ μ n ω
+      * log (log (predQuadVar M ℱ μ n ω))) := by
+  have hε0 : (0 : ℝ) < 1 + ε := by linarith
+  have hApos : (0 : ℝ) < (1 + ε) * ρ := by positivity
+  have hbApos : (0 : ℝ) < b ^ 2 - (1 + ε) * ρ := by linarith
+  set Dρ : ℝ := log (1 / log ρ + 1) with hDρ_def
+  set T : ℝ := (1 + ε) * ρ * Dρ / (b ^ 2 - (1 + ε) * ρ) with hT_def
+  filter_upwards [ae_eventually_forall_lt_pow_loglog hM hM0 hc hb hρ hδ hεδ, hV]
     with ω hgood hVω
   rw [eventually_atTop] at hgood
   obtain ⟨k₀, hk₀⟩ := hgood
-  refine ⟨K * √(2 * (1 / Real.log 2 + 2)), ?_⟩
-  filter_upwards [hVω.eventually_ge_atTop ((2 : ℝ) ^ k₀), hVω.eventually_ge_atTop (Real.exp 1)]
-    with n hn0 hne
-  let V := predQuadVar M ℱ μ n ω
-  have hVpos : 0 < V := lt_of_lt_of_le (Real.exp_pos 1) hne
-  have hlogV1 : (1 : ℝ) ≤ Real.log V := (Real.le_log_iff_exp_le hVpos).mpr hne
-  have hlogVnn : (0 : ℝ) ≤ Real.log V := le_trans zero_le_one hlogV1
-  have hVge1 : (1 : ℝ) ≤ V := le_trans (by linarith [Real.add_one_le_exp (1 : ℝ)]) hne
-  -- Least block `k` with `V ≤ 2^k`.
-  obtain ⟨k, hVle, hkmin⟩ : ∃ k : ℕ, V ≤ (2 : ℝ) ^ k ∧ ∀ m, m < k → ¬ V ≤ (2 : ℝ) ^ m := by
-    have hex : ∃ k : ℕ, V ≤ (2 : ℝ) ^ k :=
-      ((tendsto_pow_atTop_atTop_of_one_lt one_lt_two).eventually_ge_atTop V).exists
-    exact ⟨Nat.find hex, Nat.find_spec hex, fun m hm ↦ Nat.find_min hex hm⟩
-  have hkk0 : k₀ ≤ k := (pow_le_pow_iff_right₀ one_lt_two).mp (le_trans hn0 hVle)
-  have h2k : (2 : ℝ) ^ k ≤ 2 * V := by
-    obtain _ | m := k
-    · rw [pow_zero]; linarith
-    · have hm : ¬ V ≤ (2 : ℝ) ^ m := hkmin m (Nat.lt_succ_self m)
-      rw [not_le] at hm
-      rw [pow_succ]; linarith
-  have hk1 : (k : ℝ) + 1 ≤ Real.log V / Real.log 2 + 2 := by
-    obtain _ | m := k
-    · simp only [Nat.cast_zero]; have := div_nonneg hlogVnn hlog2.le; linarith
-    · have hm : ¬ V ≤ (2 : ℝ) ^ m := hkmin m (Nat.lt_succ_self m)
-      rw [not_le] at hm
-      have hmlog : (m : ℝ) * Real.log 2 < Real.log V := by
-        rw [← Real.log_pow]; exact Real.log_lt_log (by positivity) hm
-      have : (m : ℝ) < Real.log V / Real.log 2 := by rw [lt_div_iff₀ hlog2]; linarith
-      push_cast; linarith
-  -- Assemble the normalized bound.
-  have hMn : M n ω < K * √((2 : ℝ) ^ k * ((k : ℝ) + 1)) := hk₀ k hkk0 n hVle
-  have hb2 : Real.log V / Real.log 2 + 2 ≤ (1 / Real.log 2 + 2) * Real.log V := by
-    have h : (1 / Real.log 2 + 2) * Real.log V
-        = Real.log V / Real.log 2 + 2 * Real.log V := by
-      rw [add_mul, one_div, inv_mul_eq_div]
-    rw [h]; linarith
-  have hprod_le : (2 : ℝ) ^ k * ((k : ℝ) + 1) ≤ 2 * (1 / Real.log 2 + 2) * (V * Real.log V) := by
-    have step1 : (2 : ℝ) ^ k * ((k : ℝ) + 1) ≤ 2 * V * (Real.log V / Real.log 2 + 2) :=
-      mul_le_mul h2k hk1 (by positivity) (by positivity)
-    have step2 : 2 * V * (Real.log V / Real.log 2 + 2)
-        ≤ 2 * (1 / Real.log 2 + 2) * (V * Real.log V) := by
-      have h := mul_le_mul_of_nonneg_left hb2 (by positivity : (0 : ℝ) ≤ 2 * V)
-      calc 2 * V * (Real.log V / Real.log 2 + 2)
-          ≤ 2 * V * ((1 / Real.log 2 + 2) * Real.log V) := h
-        _ = 2 * (1 / Real.log 2 + 2) * (V * Real.log V) := by ring
-    linarith
-  have hDnn : (0 : ℝ) ≤ 2 * (1 / Real.log 2 + 2) := by positivity
-  have hsqrt_le : √((2 : ℝ) ^ k * ((k : ℝ) + 1))
-      ≤ √(2 * (1 / Real.log 2 + 2)) * √(V * Real.log V) := by
-    rw [← Real.sqrt_mul hDnn]; exact Real.sqrt_le_sqrt hprod_le
-  calc M n ω ≤ K * √((2 : ℝ) ^ k * ((k : ℝ) + 1)) := hMn.le
-    _ ≤ K * (√(2 * (1 / Real.log 2 + 2)) * √(V * Real.log V)) :=
-        mul_le_mul_of_nonneg_left hsqrt_le hK.le
-    _ = K * √(2 * (1 / Real.log 2 + 2)) * √(V * Real.log V) := by ring
+  filter_upwards [hVω.eventually_ge_atTop (ρ ^ k₀),
+    hVω.eventually_ge_atTop (exp (exp (max 3 T)))] with n hn0 hnT
+  set V := predQuadVar M ℱ μ n ω with hV_def
+  have hVpos : 0 < V := lt_of_lt_of_le (exp_pos _) hnT
+  have hV1 : (1 : ℝ) ≤ V := le_trans (one_le_exp (exp_pos _).le) hnT
+  have hlogV : exp (max 3 T) ≤ log V := by
+    rw [← Real.log_exp (exp (max 3 T))]; exact log_le_log (exp_pos _) hnT
+  have hlogVpos : 0 < log V := lt_of_lt_of_le (exp_pos _) hlogV
+  have hloglogV : max 3 T ≤ log (log V) := by
+    rw [← Real.log_exp (max 3 T)]; exact log_le_log (exp_pos _) hlogV
+  have hloglogV3 : (3 : ℝ) ≤ log (log V) := le_trans (le_max_left _ _) hloglogV
+  have hloglogVT : T ≤ log (log V) := le_trans (le_max_right _ _) hloglogV
+  have hloglogVpos : 0 < log (log V) := by linarith
+  have hlogV3 : (3 : ℝ) ≤ log V := by
+    linarith [log_le_sub_one_of_pos hlogVpos, hloglogV3]
+  -- Least block `k` with `V ≤ ρ^k` (`exists_pow_ge_le`).
+  obtain ⟨k, hVle, hρk, hk⟩ := exists_pow_ge_le hρ hV1
+  have hkk0 : k₀ ≤ k := (pow_le_pow_iff_right₀ hρ).mp (le_trans hn0 hVle)
+  have hlogk2 : log ((k : ℝ) + 2) ≤ Dρ + log (log V) := by
+    rw [hDρ_def]; exact log_add_two_le_add_loglog hρ hk hlogV3
+  -- Core inequality `2(1+ε)ρ^k log(k+2) ≤ b²·2V loglog V`.
+  have hMn : M n ω < √(2 * (1 + ε) * ρ ^ k * log ((k : ℝ) + 2)) := hk₀ k hkk0 n hVle
+  have hlognn : (0 : ℝ) ≤ log ((k : ℝ) + 2) :=
+    log_nonneg (by have := Nat.cast_nonneg (α := ℝ) k; linarith)
+  have h1 : (1 + ε) * ρ ^ k * log ((k : ℝ) + 2) ≤ (1 + ε) * (ρ * V) * (Dρ + log (log V)) := by
+    have hmul : ρ ^ k * log ((k : ℝ) + 2) ≤ ρ * V * (Dρ + log (log V)) :=
+      mul_le_mul hρk hlogk2 hlognn (by positivity)
+    nlinarith [hmul, hε0]
+  have h2 : (1 + ε) * ρ * Dρ ≤ (b ^ 2 - (1 + ε) * ρ) * log (log V) := by
+    rw [hT_def, div_le_iff₀ hbApos] at hloglogVT
+    linarith [hloglogVT]
+  have hcore : 2 * (1 + ε) * ρ ^ k * log ((k : ℝ) + 2) ≤ b ^ 2 * (2 * V * log (log V)) := by
+    nlinarith [h1, mul_le_mul_of_nonneg_left h2 (show (0 : ℝ) ≤ 2 * V by positivity),
+      hVpos, hloglogVpos]
+  have hsqrt : √(2 * (1 + ε) * ρ ^ k * log ((k : ℝ) + 2)) ≤ b * √(2 * V * log (log V)) := by
+    rw [show b * √(2 * V * log (log V)) = √(b ^ 2 * (2 * V * log (log V))) from by
+      rw [Real.sqrt_mul (sq_nonneg b), Real.sqrt_sq hb0.le]]
+    exact Real.sqrt_le_sqrt hcore
+  exact hMn.le.trans hsqrt
 
-/-- **One-sided LIL upper bound at scale `√(n log n)`** for a bounded-increment martingale.
-If `M` is a square-integrable martingale with `M 0 = 0`, `|ΔM_i| ≤ c`, and `⟨M⟩_n → ∞` a.s., then
-almost surely `M_n ≤ C √(n log n)` eventually. This combines the normalized bound
-`ae_eventually_le_sqrt_predQuadVar_mul_log` with `⟨M⟩_n ≤ c² n` (`predQuadVar_le_of_bound`) and
-`log⟨M⟩_n ≤ 2 log n` (valid once `n ≥ c²`). The sharper `log log` rate, at scale `√(n log log n)`,
-is proved in `LILLogLog.lean`. -/
-lemma ae_eventually_le_sqrt_nat_mul_log [IsProbabilityMeasure μ] (hM : Martingale M ℱ μ)
-    (hM0 : M 0 =ᵐ[μ] 0) (hM2 : ∀ n, MemLp (M n) 2 μ) {c : ℝ} (hc : 0 < c)
-    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
+/-- **Sharp `limsup ≤ 1`, one-sided.** For a bounded-increment `L²`-martingale with `M_0 = 0` and
+`⟨M⟩_n → ∞` a.s., almost surely for every `b > 1` eventually
+`M_n ≤ b √(2 ⟨M⟩_n log log⟨M⟩_n)`, i.e. `limsup M_n/√(2⟨M⟩_n log log⟨M⟩_n) ≤ 1`. Countable
+intersection over `b_m = 1 + 1/(m+1) ↓ 1` of `ae_eventually_le_sqrt_predQuadVar_mul_loglog_of_lt`
+with `ρ = 1+t`, `ε = t`, `δ = t/2`, `t = min((b²-1)/4, 1)`. -/
+lemma ae_forall_one_lt_eventually_le_sqrt_predQuadVar_mul_loglog [IsProbabilityMeasure μ]
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0)
+    {c : ℝ} (hc : 0 < c) (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
     (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
-    ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop, M n ω ≤ C * √(n * Real.log n) := by
-  filter_upwards [ae_eventually_le_sqrt_predQuadVar_mul_log hM hM0 hM2 hc hb hV,
-    predQuadVar_le_of_bound hM hb, hV] with ω hCex hle hVω
-  obtain ⟨C, hC⟩ := hCex
-  refine ⟨|C| * √(2 * c ^ 2), ?_⟩
-  filter_upwards [hC, hVω.eventually_ge_atTop 1,
-    (tendsto_natCast_atTop_atTop.eventually_ge_atTop (c ^ 2)), eventually_ge_atTop 2]
-    with n hCn hV1 hnc hn2
-  let V := predQuadVar M ℱ μ n ω
-  have hnR : (2 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn2
-  have hlogVnn : 0 ≤ Real.log V := Real.log_nonneg hV1
-  have hlogV2 : Real.log V ≤ 2 * Real.log n := by
-    have h1 : Real.log V ≤ Real.log (c ^ 2 * n) :=
-      (Real.log_le_log_iff (by linarith [hV1]) (by positivity)).mpr (hle n)
-    rw [Real.log_mul (by positivity) (by positivity)] at h1
-    have hlogc2 : Real.log (c ^ 2) ≤ Real.log n :=
-      (Real.log_le_log_iff (by positivity) (by linarith)).mpr hnc
+    ∀ᵐ ω ∂μ, ∀ b : ℝ, 1 < b → ∀ᶠ n in atTop, M n ω ≤ b * √(2 * predQuadVar M ℱ μ n ω
+      * log (log (predQuadVar M ℱ μ n ω))) := by
+  refine ae_forall_one_lt_eventually_le_of_forall_nat (fun m ↦ ?_) (fun _ _ ↦ sqrt_nonneg _)
+  set b : ℝ := 1 + 1 / ((m : ℝ) + 1) with hb_def
+  have hb1 : 1 < b := by
+    rw [hb_def]; have : (0 : ℝ) < 1 / ((m : ℝ) + 1) := by positivity
     linarith
-  have hprodle : V * Real.log V ≤ 2 * c ^ 2 * ((n : ℝ) * Real.log n) := by
-    nlinarith [mul_le_mul (hle n) hlogV2 hlogVnn (by positivity : (0 : ℝ) ≤ c ^ 2 * n)]
-  have hsqrt : √(V * Real.log V)
-      ≤ √(2 * c ^ 2) * √((n : ℝ) * Real.log n) := by
-    rw [← Real.sqrt_mul (by positivity)]; exact Real.sqrt_le_sqrt hprodle
-  calc M n ω ≤ C * √(V * Real.log V) := hCn
-    _ ≤ |C| * √(V * Real.log V) :=
-        mul_le_mul_of_nonneg_right (le_abs_self C) (Real.sqrt_nonneg _)
-    _ ≤ |C| * (√(2 * c ^ 2) * √((n : ℝ) * Real.log n)) :=
-        mul_le_mul_of_nonneg_left hsqrt (abs_nonneg C)
-    _ = |C| * √(2 * c ^ 2) * √((n : ℝ) * Real.log n) := by ring
+  have hb2 : (1 : ℝ) < b ^ 2 := by nlinarith [hb1]
+  -- Block parameters `ρ = 1 + t`, `ε = t`, `δ = t/2` with `t = min((b²-1)/4, 1)`, so `(1+ε)ρ < b²`.
+  set t := min ((b ^ 2 - 1) / 4) 1 with ht_def
+  have ht0 : 0 < t := lt_min (div_pos (by linarith) (by norm_num)) one_pos
+  have ht1 : t ≤ 1 := min_le_right _ _
+  have ht4 : t ≤ (b ^ 2 - 1) / 4 := min_le_left _ _
+  exact ae_eventually_le_sqrt_predQuadVar_mul_loglog_of_lt hM hM0 hc hb hV
+    (ρ := 1 + t) (ε := t) (δ := t / 2) (b := b) (by linarith) (by linarith) (by linarith)
+    (by linarith) (by nlinarith [ht4, ht1, ht0])
+
+/-- **Sharp `limsup ≤ 1`, two-sided.** Applying the one-sided sharp bound to `M` and `-M` (same
+quadratic variation, `predQuadVar_neg`) gives, a.s., for every `b > 1` eventually
+`|M_n| ≤ b √(2 ⟨M⟩_n log log⟨M⟩_n)`. This is the sharp constant `1` (two-sided). -/
+lemma ae_forall_one_lt_eventually_abs_le_sqrt_predQuadVar_mul_loglog [IsProbabilityMeasure μ]
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0)
+    {c : ℝ} (hc : 0 < c) (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
+    (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
+    ∀ᵐ ω ∂μ, ∀ b : ℝ, 1 < b → ∀ᶠ n in atTop, |M n ω| ≤ b * √(2 * predQuadVar M ℱ μ n ω
+      * log (log (predQuadVar M ℱ μ n ω))) :=
+  ae_forall_one_lt_eventually_abs_le
+    (ae_forall_one_lt_eventually_le_sqrt_predQuadVar_mul_loglog hM hM0 hc hb hV)
+    (by
+      simpa only [predQuadVar_neg] using
+        ae_forall_one_lt_eventually_le_sqrt_predQuadVar_mul_loglog hM.neg (neg_ae_eq_zero hM0)
+          hc (fun i ↦ (hb i).mono fun ω hω ↦ by rwa [abs_neg_increment])
+          (by simpa only [predQuadVar_neg] using hV))
+
+/-- **Sharp constant as an actual `limsup`.** The two-sided sharp bound in genuine `limsup` form:
+almost surely `limsup_n |M_n| / √(2 ⟨M⟩_n log log⟨M⟩_n) ≤ 1`. Derived from the `∀ b > 1, ∀ᶠ` form
+(`ae_forall_one_lt_eventually_abs_le_sqrt_predQuadVar_mul_loglog`): each `b > 1` bounds the `limsup`
+(`limsup_le_of_le`, the quotient being cobounded below by `0`), and `limsup ≤ b` for all `b > 1`
+gives `limsup ≤ 1`. -/
+lemma ae_limsup_abs_div_sqrt_predQuadVar_mul_loglog_le_one [IsProbabilityMeasure μ]
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0)
+    {c : ℝ} (hc : 0 < c) (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
+    (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
+    ∀ᵐ ω ∂μ, limsup (fun n ↦ |M n ω| / √(2 * predQuadVar M ℱ μ n ω
+      * log (log (predQuadVar M ℱ μ n ω)))) atTop ≤ 1 := by
+  filter_upwards [ae_forall_one_lt_eventually_abs_le_sqrt_predQuadVar_mul_loglog hM hM0 hc hb hV]
+    with ω hω
+  exact limsup_abs_div_le_one_of_forall_one_lt (fun _ ↦ sqrt_nonneg _) hω
+
+/-- **Bounded-increment loglog LIL, `IsBigO` form.** For a bounded-increment `L²`-martingale with
+`⟨M⟩_n → ∞` a.s., almost surely `M_n = O(√(⟨M⟩_n log log⟨M⟩_n))`: the `b = 2` instance of the
+sharp bound, restated in Mathlib's `IsBigO` idiom. -/
+lemma ae_isBigO_sqrt_predQuadVar_mul_loglog [IsProbabilityMeasure μ]
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0)
+    {c : ℝ} (hc : 0 < c) (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c)
+    (hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M ℱ μ n ω) atTop atTop) :
+    ∀ᵐ ω ∂μ, (fun n ↦ M n ω) =O[atTop]
+      fun n ↦ √(predQuadVar M ℱ μ n ω * log (log (predQuadVar M ℱ μ n ω))) := by
+  filter_upwards [ae_forall_one_lt_eventually_abs_le_sqrt_predQuadVar_mul_loglog hM hM0 hc hb hV]
+    with ω hω
+  rw [Asymptotics.isBigO_iff]
+  refine ⟨2 * √2, ?_⟩
+  filter_upwards [hω 2 one_lt_two] with n hn
+  rw [Real.norm_eq_abs, Real.norm_eq_abs, abs_of_nonneg (sqrt_nonneg _)]
+  calc |M n ω| ≤ 2 * √(2 * predQuadVar M ℱ μ n ω * log (log (predQuadVar M ℱ μ n ω))) := hn
+    _ = 2 * √2 * √(predQuadVar M ℱ μ n ω * log (log (predQuadVar M ℱ μ n ω))) := by
+        rw [mul_assoc (2 : ℝ) (predQuadVar M ℱ μ n ω), sqrt_mul (by norm_num : (0 : ℝ) ≤ 2)]
+        ring
+
+/-! ### Refined per-block Freedman bounds for growing increments (deterministic horizon)
+
+The sharp bounded engine above requires a global increment bound; the i.i.d. Hartman–Wintner low
+part has increments growing like `√(i/log i)`. We handle growing increments by stopping at each
+deterministic horizon `N_j` (`stoppedProcess` at a constant time), where the increments are bounded
+up to the horizon, and applying the pre-optimization Freedman bound with the near-optimal
+`θ_j = α√(log(j+2)/N_j)`. The refined exponent collapses to the sharp `(½(1+δ)α²v - αC)log(j+2)`,
+a `p`-series tail.
+
+**Scope.** These are the *sharp per-block bounds* (refined-Freedman exponent). With dyadic
+horizons, repackaging them to the natural `n`-scale via the least `j` with `n ≤ 2^j` incurs
+`2^j ≤ 2n`, an irreducible base-2 factor, so the LIL constant would be `√2·(C/√(2v)) → √2`, not the
+sharp `1`: the base-2 deterministic horizon sharpens the exponent but not the constant. The sharp
+constant comes instead from horizons of base `ρ ↓ 1` together with a linear quadratic-variation
+bound `⟨M⟩_n ≤ v·n`, which lets a deterministic horizon play the role of quadratic-variation
+stopping at level `ρ^k`. -/
+
+/-- **Sharp block Borel–Cantelli for a growing-increment martingale.** Given horizons `N j` (with
+`1 ≤ N j`), a per-block increment bound `c j` up to horizon `N j` with admissible `θ_j c_j ≤ η`, and
+`1 < αC - ½(1+δ)α²v` (so the block tails `(j+2)^{½(1+δ)α²v-αC}` are summable), almost surely for all
+large `j` and every `m ≤ N j`, `⟨M⟩_m ≤ v·N j ⇒ M_m < C√(N j·log(j+2))`. The horizon sequence is a
+parameter: taking `N j = ⌈ρ^j⌉` with `ρ ↓ 1` (rather than `2^j`) is what delivers the sharp constant
+in the repackaging. -/
+lemma ae_eventually_lt_block_of_growing_loglog [IsProbabilityMeasure μ]
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0)
+    {v C α δ η : ℝ} (hδ : 0 ≤ δ) (hη : ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2)
+    (hα : 0 < α) (N : ℕ → ℕ) (hN : ∀ j, 1 ≤ N j) (c : ℕ → ℝ) (hc0 : ∀ j, 0 ≤ c j)
+    (hp : 1 < α * C - (1 + δ) / 2 * α ^ 2 * v)
+    (hadm : ∀ᶠ (j : ℕ) in atTop, α * √(log ((j : ℝ) + 2) / (N j : ℝ)) * c j ≤ η)
+    (hb : ∀ j : ℕ, ∀ i < N j, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c j) :
+    ∀ᵐ ω ∂μ, ∀ᶠ (j : ℕ) in atTop, ∀ m ≤ N j,
+      predQuadVar M ℱ μ m ω ≤ v * (N j : ℝ) →
+      M m ω < C * √((N j : ℝ) * log ((j : ℝ) + 2)) := by
+  have hL : ∀ j : ℕ, (0 : ℝ) < log ((j : ℝ) + 2) := fun j ↦
+    log_pos (by have := Nat.cast_nonneg (α := ℝ) j; linarith)
+  have hNR : ∀ j, (0 : ℝ) < (N j : ℝ) := fun j ↦ by exact_mod_cast hN j
+  refine ae_eventually_forall_le_lt_of_summable hM hM0 hδ hη hc0
+    (θ := fun j ↦ α * √(log ((j : ℝ) + 2) / (N j : ℝ)))
+    (fun j ↦ mul_pos hα (sqrt_pos.mpr (div_pos (hL j) (hNR j)))) hadm hb ?_
+  -- The Freedman exponent collapses to `(½(1+δ)α²v - αC) log(j+2)`: the square roots cancel.
+  refine (summable_exp_neg_mul_log_add hp).congr fun j ↦ ?_
+  have hLj := hL j
+  have hNj := hNR j
+  have hst : √(log ((j : ℝ) + 2) / (N j : ℝ)) * √((N j : ℝ) * log ((j : ℝ) + 2))
+      = log ((j : ℝ) + 2) := by
+    rw [← sqrt_mul (by positivity),
+      show log ((j : ℝ) + 2) / (N j : ℝ) * ((N j : ℝ) * log ((j : ℝ) + 2))
+        = log ((j : ℝ) + 2) ^ 2 by field_simp, sqrt_sq hLj.le]
+  have hs2 : √(log ((j : ℝ) + 2) / (N j : ℝ)) ^ 2 * (N j : ℝ) = log ((j : ℝ) + 2) := by
+    rw [sq_sqrt (by positivity)]; exact div_mul_cancel₀ _ hNj.ne'
+  congr 1
+  linear_combination (α * C) * hst - ((1 + δ) / 2 * α ^ 2 * v) * hs2
+
+set_option maxHeartbeats 800000 in
+-- The repackaging combines the per-block bound with the least-`j` estimates `N_j ≤ ρn+1` and
+-- the additive `log(j+2) ≤ D_ρ + loglog n` through a single `nlinarith`; the accumulated linear
+-- arithmetic exceeds the default heartbeat budget.
+/-- **Sharp `√(2vn loglog n)` LIL for a growing-increment martingale with a linear quadratic
+variation bound.** With time horizons `N_j = ⌈ρ^j⌉` (`ρ ↓ 1`), the block condition
+`c_j √(log(j+2)/N_j) → 0`, and `⟨M⟩_n ≤ v·n`, almost surely eventually
+`M_n ≤ b √(2 v n log log n)`, whenever `C√ρ < b√(2v)` and `1 < αC - ½(1+δ)α²v`. Repackaging the
+block via the least `j` with `n ≤ N_j`: `N_j ≤ ρn+1` and (additively) `log(j+2) ≤ D_ρ + loglog n`,
+so the constant is `C√ρ/√(2v)·(1+o(1)) < b`. No random stopping time is used: the linear QV bound
+lets a deterministic time horizon play the role of quadratic-variation stopping. -/
+lemma ae_eventually_le_sqrt_nat_mul_loglog_of_growing_of_lt [IsProbabilityMeasure μ]
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0)
+    {v C α δ b ρ : ℝ} (hρ : 1 < ρ) (hδ : 0 < δ) (hα : 0 < α) (hv : 0 < v)
+    (hp : 1 < α * C - (1 + δ) / 2 * α ^ 2 * v) (hb0 : 0 < b) (hbC : C * √ρ < b * √(2 * v))
+    (N : ℕ → ℕ) (hNmono : Monotone N) (hN1 : ∀ j, 1 ≤ N j) (hNle : ∀ j, ρ ^ j ≤ (N j : ℝ))
+    (hNlt : ∀ j, (N j : ℝ) < ρ ^ j + 1) (c : ℕ → ℝ) (hc0 : ∀ j, 0 ≤ c j)
+    (hb : ∀ j, ∀ i < N j, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c j)
+    (hH : Tendsto (fun j : ℕ ↦ c j * √(log ((j : ℝ) + 2) / (N j : ℝ))) atTop (𝓝 0))
+    (hqv : ∀ᵐ ω ∂μ, ∀ n, predQuadVar M ℱ μ n ω ≤ v * (n : ℝ)) :
+    ∀ᵐ ω ∂μ, ∀ᶠ n in atTop, M n ω ≤ b * √(2 * v * (n : ℝ) * log (log n)) := by
+  obtain ⟨η, hη0, hη⟩ : ∃ η > 0, ∀ x : ℝ, |x| ≤ η → exp x ≤ 1 + x + (1 + δ) / 2 * x ^ 2 :=
+    ⟨min 1 (9 / 4 * δ), lt_min one_pos (by positivity), fun _ hx ↦
+      exp_le_one_add_add_half_mul_sq hx⟩
+  have hCpos : 0 < C := by nlinarith [hp, mul_nonneg (sq_nonneg α) hv.le, hα]
+  have hlogρ : (0 : ℝ) < log ρ := log_pos hρ
+  have h2v : (0 : ℝ) < 2 * v := by positivity
+  have hρpos : (0 : ℝ) < ρ := by linarith
+  -- Eventual admissibility from the block condition.
+  have hAdm : ∀ᶠ (j : ℕ) in atTop, α * √(log ((j : ℝ) + 2) / (N j : ℝ)) * c j ≤ η := by
+    have htend : Tendsto (fun j : ℕ ↦ α * (c j * √(log ((j : ℝ) + 2) / (N j : ℝ)))) atTop
+        (𝓝 0) := by
+      have h := hH.const_mul α
+      rwa [mul_zero] at h
+    filter_upwards [htend.eventually (gt_mem_nhds hη0)] with j hj
+    have he : α * √(log ((j : ℝ) + 2) / (N j : ℝ)) * c j
+        = α * (c j * √(log ((j : ℝ) + 2) / (N j : ℝ))) := by ring
+    rw [he]; exact hj.le
+  -- `A = b²·2v - C²ρ > 0`.
+  have hApos : 0 < b ^ 2 * (2 * v) - C ^ 2 * ρ := by
+    have hsq : (C * √ρ) ^ 2 < (b * √(2 * v)) ^ 2 :=
+      pow_lt_pow_left₀ hbC (by positivity) (by norm_num)
+    rw [mul_pow, mul_pow, Real.sq_sqrt hρpos.le, Real.sq_sqrt h2v.le] at hsq
+    linarith
+  set Dρ : ℝ := log (1 / log ρ + 1) with hDρ_def
+  have hDρnn : 0 ≤ Dρ := log_nonneg (by have := div_pos one_pos hlogρ; linarith)
+  set A : ℝ := b ^ 2 * (2 * v) - C ^ 2 * ρ with hA_def
+  set T : ℝ := 3 * C ^ 2 * ρ * Dρ / A + 3 * C ^ 2 * Dρ / A with hT_def
+  set n₀ : ℝ := 3 * C ^ 2 / A with hn0_def
+  clear_value Dρ A T n₀
+  filter_upwards [ae_eventually_lt_block_of_growing_loglog hM hM0 hδ.le hη hα N hN1 c hc0
+    hp hAdm hb, hqv] with ω hgood hqvn
+  rw [eventually_atTop] at hgood
+  obtain ⟨j₀, hj₀⟩ := hgood
+  filter_upwards [eventually_ge_atTop (N j₀ + 1),
+    tendsto_natCast_atTop_atTop.eventually_ge_atTop (exp (exp (max 3 T))),
+    tendsto_natCast_atTop_atTop.eventually_ge_atTop n₀] with n hn0 hnT hnn0
+  -- Basic bounds on n, log n, loglog n.
+  have hnpos : (0 : ℝ) < (n : ℝ) := lt_of_lt_of_le (exp_pos _) hnT
+  have hn1 : (1 : ℝ) ≤ (n : ℝ) := le_trans (one_le_exp (exp_pos _).le) hnT
+  have hlogn : exp (max 3 T) ≤ log n := by
+    rw [← Real.log_exp (exp (max 3 T))]; exact log_le_log (exp_pos _) hnT
+  have hlognpos : 0 < log n := lt_of_lt_of_le (exp_pos _) hlogn
+  have hloglogn : max 3 T ≤ log (log n) := by
+    rw [← Real.log_exp (max 3 T)]; exact log_le_log (exp_pos _) hlogn
+  have hloglogn3 : (3 : ℝ) ≤ log (log n) := le_trans (le_max_left _ _) hloglogn
+  have hloglognT : T ≤ log (log n) := le_trans (le_max_right _ _) hloglogn
+  have hloglognpos : 0 < log (log n) := by linarith
+  have hlogn3 : (3 : ℝ) ≤ log n := by linarith [log_le_sub_one_of_pos hlognpos, hloglogn3]
+  -- Least block `j` with `n ≤ ρ^j` (`exists_pow_ge_le`), hence `n ≤ N j`.
+  obtain ⟨j, hnρ, hρn, hj⟩ := exists_pow_ge_le hρ hn1
+  have hjle : n ≤ N j := by exact_mod_cast hnρ.trans (hNle j)
+  have hjj0 : j₀ ≤ j := by
+    by_contra hlt
+    rw [not_le] at hlt
+    have := hNmono hlt.le
+    omega
+  -- `N_j ≤ ρ·n + 1`.
+  have hNjR : (N j : ℝ) ≤ ρ * (n : ℝ) + 1 := by linarith [hNlt j]
+  -- `log(j+2) ≤ D_ρ + loglog n` (additive).
+  have hlogj2 : log ((j : ℝ) + 2) ≤ Dρ + log (log n) := by
+    rw [hDρ_def]; exact log_add_two_le_add_loglog hρ hj hlogn3
+  -- Apply the block bound at `m = n`.
+  have hqvcond : predQuadVar M ℱ μ n ω ≤ v * (N j : ℝ) :=
+    (hqvn n).trans (mul_le_mul_of_nonneg_left (by exact_mod_cast hjle) hv.le)
+  have hMn : M n ω < C * √((N j : ℝ) * log ((j : ℝ) + 2)) := hj₀ j hjj0 n hjle hqvcond
+  -- Arithmetic core: `C²·N_j·log(j+2) ≤ b²·2v·n·loglog n`.
+  have hlognn2 : (0 : ℝ) ≤ log ((j : ℝ) + 2) :=
+    log_nonneg (by have := Nat.cast_nonneg (α := ℝ) j; linarith)
+  have hcore : C ^ 2 * ((N j : ℝ) * log ((j : ℝ) + 2))
+      ≤ b ^ 2 * (2 * v * (n : ℝ) * log (log n)) := by
+    have hprod : (N j : ℝ) * log ((j : ℝ) + 2) ≤ (ρ * (n : ℝ) + 1) * (Dρ + log (log n)) :=
+      mul_le_mul hNjR hlogj2 hlognn2 (by positivity)
+    have hC2Dρnn : (0 : ℝ) ≤ 3 * C ^ 2 * Dρ := by positivity
+    have hC2ρDρnn : (0 : ℝ) ≤ 3 * C ^ 2 * ρ * Dρ := by positivity
+    have hi : 3 * C ^ 2 * ρ * Dρ ≤ A * log (log n) := by
+      have h : 3 * C ^ 2 * ρ * Dρ / A ≤ log (log n) := by
+        refine le_trans ?_ hloglognT; rw [hT_def]; linarith [div_nonneg hC2Dρnn hApos.le]
+      rw [div_le_iff₀ hApos, mul_comm _ A] at h; exact h
+    have hii : 3 * C ^ 2 * Dρ ≤ A * log (log n) := by
+      have h : 3 * C ^ 2 * Dρ / A ≤ log (log n) := by
+        refine le_trans ?_ hloglognT; rw [hT_def]; linarith [div_nonneg hC2ρDρnn hApos.le]
+      rw [div_le_iff₀ hApos, mul_comm _ A] at h; exact h
+    have hiii : 3 * C ^ 2 ≤ A * (n : ℝ) := by
+      rw [hn0_def] at hnn0
+      have h := (div_le_iff₀ hApos).mp hnn0
+      linarith [h, mul_comm (n : ℝ) A]
+    have hbig : C ^ 2 * ((ρ * (n : ℝ) + 1) * (Dρ + log (log n)))
+        ≤ b ^ 2 * (2 * v * (n : ℝ) * log (log n)) := by
+      have e1 : b ^ 2 * (2 * v) = A + C ^ 2 * ρ := by rw [hA_def]; ring
+      have hALn : A * log (log n) ≤ A * log (log n) * (n : ℝ) :=
+        le_mul_of_one_le_right (mul_nonneg hApos.le hloglognpos.le) hn1
+      have hP1 : 3 * C ^ 2 * ρ * Dρ * (n : ℝ) ≤ A * log (log n) * (n : ℝ) :=
+        mul_le_mul_of_nonneg_right hi hnpos.le
+      have hP2 : 3 * C ^ 2 * Dρ ≤ A * log (log n) * (n : ℝ) := hii.trans hALn
+      have hP3 : 3 * C ^ 2 * log (log n) ≤ A * (n : ℝ) * log (log n) :=
+        mul_le_mul_of_nonneg_right hiii hloglognpos.le
+      nlinarith [hP1, hP2, hP3, e1]
+    calc C ^ 2 * ((N j : ℝ) * log ((j : ℝ) + 2))
+        ≤ C ^ 2 * ((ρ * (n : ℝ) + 1) * (Dρ + log (log n))) :=
+          mul_le_mul_of_nonneg_left hprod (sq_nonneg C)
+      _ ≤ b ^ 2 * (2 * v * (n : ℝ) * log (log n)) := hbig
+  -- Assemble: `M_n < C√(N_j log(j+2)) ≤ b√(2vn loglog n)`.
+  have hsqrt : C * √((N j : ℝ) * log ((j : ℝ) + 2)) ≤ b * √(2 * v * (n : ℝ) * log (log n)) := by
+    rw [show C * √((N j : ℝ) * log ((j : ℝ) + 2))
+        = √(C ^ 2 * ((N j : ℝ) * log ((j : ℝ) + 2))) from by
+      rw [Real.sqrt_mul (sq_nonneg C), Real.sqrt_sq hCpos.le],
+      show b * √(2 * v * (n : ℝ) * log (log n))
+        = √(b ^ 2 * (2 * v * (n : ℝ) * log (log n))) from by
+      rw [Real.sqrt_mul (sq_nonneg b), Real.sqrt_sq hb0.le]]
+    exact Real.sqrt_le_sqrt hcore
+  exact hMn.le.trans hsqrt
+
+/-- The geometric time horizons `N_j = ⌈ρ^j⌉` (`ρ > 1`): monotone, `≥ 1`, and bracketing
+`ρ^j ≤ N_j < ρ^j + 1`. These are the horizons feeding the sharp growing-increment LIL. -/
+lemma exists_ceil_pow_horizon {ρ : ℝ} (hρ : 1 < ρ) :
+    ∃ N : ℕ → ℕ, Monotone N ∧ (∀ j, 1 ≤ N j) ∧ (∀ j, ρ ^ j ≤ (N j : ℝ)) ∧
+      (∀ j, (N j : ℝ) < ρ ^ j + 1) :=
+  ⟨fun j ↦ ⌈ρ ^ j⌉₊, fun _ _ hab ↦ Nat.ceil_mono (pow_le_pow_right₀ hρ.le hab),
+    fun _ ↦ Nat.one_le_ceil_iff.mpr (by positivity), fun _ ↦ Nat.le_ceil _,
+    fun _ ↦ Nat.ceil_lt_add_one (by positivity)⟩
+
+/-- **Sharp growing-increment LIL, single constant `b`.** Given `1 < ρ`, `0 < δ`, `(1+δ)ρ < b²`, the
+sharp block/repackaging with an internally-chosen optimizer `α = C/((1+δ)v)`,
+`C = √((1+δ)v + b²v/ρ)` (so `2(1+δ)v < C² < 2b²v/ρ`) yields `M_n ≤ b √(2vn loglog n)` a.s.
+This packages the `C, α` arithmetic; the caller supplies only the horizons, the increment bound and
+the block condition `c_j √(log(j+2)/N_j) → 0`. -/
+lemma ae_eventually_le_sqrt_nat_mul_loglog_of_growing [IsProbabilityMeasure μ]
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0)
+    {v δ b ρ : ℝ} (hρ : 1 < ρ) (hδ : 0 < δ) (hv : 0 < v) (hb0 : 0 < b) (hbρ : (1 + δ) * ρ < b ^ 2)
+    (N : ℕ → ℕ) (hNmono : Monotone N) (hN1 : ∀ j, 1 ≤ N j) (hNle : ∀ j, ρ ^ j ≤ (N j : ℝ))
+    (hNlt : ∀ j, (N j : ℝ) < ρ ^ j + 1) (c : ℕ → ℝ) (hc0 : ∀ j, 0 ≤ c j)
+    (hb : ∀ j, ∀ i < N j, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c j)
+    (hH : Tendsto (fun j : ℕ ↦ c j * √(log ((j : ℝ) + 2) / (N j : ℝ))) atTop (𝓝 0))
+    (hqv : ∀ᵐ ω ∂μ, ∀ n, predQuadVar M ℱ μ n ω ≤ v * (n : ℝ)) :
+    ∀ᵐ ω ∂μ, ∀ᶠ n in atTop, M n ω ≤ b * √(2 * v * (n : ℝ) * log (log n)) := by
+  have hρpos : (0 : ℝ) < ρ := by linarith
+  have h1δv : (0 : ℝ) < (1 + δ) * v := by positivity
+  set C : ℝ := √((1 + δ) * v + b ^ 2 * v / ρ) with hC_def
+  have hCarg : (0 : ℝ) ≤ (1 + δ) * v + b ^ 2 * v / ρ := by positivity
+  have hCpos : 0 < C := Real.sqrt_pos.mpr (by positivity)
+  have hC2 : C ^ 2 = (1 + δ) * v + b ^ 2 * v / ρ := Real.sq_sqrt hCarg
+  set α : ℝ := C / ((1 + δ) * v) with hα_def
+  have hαpos : 0 < α := by rw [hα_def]; positivity
+  have hsimp : α * C - (1 + δ) / 2 * α ^ 2 * v = C ^ 2 / (2 * ((1 + δ) * v)) := by
+    rw [hα_def]; field_simp; ring
+  have hp : 1 < α * C - (1 + δ) / 2 * α ^ 2 * v := by
+    rw [hsimp, hC2, lt_div_iff₀ (by positivity : (0 : ℝ) < 2 * ((1 + δ) * v))]
+    have hkey : (1 + δ) * v < b ^ 2 * v / ρ := by
+      rw [lt_div_iff₀ hρpos]; nlinarith [hbρ, hv]
+    linarith [hkey]
+  have hbC : C * √ρ < b * √(2 * v) := by
+    have hlhs : (C * √ρ) ^ 2 = ((1 + δ) * v + b ^ 2 * v / ρ) * ρ := by
+      rw [mul_pow, Real.sq_sqrt hρpos.le, hC2]
+    have hrhs : (b * √(2 * v)) ^ 2 = b ^ 2 * (2 * v) := by
+      rw [mul_pow, Real.sq_sqrt (by positivity)]
+    have hsqlt : (C * √ρ) ^ 2 < (b * √(2 * v)) ^ 2 := by
+      rw [hlhs, hrhs, add_mul, div_mul_cancel₀ _ hρpos.ne']
+      nlinarith [hbρ, hv]
+    exact lt_of_pow_lt_pow_left₀ 2 (by positivity) hsqlt
+  exact ae_eventually_le_sqrt_nat_mul_loglog_of_growing_of_lt hM hM0 hρ hδ hαpos hv hp hb0 hbC
+    N hNmono hN1 hNle hNlt c hc0 hb hH hqv
+
+/-- **The block condition from a base-independent increment growth.** If the increment growth `g`
+(`0 ≤ g`) satisfies `g n · √(loglog n / n) → 0`, then for the geometric horizons `N_j` with
+`ρ^j ≤ N_j` (`ρ > 1`) the block condition `g(N_j) √(log(j+2)/N_j) → 0` holds. The bridge:
+`N_j → ∞`, and `log(j+2) ≤ (log K + 1)·loglog N_j` with `K = 1/log ρ + 2` (from
+`j ≤ log N_j / log ρ`), so the block quantity is `≤ √(log K+1)·g(N_j)√(loglog N_j/N_j) → 0`. -/
+lemma tendsto_growth_horizon {ρ : ℝ} (hρ : 1 < ρ) {g : ℕ → ℝ} (hgnn : ∀ i, 0 ≤ g i)
+    {N : ℕ → ℕ} (hNle : ∀ j, ρ ^ j ≤ (N j : ℝ))
+    (hg : Tendsto (fun n : ℕ ↦ g n * √(log (log n) / n)) atTop (𝓝 0)) :
+    Tendsto (fun j : ℕ ↦ g (N j) * √(log ((j : ℝ) + 2) / (N j : ℝ))) atTop (𝓝 0) := by
+  have hlogρ : (0 : ℝ) < log ρ := log_pos hρ
+  have hρpos : (0 : ℝ) < ρ := by linarith
+  set K : ℝ := 1 / log ρ + 2 with hK_def
+  have hK0 : (0 : ℝ) < K := by rw [hK_def]; have := div_pos one_pos hlogρ; linarith
+  have hK1 : (1 : ℝ) ≤ K := by rw [hK_def]; have := div_pos one_pos hlogρ; linarith
+  have hlogK0 : (0 : ℝ) ≤ log K := Real.log_nonneg hK1
+  set L : ℝ := √(log K + 1) with hL_def
+  -- `N j → ∞`, and its real cast.
+  have hNtop : Tendsto N atTop atTop := by
+    refine tendsto_atTop.2 fun P ↦ ?_
+    filter_upwards [(tendsto_pow_atTop_atTop_of_one_lt hρ).eventually_ge_atTop (P : ℝ)] with j hj
+    exact_mod_cast le_trans hj (hNle j)
+  have hNRtop : Tendsto (fun j : ℕ ↦ (N j : ℝ)) atTop atTop :=
+    tendsto_natCast_atTop_atTop.comp hNtop
+  -- Comparison sequence `g(N_j) √(loglog N_j / N_j) → 0` (a subsequence of `hg`).
+  have hcomp : Tendsto (fun j : ℕ ↦ g (N j) * √(log (log (N j)) / (N j))) atTop (𝓝 0) :=
+    hg.comp hNtop
+  have hbdd : Tendsto (fun j : ℕ ↦ L * (g (N j) * √(log (log (N j)) / (N j)))) atTop (𝓝 0) := by
+    have h := hcomp.const_mul L
+    rwa [mul_zero] at h
+  refine squeeze_zero' (Eventually.of_forall fun j ↦
+    mul_nonneg (hgnn _) (Real.sqrt_nonneg _)) ?_ hbdd
+  filter_upwards [hNRtop.eventually_ge_atTop (exp (exp 1))] with j hj
+  have hnpos : (0 : ℝ) < (N j : ℝ) := lt_of_lt_of_le (exp_pos _) hj
+  have hlogn_ge : exp 1 ≤ log (N j : ℝ) := by
+    rw [← Real.log_exp (exp 1)]; exact log_le_log (exp_pos _) hj
+  have hlogn_pos : (0 : ℝ) < log (N j : ℝ) := lt_of_lt_of_le (exp_pos _) hlogn_ge
+  have hlogn1 : (1 : ℝ) ≤ log (N j : ℝ) := le_trans (one_le_exp (by norm_num)) hlogn_ge
+  have hloglogn1 : (1 : ℝ) ≤ log (log (N j : ℝ)) := by
+    rw [← Real.log_exp 1]; exact log_le_log (exp_pos 1) hlogn_ge
+  -- `j ≤ log N_j / log ρ`, hence `j + 2 ≤ K log N_j`.
+  have hjlog : (j : ℝ) * log ρ ≤ log (N j : ℝ) := by
+    rw [← Real.log_pow]; exact log_le_log (pow_pos hρpos j) (hNle j)
+  have hjdiv : (j : ℝ) ≤ log (N j : ℝ) / log ρ := (le_div_iff₀ hlogρ).2 hjlog
+  have hj2 : (j : ℝ) + 2 ≤ K * log (N j : ℝ) := by
+    have hKe : K * log (N j : ℝ) = log (N j : ℝ) / log ρ + 2 * log (N j : ℝ) := by
+      rw [hK_def]; ring
+    rw [hKe]; linarith [hjdiv, hlogn1]
+  -- `log(j+2) ≤ (log K + 1) loglog N_j`.
+  have hlogj2 : log ((j : ℝ) + 2) ≤ (log K + 1) * log (log (N j : ℝ)) := by
+    have h1 : log ((j : ℝ) + 2) ≤ log (K * log (N j : ℝ)) := log_le_log (by positivity) hj2
+    rw [Real.log_mul hK0.ne' hlogn_pos.ne'] at h1
+    nlinarith [h1, mul_nonneg hlogK0 (sub_nonneg.mpr hloglogn1)]
+  -- Push through the square root.
+  have hfrac : log ((j : ℝ) + 2) / (N j : ℝ)
+      ≤ (log K + 1) * (log (log (N j : ℝ)) / (N j : ℝ)) := by
+    rw [div_le_iff₀ hnpos, mul_assoc, div_mul_cancel₀ _ hnpos.ne']; exact hlogj2
+  have hsqrt : √(log ((j : ℝ) + 2) / (N j : ℝ))
+      ≤ L * √(log (log (N j : ℝ)) / (N j : ℝ)) := by
+    calc √(log ((j : ℝ) + 2) / (N j : ℝ))
+        ≤ √((log K + 1) * (log (log (N j : ℝ)) / (N j : ℝ))) := Real.sqrt_le_sqrt hfrac
+      _ = L * √(log (log (N j : ℝ)) / (N j : ℝ)) := by
+          rw [hL_def, Real.sqrt_mul (by linarith [hlogK0] : (0 : ℝ) ≤ log K + 1)]
+  calc g (N j) * √(log ((j : ℝ) + 2) / (N j : ℝ))
+      ≤ g (N j) * (L * √(log (log (N j : ℝ)) / (N j : ℝ))) :=
+        mul_le_mul_of_nonneg_left hsqrt (hgnn _)
+    _ = L * (g (N j) * √(log (log (N j : ℝ)) / (N j : ℝ))) := by ring
+
+/-- **Sharp growing-increment LIL, `b > 1` limit (one-sided).** For a martingale with `M_0 = 0`, a
+base-independent increment growth `|ΔM_i| ≤ g(i)` (`g` monotone, `0 ≤ g`, `g n √(loglog n/n) → 0`)
+and linear quadratic variation `⟨M⟩_n ≤ v·n`, almost surely for every `b > 1` eventually
+`M_n ≤ b √(2 v n loglog n)`. For each `b`, blocks with base `ρ = 1 + (b-1)/2 ↓ 1` and
+`δ = (b-1)/2` give `(1+δ)ρ = ρ² < b²`; the block condition comes from `tendsto_growth_horizon`. -/
+lemma ae_forall_one_lt_eventually_le_sqrt_nat_mul_loglog_of_growth [IsProbabilityMeasure μ]
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0)
+    {v : ℝ} (hv : 0 < v) {g : ℕ → ℝ} (hgmono : Monotone g) (hgnn : ∀ i, 0 ≤ g i)
+    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ g i)
+    (hg : Tendsto (fun n : ℕ ↦ g n * √(log (log n) / n)) atTop (𝓝 0))
+    (hqv : ∀ᵐ ω ∂μ, ∀ n, predQuadVar M ℱ μ n ω ≤ v * (n : ℝ)) :
+    ∀ᵐ ω ∂μ, ∀ b : ℝ, 1 < b → ∀ᶠ n in atTop,
+      M n ω ≤ b * √(2 * v * (n : ℝ) * log (log n)) := by
+  refine ae_forall_one_lt_eventually_le_of_forall_nat (fun m ↦ ?_) (fun _ _ ↦ sqrt_nonneg _)
+  set b : ℝ := 1 + 1 / ((m : ℝ) + 1) with hb_def
+  have hb1 : 1 < b := by
+    rw [hb_def]; have : (0 : ℝ) < 1 / ((m : ℝ) + 1) := by positivity
+    linarith
+  have hbm1 : 0 < b - 1 := by linarith
+  have hb0 : 0 < b := by linarith
+  set δ : ℝ := (b - 1) / 2 with hδ_def
+  have hδ0 : 0 < δ := by rw [hδ_def]; linarith
+  set ρ : ℝ := 1 + δ with hρ_def
+  have hρ1 : 1 < ρ := by rw [hρ_def]; linarith
+  have hρb : ρ < b := by rw [hρ_def, hδ_def]; linarith
+  have hbρ : (1 + δ) * ρ < b ^ 2 := by
+    have heq : (1 + δ) = ρ := hρ_def.symm
+    rw [heq]
+    nlinarith [mul_pos (show (0 : ℝ) < b - ρ by linarith) (show (0 : ℝ) < b + ρ by linarith)]
+  obtain ⟨N, hNmono, hN1, hNle, hNlt⟩ := exists_ceil_pow_horizon hρ1
+  refine ae_eventually_le_sqrt_nat_mul_loglog_of_growing hM hM0 hρ1 hδ0 hv hb0 hbρ
+    N hNmono hN1 hNle hNlt (fun j ↦ g (N j)) (fun j ↦ hgnn _) ?_
+    (tendsto_growth_horizon hρ1 hgnn hNle hg) hqv
+  intro j i hi
+  filter_upwards [hb i] with ω hω
+  exact hω.trans (hgmono hi.le)
+
+/-- **Sharp growing-increment LIL, `b > 1` limit (two-sided).** Applying the one-sided limit to `M`
+and `-M` (same increment growth and quadratic variation, `predQuadVar_neg`) gives, a.s., for every
+`b > 1` eventually `|M_n| ≤ b √(2 v n loglog n)`: the sharp constant `1` for growing increments. -/
+lemma ae_forall_one_lt_eventually_abs_le_sqrt_nat_mul_loglog_of_growth [IsProbabilityMeasure μ]
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0)
+    {v : ℝ} (hv : 0 < v) {g : ℕ → ℝ} (hgmono : Monotone g) (hgnn : ∀ i, 0 ≤ g i)
+    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ g i)
+    (hg : Tendsto (fun n : ℕ ↦ g n * √(log (log n) / n)) atTop (𝓝 0))
+    (hqv : ∀ᵐ ω ∂μ, ∀ n, predQuadVar M ℱ μ n ω ≤ v * (n : ℝ)) :
+    ∀ᵐ ω ∂μ, ∀ b : ℝ, 1 < b → ∀ᶠ n in atTop,
+      |M n ω| ≤ b * √(2 * v * (n : ℝ) * log (log n)) :=
+  ae_forall_one_lt_eventually_abs_le
+    (ae_forall_one_lt_eventually_le_sqrt_nat_mul_loglog_of_growth hM hM0 hv hgmono hgnn hb hg
+      hqv)
+    (ae_forall_one_lt_eventually_le_sqrt_nat_mul_loglog_of_growth hM.neg (neg_ae_eq_zero hM0)
+      hv hgmono hgnn
+      (fun i ↦ (hb i).mono fun ω hω ↦ by rwa [abs_neg_increment]) hg
+      (by simpa only [predQuadVar_neg] using hqv))
+
+/-- **Sharp growing-increment LIL as a `limsup`** (two-sided). Almost surely
+`limsup_n |M_n| / √(2 v n log log n) ≤ 1`, from the `∀ b > 1, ∀ᶠ` two-sided form. -/
+lemma ae_limsup_abs_div_sqrt_nat_mul_loglog_of_growth_le_one [IsProbabilityMeasure μ]
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0)
+    {v : ℝ} (hv : 0 < v) {g : ℕ → ℝ} (hgmono : Monotone g) (hgnn : ∀ i, 0 ≤ g i)
+    (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ g i)
+    (hg : Tendsto (fun n : ℕ ↦ g n * √(log (log n) / n)) atTop (𝓝 0))
+    (hqv : ∀ᵐ ω ∂μ, ∀ n, predQuadVar M ℱ μ n ω ≤ v * (n : ℝ)) :
+    ∀ᵐ ω ∂μ, limsup (fun n ↦ |M n ω| / √(2 * v * (n : ℝ) * log (log n))) atTop ≤ 1 := by
+  filter_upwards [ae_forall_one_lt_eventually_abs_le_sqrt_nat_mul_loglog_of_growth hM hM0 hv
+    hgmono hgnn hb hg hqv] with ω hω
+  exact limsup_abs_div_le_one_of_forall_one_lt (fun _ ↦ sqrt_nonneg _) hω
+
+/-! ### The unconditional bounded-increment LIL
+
+A bounded-increment martingale has `⟨M⟩_n ≤ c² n` (`predQuadVar_le_of_bound`), so the sharp
+growing-increment LIL applies with the constant growth `g ≡ c`, whose block condition
+`c √(log log n / n) → 0` is automatic. Unlike the normalized form, this needs **no** hypothesis
+`⟨M⟩_n → ∞`: a design that hits its target deterministically has `⟨M⟩ ≡ 0`, yet `M ≡ 0` is still
+`O(√(n log log n))`. This is the form the (possibly degenerate) assignment martingale needs. -/
+
+/-- **Unconditional bounded-increment loglog LIL, `IsBigO` form.** For a martingale `M` with
+`M 0 = 0` and `|ΔM_i| ≤ c` a.s. (`c > 0`), almost surely `M_n = O(√(n log log n))`, with no
+hypothesis on `⟨M⟩`. The `L²` side conditions are derived from the increment bound (a.e.
+`|M_n| ≤ n c`). -/
+lemma ae_isBigO_sqrt_nat_mul_loglog_of_bdd [IsProbabilityMeasure μ]
+    (hM : Martingale M ℱ μ) (hM0 : M 0 =ᵐ[μ] 0)
+    {c : ℝ} (hc : 0 < c) (hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c) :
+    ∀ᵐ ω ∂μ, (fun n ↦ M n ω) =O[atTop] fun n : ℕ ↦ √((n : ℝ) * log (log n)) := by
+  have hg : Tendsto (fun n : ℕ ↦ c * √(log (log n) / n)) atTop (𝓝 0) := by
+    have h := tendsto_sqrt_loglog_div_nat.const_mul c
+    rwa [mul_zero] at h
+  filter_upwards [ae_forall_one_lt_eventually_abs_le_sqrt_nat_mul_loglog_of_growth hM hM0
+    (by positivity : (0 : ℝ) < c ^ 2) (g := fun _ ↦ c) monotone_const (fun _ ↦ hc.le) hb hg
+    (predQuadVar_le_of_bound hM hb)] with ω hω
+  rw [Asymptotics.isBigO_iff]
+  refine ⟨2 * √(2 * c ^ 2), ?_⟩
+  filter_upwards [hω 2 one_lt_two] with n hn
+  rw [Real.norm_eq_abs, Real.norm_eq_abs, abs_of_nonneg (sqrt_nonneg _)]
+  calc |M n ω| ≤ 2 * √(2 * c ^ 2 * (n : ℝ) * log (log n)) := hn
+    _ = 2 * √(2 * c ^ 2) * √((n : ℝ) * log (log n)) := by
+        rw [mul_assoc (2 * c ^ 2), sqrt_mul (by positivity)]
+        ring
 
 end AlphaRAR

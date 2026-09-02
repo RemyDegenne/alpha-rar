@@ -5,8 +5,7 @@ Authors: Rémy Degenne
 -/
 module
 
-public import AlphaRAR.Mathlib.LILLogLog
-public import AlphaRAR.Mathlib.LILSharp
+public import AlphaRAR.Mathlib.LIL
 public import AlphaRAR.Mathlib.LILTruncation
 public import AlphaRAR.Mathlib.MartingaleSLLN
 public import AlphaRAR.Mathlib.TsumMeasureIoi
@@ -21,7 +20,7 @@ public meta import Characterization
 This file develops the finite-variance (i.i.d.) case of the loglog LIL (Hartman–Wintner 1941).
 A sum of i.i.d. centred increments with only a second moment is split into three levels — low
 `|Y|≤b_i`, medium `b_i<|Y|≤√i`, high `|Y|>√i` — with the `log`-level cutoff `b_i = √(i/log(i+2))`.
-The main (low) part satisfies the growing-increment hypothesis of `LILLogLog.lean` and gets the
+The main (low) part satisfies the growing-increment hypothesis of `LIL.lean` and gets the
 loglog rate; the high part vanishes eventually; the drift and medium parts are `o(√(n log log n))`.
 
 ## Main results
@@ -37,24 +36,21 @@ loglog rate; the high part vanishes eventually; the drift and medium parts are `
 * `AlphaRAR.predQuadVar_iidSum_succ_sub`, `AlphaRAR.predQuadVar_iidSum_le`,
   `AlphaRAR.predQuadVar_iidSum_ge`: the quadratic-variation increment `⟨S⟩_{n+1}-⟨S⟩_n = E[Y_n²]`
   and the two-sided linear bounds `w·n ≤ ⟨S⟩_n ≤ v·n`.
-* `AlphaRAR.ae_eventually_abs_sum_le_sqrt_nat_mul_loglog_of_bounded`: the loglog LIL
-  `|S_n| = O(√(n log log n))` for bounded independent centred increments with `E[Y_i²] ≥ w > 0`,
-  the bounded case of Hartman–Wintner, assembled from the above and the bounded-increment engine
-  `ae_eventually_abs_le_sqrt_nat_mul_loglog`.
 * The low-part (centred-truncation) ingredients:
   `AlphaRAR.iIndepFun_truncation_sub_const`, `AlphaRAR.martingale_centeredTruncation` (the
   martingale `S̃_n = ∑(Y_j^L - E Y_j^L)`), `AlphaRAR.predQuadVar_centeredTruncation_le`
   (`⟨S̃⟩_n ≤ v·n`),
   `AlphaRAR.abs_truncation_sub_integral_le` (increment bound `|ΔS̃_j| ≤ 2 b_j`), and
   `AlphaRAR.integral_truncation_sub_integral_sq_le` (`Var(Y^L) ≤ σ²`), assembled into the sharp
-  low-part LIL `AlphaRAR.ae_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation_sharp`.
+  low-part LIL `AlphaRAR.ae_forall_one_lt_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation`.
 * `AlphaRAR.medium_variance_summable_seq` and `AlphaRAR.ae_medium_div_weight_tendsto_zero`: the
   medium band has a summable weighted variance series, hence is `o(√(m log log m))`.
-* `AlphaRAR.hw_drift_bound`: the deterministic drift bound
+* `AlphaRAR.sum_integral_truncation_add_mediumTrunc_le`: the deterministic drift bound
   `∑_{j<m}(E Y_j^L + E Y_j^M) ≤ 2σ²√m + E|Y_0|`.
 * `AlphaRAR.iid_hartmanWintner_limsup_le_one`: the upper half of the Hartman–Wintner LIL, a.s.
   `limsup_m (∑_{j<m} Y_j) / √(2σ² m log log m) ≤ 1` for i.i.d. centred `L²` increments with
-  `σ² = E[Y_0²] > 0` (eventual, coboundedness-free form: `AlphaRAR.hw_eventually`).
+  `σ² = E[Y_0²] > 0` (eventual, coboundedness-free form:
+`AlphaRAR.ae_forall_one_lt_eventually_sum_le_sqrt_nat_mul_loglog`).
 -/
 
 @[expose] public section
@@ -400,38 +396,6 @@ lemma predQuadVar_iidSum_ge [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
           - predQuadVar (fun m ↦ ∑ j ∈ Finset.range m, Y j) (natFiltLT Y hY) μ k ω) :=
         Finset.sum_le_sum fun k _ ↦ hω k
 
-/-- **Loglog LIL for bounded independent centred variables.** For an independent, centred sequence
-`Y` with `|Y_i| ≤ c` a.e. and second moments bounded below by `w > 0`, the partial sums
-`S_n = ∑_{j<n} Y_j` satisfy `|S_n| ≤ C √(n log log n)` for all large `n`, almost surely. This is the
-bounded case of the Hartman–Wintner LIL: the i.i.d.-sum martingale (`martingale_iidSum`), its
-quadratic variation (`predQuadVar_iidSum_le`/`predQuadVar_iidSum_ge`, giving `⟨S⟩_n → ∞`), and the
-bounded increments feed the general bounded-increment engine
-`ae_eventually_abs_le_sqrt_nat_mul_loglog`. -/
-lemma ae_eventually_abs_sum_le_sqrt_nat_mul_loglog_of_bounded [IsProbabilityMeasure μ]
-    {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i)) (hindep : iIndepFun Y μ)
-    (hcent : ∀ i, ∫ ω, Y i ω ∂μ = 0) {c : ℝ} (hc : 0 < c) (hbdd : ∀ i, ∀ᵐ ω ∂μ, |Y i ω| ≤ c)
-    {w : ℝ} (hw : 0 < w) (hvar : ∀ i, w ≤ ∫ ω, Y i ω ^ 2 ∂μ) :
-    ∀ᵐ ω ∂μ, ∃ C, ∀ᶠ n in atTop,
-      |(∑ j ∈ Finset.range n, Y j) ω| ≤ C * √((n : ℝ) * log (log n)) := by
-  have hmemLp2 : ∀ i, MemLp (Y i) 2 μ := fun i ↦ MemLp.of_bound (hY i).aestronglyMeasurable c
-    (by filter_upwards [hbdd i] with ω h; rwa [Real.norm_eq_abs])
-  have hint : ∀ i, Integrable (Y i) μ := fun i ↦ (hmemLp2 i).integrable one_le_two
-  have hint2 : ∀ i, MemLp (Y i) 2 μ := hmemLp2
-  set M : ℕ → Ω → ℝ := fun n ↦ ∑ j ∈ Finset.range n, Y j with hM_def
-  have hM : Martingale M (natFiltLT Y hY) μ := martingale_iidSum hY hindep hint hcent
-  have hM0 : M 0 =ᵐ[μ] 0 := by simp [hM_def]
-  have hM2 : ∀ n, MemLp (M n) 2 μ := fun n ↦
-    memLp_finsetSum' (Finset.range n) fun j _ ↦ hmemLp2 j
-  have hb : ∀ i, ∀ᵐ ω ∂μ, |M (i + 1) ω - M i ω| ≤ c := fun i ↦ by
-    filter_upwards [hbdd i] with ω h
-    have hΔ : M (i + 1) ω - M i ω = Y i ω := by
-      simp only [hM_def, Finset.sum_apply, Finset.sum_range_succ]; ring
-    rw [hΔ]; exact h
-  have hV : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ predQuadVar M (natFiltLT Y hY) μ n ω) atTop atTop := by
-    filter_upwards [predQuadVar_iidSum_ge hY hindep hcent hint2 hvar] with ω hge
-    exact tendsto_atTop_mono hge (Tendsto.const_mul_atTop hw tendsto_natCast_atTop_atTop)
-  exact ae_eventually_abs_le_sqrt_nat_mul_loglog hM hM0 hM2 hc hb hV
-
 /-! ### The centred-truncation (low-part) martingale
 
 For the Hartman–Wintner decomposition the low part is `S̃_n = ∑_{j<n}(Y_j^L - E Y_j^L)` with
@@ -515,10 +479,12 @@ centred-truncation martingale `S̃_n = ∑_{j<n}(Y_j^L - E Y_j^L)`
 `|S̃_n| ≤ β √(2 v n loglog n)` — the sharp constant `1` for the low part of Hartman–Wintner.
 The increments `|ΔS̃_j| ≤ 2 b_j` (`abs_truncation_sub_integral_le`) and the
 linear quadratic variation `⟨S̃⟩_n ≤ v·n` (`predQuadVar_centeredTruncation_le`) feed the sharp
-growing-increment engine `ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growth_sharp_all` with growth
+growing-increment engine
+`ae_forall_one_lt_eventually_abs_le_sqrt_nat_mul_loglog_of_growth` with growth
 `g = 2b`. No random stopping time; the log-level cutoff `b_n = √(n/log(n+2))` satisfies (H) since
 `b_n √(loglog n/n) = √(loglog n/log(n+2)) → 0`. -/
-lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation_sharp [IsProbabilityMeasure μ]
+lemma ae_forall_one_lt_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation
+    [IsProbabilityMeasure μ]
     {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i)) (hindep : iIndepFun Y μ)
     (hint2 : ∀ i, MemLp (Y i) 2 μ)
     {v : ℝ} (hv0 : 0 < v) (hv : ∀ i, ∫ ω, Y i ω ^ 2 ∂μ ≤ v)
@@ -531,15 +497,10 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation_sharp [IsProba
   have hint : ∀ i, Integrable (Y i) μ := fun i ↦ (hint2 i).integrable one_le_two
   set SL : ℕ → Ω → ℝ := fun n ↦ ∑ j ∈ Finset.range n,
     fun ω ↦ truncation (Y j) (b j) ω - ∫ x, truncation (Y j) (b j) x ∂μ with hSL_def
-  have hmemLp : ∀ j, MemLp (fun ω ↦ truncation (Y j) (b j) ω
-      - ∫ x, truncation (Y j) (b j) x ∂μ) 2 μ := fun j ↦
-    memLp_two_truncation_sub_const hY b (fun j ↦ ∫ x, truncation (Y j) (b j) x ∂μ) j
   have hM : Martingale SL (natFiltLT _ (stronglyMeasurable_centeredTruncation hY b
       fun j ↦ ∫ x, truncation (Y j) (b j) x ∂μ)) μ :=
     martingale_centeredTruncation hY hindep b
   have hM0 : SL 0 =ᵐ[μ] 0 := by simp [hSL_def]
-  have hM2 : ∀ n, MemLp (SL n) 2 μ := fun n ↦
-    memLp_finsetSum' (Finset.range n) fun j _ ↦ hmemLp j
   have hgmono : Monotone (fun i ↦ 2 * b i) := hbmono.const_mul (by norm_num)
   have hgnn : ∀ i, 0 ≤ 2 * b i := fun i ↦ mul_nonneg (by norm_num) (hbnn i)
   have hg : Tendsto (fun n : ℕ ↦ 2 * b n * √(log (log n) / n)) atTop (𝓝 0) := by
@@ -556,7 +517,7 @@ lemma ae_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation_sharp [IsProba
       (stronglyMeasurable_centeredTruncation hY b fun j ↦ ∫ x, truncation (Y j) (b j) x ∂μ))
       μ n ω ≤ v * (n : ℝ) :=
     predQuadVar_centeredTruncation_le hY hindep hint2 b hv
-  exact ae_eventually_abs_le_sqrt_nat_mul_loglog_of_growth_sharp_all hM hM0 hM2 hv0 hgmono hgnn
+  exact ae_forall_one_lt_eventually_abs_le_sqrt_nat_mul_loglog_of_growth hM hM0 hv0 hgmono hgnn
     hginc hg hqv
 
 /-- **Sharp low-part LIL as a `limsup`.** From the `∀ β > 1, ∀ᶠ` two-sided form, a.s.
@@ -570,22 +531,10 @@ lemma ae_limsup_abs_div_sqrt_nat_mul_loglog_centeredTruncation_le_one [IsProbabi
     ∀ᵐ ω ∂μ, limsup (fun n ↦ |(∑ j ∈ Finset.range n,
           fun ω ↦ truncation (Y j) (b j) ω - ∫ x, truncation (Y j) (b j) x ∂μ) ω|
         / √(2 * v * (n : ℝ) * log (log n))) atTop ≤ 1 := by
-  filter_upwards [ae_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation_sharp hY hindep
+  filter_upwards [ae_forall_one_lt_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation
+    hY hindep
     hint2 hv0 hv hbmono hbnn hbH] with ω hω
-  have hf_nonneg : ∀ n, 0 ≤ |(∑ j ∈ Finset.range n,
-      fun ω ↦ truncation (Y j) (b j) ω - ∫ x, truncation (Y j) (b j) x ∂μ) ω|
-        / √(2 * v * (n : ℝ) * log (log n)) :=
-    fun n ↦ div_nonneg (abs_nonneg _) (Real.sqrt_nonneg _)
-  have hcobdd : IsCoboundedUnder (· ≤ ·) atTop (fun n ↦ |(∑ j ∈ Finset.range n,
-      fun ω ↦ truncation (Y j) (b j) ω - ∫ x, truncation (Y j) (b j) x ∂μ) ω|
-        / √(2 * v * (n : ℝ) * log (log n))) :=
-    IsCoboundedUnder.of_frequently_ge (a := 0) ((Eventually.of_forall hf_nonneg).frequently)
-  refine le_of_forall_gt_imp_ge_of_dense fun a ha ↦ ?_
-  refine limsup_le_of_le hcobdd ?_
-  filter_upwards [hω a ha] with n hn
-  rcases le_or_gt (√(2 * v * (n : ℝ) * log (log n))) 0 with hs | hs
-  · rw [le_antisymm hs (Real.sqrt_nonneg _), div_zero]; linarith
-  · rw [div_le_iff₀ hs]; exact hn
+  exact limsup_abs_div_le_one_of_forall_one_lt (fun _ ↦ sqrt_nonneg _) hω
 
 /-! ### The medium-band variance estimate (Kolmogorov's crux)
 
@@ -604,7 +553,7 @@ lemma log_le_two_mul_sqrt {u : ℝ} (hu : 0 < u) : log u ≤ 2 * √u := by
 /-- **Crude range bound.** If `j` lies in the medium index set for `t` (i.e. `t ≤ j` and
 `j < t log(j+2)`) with `j ≥ 2`, then `j < 8 t²`. Uses only `log(j+2) ≤ 2√(j+2)` and
 `√(j+2) ≤ √2·√j`. -/
-lemma medium_crude {t : ℝ} {j : ℕ} (hj : 2 ≤ j) (_htj : t ≤ (j : ℝ))
+lemma lt_mul_sq_of_lt_mul_log_add_two {t : ℝ} {j : ℕ} (hj : 2 ≤ j) (_htj : t ≤ (j : ℝ))
     (hlt : (j : ℝ) < t * log ((j : ℝ) + 2)) : (j : ℝ) < 8 * t ^ 2 := by
   have hjR : (2 : ℝ) ≤ (j : ℝ) := by exact_mod_cast hj
   have hlogpos : 0 < log ((j : ℝ) + 2) := Real.log_pos (by linarith)
@@ -633,13 +582,14 @@ lemma medium_crude {t : ℝ} {j : ℕ} (hj : 2 ≤ j) (_htj : t ≤ (j : ℝ))
 
 /-- **Tight range bound.** For `t ≥ √2` and `j` in the medium index set (`t ≤ j`, `j < t log(j+2)`,
 `j ≥ 2`), `j < t (log 9 + 2 log t)` — a multiplicative width `≍ log t` above `t`. -/
-lemma medium_tight {t : ℝ} {j : ℕ} (ht : √2 ≤ t) (hj : 2 ≤ j) (htj : t ≤ (j : ℝ))
+lemma lt_mul_log_of_lt_mul_log_add_two {t : ℝ} {j : ℕ} (ht : √2 ≤ t) (hj : 2 ≤ j)
+    (htj : t ≤ (j : ℝ))
     (hlt : (j : ℝ) < t * log ((j : ℝ) + 2)) : (j : ℝ) < t * (log 9 + 2 * log t) := by
   have htpos : 0 < t := lt_of_lt_of_le (Real.sqrt_pos.mpr (by norm_num)) ht
   have ht2 : (2 : ℝ) ≤ t ^ 2 := by
     have h := Real.mul_self_sqrt (show (0 : ℝ) ≤ 2 by norm_num)
     nlinarith [ht, Real.sqrt_nonneg (2 : ℝ), h]
-  have hcrude : (j : ℝ) < 8 * t ^ 2 := medium_crude hj htj hlt
+  have hcrude : (j : ℝ) < 8 * t ^ 2 := lt_mul_sq_of_lt_mul_log_add_two hj htj hlt
   have hlogj2 : log ((j : ℝ) + 2) < log 9 + 2 * log t := by
     have h9 : (j : ℝ) + 2 < 9 * t ^ 2 := by nlinarith [hcrude, ht2]
     have hlog9t : log (9 * t ^ 2) = log 9 + 2 * log t := by
@@ -692,12 +642,12 @@ lemma sum_Icc_one_div_le {A B : ℕ} (hA : 1 ≤ A) (hAB : A ≤ B) :
 constant. The multiplicative width of the range is `≍ log t`, so pulling out `1/log log A` (loglog
 monotone) and bounding the harmonic sum by `log(B/A) ≤ log(5 log t) = log 5 + log log t` gives an
 `O(1)` sum. -/
-lemma medium_sum_Icc_big {t : ℝ} (ht : 9 ≤ t) :
+lemma sum_Icc_one_div_mul_loglog_le {t : ℝ} (ht : 9 ≤ t) :
     ∑ j ∈ Finset.Icc ⌈t⌉₊ ⌈t * (log 9 + 2 * log t)⌉₊, 1 / ((j : ℝ) * log (log (j : ℝ)))
       ≤ 1 + (1 / 9 + log 5) / log (log 9) := by
   have htpos : (0 : ℝ) < t := by linarith
   have hlog9 : (1 : ℝ) < log 9 :=
-    (Real.lt_log_iff_exp_lt (by norm_num)).2 (lt_trans Real.exp_one_lt_d9 (by norm_num))
+    one_lt_log_three.trans_le (log_le_log (by norm_num) (by norm_num))
   have hll9 : (0 : ℝ) < log (log 9) := Real.log_pos hlog9
   have hlogt : log 9 ≤ log t := Real.log_le_log (by norm_num) ht
   have hllt : log (log 9) ≤ log (log t) := loglog_le_loglog (by norm_num) ht
@@ -790,17 +740,12 @@ lemma medium_sum_Icc_big {t : ℝ} (ht : 9 ≤ t) :
 
 /-- **The inner sum is bounded uniformly in `t = y²`.** For every `t`, the medium-band index sum
 `∑_{j : t ≤ j < t log(j+2), j ≥ 3} 1/(j log log j) ≤ C` with a single constant `C`. Small `t` land
-in the fixed finite range `Icc 3 647`; large `t` (`≥ 9`) use `medium_sum_Icc_big`. -/
-lemma medium_inner_tsum_le : ∃ C : ℝ, 0 ≤ C ∧ ∀ (t : ℝ) (n : ℕ),
+in the fixed finite range `Icc 3 647`; large `t` (`≥ 9`) use `sum_Icc_one_div_mul_loglog_le`. -/
+lemma exists_sum_ite_one_div_mul_loglog_le : ∃ C : ℝ, 0 ≤ C ∧ ∀ (t : ℝ) (n : ℕ),
     ∑ j ∈ Finset.range n, (if 3 ≤ j ∧ t ≤ (j : ℝ) ∧ (j : ℝ) < t * log ((j : ℝ) + 2)
       then 1 / ((j : ℝ) * log (log (j : ℝ))) else 0) ≤ C := by
-  have hloglogpos : ∀ j : ℕ, 3 ≤ j → 0 < log (log (j : ℝ)) := by
-    intro j hj
-    have hjR : (3 : ℝ) ≤ (j : ℝ) := by exact_mod_cast hj
-    refine Real.log_pos ?_
-    calc (1 : ℝ) = log (exp 1) := (Real.log_exp 1).symm
-      _ < log 3 := Real.log_lt_log (exp_pos 1) (lt_trans Real.exp_one_lt_d9 (by norm_num))
-      _ ≤ log (j : ℝ) := Real.log_le_log (by norm_num) hjR
+  have hloglogpos : ∀ j : ℕ, 3 ≤ j → 0 < log (log (j : ℝ)) := fun j hj ↦
+    loglog_pos_of_three_le_nat hj
   have hGnn : ∀ j : ℕ, 3 ≤ j → 0 ≤ 1 / ((j : ℝ) * log (log (j : ℝ))) := by
     intro j hj
     have h := hloglogpos j hj
@@ -834,7 +779,8 @@ lemma medium_inner_tsum_le : ∃ C : ℝ, 0 ≤ C ∧ ∀ (t : ℝ) (n : ℕ),
         rw [Finset.mem_Icc]
         obtain ⟨hj3, hjt, hjlt⟩ := hc
         refine ⟨Nat.ceil_le.mpr hjt, ?_⟩
-        have htight : (j : ℝ) < t * (log 9 + 2 * log t) := medium_tight hsqrt2 (by omega) hjt hjlt
+        have htight : (j : ℝ) < t * (log 9 + 2 * log t) :=
+          lt_mul_log_of_lt_mul_log_add_two hsqrt2 (by omega) hjt hjlt
         have : (j : ℝ) < (⌈t * (log 9 + 2 * log t)⌉₊ : ℝ) := lt_of_lt_of_le htight (Nat.le_ceil _)
         exact le_of_lt (by exact_mod_cast this)
       · rfl
@@ -854,7 +800,7 @@ lemma medium_inner_tsum_le : ∃ C : ℝ, 0 ≤ C ∧ ∀ (t : ℝ) (n : ℕ),
           split_ifs with hc
           · exact le_refl _
           · exact hGnn j (le_trans hA3 (Finset.mem_Icc.mp hj).1)
-      _ ≤ 1 + (1 / 9 + log 5) / log (log 9) := medium_sum_Icc_big ht9
+      _ ≤ 1 + (1 / 9 + log 5) / log (log 9) := sum_Icc_one_div_mul_loglog_le ht9
       _ ≤ _ := le_max_right _ _
   · -- small case: support in `Icc 3 647`
     rw [not_le] at ht9
@@ -874,7 +820,7 @@ lemma medium_inner_tsum_le : ∃ C : ℝ, 0 ≤ C ∧ ∀ (t : ℝ) (n : ℕ),
           rw [not_lt] at h
           have := mul_nonpos_of_nonpos_of_nonneg h hlogpos
           linarith [hjlt]
-        have hcrude : (j : ℝ) < 8 * t ^ 2 := medium_crude (by omega) hjt hjlt
+        have hcrude : (j : ℝ) < 8 * t ^ 2 := lt_mul_sq_of_lt_mul_log_add_two (by omega) hjt hjlt
         have hj648 : (j : ℝ) < 648 := by nlinarith [hcrude, ht9, htpos]
         have hj648N : j < 648 := by exact_mod_cast hj648
         omega
@@ -901,7 +847,8 @@ lemma medium_inner_tsum_le : ∃ C : ℝ, 0 ≤ C ∧ ∀ (t : ℝ) (n : ℕ),
 truncated-band second moments summed with the LIL weight are `≤ C·E[X²]`:
 `∑_j (∫ X² 𝟙{√(j/log(j+2)) < |X| ≤ √j})/(j log log j) ≤ C·∫X²`, and the series is summable. By
 finite-sum linearity `∑_{j<n} … = ∫ X²·∑_{j<n}𝟙{…}/(j log log j)`, the inner sum is `≤ C` pointwise
-(`medium_inner_tsum_le` at `t = X(ω)²`, since `√(j/log(j+2)) < |x| ≤ √j ⟺ x² ≤ j < x² log(j+2)`), so
+(`exists_sum_ite_one_div_mul_loglog_le` at `t = X(ω)²`, since
+`√(j/log(j+2)) < |x| ≤ √j ⟺ x² ≤ j < x² log(j+2)`), so
 each partial sum is `≤ C·∫X²`; `summable_of_sum_range_le` / `Real.tsum_le_of_sum_range_le` finish.
 With `Var(Y_j^M) ≤ E[(Y_j^M)²] = E[X² 𝟙{…}]` (identical distribution) this gives the summability of
 the medium-band variance series. -/
@@ -915,14 +862,9 @@ lemma medium_variance_series_le {X : Ω → ℝ} (hX : Measurable X)
         (∫ ω, Set.indicator {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)}
           (X · ^ 2) ω ∂μ) / ((j : ℝ) * log (log (j : ℝ))) else 0)
         ≤ C * ∫ ω, X ω ^ 2 ∂μ := by
-  obtain ⟨C, hC0, hCbound⟩ := medium_inner_tsum_le
-  have hloglogpos : ∀ j : ℕ, 3 ≤ j → 0 < log (log (j : ℝ)) := by
-    intro j hj
-    have hjR : (3 : ℝ) ≤ (j : ℝ) := by exact_mod_cast hj
-    refine Real.log_pos ?_
-    calc (1 : ℝ) = log (exp 1) := (Real.log_exp 1).symm
-      _ < log 3 := Real.log_lt_log (exp_pos 1) (lt_trans Real.exp_one_lt_d9 (by norm_num))
-      _ ≤ log (j : ℝ) := Real.log_le_log (by norm_num) hjR
+  obtain ⟨C, hC0, hCbound⟩ := exists_sum_ite_one_div_mul_loglog_le
+  have hloglogpos : ∀ j : ℕ, 3 ≤ j → 0 < log (log (j : ℝ)) := fun j hj ↦
+    loglog_pos_of_three_le_nat hj
   have hXabs : Measurable (fun ω ↦ |X ω|) := continuous_abs.measurable.comp hX
   have hSmeas : ∀ j : ℕ,
       MeasurableSet {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)} := fun j ↦
@@ -1011,13 +953,8 @@ lemma medium_variance_summable [IsProbabilityMeasure μ] {X : Ω → ℝ} (hX : 
   have hSmeas : ∀ j : ℕ,
       MeasurableSet {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)} := fun j ↦
     (measurableSet_lt measurable_const hXabs).inter (measurableSet_le hXabs measurable_const)
-  have hloglogpos : ∀ j : ℕ, 3 ≤ j → 0 < log (log (j : ℝ)) := by
-    intro j hj
-    have hjR : (3 : ℝ) ≤ (j : ℝ) := by exact_mod_cast hj
-    refine Real.log_pos ?_
-    calc (1 : ℝ) = log (exp 1) := (Real.log_exp 1).symm
-      _ < log 3 := Real.log_lt_log (exp_pos 1) (lt_trans Real.exp_one_lt_d9 (by norm_num))
-      _ ≤ log (j : ℝ) := Real.log_le_log (by norm_num) hjR
+  have hloglogpos : ∀ j : ℕ, 3 ≤ j → 0 < log (log (j : ℝ)) := fun j hj ↦
+    loglog_pos_of_three_le_nat hj
   have hVar_le : ∀ j : ℕ,
       variance (Set.indicator {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)} X) μ
         ≤ ∫ ω, Set.indicator {ω | √((j : ℝ) / log ((j : ℝ) + 2)) < |X ω| ∧ |X ω| ≤ √(j : ℝ)}
@@ -1155,15 +1092,9 @@ lemma ae_medium_div_weight_tendsto_zero [IsProbabilityMeasure μ] {Y : ℕ → �
   set 𝒢 : Filtration ℕ m0 := natFiltLT _ (stronglyMeasurable_centeredMedium (μ := μ) hY) with h𝒢
   have hM : Martingale M 𝒢 μ := martingale_centeredMedium hY hindep
   -- The weight `a m = √(2(m+3) log log(m+3))`.
-  have hll : ∀ m : ℕ, 0 < log (log ((m : ℝ) + 3)) := fun m ↦ by
-    refine Real.log_pos ?_
-    calc (1 : ℝ) = log (exp 1) := (Real.log_exp 1).symm
-      _ < log 3 := Real.log_lt_log (exp_pos 1) (lt_trans Real.exp_one_lt_d9 (by norm_num))
-      _ ≤ log ((m : ℝ) + 3) := Real.log_le_log (by norm_num)
-          (le_add_of_nonneg_left (Nat.cast_nonneg m))
-  have hlog3 : (0 : ℝ) < log (log 3) := Real.log_pos (by
-    calc (1 : ℝ) = log (exp 1) := (Real.log_exp 1).symm
-      _ < log 3 := Real.log_lt_log (exp_pos 1) (lt_trans Real.exp_one_lt_d9 (by norm_num)))
+  have hll : ∀ m : ℕ, 0 < log (log ((m : ℝ) + 3)) := fun m ↦
+    loglog_pos_of_three_le (le_add_of_nonneg_left (Nat.cast_nonneg m))
+  have hlog3 : (0 : ℝ) < log (log 3) := loglog_pos_of_three_le le_rfl
   set a : ℕ → ℝ := fun m ↦ √(2 * ((m : ℝ) + 3) * log (log ((m : ℝ) + 3))) with hadef
   have harg : ∀ m : ℕ, 0 < 2 * ((m : ℝ) + 3) * log (log ((m : ℝ) + 3)) := fun m ↦ by
     have := hll m; have : (0 : ℝ) ≤ (m : ℝ) := Nat.cast_nonneg m; positivity
@@ -1273,9 +1204,9 @@ lemma ae_medium_div_weight_tendsto_zero [IsProbabilityMeasure μ] {Y : ℕ → �
   simp only [hMdef, hadef, Finset.sum_apply]
 
 /-- The log-level Hartman–Wintner low cutoff `b_j = √(j/log(j+2))`. -/
-noncomputable def hwCutoff (j : ℕ) : ℝ := √((j : ℝ) / log ((j : ℝ) + 2))
+noncomputable def logCutoff (j : ℕ) : ℝ := √((j : ℝ) / log ((j : ℝ) + 2))
 
-/-- `x/log(x+2) < (x+1)/log(x+3)` strictly, for `x ≥ 0` (strict form of `div_log_add_two_le`). -/
+/-- `x/log(x+2) < (x+1)/log(x+3)` for `x ≥ 0`: `x ↦ x/log(x+2)` is strictly increasing. -/
 lemma div_log_add_two_lt {x : ℝ} (hx : 0 ≤ x) : x / log (x + 2) < (x + 1) / log (x + 3) := by
   have hlog2 : (0 : ℝ) < log (x + 2) := log_pos (by linarith)
   have hlog3 : (0 : ℝ) < log (x + 3) := log_pos (by linarith)
@@ -1308,23 +1239,23 @@ lemma strictMono_nat_div_log_add_two :
   exact h
 
 /-- The log-level cutoff `b_j = √(j/log(j+2))` is strictly monotone. -/
-@[specifies hwCutoff "the levels grow strictly, so the low truncations `(-b_j, b_j]` are nested \
+@[specifies logCutoff "the levels grow strictly, so the low truncations `(-b_j, b_j]` are nested \
 and the boundary atoms `{-b_j}` are pairwise distinct — the fact the layered decomposition rests \
 on"]
-lemma strictMono_cutoff : StrictMono hwCutoff := by
+lemma strictMono_logCutoff : StrictMono logCutoff := by
   intro i j hij
-  simp only [hwCutoff]
+  simp only [logCutoff]
   refine Real.sqrt_lt_sqrt ?_ (strictMono_nat_div_log_add_two hij)
   exact div_nonneg (Nat.cast_nonneg i)
     (log_pos (by have : (0 : ℝ) ≤ (i : ℝ) := Nat.cast_nonneg i; linarith)).le
 
-lemma cutoff_nonneg (j : ℕ) : 0 ≤ hwCutoff j := Real.sqrt_nonneg _
+lemma logCutoff_nonneg (j : ℕ) : 0 ≤ logCutoff j := Real.sqrt_nonneg _
 
-lemma monotone_cutoff : Monotone hwCutoff := strictMono_cutoff.monotone
+lemma monotone_logCutoff : Monotone logCutoff := strictMono_logCutoff.monotone
 
 /-- `j ↦ -b_j` is injective (the singletons `{-b_j}` are pairwise distinct). -/
-lemma injective_neg_cutoff : Function.Injective (fun j : ℕ ↦ -hwCutoff j) :=
-  neg_injective.comp strictMono_cutoff.injective
+lemma injective_neg_logCutoff : Function.Injective (fun j : ℕ ↦ -logCutoff j) :=
+  neg_injective.comp strictMono_logCutoff.injective
 
 /-- **Pointwise upper decomposition.** With `0 ≤ bj ≤ sj`, every real `x` is bounded above by the
 sum of its low `(-bj,bj]`-truncation, its medium `{bj<|·|≤sj}`-part, and its high `{sj<|·|}`-part.
@@ -1431,40 +1362,40 @@ lemma lowMed_le {bj sj x : ℝ} (hb : 0 ≤ bj) (hbs : bj ≤ sj) :
 
 /-- **Atom-sum bound.** For identically distributed `Y` with `E|Y_0| < ∞`, the boundary atoms at
 `-b_j` (`b_j = √(j/log(j+2))`) contribute a uniformly bounded total:
-`∑_{j<m} b_j · μ{Y_j = -b_j} ≤ E|Y_0|`. Since `b_j` are distinct (`injective_neg_cutoff`), the
+`∑_{j<m} b_j · μ{Y_j = -b_j} ≤ E|Y_0|`. Since `b_j` are distinct (`injective_neg_logCutoff`), the
 events `{Y_0 = -b_j}` are disjoint, and on `{Y_0 = -b_j}` we have `|Y_0| = b_j`, so
 `b_j μ{Y_0=-b_j} = ∫_{Y_0=-b_j}|Y_0|` and the disjoint sum is `≤ ∫|Y_0|`. This lets the boundary
 term be absorbed into the (deterministic) Hartman–Wintner drift. -/
 lemma sum_atom_le {Y : ℕ → Ω → ℝ} (hY : ∀ i, Measurable (Y i))
     (hident : ∀ j, IdentDistrib (Y j) (Y 0) μ μ)
     (hint : Integrable (fun ω ↦ |Y 0 ω|) μ) (m : ℕ) :
-    ∑ j ∈ Finset.range m, hwCutoff j * (μ {ω | Y j ω = -hwCutoff j}).toReal
+    ∑ j ∈ Finset.range m, logCutoff j * (μ {ω | Y j ω = -logCutoff j}).toReal
       ≤ ∫ ω, |Y 0 ω| ∂μ := by
-  set A : ℕ → Set Ω := fun j ↦ Y 0 ⁻¹' {-hwCutoff j} with hAdef
+  set A : ℕ → Set Ω := fun j ↦ Y 0 ⁻¹' {-logCutoff j} with hAdef
   have hAmeas : ∀ j, MeasurableSet (A j) := fun j ↦ hY 0 (measurableSet_singleton _)
-  have hmeas_eq : ∀ j, (μ {ω | Y j ω = -hwCutoff j}).toReal = (μ (A j)).toReal := by
+  have hmeas_eq : ∀ j, (μ {ω | Y j ω = -logCutoff j}).toReal = (μ (A j)).toReal := by
     intro j; congr 1
-    rw [show {ω | Y j ω = -hwCutoff j} = Y j ⁻¹' {-hwCutoff j} by ext ω; simp,
-      (hident j).measure_mem_eq (measurableSet_singleton (-hwCutoff j))]
+    rw [show {ω | Y j ω = -logCutoff j} = Y j ⁻¹' {-logCutoff j} by ext ω; simp,
+      (hident j).measure_mem_eq (measurableSet_singleton (-logCutoff j))]
   have hdisj : Pairwise fun i j ↦ Disjoint (A i) (A j) := by
     intro i j hij
     refine Set.disjoint_left.mpr (fun ω hωi hωj ↦ hij ?_)
     simp only [hAdef, Set.mem_preimage, Set.mem_singleton_iff] at hωi hωj
-    exact injective_neg_cutoff (by rw [← hωi, ← hωj] : -hwCutoff i = -hwCutoff j)
+    exact injective_neg_logCutoff (by rw [← hωi, ← hωj] : -logCutoff i = -logCutoff j)
   have hInt : IntegrableOn (fun ω ↦ |Y 0 ω|) (⋃ j, A j) μ := hint.integrableOn
   have hsum := hasSum_integral_iUnion hAmeas hdisj hInt
-  have hterm : ∀ j, ∫ ω in A j, |Y 0 ω| ∂μ = hwCutoff j * (μ (A j)).toReal := by
+  have hterm : ∀ j, ∫ ω in A j, |Y 0 ω| ∂μ = logCutoff j * (μ (A j)).toReal := by
     intro j
-    have heqon : Set.EqOn (fun ω ↦ |Y 0 ω|) (fun _ ↦ hwCutoff j) (A j) := by
+    have heqon : Set.EqOn (fun ω ↦ |Y 0 ω|) (fun _ ↦ logCutoff j) (A j) := by
       intro ω hω
       simp only [hAdef, Set.mem_preimage, Set.mem_singleton_iff] at hω
       simp only [hω, abs_neg]
-      exact abs_of_nonneg (cutoff_nonneg j)
+      exact abs_of_nonneg (logCutoff_nonneg j)
     rw [setIntegral_congr_fun (hAmeas j) heqon, setIntegral_const, smul_eq_mul, mul_comm]
     rfl
   have hnn : ∀ j, 0 ≤ ∫ ω in A j, |Y 0 ω| ∂μ := fun j ↦ by
-    rw [hterm]; exact mul_nonneg (cutoff_nonneg j) ENNReal.toReal_nonneg
-  calc ∑ j ∈ Finset.range m, hwCutoff j * (μ {ω | Y j ω = -hwCutoff j}).toReal
+    rw [hterm]; exact mul_nonneg (logCutoff_nonneg j) ENNReal.toReal_nonneg
+  calc ∑ j ∈ Finset.range m, logCutoff j * (μ {ω | Y j ω = -logCutoff j}).toReal
       = ∑ j ∈ Finset.range m, ∫ ω in A j, |Y 0 ω| ∂μ :=
         Finset.sum_congr rfl (fun j _ ↦ by rw [hmeas_eq j, hterm j])
     _ ≤ ∑' j, ∫ ω in A j, |Y 0 ω| ∂μ := hsum.summable.sum_le_tsum _ (fun j _ ↦ hnn j)
@@ -1475,14 +1406,13 @@ lemma sum_atom_le {Y : ℕ → Ω → ℝ} (hY : ∀ i, Measurable (Y i))
 /-- `1 ≤ log(j+2)` for `j ≥ 1` (since `j+2 ≥ 3 > e`). -/
 lemma one_le_log_add_two {j : ℕ} (hj : 1 ≤ j) : (1 : ℝ) ≤ log ((j : ℝ) + 2) := by
   have hj1 : (1 : ℝ) ≤ (j : ℝ) := by exact_mod_cast hj
-  calc (1 : ℝ) = log (exp 1) := (Real.log_exp 1).symm
-    _ ≤ log ((j : ℝ) + 2) := Real.log_le_log (exp_pos 1) (by linarith [Real.exp_one_lt_d9])
+  exact one_lt_log_three.le.trans (Real.log_le_log (by norm_num) (by linarith))
 
 /-- **Condition (H) for the log-level cutoff.** `b_n √(loglog n / n) → 0`, since
 `b_n √(loglog n/n) = √(loglog n / log(n+2)) → 0` as `loglog n ≪ log(n+2)`. -/
-lemma cutoff_condH :
-    Tendsto (fun n : ℕ ↦ hwCutoff n * √(log (log n) / n)) atTop (𝓝 0) := by
-  simp only [hwCutoff]
+lemma tendsto_logCutoff_mul_sqrt_loglog_div :
+    Tendsto (fun n : ℕ ↦ logCutoff n * √(log (log n) / n)) atTop (𝓝 0) := by
+  simp only [logCutoff]
   have hlogdiv : Tendsto (fun x : ℝ ↦ log x / x) atTop (𝓝 0) := by
     simpa using tendsto_pow_log_div_mul_add_atTop 1 0 1 one_ne_zero
   have hg2 : Tendsto (fun n : ℕ ↦ log ((n : ℝ) + 2)) atTop atTop :=
@@ -1499,9 +1429,8 @@ lemma cutoff_condH :
   · filter_upwards [eventually_ge_atTop 3] with n _hn; positivity
   · filter_upwards [eventually_ge_atTop 3] with n hn
     have hn3 : (3 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
-    have hlogn : 1 < log (n : ℝ) := by
-      calc (1 : ℝ) = log (exp 1) := (Real.log_exp 1).symm
-        _ < log (n : ℝ) := Real.log_lt_log (exp_pos 1) (by linarith [Real.exp_one_lt_d9])
+    have hlogn : 1 < log (n : ℝ) :=
+      one_lt_log_three.trans_le (Real.log_le_log (by norm_num) hn3)
     have hnpos : (0 : ℝ) < (n : ℝ) := by linarith
     have hlogn2pos : (0 : ℝ) < log ((n : ℝ) + 2) := log_pos (by linarith)
     have hprod : √((n : ℝ) / log ((n : ℝ) + 2)) * √(log (log n) / n)
@@ -1515,10 +1444,10 @@ lemma cutoff_condH :
     exact loglog_le_loglog hn3 (by linarith)
 
 /-- `b_j ≤ √j`: the low cutoff is below the high cutoff. -/
-@[specifies hwCutoff "the ordering that makes `b_j` the *low* cutoff: it never overtakes the high \
+@[specifies logCutoff "the ordering that makes `b_j` the *low* cutoff: it never overtakes the high \
 cutoff `√j`, so the medium band `(b_j, √j]` is non-degenerate"]
-lemma cutoff_le_sqrt (j : ℕ) : hwCutoff j ≤ √(j : ℝ) := by
-  rw [hwCutoff]
+lemma logCutoff_le_sqrt (j : ℕ) : logCutoff j ≤ √(j : ℝ) := by
+  rw [logCutoff]
   refine Real.sqrt_le_sqrt ?_
   rcases Nat.eq_zero_or_pos j with hj | hj
   · simp [hj]
@@ -1532,7 +1461,7 @@ lemma tendsto_loglog_atTop : Tendsto (fun m : ℕ ↦ log (log (m : ℝ))) atTop
   simpa [Function.comp_def] using
     Real.tendsto_log_atTop.comp (Real.tendsto_log_atTop.comp tendsto_natCast_atTop_atTop)
 
-lemma tendsto_hwWeight_atTop {c : ℝ} (hc : 0 < c) :
+lemma tendsto_sqrt_mul_loglog_atTop {c : ℝ} (hc : 0 < c) :
     Tendsto (fun m : ℕ ↦ √(2 * c * (m : ℝ) * log (log (m : ℝ)))) atTop atTop := by
   have hmL : Tendsto (fun m : ℕ ↦ (m : ℝ) * log (log (m : ℝ))) atTop atTop :=
     tendsto_natCast_atTop_atTop.atTop_mul_atTop₀ tendsto_loglog_atTop
@@ -1541,7 +1470,7 @@ lemma tendsto_hwWeight_atTop {c : ℝ} (hc : 0 < c) :
     exact h2c.congr fun m => by ring
   simpa [Function.comp_def] using Real.tendsto_sqrt_atTop.comp h
 
-lemma tendsto_sqrt_div_hwWeight {c : ℝ} (hc : 0 < c) :
+lemma tendsto_sqrt_div_sqrt_mul_loglog {c : ℝ} (hc : 0 < c) :
     Tendsto (fun m : ℕ ↦ √(m : ℝ) / √(2 * c * (m : ℝ) * log (log (m : ℝ)))) atTop (𝓝 0) := by
   have hLL : Tendsto (fun m : ℕ ↦ 2 * c * log (log (m : ℝ))) atTop atTop :=
     Tendsto.const_mul_atTop (r := 2 * c) (by positivity) tendsto_loglog_atTop
@@ -1554,13 +1483,7 @@ lemma tendsto_sqrt_div_hwWeight {c : ℝ} (hc : 0 < c) :
         = (√(2 * c * log (log (m : ℝ))))⁻¹ := by
     filter_upwards [eventually_ge_atTop 3] with m hm
     have h3m : (3 : ℝ) ≤ (m : ℝ) := by exact_mod_cast hm
-    have hlog3 : (1 : ℝ) < log 3 := by
-      have he : exp 1 < 3 := lt_trans exp_one_lt_d9 (by norm_num)
-      calc (1 : ℝ) = log (exp 1) := (Real.log_exp 1).symm
-        _ < log 3 := Real.log_lt_log (exp_pos 1) he
-    have hlogm : (1 : ℝ) < log (m : ℝ) :=
-      lt_of_lt_of_le hlog3 (Real.log_le_log (by norm_num) h3m)
-    have hLpos : 0 < log (log (m : ℝ)) := Real.log_pos hlogm
+    have hLpos : 0 < log (log (m : ℝ)) := loglog_pos_of_three_le h3m
     have hcoef : 0 ≤ 2 * c * log (log (m : ℝ)) := mul_nonneg (by positivity) hLpos.le
     have hmne : √(m : ℝ) ≠ 0 := by rw [Real.sqrt_ne_zero']; linarith
     have harg : 2 * c * log (log (m : ℝ)) * (m : ℝ)
@@ -1569,7 +1492,7 @@ lemma tendsto_sqrt_div_hwWeight {c : ℝ} (hc : 0 < c) :
       ← div_div, div_self hmne, one_div]
   exact hinv.congr' (key.mono fun m h => h.symm)
 
-lemma mediumWeight_le_hwWeight {c : ℝ} (hc : 0 < c) :
+lemma sqrt_add_three_mul_loglog_le {c : ℝ} (hc : 0 < c) :
     ∀ᶠ m : ℕ in atTop,
       √(2 * ((m : ℝ) + 3) * log (log ((m : ℝ) + 3)))
         ≤ (2 / √c) * √(2 * c * (m : ℝ) * log (log (m : ℝ))) := by
@@ -1622,47 +1545,48 @@ lemma mediumWeight_le_hwWeight {c : ℝ} (hc : 0 < c) :
 ≤ 2σ²√m + 𝔼|Y_0|`: the low+medium truncated means, combined, are the `√j`-truncated mean up to the
 boundary atom, bounded by the deterministic drift `2σ²√m` (`abs_sum_integral_truncation_le`) plus
 the atom total `𝔼|Y_0|` (`sum_atom_le`). -/
-lemma hw_drift_bound [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i))
+lemma sum_integral_truncation_add_mediumTrunc_le [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
+    (hY : ∀ i, StronglyMeasurable (Y i))
     (hident : ∀ j, IdentDistrib (Y j) (Y 0) μ μ) (hint2 : MemLp (Y 0) 2 μ)
     (hcent : ∫ ω, Y 0 ω ∂μ = 0) (m : ℕ) :
     ∑ j ∈ Finset.range m,
-        (∫ x, truncation (Y j) (hwCutoff j) x ∂μ + ∫ x, mediumTrunc j (Y j x) ∂μ)
+        (∫ x, truncation (Y j) (logCutoff j) x ∂μ + ∫ x, mediumTrunc j (Y j x) ∂μ)
       ≤ 2 * (∫ x, Y 0 x ^ 2 ∂μ) * √(m : ℝ) + ∫ x, |Y 0 x| ∂μ := by
-  have hmeasset : ∀ j, MeasurableSet {ω | Y j ω = -hwCutoff j} := fun j ↦
+  have hmeasset : ∀ j, MeasurableSet {ω | Y j ω = -logCutoff j} := fun j ↦
     (hY j).measurable (measurableSet_singleton _)
-  have hcj_ej : ∀ j, ∫ x, truncation (Y j) (hwCutoff j) x ∂μ + ∫ x, mediumTrunc j (Y j x) ∂μ
+  have hcj_ej : ∀ j, ∫ x, truncation (Y j) (logCutoff j) x ∂μ + ∫ x, mediumTrunc j (Y j x) ∂μ
       ≤ (∫ x, truncation (Y j) (√(j : ℝ)) x ∂μ)
-        + hwCutoff j * (μ {ω | Y j ω = -hwCutoff j}).toReal := by
+        + logCutoff j * (μ {ω | Y j ω = -logCutoff j}).toReal := by
     intro j
-    have hint_low : Integrable (fun ω ↦ truncation (Y j) (hwCutoff j) ω) μ :=
+    have hint_low : Integrable (fun ω ↦ truncation (Y j) (logCutoff j) ω) μ :=
       (hY j).aestronglyMeasurable.integrable_truncation
     have hint_med : Integrable (fun ω ↦ mediumTrunc j (Y j ω)) μ :=
       (memLp_two_mediumTrunc hY j).integrable one_le_two
     have hint_hi : Integrable (fun ω ↦ truncation (Y j) (√(j : ℝ)) ω) μ :=
       (hY j).aestronglyMeasurable.integrable_truncation
     have hint_atom : Integrable
-        (fun ω ↦ ({ω | Y j ω = -hwCutoff j}).indicator (fun _ ↦ hwCutoff j) ω) μ :=
-      (integrable_const (hwCutoff j)).indicator (hmeasset j)
+        (fun ω ↦ ({ω | Y j ω = -logCutoff j}).indicator (fun _ ↦ logCutoff j) ω) μ :=
+      (integrable_const (logCutoff j)).indicator (hmeasset j)
     rw [← integral_add hint_low hint_med]
-    have hptw : ∀ ω, truncation (Y j) (hwCutoff j) ω + mediumTrunc j (Y j ω)
+    have hptw : ∀ ω, truncation (Y j) (logCutoff j) ω + mediumTrunc j (Y j ω)
         ≤ truncation (Y j) (√(j : ℝ)) ω
-          + ({ω | Y j ω = -hwCutoff j}).indicator (fun _ ↦ hwCutoff j) ω := fun ω ↦
-      lowMed_le (cutoff_nonneg j) (cutoff_le_sqrt j)
-    calc ∫ ω, (truncation (Y j) (hwCutoff j) ω + mediumTrunc j (Y j ω)) ∂μ
+          + ({ω | Y j ω = -logCutoff j}).indicator (fun _ ↦ logCutoff j) ω := fun ω ↦
+      lowMed_le (logCutoff_nonneg j) (logCutoff_le_sqrt j)
+    calc ∫ ω, (truncation (Y j) (logCutoff j) ω + mediumTrunc j (Y j ω)) ∂μ
         ≤ ∫ ω, (truncation (Y j) (√(j : ℝ)) ω
-            + ({ω | Y j ω = -hwCutoff j}).indicator (fun _ ↦ hwCutoff j) ω) ∂μ :=
+            + ({ω | Y j ω = -logCutoff j}).indicator (fun _ ↦ logCutoff j) ω) ∂μ :=
           integral_mono (hint_low.add hint_med) (hint_hi.add hint_atom) hptw
       _ = (∫ x, truncation (Y j) (√(j : ℝ)) x ∂μ)
-          + hwCutoff j * (μ {ω | Y j ω = -hwCutoff j}).toReal := by
+          + logCutoff j * (μ {ω | Y j ω = -logCutoff j}).toReal := by
         rw [integral_add hint_hi hint_atom, integral_indicator_const _ (hmeasset j),
           smul_eq_mul, mul_comm, measureReal_def]
   calc ∑ j ∈ Finset.range m,
-        (∫ x, truncation (Y j) (hwCutoff j) x ∂μ + ∫ x, mediumTrunc j (Y j x) ∂μ)
+        (∫ x, truncation (Y j) (logCutoff j) x ∂μ + ∫ x, mediumTrunc j (Y j x) ∂μ)
       ≤ ∑ j ∈ Finset.range m, ((∫ x, truncation (Y j) (√(j : ℝ)) x ∂μ)
-          + hwCutoff j * (μ {ω | Y j ω = -hwCutoff j}).toReal) :=
+          + logCutoff j * (μ {ω | Y j ω = -logCutoff j}).toReal) :=
         Finset.sum_le_sum (fun j _ ↦ hcj_ej j)
     _ = (∑ j ∈ Finset.range m, ∫ x, truncation (Y j) (√(j : ℝ)) x ∂μ)
-        + ∑ j ∈ Finset.range m, hwCutoff j * (μ {ω | Y j ω = -hwCutoff j}).toReal :=
+        + ∑ j ∈ Finset.range m, logCutoff j * (μ {ω | Y j ω = -logCutoff j}).toReal :=
         Finset.sum_add_distrib
     _ ≤ 2 * (∫ x, Y 0 x ^ 2 ∂μ) * √(m : ℝ) + ∫ x, |Y 0 x| ∂μ := by
         refine add_le_add ?_ (sum_atom_le (fun i ↦ (hY i).measurable) hident
@@ -1683,7 +1607,8 @@ drift.
 No positivity of `σ²` is needed: if `σ² = 0` then every `Y_j` vanishes a.s. and both sides are `0`.
 (The *limsup* form `iid_hartmanWintner_limsup_le_one` does need `σ² > 0`, since it divides by
 `√(2σ² m log log m)`.) -/
-lemma hw_eventually [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i))
+lemma ae_forall_one_lt_eventually_sum_le_sqrt_nat_mul_loglog [IsProbabilityMeasure μ]
+    {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i))
     (hindep : iIndepFun Y μ) (hident : ∀ j, IdentDistrib (Y j) (Y 0) μ μ)
     (hint2 : MemLp (Y 0) 2 μ) (hcent : ∫ ω, Y 0 ω ∂μ = 0) :
     ∀ᵐ ω ∂μ, ∀ β : ℝ, 1 < β → ∀ᶠ m in atTop,
@@ -1720,20 +1645,21 @@ lemma hw_eventually [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : ∀
     (memLp_two_iff_integrable_sq (hY i).aestronglyMeasurable).mpr
       (((hident2 i).integrable_iff).mpr hint2.integrable_sq)
   have hv : ∀ i, ∫ ω, Y i ω ^ 2 ∂μ ≤ σ2 := fun i ↦ le_of_eq (hident2 i).integral_eq
-  have hdrift := hw_drift_bound hY hident hint2 hcent
+  have hdrift := sum_integral_truncation_add_mediumTrunc_le hY hident hint2 hcent
   have ha_top : Tendsto (fun m : ℕ ↦ √(2 * σ2 * (m : ℝ) * log (log (m : ℝ)))) atTop atTop :=
-    tendsto_hwWeight_atTop hσ
+    tendsto_sqrt_mul_loglog_atTop hσ
   have ha_pos : ∀ᶠ m : ℕ in atTop, 0 < √(2 * σ2 * (m : ℝ) * log (log (m : ℝ))) :=
     ha_top.eventually_gt_atTop 0
   have hw_pos : ∀ᶠ m : ℕ in atTop, 0 < √(2 * ((m : ℝ) + 3) * log (log ((m : ℝ) + 3))) := by
     filter_upwards [eventually_ge_atTop 1] with m hm
     have hm1 : (1 : ℝ) ≤ (m : ℝ) := by exact_mod_cast hm
-    have hlt : (1 : ℝ) < log ((m : ℝ) + 3) := by
-      calc (1 : ℝ) = log (exp 1) := (Real.log_exp 1).symm
-        _ < log ((m : ℝ) + 3) := Real.log_lt_log (exp_pos 1) (by linarith [Real.exp_one_lt_d9])
+    have hlt : (1 : ℝ) < log ((m : ℝ) + 3) :=
+      one_lt_log_three.trans_le (Real.log_le_log (by norm_num) (by linarith))
     exact Real.sqrt_pos.mpr (mul_pos (mul_pos (by norm_num) (by linarith)) (Real.log_pos hlt))
-  filter_upwards [ae_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation_sharp hY hindep
-      hint2_i hσ hv (b := hwCutoff) monotone_cutoff cutoff_nonneg cutoff_condH,
+  filter_upwards [ae_forall_one_lt_eventually_abs_le_sqrt_nat_mul_loglog_centeredTruncation
+    hY hindep
+      hint2_i hσ hv (b := logCutoff) monotone_logCutoff logCutoff_nonneg
+      tendsto_logCutoff_mul_sqrt_loglog_div,
     ae_medium_div_weight_tendsto_zero hY hindep hident hint2,
     ae_eventually_abs_le_sqrt_of_identDistrib (fun i ↦ (hY i).measurable) hident hint2]
     with ω hlowω hmedω hhighω
@@ -1743,7 +1669,7 @@ lemma hw_eventually [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : ∀
   set β₁ := (1 + β) / 2 with hβ₁def
   -- Low part: `|S̃_m| ≤ β₁ a_m` eventually.
   have hlowβ : ∀ᶠ m in atTop, |∑ j ∈ Finset.range m,
-      (truncation (Y j) (hwCutoff j) ω - ∫ x, truncation (Y j) (hwCutoff j) x ∂μ)|
+      (truncation (Y j) (logCutoff j) ω - ∫ x, truncation (Y j) (logCutoff j) x ∂μ)|
         ≤ β₁ * √(2 * σ2 * (m : ℝ) * log (log (m : ℝ))) := by
     filter_upwards [hlowω β₁ hβ₁1] with m hm
     rwa [Finset.sum_apply] at hm
@@ -1756,7 +1682,7 @@ lemma hw_eventually [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : ∀
           / √(2 * ((m : ℝ) + 3) * log (log ((m : ℝ) + 3)))|) atTop (𝓝 0) := by
       simpa using hmedω.abs.const_mul (2 / √σ2)
     refine squeeze_zero_norm' ?_ hbound
-    filter_upwards [mediumWeight_le_hwWeight hσ, ha_pos, hw_pos] with m hwle hapos hwpos
+    filter_upwards [sqrt_add_three_mul_loglog_le hσ, ha_pos, hw_pos] with m hwle hapos hwpos
     rw [Real.norm_eq_abs, abs_div, abs_of_pos hapos, abs_div, abs_of_pos hwpos]
     rw [div_le_iff₀ hapos, mul_comm (2 / √σ2), mul_assoc, div_mul_eq_mul_div, le_div_iff₀ hwpos]
     have hWnn : 0 ≤ |∑ j ∈ Finset.range m,
@@ -1790,7 +1716,7 @@ lemma hw_eventually [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : ∀
       / √(2 * σ2 * (m : ℝ) * log (log (m : ℝ)))) atTop (𝓝 0) := by
     have h : Tendsto (fun m : ℕ ↦ 2 * σ2 * (√(m : ℝ)
         / √(2 * σ2 * (m : ℝ) * log (log (m : ℝ))))) atTop (𝓝 0) := by
-      simpa using (tendsto_sqrt_div_hwWeight hσ (c := σ2)).const_mul (2 * σ2)
+      simpa using (tendsto_sqrt_div_sqrt_mul_loglog hσ (c := σ2)).const_mul (2 * σ2)
     exact Tendsto.congr (fun m ↦ (mul_div_assoc _ _ _).symm) h
   have hKa : Tendsto (fun m : ℕ ↦ K / √(2 * σ2 * (m : ℝ) * log (log (m : ℝ)))) atTop (𝓝 0) := by
     simpa [div_eq_mul_inv] using ha_top.inv_tendsto_atTop.const_mul K
@@ -1813,30 +1739,30 @@ lemma hw_eventually [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : ∀
   -- Pointwise decomposition bound.
   have hSbound : ∀ m, (∑ j ∈ Finset.range m, Y j ω)
       ≤ (∑ j ∈ Finset.range m,
-          (truncation (Y j) (hwCutoff j) ω - ∫ x, truncation (Y j) (hwCutoff j) x ∂μ))
+          (truncation (Y j) (logCutoff j) ω - ∫ x, truncation (Y j) (logCutoff j) x ∂μ))
         + (∑ j ∈ Finset.range m,
             (mediumTrunc j (Y j ω) - ∫ x, mediumTrunc j (Y j x) ∂μ))
         + (∑ j ∈ Finset.range m, ({y : ℝ | √(j : ℝ) < |y|}).indicator id (Y j ω))
         + (∑ j ∈ Finset.range m,
-            (∫ x, truncation (Y j) (hwCutoff j) x ∂μ + ∫ x, mediumTrunc j (Y j x) ∂μ)) := by
+            (∫ x, truncation (Y j) (logCutoff j) x ∂μ + ∫ x, mediumTrunc j (Y j x) ∂μ)) := by
     intro m
     calc (∑ j ∈ Finset.range m, Y j ω)
-        ≤ ∑ j ∈ Finset.range m, (truncation (Y j) (hwCutoff j) ω + mediumTrunc j (Y j ω)
+        ≤ ∑ j ∈ Finset.range m, (truncation (Y j) (logCutoff j) ω + mediumTrunc j (Y j ω)
             + ({y : ℝ | √(j : ℝ) < |y|}).indicator id (Y j ω)) :=
-          Finset.sum_le_sum fun j _ ↦ le_lowMedHigh (cutoff_nonneg j) (cutoff_le_sqrt j)
+          Finset.sum_le_sum fun j _ ↦ le_lowMedHigh (logCutoff_nonneg j) (logCutoff_le_sqrt j)
       _ = _ := by simp only [Finset.sum_add_distrib, Finset.sum_sub_distrib]; ring
   -- Assemble the eventual bound `S_m ≤ β a_m`.
   filter_upwards [hlowβ, hrembd] with m hlm hrm
   calc (∑ j ∈ Finset.range m, Y j ω)
       ≤ _ := hSbound m
     _ ≤ |∑ j ∈ Finset.range m,
-          (truncation (Y j) (hwCutoff j) ω - ∫ x, truncation (Y j) (hwCutoff j) x ∂μ)|
+          (truncation (Y j) (logCutoff j) ω - ∫ x, truncation (Y j) (logCutoff j) x ∂μ)|
         + ((∑ j ∈ Finset.range m,
             (mediumTrunc j (Y j ω) - ∫ x, mediumTrunc j (Y j x) ∂μ))
           + (∑ j ∈ Finset.range m, ({y : ℝ | √(j : ℝ) < |y|}).indicator id (Y j ω))
           + 2 * σ2 * √(m : ℝ) + K) := by
         have := hdrift m; have := le_abs_self (∑ j ∈ Finset.range m,
-          (truncation (Y j) (hwCutoff j) ω - ∫ x, truncation (Y j) (hwCutoff j) x ∂μ)); linarith
+          (truncation (Y j) (logCutoff j) ω - ∫ x, truncation (Y j) (logCutoff j) x ∂μ)); linarith
     _ ≤ β₁ * √(2 * σ2 * (m : ℝ) * log (log (m : ℝ)))
         + (β - β₁) * √(2 * σ2 * (m : ℝ) * log (log (m : ℝ))) := by linarith
     _ = β * √(2 * σ2 * (m : ℝ) * log (log (m : ℝ))) := by ring
@@ -1844,7 +1770,8 @@ lemma hw_eventually [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ} (hY : ∀
 /-- **Sharp i.i.d. Hartman–Wintner LIL, upper half** (Hartman–Wintner 1941). For an i.i.d., centred,
 `L²` sequence with `σ² = 𝔼[Y_0²] > 0`, almost surely
 `limsup_m (∑_{j<m} Y_j) / √(2σ² m log log m) ≤ 1`. Assembled from the coboundedness-free eventual
-bound `hw_eventually` applied to `Y` (upper bound) and to `-Y` (lower bound, giving coboundedness of
+bound `ae_forall_one_lt_eventually_sum_le_sqrt_nat_mul_loglog` applied to `Y` (upper bound) and
+to `-Y` (lower bound, giving coboundedness of
 `S_m/a_m`), then `limsup_le_of_le`. -/
 theorem iid_hartmanWintner_limsup_le_one [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
     (hY : ∀ i, StronglyMeasurable (Y i)) (hindep : iIndepFun Y μ)
@@ -1857,9 +1784,10 @@ theorem iid_hartmanWintner_limsup_le_one [IsProbabilityMeasure μ] {Y : ℕ → 
     integral_congr_ae (Eventually.of_forall fun x ↦ neg_sq (Y 0 x))
   have ha_pos : ∀ᶠ m : ℕ in atTop,
       0 < √(2 * (∫ x, Y 0 x ^ 2 ∂μ) * (m : ℝ) * log (log (m : ℝ))) :=
-    (tendsto_hwWeight_atTop hσ).eventually_gt_atTop 0
-  have hY_ev := hw_eventually hY hindep hident hint2 hcent
-  have hnegY_ev := hw_eventually (Y := fun i ω ↦ -Y i ω) (fun i ↦ (hY i).neg)
+    (tendsto_sqrt_mul_loglog_atTop hσ).eventually_gt_atTop 0
+  have hY_ev := ae_forall_one_lt_eventually_sum_le_sqrt_nat_mul_loglog hY hindep hident hint2 hcent
+  have hnegY_ev := ae_forall_one_lt_eventually_sum_le_sqrt_nat_mul_loglog (Y := fun i ω ↦ -Y i ω)
+    (fun i ↦ (hY i).neg)
     (hindep.comp (fun _ ↦ (- ·)) (fun _ ↦ measurable_neg))
     (fun j ↦ (hident j).comp (u := fun x : ℝ ↦ -x) measurable_neg)
     hint2.neg
@@ -1873,10 +1801,6 @@ theorem iid_hartmanWintner_limsup_le_one [IsProbabilityMeasure μ] {Y : ℕ → 
     rw [le_div_iff₀ hpos]
     rw [Finset.sum_neg_distrib] at hm
     linarith
-  refine le_of_forall_gt_imp_ge_of_dense (fun a ha ↦ ?_)
-  refine limsup_le_of_le hcobdd ?_
-  filter_upwards [h1 a ha, ha_pos] with m hm hpos
-  rw [div_le_iff₀ hpos]
-  exact hm
+  exact limsup_div_le_one_of_forall_one_lt (fun _ ↦ sqrt_nonneg _) hcobdd h1
 
 end AlphaRAR

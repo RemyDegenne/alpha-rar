@@ -6,7 +6,7 @@ Authors: Rémy Degenne
 module
 
 public import AlphaRAR.YDK2026.OptionalSkipping
-public import AlphaRAR.Mathlib.LILHartmanWintner
+public import AlphaRAR.Mathlib.HartmanWintner
 public import AlphaRAR.YDK2026.ResponseConsistency
 
 /-!
@@ -181,8 +181,10 @@ lemma abs_respMart_le_sqrt_nat_mul_loglog
     (IdentDistrib.mk (hCmeas j).aemeasurable (hCmeas 0).aemeasurable
       ((hmapC j).trans (hmapC 0).symm)).comp (measurable_id.sub_const θ)
   -- Hartman–Wintner (upper) for `W` and for `-W`
-  have hev_up := hw_eventually hW_sm hindepW hidW hint2W hcent
-  have hev_lo := hw_eventually (μ := P) (Y := fun i ω ↦ -(W i ω)) (fun i ↦ (hW_sm i).neg)
+  have hev_up :=
+    ae_forall_one_lt_eventually_sum_le_sqrt_nat_mul_loglog hW_sm hindepW hidW hint2W hcent
+  have hev_lo := ae_forall_one_lt_eventually_sum_le_sqrt_nat_mul_loglog (μ := P)
+    (Y := fun i ω ↦ -(W i ω)) (fun i ↦ (hW_sm i).neg)
     (hindepW.comp (fun _ x ↦ -x) (fun _ ↦ measurable_neg))
     (fun j ↦ (hidW j).comp measurable_neg)
     hint2W.neg
