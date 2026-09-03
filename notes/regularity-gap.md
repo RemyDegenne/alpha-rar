@@ -141,7 +141,7 @@ alike. Cramér–Wold still applies because the arm indicators are disjoint, so 
 *even with a different normalizer per arm* — is again a single martingale-difference array. (The
 Anscombe route does **not** jointify: a linear combination of random-time sums is not a random-time
 sum. The Anscombe machinery is formalized too, for the per-arm statements:
-`AlphaRAR.tendsto_map_anscombe_iid`, `AlphaRAR.respMart_selfNorm_anscombe_tendsto`,
+`AlphaRAR.tendstoInDistribution_anscombe_iid`, `AlphaRAR.respMart_selfNorm_anscombe_tendsto`,
 `AlphaRAR.estimator_sqrtN_anscombe_tendsto`.)
 
 ## 7. Closing it: what is now proved, and what stays open

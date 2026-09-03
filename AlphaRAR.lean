@@ -32,6 +32,7 @@ public import AlphaRAR.Mathlib.Tactic.Tendsto
 public import AlphaRAR.Mathlib.Tactic.TendstoTest
 public import AlphaRAR.Mathlib.TailBoundLIntegral
 public import AlphaRAR.Mathlib.TaylorRemainder
+public import AlphaRAR.Mathlib.TendstoInDistribution
 public import AlphaRAR.Mathlib.TendstoInMeasure
 public import AlphaRAR.Mathlib.TsumMeasureIoi
 public import AlphaRAR.Mathlib.Variance

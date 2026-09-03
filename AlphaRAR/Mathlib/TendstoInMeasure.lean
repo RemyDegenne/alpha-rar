@@ -5,6 +5,7 @@ Authors: Rémy Degenne
 -/
 module
 
+public import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
 public import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 public import Mathlib.MeasureTheory.Measure.Portmanteau
 
@@ -24,14 +25,14 @@ remainder `√n(T(θ̂ₙ) - T(θ)) - G·√n(θ̂ₙ - θ) = √n · φ(θ̂ₙ
 the missing hypothesis of the delta-method CLT.
 
 The tightness input is itself supplied by weak convergence: if the laws of `Xₙ` converge to a
-probability measure `ν`, then `Xₙ` is tight (`tight_of_tendsto_probabilityMeasure`), by the
+probability measure `ν`, then `Xₙ` is tight (`tight_of_tendstoInDistribution`), by the
 portmanteau theorem together with the continuity from above of the finite measure `ν` over the
 shrinking balls' complements `{‖x‖ ≥ j} ↓ ∅`.
 
 ## Main results
 
 * `MeasureTheory.tendstoInMeasure_smul_littleO_of_tight`.
-* `MeasureTheory.tight_of_tendsto_probabilityMeasure`.
+* `MeasureTheory.tight_of_tendstoInDistribution`.
 -/
 
 @[expose] public section
@@ -94,19 +95,21 @@ lemma tendstoInMeasure_smul_littleO_of_tight
     _ = b := ENNReal.add_halves b
 
 omit [NormedSpace ℝ E] in
-/-- **Tightness from weak convergence.** If the laws `μs n` of a sequence of random vectors `Xₙ`
-(i.e. `μs n = μ.map Xₙ`, hypothesis `hμs`) converge weakly to a probability measure `ν` on a
-normed space, then `Xₙ` is tight: for every `η > 0` there is a radius `M > 0` with
-`μ{‖Xₙ‖ ≥ M} ≤ η` eventually.
+/-- **Tightness from convergence in distribution.** If a sequence of random vectors `Xₙ` in a
+normed space converges in distribution, then `Xₙ` is tight: for every `η > 0` there is a radius
+`M > 0` with `μ{‖Xₙ‖ ≥ M} ≤ η` eventually.
 
 The proof combines the portmanteau theorem (weak convergence controls the `limsup` of the closed
-tail `{M ≤ ‖·‖}`) with the continuity from above of the finite measure `ν` over the shrinking
+tail `{M ≤ ‖·‖}`) with the continuity from above of the finite limit law `ν` over the shrinking
 family `{j ≤ ‖·‖} ↓ ∅`, which produces a radius with small `ν`-mass. -/
-lemma tight_of_tendsto_probabilityMeasure {mE : MeasurableSpace E} [OpensMeasurableSpace E]
-    [HasOuterApproxClosed E] {X : ℕ → Ω → E} (hXmeas : ∀ n, Measurable (X n))
-    {μs : ℕ → ProbabilityMeasure E} (hμs : ∀ n, (μs n : Measure E) = μ.map (X n))
-    {ν : ProbabilityMeasure E} (hconv : Tendsto μs atTop (𝓝 ν)) (η : ℝ≥0∞) (hη : 0 < η) :
+lemma tight_of_tendstoInDistribution {mE : MeasurableSpace E} [OpensMeasurableSpace E]
+    [HasOuterApproxClosed E] [IsProbabilityMeasure μ] {X : ℕ → Ω → E}
+    {Ω' : Type*} {mΩ' : MeasurableSpace Ω'} {ν' : Measure Ω'} [IsProbabilityMeasure ν']
+    {Z : Ω' → E} (h : TendstoInDistribution X atTop Z (fun _ ↦ μ) ν') (η : ℝ≥0∞) (hη : 0 < η) :
     ∃ M : ℝ, 0 < M ∧ ∀ᶠ n in atTop, μ {ω | M ≤ dist (X n ω) 0} ≤ η := by
+  set ν : ProbabilityMeasure E :=
+    ⟨ν'.map Z, Measure.isProbabilityMeasure_map h.aemeasurable_limit⟩ with hνdef
+  have hconv := h.tendsto
   -- continuity from above: the finite measure `ν` of `{j ≤ ‖·‖}` tends to `ν ∅ = 0`
   have hCanti : Antitone (fun j : ℕ ↦ {x : E | (j : ℝ) ≤ dist x 0}) := by
     intro i j hij x hx
@@ -139,7 +142,8 @@ lemma tight_of_tendsto_probabilityMeasure {mE : MeasurableSpace E} [OpensMeasura
   have hlt := lt_of_le_of_lt
     (ProbabilityMeasure.limsup_measure_closed_le_of_tendsto hconv hFclosed) hνF
   filter_upwards [eventually_lt_of_limsup_lt hlt] with n hn
-  rw [hμs n, Measure.map_apply (hXmeas n) hFclosed.measurableSet] at hn
+  simp only [ProbabilityMeasure.coe_mk] at hn
+  rw [Measure.map_apply_of_aemeasurable (h.forall_aemeasurable n) hFclosed.measurableSet] at hn
   exact hn.le
 
 end MeasureTheory

@@ -1,6 +1,6 @@
 {
     "challenge_module": "Challenge_aRTSFE_sparse_clt_of_contDiffAt",
     "solution_module": "Solution",
-    "theorem_names": ["AlphaRAR.aRTSFE_sparse_clt_of_contDiffAt", "AlphaRAR.measurable_estimatorErrorVec"],
+    "theorem_names": ["AlphaRAR.aRTSFE_sparse_clt_of_contDiffAt"],
     "permitted_axioms": ["propext", "Classical.choice", "Quot.sound"]
 }

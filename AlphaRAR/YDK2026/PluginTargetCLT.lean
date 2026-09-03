@@ -20,7 +20,8 @@ display in the paper's proof of Theorem 4.2 (ii).
 
 This file assembles the delta method from three inputs: the estimator CLT, the linear pushforward of
 a multivariate Gaussian (`multivariateGaussian_map_matrix`, giving the covariance `G V Gᵀ`) and the
-product-space Slutsky lemma (`tendsto_map_comp_of_tendstoInMeasure_const`). The remaining analytic
+product-space Slutsky lemma
+(`TendstoInDistribution.continuous_comp_prodMk_of_tendstoInMeasure_const`). The remaining analytic
 content — that the first-order Taylor remainder `√n(T(θ̂_n)-T(θ)) - G·√n(θ̂_n-θ)` vanishes in
 probability — enters as the hypothesis `hR` of `clt_rho_of_tendstoInMeasure`, and is discharged in
 `clt_rho` from tightness of `√n(θ̂_n-θ)` (from the CLT) plus differentiability of `T` at `θ`.
@@ -102,12 +103,8 @@ lemma estimatorSqrtNVec_joint_tendsto_multivariateGaussian
     (hνk : ∀ a, MemLp id 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a))) :
-    Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-      (fun n : ℕ ↦ (⟨P.map (estimatorSqrtNVec ν A Y θ₀ n),
-        Measure.isProbabilityMeasure_map (measurable_estimatorSqrtNVec' h θ₀ n).aemeasurable⟩
-          : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)))
-      atTop
-      (𝓝 ⟨multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a] / v a), inferInstance⟩) :=
+    TendstoInDistribution (estimatorSqrtNVec ν A Y θ₀) atTop id (fun _ ↦ P)
+      (multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a] / v a)) :=
   estimator_sqrtN_joint_tendsto_multivariateGaussian h θ₀ hνk hv hNconv
 
 omit [DecidableEq 𝓐] [Fintype 𝓐] in
@@ -150,13 +147,8 @@ lemma clt_rho_of_tendstoInMeasure
     (hR : TendstoInMeasure P (fun n ω ↦ targetSqrtNVec ν A Y θ₀ T n ω
       - WithLp.toLp 2 (G.mulVec (WithLp.ofLp (estimatorSqrtNVec ν A Y θ₀ n ω))))
       atTop (fun _ ↦ 0)) :
-    Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-      (fun n : ℕ ↦ (⟨P.map (targetSqrtNVec ν A Y θ₀ T n),
-        Measure.isProbabilityMeasure_map (measurable_targetSqrtNVec h θ₀ hT n).aemeasurable⟩
-          : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)))
-      atTop
-      (𝓝 ⟨multivariateGaussian 0
-        (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / v a) * Gᵀ), inferInstance⟩) := by
+    TendstoInDistribution (targetSqrtNVec ν A Y θ₀ T) atTop id (fun _ ↦ P)
+      (multivariateGaussian 0 (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / v a) * Gᵀ)) := by
   have hVnn : ∀ a, 0 ≤ Var[id; ν a] := fun a ↦ variance_nonneg _ _
   set μ' : Measure (EuclideanSpace ℝ 𝓐) :=
     multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a] / v a) with hμ'
@@ -180,30 +172,21 @@ lemma clt_rho_of_tendstoInMeasure
   have hRmeas : ∀ n, AEMeasurable (fun ω ↦ targetSqrtNVec ν A Y θ₀ T n ω
       - WithLp.toLp 2 (G.mulVec (WithLp.ofLp (estimatorSqrtNVec ν A Y θ₀ n ω)))) P := fun n ↦
     (((measurable_targetSqrtNVec h θ₀ hT n).sub (hGXmeas n))).aemeasurable
-  have hclt := estimator_sqrtN_joint_tendsto_multivariateGaussian h θ₀ hνk hv hNconv
-  have hslut := tendsto_map_comp_of_tendstoInMeasure_const (P := P) (μ' := μ') g hg
-    (fun n ↦ (hXmeas n).aemeasurable) hRmeas hclt hR
+  have hclt := estimatorSqrtNVec_joint_tendsto_multivariateGaussian h θ₀ hνk hv hNconv
+  have hslut := hclt.continuous_comp_prodMk_of_tendstoInMeasure_const hg hR hRmeas
   -- the limiting law: `μ'.map (g(·, 0)) = 𝒩(0, G diag Gᵀ)`
-  have hlim : μ'.map (fun x ↦ g (x, 0))
+  have hlim : μ'.map (fun x ↦ g (id x, 0))
       = multivariateGaussian 0 (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / v a) * Gᵀ) := by
-    have hgc : (fun x : EuclideanSpace ℝ 𝓐 ↦ g (x, 0))
+    have hgc : (fun x : EuclideanSpace ℝ 𝓐 ↦ g (id x, 0))
         = fun x : EuclideanSpace ℝ 𝓐 ↦
           (WithLp.toLp 2 (G.mulVec (WithLp.ofLp x)) : EuclideanSpace ℝ 𝓐) := by
-      funext x; simp only [hg_def, add_zero]
+      funext x; simp only [hg_def, add_zero, id_eq]
     rw [hgc, hμ', multivariateGaussian_map_matrix _ G
       (Matrix.posSemidef_diagonal_iff.mpr fun a ↦ div_nonneg (hVnn a) (hv a).le)]
-  -- rewrite the target of `hslut`
-  have heq : (⟨multivariateGaussian 0 (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / v a) * Gᵀ),
-        inferInstance⟩ : ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-      = ⟨μ'.map (fun x ↦ g (x, 0)), Measure.isProbabilityMeasure_map
-          (hg.comp (continuous_id.prodMk continuous_const)).measurable.aemeasurable⟩ := by
-    apply Subtype.ext
-    change multivariateGaussian 0 _ = μ'.map _
-    rw [hlim]
-  rw [heq]
   -- rewrite `g(Xn, Rn) = targetSqrtNVec`
-  refine Tendsto.congr (fun n ↦ Subtype.ext (congrArg (P.map ·) ?_)) hslut
-  funext ω
+  refine ((tendstoInDistribution_id_iff
+    ⟨(hg.comp (continuous_id.prodMk continuous_const)).measurable.aemeasurable, hlim⟩).mpr
+      hslut).congr (fun n ↦ Eventually.of_forall fun ω ↦ ?_) EventuallyEq.rfl
   simp only [hg_def]
   abel
 
@@ -217,7 +200,7 @@ of the paper) and the differentiability of the (vectorised) target map at `θ` w
 This removes the Taylor-remainder hypothesis of `clt_rho_of_tendstoInMeasure` by discharging it: the
 remainder `√n(T(θ̂_n)-T(θ)) - G·√n(θ̂_n-θ) = √n · φ(θ̂_n-θ)` (with `φ` the first-order remainder of
 the differentiable map) tends to `0` in probability by `tendstoInMeasure_smul_littleO_of_tight`,
-whose tightness input is supplied from the estimator CLT via `tight_of_tendsto_probabilityMeasure`
+whose tightness input is supplied from the estimator CLT via `tight_of_tendstoInDistribution`
 and whose `Sₙ → 0` input is the a.s. consistency. -/
 @[specifies targetSqrtNVec "certifies the two choices in the definition: the same `√n` scale as \
 the estimator error (no extra rate is introduced by `T`) and the centring at `T(θ)` rather than at \
@@ -233,13 +216,8 @@ lemma clt_rho
       (Matrix.toEuclideanCLM (𝕜 := ℝ) G) (WithLp.toLp 2 ν.means))
     (hcons : ∀ᵐ ω ∂P, Tendsto (fun n k' ↦ estimator (fun j ↦ actionIndicator A k' j ω)
       (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means)) :
-    Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-      (fun n : ℕ ↦ (⟨P.map (targetSqrtNVec ν A Y θ₀ T n),
-        Measure.isProbabilityMeasure_map (measurable_targetSqrtNVec h θ₀ hT n).aemeasurable⟩
-          : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)))
-      atTop
-      (𝓝 ⟨multivariateGaussian 0
-        (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / v a) * Gᵀ), inferInstance⟩) := by
+    TendstoInDistribution (targetSqrtNVec ν A Y θ₀ T) atTop id (fun _ ↦ P)
+      (multivariateGaussian 0 (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / v a) * Gᵀ)) := by
   refine clt_rho_of_tendstoInMeasure h θ₀ hνk hv hNconv hT G ?_
   -- Notation for the un-scaled error vector `S`, base point `p`, derivative `L`, remainder `φ`.
   set p : EuclideanSpace ℝ 𝓐 := WithLp.toLp 2 ν.means with hpdef
@@ -296,8 +274,8 @@ lemma clt_rho
   -- Tightness of `√n(θ̂_n-θ)` from the estimator CLT.
   have hX : ∀ η : ℝ≥0∞, 0 < η → ∃ M : ℝ, 0 < M ∧
       ∀ᶠ n in atTop, P {ω | M ≤ dist (estimatorSqrtNVec ν A Y θ₀ n ω) 0} ≤ η := fun η hη ↦
-    tight_of_tendsto_probabilityMeasure (measurable_estimatorSqrtNVec' h θ₀) (fun n ↦ rfl)
-      (estimator_sqrtN_joint_tendsto_multivariateGaussian h θ₀ hνk hv hNconv) η hη
+    tight_of_tendstoInDistribution
+      (estimatorSqrtNVec_joint_tendsto_multivariateGaussian h θ₀ hνk hv hNconv) η hη
   -- The remainder equals `√n • φ(S)`.
   have hpt : ∀ n ω, targetSqrtNVec ν A Y θ₀ T n ω
       - WithLp.toLp 2 (G.mulVec (WithLp.ofLp (estimatorSqrtNVec ν A Y θ₀ n ω)))

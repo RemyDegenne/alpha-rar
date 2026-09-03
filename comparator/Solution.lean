@@ -17,10 +17,10 @@ The solution side of the [comparator](https://github.com/leanprover/comparator) 
 the `comparator/Challenge_*.lean` files:
 
 * `AlphaRAR.aRTS_LLN`,
-* `AlphaRAR.aRTS_clt_joint` (and `AlphaRAR.measurable_jointSqrtNVec`),
+* `AlphaRAR.aRTS_clt_joint`,
 * `AlphaRAR.aRTS_prop_dev`,
 * `AlphaRAR.aRTS_prop_dev_ae`,
-* `AlphaRAR.aRTSFE_sparse_clt_of_contDiffAt` (and `AlphaRAR.measurable_estimatorErrorVec`),
+* `AlphaRAR.aRTSFE_sparse_clt_of_contDiffAt`,
 * `AlphaRAR.aRTSFE_sparse_rate_of_isARTSFE`.
 
 Nothing is restated here: comparator compares the challenge statements against this

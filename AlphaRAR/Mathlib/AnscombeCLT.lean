@@ -33,23 +33,21 @@ Decompose `S_{N_n}/√(N_n) = (S_{c_n}/√(c_n)) · √(c_n/N_n) + (S_{N_n} - S_
 * the base term `S_{c_n}/√(c_n) ⇒ 𝒩(0,v)` is the Mathlib i.i.d. CLT
   (`tendstoInDistribution_inv_sqrt_mul_sum_sub`) precomposed with the subsequence `c_n → ∞`;
 * the scaling `√(c_n/N_n) → 1` in probability by the regularity `N_n/c_n → 1`, so Slutsky
-  (`tendsto_map_mul_of_tendstoInMeasure_one`) keeps the limit;
+  (`TendstoInDistribution.mul_of_tendstoInMeasure_const`) keeps the limit;
 * the window remainder `(S_{N_n} - S_{c_n})/√(N_n) → 0` in probability, controlled by the Doob
   maximal inequality for the partial-sum martingale (`mart_maximal`) over the window
   `|m - c_n| ≤ ε c_n`.
 
 ## Main results
 
-* `AlphaRAR.tendsto_map_anscombe_iid` : **Anscombe's theorem** for an i.i.d. sequence. Under the
-  regularity `N_n/c_n → 1` almost surely with `c_n → ∞`, the randomly indexed self-normalized sum
-  `S_{N_n}/√(N_n)` converges in distribution to `𝒩(0, Var[X 0])`.
+* `AlphaRAR.tendstoInDistribution_anscombe_iid` : **Anscombe's theorem** for an i.i.d. sequence.
+  Under the regularity `N_n/c_n → 1` almost surely with `c_n → ∞`, the randomly indexed
+  self-normalized sum `S_{N_n}/√(N_n)` converges in distribution to `𝒩(0, Var[X 0])`.
 * `AlphaRAR.tendstoInMeasure_window` : the window estimate that drives the proof — the increment
   `S_{N_n} - S_{c_n}`, normalized by `√(N_n)`, tends to `0` in probability, via the maximal
   fluctuation of the martingale over `|m - c_n| ≤ ε c_n`.
-* `AlphaRAR.tendsto_map_clt_comp` : the deterministic-index CLT precomposed with a subsequence
-  `c_n → ∞`, the base term of the decomposition.
-* `AlphaRAR.tendsto_map_add_of_tendstoInMeasure_zero` : the Slutsky step absorbing the window
-  remainder.
+* `AlphaRAR.tendstoInDistribution_clt_comp` : the deterministic-index CLT precomposed with a
+  subsequence `c_n → ∞`, the base term of the decomposition.
 -/
 
 @[expose] public section
@@ -66,43 +64,14 @@ variable {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbability
 the centered partial sums normalized by `√(c n)` converge in distribution to `𝒩(0, Var[X 0])` along
 any `c : ℕ → ℕ` with `c n → ∞`. This is Mathlib's `tendstoInDistribution_inv_sqrt_mul_sum_sub`
 precomposed with the subsequence. -/
-lemma tendsto_map_clt_comp {X : ℕ → Ω → ℝ} (hX2 : MemLp (X 0) 2 P) (hindep : iIndepFun X P)
-    (hident : ∀ i, IdentDistrib (X i) (X 0) P P) {c : ℕ → ℕ} (hc : Tendsto c atTop atTop) :
-    Tendsto (β := ProbabilityMeasure ℝ)
-      (fun n ↦ (⟨P.map (fun ω ↦ (√(c n : ℝ))⁻¹ *
-          (∑ k ∈ Finset.range (c n), X k ω - (c n : ℝ) * P[X 0])),
-        Measure.isProbabilityMeasure_map
-          (((Finset.aemeasurable_fun_sum _ fun i _ ↦ (hident i).aemeasurable_fst).sub_const
-            _).const_mul _)⟩ : ProbabilityMeasure ℝ)) atTop
-      (𝓝 (⟨gaussianReal 0 Var[X 0; P].toNNReal, inferInstance⟩ : ProbabilityMeasure ℝ)) := by
-  have hbase := (tendstoInDistribution_inv_sqrt_mul_sum_sub (Y := (id : ℝ → ℝ))
-    (P' := gaussianReal 0 Var[X 0; P].toNNReal) HasLaw.id hX2 hindep hident).tendsto
-  simp only [Measure.map_id] at hbase
-  exact hbase.comp hc
-
-/-- **Additive Slutsky for the CLT.** If the laws of `X n` converge weakly to `𝒩(0,σ²)` and
-`Y n → 0` in probability, then so do the laws of `X n + Y n`. Companion to
-`tendsto_map_mul_of_tendstoInMeasure_one`, used to absorb the negligible window remainder in the
-Anscombe assembly. -/
-lemma tendsto_map_add_of_tendstoInMeasure_zero {σ2 : NNReal} {X Y : ℕ → Ω → ℝ}
-    (hX_meas : ∀ n, AEMeasurable (X n) P) (hY_meas : ∀ n, AEMeasurable (Y n) P)
-    (hX : Tendsto (β := ProbabilityMeasure ℝ)
-        (fun n ↦ ⟨P.map (X n), Measure.isProbabilityMeasure_map (hX_meas n)⟩) atTop
-        (𝓝 ⟨gaussianReal 0 σ2, inferInstance⟩))
-    (hY : TendstoInMeasure P Y atTop (fun _ ↦ (0 : ℝ))) :
-    Tendsto (β := ProbabilityMeasure ℝ)
-      (fun n ↦ ⟨P.map (fun ω ↦ X n ω + Y n ω),
-        Measure.isProbabilityMeasure_map ((hX_meas n).add (hY_meas n))⟩) atTop
-      (𝓝 ⟨gaussianReal 0 σ2, inferInstance⟩) := by
-  have hid : TendstoInDistribution X atTop (id : ℝ → ℝ) (fun _ ↦ P) (gaussianReal 0 σ2) := by
-    refine ⟨hX_meas, aemeasurable_id, ?_⟩
-    simp only [Measure.map_id]
-    exact hX
-  have hslut := hid.continuous_comp_prodMk_of_tendstoInMeasure_const
-    (g := fun x : ℝ × ℝ ↦ x.1 + x.2) (by fun_prop) hY hY_meas
-  have h2 := hslut.tendsto
-  simp only [id_eq, add_zero, Measure.map_id'] at h2
-  exact h2
+lemma tendstoInDistribution_clt_comp {X : ℕ → Ω → ℝ} (hX2 : MemLp (X 0) 2 P)
+    (hindep : iIndepFun X P) (hident : ∀ i, IdentDistrib (X i) (X 0) P P) {c : ℕ → ℕ}
+    (hc : Tendsto c atTop atTop) :
+    TendstoInDistribution (fun n ω ↦ (√(c n : ℝ))⁻¹ *
+        (∑ k ∈ Finset.range (c n), X k ω - (c n : ℝ) * P[X 0])) atTop id (fun _ ↦ P)
+      (gaussianReal 0 Var[X 0; P].toNNReal) :=
+  (tendstoInDistribution_inv_sqrt_mul_sum_sub (Y := (id : ℝ → ℝ))
+    (P' := gaussianReal 0 Var[X 0; P].toNNReal) HasLaw.id hX2 hindep hident).comp hc
 
 /-- **The window remainder is negligible in probability.** For a square-integrable martingale `S`
 whose increments have second moment `≤ v`, a random index `N` and a deterministic `c → ∞` with the
@@ -361,23 +330,20 @@ self-normalized random-time sum converges in distribution,
 
 The regularity hypothesis is essential: for a general adaptive `N_n → ∞` the statement fails (see
 `tendstoInMeasure_window`). The proof combines the base i.i.d. CLT along the subsequence `c_n`
-(`tendsto_map_clt_comp`), the negligibility of the window remainder (`tendstoInMeasure_window`), and
-two Slutsky steps (`tendsto_map_mul_of_tendstoInMeasure_one`,
-`tendsto_map_add_of_tendstoInMeasure_zero`). -/
-lemma tendsto_map_anscombe_iid {X : ℕ → Ω → ℝ} (hXmeas : ∀ i, Measurable (X i))
+(`tendstoInDistribution_clt_comp`), the negligibility of the window remainder
+(`tendstoInMeasure_window`), and
+two Slutsky steps (`TendstoInDistribution.mul_of_tendstoInMeasure_const`,
+`TendstoInDistribution.add_of_tendstoInMeasure_const`). -/
+lemma tendstoInDistribution_anscombe_iid {X : ℕ → Ω → ℝ} (hXmeas : ∀ i, Measurable (X i))
     (hX2 : MemLp (X 0) 2 P) (hindep : iIndepFun X P)
     (hident : ∀ i, IdentDistrib (X i) (X 0) P P)
     {N : ℕ → Ω → ℕ} (hNmeas : ∀ n, Measurable (N n))
     (hSumMeas : ∀ n, Measurable (fun ω ↦ ∑ k ∈ Finset.range (N n ω), X k ω))
     {c : ℕ → ℕ} (hc : Tendsto c atTop atTop)
     (hreg : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (N n ω : ℝ) / (c n : ℝ)) atTop (𝓝 1)) :
-    Tendsto (β := ProbabilityMeasure ℝ)
-      (fun n ↦ (⟨P.map (fun ω ↦ (√(N n ω : ℝ))⁻¹ *
-          ((∑ k ∈ Finset.range (N n ω), X k ω) - (N n ω : ℝ) * P[X 0])),
-        Measure.isProbabilityMeasure_map
-          (measurable_natTimeSelfNorm P[X 0] (hNmeas n) (hSumMeas n)).aemeasurable⟩
-            : ProbabilityMeasure ℝ)) atTop
-      (𝓝 (⟨gaussianReal 0 Var[X 0; P].toNNReal, inferInstance⟩ : ProbabilityMeasure ℝ)) := by
+    TendstoInDistribution (fun n ω ↦ (√(N n ω : ℝ))⁻¹ *
+        ((∑ k ∈ Finset.range (N n ω), X k ω) - (N n ω : ℝ) * P[X 0])) atTop id (fun _ ↦ P)
+      (gaussianReal 0 Var[X 0; P].toNNReal) := by
   set μ : ℝ := P[X 0] with hμ
   set v : ℝ := Var[X 0; P] with hvdef
   have hv0 : 0 ≤ v := variance_nonneg _ _
@@ -418,7 +384,7 @@ lemma tendsto_map_anscombe_iid {X : ℕ → Ω → ℝ} (hXmeas : ∀ i, Measura
     simp only [hS, Finset.sum_apply, hYc, Finset.sum_sub_distrib, Finset.sum_const,
       Finset.card_range, nsmul_eq_mul]
   -- Base CLT along `c_n`: the law of `A_n = (√c_n)⁻¹ S(c_n)` converges to `𝒩(0, v)`.
-  have hbase := tendsto_map_clt_comp hX2 hindep hident hc
+  have hbase := tendstoInDistribution_clt_comp hX2 hindep hident hc
   simp only [← hμ, ← hvdef] at hbase
   -- Scaling `R_n = √c_n · (√N_n)⁻¹ → 1` in probability.
   have hcr : Tendsto (fun n ↦ (c n : ℝ)) atTop atTop := tendsto_natCast_atTop_atTop.comp hc
@@ -438,11 +404,7 @@ lemma tendsto_map_anscombe_iid {X : ℕ → Ω → ℝ} (hXmeas : ∀ i, Measura
     rw [Real.sqrt_div (Nat.cast_nonneg _), div_eq_mul_inv]
   -- Window remainder `E_n → 0` in probability.
   have hwindow := tendstoInMeasure_window hMart hM2 hv0 hinc hNmeas hc hreg
-  -- Measurability of the three assembled pieces.
-  have hA_meas : ∀ n, AEMeasurable (fun ω ↦ (√(c n : ℝ))⁻¹ *
-      (∑ k ∈ Finset.range (c n), X k ω - (c n : ℝ) * μ)) P := fun n ↦
-    (measurable_const.mul
-      ((Finset.measurable_sum _ fun k _ ↦ hXmeas k).sub measurable_const)).aemeasurable
+  -- Measurability of the Slutsky factors.
   have hR_meas : ∀ n, AEMeasurable
       (fun ω ↦ √(c n : ℝ) * (√(N n ω : ℝ))⁻¹) P := fun n ↦
     (measurable_const.mul
@@ -458,18 +420,16 @@ lemma tendsto_map_anscombe_iid {X : ℕ → Ω → ℝ} (hXmeas : ∀ i, Measura
     ((((measurable_of_countable _).comp (hNmeas n)).sqrt.inv).mul
       ((hSNfun_meas n).sub (hSmeas (c n)))).aemeasurable
   -- Multiplicative then additive Slutsky.
-  have hmul := tendsto_map_mul_of_tendstoInMeasure_one hA_meas hR_meas hbase hR1
-  have hadd := tendsto_map_add_of_tendstoInMeasure_zero
-    (fun n ↦ (hA_meas n).mul (hR_meas n)) hE_meas hmul hwindow
+  have hmul := hbase.mul_of_tendstoInMeasure_const hR1 hR_meas
+  have hadd := hmul.add_of_tendstoInMeasure_const hwindow hE_meas
   -- Identify the assembled process `A_n R_n + E_n` with the target `(√N_n)⁻¹ S(N_n)`.
-  refine hadd.congr' ?_
+  refine hadd.congr' ?_ (Eventually.of_forall fun x ↦ by simp)
+    fun n ↦ (measurable_natTimeSelfNorm μ (hNmeas n) (hSumMeas n)).aemeasurable
   filter_upwards [hc.eventually_ge_atTop 1] with n hn
-  apply Subtype.ext
-  refine congrArg (P.map ·) ?_
-  funext ω
+  refine Eventually.of_forall fun ω ↦ ?_
   have hcn0 : √(c n : ℝ) ≠ 0 :=
     Real.sqrt_ne_zero'.mpr (by exact_mod_cast Nat.lt_of_lt_of_le Nat.one_pos hn)
-  simp only [Pi.mul_apply]
+  simp only [Pi.add_apply]
   rw [show (∑ k ∈ Finset.range (c n), X k ω - (c n : ℝ) * μ) = S (c n) ω from (hSeq (c n) ω).symm,
     show (∑ k ∈ Finset.range (N n ω), X k ω - (N n ω : ℝ) * μ) = S (N n ω) ω from
       (hSeq (N n ω) ω).symm]

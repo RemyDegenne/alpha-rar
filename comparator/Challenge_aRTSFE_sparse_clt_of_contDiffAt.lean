@@ -1,4 +1,5 @@
 import Mathlib.Probability.Process.Filtration
+import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
 import Mathlib.Algebra.BigOperators.Field
 import Mathlib.Algebra.Order.Star.Real
 import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
@@ -285,16 +286,6 @@ open scoped Topology
 namespace AlphaRAR
 variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐} [MeasurableSingletonClass 𝓐] [Fintype 𝓐] [DecidableEq 𝓐] {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν] {P : Measure Ω} [IsProbabilityMeasure P] {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
-omit [Fintype 𝓐] [DecidableEq 𝓐] in
-/-- The estimator-error vector `D_n(θ̂_n-θ)_k = √N_{n,k}(θ̂_{n,k}-θ_k)` is measurable. -/
-@[fun_prop]
-lemma measurable_estimatorErrorVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
-    (n : ℕ) :
-    Measurable (fun ω ↦ (WithLp.toLp 2 (fun k ↦
-      √(count (fun j ↦ actionIndicator A k j ω) n)
-        * (estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
-          : EuclideanSpace ℝ 𝓐)) := sorry
-
 end AlphaRAR
 end
 
@@ -380,14 +371,11 @@ theorem aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [Stand
     (hTsum : ∀ z, ∑ a, T z a = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTSFE : IsARTSFE alg θ₀ T hsched α)
     (hT2 : ∀ a, T ν.means a = 0 → ContDiffAt ℝ 2 (T · a) ν.means) :
-    Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-      (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (WithLp.toLp 2 (fun k ↦
-          √(count (actionIndicator A k · ω) n)
-            * (estimator (actionIndicator A k · ω) (Y · ω) (θ₀ k) n - ν.means k)))),
-        Measure.isProbabilityMeasure_map (measurable_estimatorErrorVec h θ₀ n).aemeasurable⟩
-          : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)))
-      atTop
-      (𝓝 ⟨multivariateGaussian 0 (Matrix.diagonal (fun a ↦ Var[id; ν a])), inferInstance⟩) := sorry
+    TendstoInDistribution (fun n ω ↦ (WithLp.toLp 2 (fun k ↦
+        √(count (actionIndicator A k · ω) n)
+          * (estimator (actionIndicator A k · ω) (Y · ω) (θ₀ k) n - ν.means k))
+            : EuclideanSpace ℝ 𝓐)) atTop id (fun _ ↦ P)
+      (multivariateGaussian 0 (Matrix.diagonal (fun a ↦ Var[id; ν a]))) := sorry
 
 end AlphaRAR
 end

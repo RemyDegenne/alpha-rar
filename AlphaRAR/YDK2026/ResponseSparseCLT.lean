@@ -12,7 +12,8 @@ public import AlphaRAR.YDK2026.ResponseCLT
 /-!
 # The self-normalized response-martingale CLT for sparse targets
 
-Applying the Anscombe random-time CLT (`AlphaRAR.tendsto_map_anscombe_iid`) to the i.i.d. sampled
+Applying the Anscombe random-time CLT (`AlphaRAR.tendstoInDistribution_anscombe_iid`) to the i.i.d.
+sampled
 responses of a fixed arm `k`, we obtain the self-normalized response-martingale CLT normalized by
 the arm's **own** random pull count `N_{n,k}`:
 `Q_{n,k}/√N_{n,k} ⇒ 𝒩(0, V_k)`, where `V_k = Var[id; ν k]`.
@@ -56,11 +57,8 @@ lemma respMart_selfNorm_anscombe_tendsto
     (hνk : MemLp id 2 (ν k))
     {c : ℕ → ℕ} (hc : Tendsto c atTop atTop)
     (hreg : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (c n : ℝ)) atTop (𝓝 1)) :
-    Tendsto (β := ProbabilityMeasure ℝ)
-      (fun n ↦ (⟨P.map (fun ω ↦ (√(pullCount A k n ω : ℝ))⁻¹ * respMart ν A Y k n ω),
-        Measure.isProbabilityMeasure_map
-          (measurable_respSelfNorm h k n).aemeasurable⟩ : ProbabilityMeasure ℝ)) atTop
-      (𝓝 (⟨gaussianReal 0 (Var[id; ν k]).toNNReal, inferInstance⟩ : ProbabilityMeasure ℝ)) := by
+    TendstoInDistribution (fun n ω ↦ (√(pullCount A k n ω : ℝ))⁻¹ * respMart ν A Y k n ω) atTop
+      id (fun _ ↦ P) (gaussianReal 0 (Var[id; ν k]).toNNReal) := by
   have : IsProbabilityMeasure (ν k) := IsMarkovKernel.isProbabilityMeasure k
   have hint_id : Integrable (fun x : ℝ ↦ x) (ν k) := hνk.integrable (by norm_num)
   have hint_sq : Integrable (fun x : ℝ ↦ x ^ 2) (ν k) := hνk.integrable_sq
@@ -123,13 +121,13 @@ lemma respMart_selfNorm_anscombe_tendsto
         fun m ↦ Finset.measurable_sum (Finset.range m) fun i _ ↦ hCmeas i
     exact hF.comp ((measurable_pullCount h.measurable_action k n).prodMk measurable_id)
   -- Anscombe CLT for the clean samples with random index `N_{n,k}`.
-  have hanscombe := tendsto_map_anscombe_iid hCmeas hX2 hindepC hidentC
+  have hanscombe := tendstoInDistribution_anscombe_iid hCmeas hX2 hindepC hidentC
     (measurable_pullCount h.measurable_action k) hSumMeas hc hreg
   rw [hVar] at hanscombe
   -- identify the Anscombe object with `(√N_{n,k})⁻¹ Q_{n,k}` almost everywhere
   have hae_eq : ∀ᵐ ω ∂P, ∀ i, sampledSeq Y D i ω = sampledClean Y D i ω := by
     rw [ae_all_iff]; exact fun i ↦ sampledSeq_ae_eq_sampledClean hDinf i
-  refine hanscombe.congr' (Filter.Eventually.of_forall fun n ↦ Subtype.ext (Measure.map_congr ?_))
+  refine hanscombe.congr (fun n ↦ ?_) EventuallyEq.rfl
   filter_upwards [hae_eq] with ω hω
   congr 1
   rw [hμθ, respMart_eq_sum_sampledSeq k n ω, hitCount_actionIndicator_eq_pullCount k n ω, ← hθdef,
@@ -172,13 +170,9 @@ lemma estimator_sqrtN_anscombe_tendsto
     (hνk : MemLp id 2 (ν k)) (θ₀ : ℝ)
     {c : ℕ → ℕ} (hc : Tendsto c atTop atTop)
     (hreg : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (c n : ℝ)) atTop (𝓝 1)) :
-    Tendsto (β := ProbabilityMeasure ℝ)
-      (fun n ↦ (⟨P.map (fun ω ↦ √(pullCount A k n ω : ℝ)
-          * (estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) θ₀ n - ν.means k)),
-        Measure.isProbabilityMeasure_map
-          (measurable_estimatorSqrtN h k θ₀ n).aemeasurable⟩ : ProbabilityMeasure ℝ))
-      atTop
-      (𝓝 (⟨gaussianReal 0 (Var[id; ν k]).toNNReal, inferInstance⟩ : ProbabilityMeasure ℝ)) := by
+    TendstoInDistribution (fun n ω ↦ √(pullCount A k n ω : ℝ)
+        * (estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) θ₀ n - ν.means k)) atTop id
+      (fun _ ↦ P) (gaussianReal 0 (Var[id; ν k]).toNNReal) := by
   set θ := ν.means k with hθdef
   have hQ := respMart_selfNorm_anscombe_tendsto h k hk_inf hνk hc hreg
   -- pull count `→ ∞` a.e. (from infinitely many pulls)
@@ -230,13 +224,10 @@ lemma estimator_sqrtN_anscombe_tendsto
     rw [mul_zero] at this
     exact this.congr fun n ↦ by rw [hEdef]
   -- Multiplicative then additive Slutsky, then identify with `√N(θ̂-θ)`.
-  have hmul := tendsto_map_mul_of_tendstoInMeasure_one
-    (fun n ↦ (measurable_respSelfNorm h k n).aemeasurable) hRmeas hQ hR1
-  have hadd := tendsto_map_add_of_tendstoInMeasure_zero
-    (fun n ↦ ((measurable_respSelfNorm h k n).aemeasurable.mul (hRmeas n))) hEmeas hmul hE0
-  refine hadd.congr' (Filter.Eventually.of_forall fun n ↦ Subtype.ext (congrArg (P.map ·) ?_))
-  funext ω
-  simp only [Pi.mul_apply, hRdef, hEdef]
+  have hmul := hQ.mul_of_tendstoInMeasure_const hR1 hRmeas
+  have hadd := hmul.add_of_tendstoInMeasure_const hE0 hEmeas
+  refine hadd.congr (fun n ↦ Eventually.of_forall fun ω ↦ ?_) (Eventually.of_forall fun x ↦ by simp)
+  simp only [Pi.add_apply, hRdef, hEdef]
   have hne : count (fun j ↦ actionIndicator A k j ω) n + 1 ≠ 0 := by
     rw [count_indicator_eq_pullCount]; positivity
   rw [estimator_sub_eq (X := fun j ↦ actionIndicator A k j ω) (Y · ω) θ θ₀ n hne,

@@ -1122,18 +1122,12 @@ theorem aRTSFE_clt_joint [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace �
       (Matrix.toEuclideanCLM (𝕜 := ℝ) G) (WithLp.toLp 2 ν.means))
     {hsched : ℕ → ℝ} (hh : IsExplorationSchedule hsched)
     (hARTSFE : IsARTSFE alg θ₀ T hsched α) :
-    Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ (𝓐 ⊕ 𝓐)))
-      (fun n : ℕ ↦ (⟨P.map (jointSqrtNVec ν A Y θ₀ T (T ν.means) n),
-        Measure.isProbabilityMeasure_map
-          (measurable_jointSqrtNVec h θ₀ hlip.continuous (T ν.means) n).aemeasurable⟩
-          : ProbabilityMeasure (EuclideanSpace ℝ (𝓐 ⊕ 𝓐))))
-      atTop
-      (𝓝 ⟨multivariateGaussian 0 (Matrix.fromBlocks
+    TendstoInDistribution (jointSqrtNVec ν A Y θ₀ T (T ν.means)) atTop id (fun _ ↦ P)
+      (multivariateGaussian 0 (Matrix.fromBlocks
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ)
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ)
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ)
-        (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ)),
-          inferInstance⟩) := by
+        (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ))) := by
   have hT : Continuous T := hlip.continuous
   have hthrottle := fun k' ↦ throttle_of_isARTSFE (A := A) (Y := Y) h hARTSFE k'
   have hgs := aRTSFE_smallness_all (A := A) (Y := Y) (P := P) θ₀ T hTnn hh
@@ -1553,15 +1547,11 @@ lemma aRTSFE_sparse_clt [Fintype 𝓐] [DecidableEq 𝓐]
       Tendsto (fun n ↦ E n / hsched n) atTop (𝓝 0))
     (hprop : ∀ᵐ ω ∂P, ∀ a, ¬ FEfed a →
       Tendsto (fun n ↦ (pullCount A a n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v a))) :
-    Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-      (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (WithLp.toLp 2 (fun k ↦
-          √(count (fun j ↦ actionIndicator A k j ω) n)
-            * (estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
-              : EuclideanSpace ℝ 𝓐)),
-        Measure.isProbabilityMeasure_map (measurable_estimatorErrorVec h θ₀ n).aemeasurable⟩
-          : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)))
-      atTop
-      (𝓝 ⟨multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a]), inferInstance⟩) := by
+    TendstoInDistribution (fun n ω ↦ (WithLp.toLp 2 (fun k ↦
+        √(count (fun j ↦ actionIndicator A k j ω) n)
+          * (estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
+            : EuclideanSpace ℝ 𝓐)) atTop id (fun _ ↦ P)
+      (multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a])) := by
   classical
   -- `max 0 (h n)` rather than `h n`: the schedule may start negative (e.g. `n^{1/3} - K/2`),
   -- and the CLT wants a nonnegative normalizer. The two agree eventually, since `h n → ∞`.
@@ -2121,14 +2111,11 @@ theorem aRTSFE_sparse_clt_of_contDiffAt [Fintype 𝓐] [DecidableEq 𝓐] [Stand
     (hTsum : ∀ z, ∑ a, T z a = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTSFE : IsARTSFE alg θ₀ T hsched α)
     (hT2 : ∀ a, T ν.means a = 0 → ContDiffAt ℝ 2 (T · a) ν.means) :
-    Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-      (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (WithLp.toLp 2 (fun k ↦
-          √(count (actionIndicator A k · ω) n)
-            * (estimator (actionIndicator A k · ω) (Y · ω) (θ₀ k) n - ν.means k)))),
-        Measure.isProbabilityMeasure_map (measurable_estimatorErrorVec h θ₀ n).aemeasurable⟩
-          : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)))
-      atTop
-      (𝓝 ⟨multivariateGaussian 0 (Matrix.diagonal (fun a ↦ Var[id; ν a])), inferInstance⟩) := by
+    TendstoInDistribution (fun n ω ↦ (WithLp.toLp 2 (fun k ↦
+        √(count (actionIndicator A k · ω) n)
+          * (estimator (actionIndicator A k · ω) (Y · ω) (θ₀ k) n - ν.means k))
+            : EuclideanSpace ℝ 𝓐)) atTop id (fun _ ↦ P)
+      (multivariateGaussian 0 (Matrix.diagonal (fun a ↦ Var[id; ν a]))) := by
   classical
   have hfe := fe_of_isARTSFE h hARTSFE
   have hthrottle := fun a ↦ throttle_of_isARTSFE h hARTSFE a

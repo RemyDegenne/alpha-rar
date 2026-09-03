@@ -327,8 +327,9 @@ $\sqrt n(\hat{\rho}_n-v)=G\sqrt n(\estParams_n-\Params)+O_p(1/\sqrt n)$. Apply
 Lemma~\ref{lem:clt_theta} and Slutsky.
 
 \emph{Formalization.} The delta method is assembled in
-\texttt{AlphaRAR.clt\_rho}. First, the product-space Slutsky lemma
-(\texttt{tendsto\_map\_comp\_of\_tendstoInMeasure\_const}) with $g(x,r)=Gx+r$ combines the estimator
+\texttt{AlphaRAR.clt\_rho}. First, Mathlib's product-space Slutsky lemma
+(\texttt{TendstoInDistribution.continuous\_comp\_prodMk\_of\_tendstoInMeasure\_const}) with
+$g(x,r)=Gx+r$ combines the estimator
 CLT (Lemma~\ref{lem:clt_theta}) with the fact that the first-order remainder
 $\sqrt n(\Target(\estParams_n)-\Target(\Params))-G\sqrt n(\estParams_n-\Params)=\sqrt n\,\varphi(\estParams_n-\Params)$
 tends to $0$ in probability, and the limiting law is the linear pushforward of the estimator's Gaussian

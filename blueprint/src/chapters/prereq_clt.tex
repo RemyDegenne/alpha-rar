@@ -100,19 +100,6 @@ The specific constant $1/6$ is not used downstream; any fixed constant on the
 cubic term suffices.
 \end{proof}
 
-\begin{lemma}[A real elementary bound]\label{lem:clt_real_exp_bound}
-\lean{AlphaRAR.abs_exp_mul_one_sub_le}\leanok
-For every $y\in[0,1]$, $\ \big|e^{y}(1-y)-1\big|\le y^2$.
-\end{lemma}
-
-\begin{proof}\leanok
-Let $g(y)=1-e^{y}(1-y)$, so $g'(y)=y e^{y}\ge0$ and $g(0)=0$, whence $g\ge0$ and
-$\big|e^{y}(1-y)-1\big|=g(y)$. Put $h(y)=y^2-g(y)$; then $h(0)=h(1)=0$ and
-$h'(y)=y(2-e^{y})$ is $\ge0$ on $[0,\ln2]$ and $\le0$ on $[\ln2,1]$, so $h$ is
-nonnegative on $[0,1]$. Hence $g(y)\le y^2$. (The precise constant $1$ is
-immaterial downstream.)
-\end{proof}
-
 \begin{lemma}[A real elementary bound, unbounded form]\label{lem:clt_real_exp_bound_pos}
 \lean{AlphaRAR.abs_exp_mul_one_sub_le'}\leanok
 For every $y\ge0$, $\ \big|e^{y}(1-y)-1\big|\le y^2 e^{y}$.
@@ -168,6 +155,12 @@ stopping argument, reducing the theorem to the case where the predictable
 variance is uniformly bounded.
 
 \begin{lemma}[Variance truncation]\label{lem:clt_truncation}
+\lean{AlphaRAR.MartDiffArray.trunc, AlphaRAR.MartDiffArray.predVar_trunc_le,
+AlphaRAR.MartDiffArray.condVar_trunc, AlphaRAR.MartDiffArray.predVar_trunc_ae_eq_of_le,
+AlphaRAR.MartDiffArray.rowSum_trunc_ae_eq_of_le, AlphaRAR.MartDiffArray.lindeberg_trunc_le,
+AlphaRAR.MartDiffArray.tendstoInMeasure_predVar_trunc,
+AlphaRAR.MartDiffArray.tendstoInMeasure_lindeberg_trunc,
+AlphaRAR.MartDiffArray.tendstoInMeasure_expI_rowSum_sub}\leanok
 Fix a constant $B$ with $\sigma^2<B$ (e.g.\ $B:=\sigma^2+1$). Define the stopped
 array by truncating increment $i$ as soon as the \emph{next} partial variance
 would exceed $B$:
@@ -192,7 +185,7 @@ Consequently $S_n$ and $\bar S_n$ have the same characteristic-function limit, a
 it suffices to prove the theorem under the extra assumption $V_n\le B$ a.s.
 \end{lemma}
 
-\begin{proof}
+\begin{proof}\leanok
 Since $v_{n,l}$ is $\filt_l$-measurable and $l\le i$ for $l$ appearing in
 $V_{n,i+1}$, the indicator $\indic_{\{V_{n,i+1}\le B\}}$ is $\filt_i$-measurable;
 multiplying $\Delta_{n,i}$ by it therefore preserves both the $\filt_{i+1}$-%
@@ -380,6 +373,10 @@ converge in distribution,
 \[
   S_n=\sum_{i<k_n}\Delta_{n,i} \;\eqdist\; \mathcal{N}(0,\sigma^2).
 \]
+In Lean the conclusion has the shape of Mathlib's i.i.d.\ central limit theorem: for every random
+variable $Y$ (on any probability space) with law $\mathcal N(0,\sigma^2)$, $S_n$ converges to $Y$
+in distribution (\texttt{TendstoInDistribution}); the convergence of the laws of $S_n$ themselves
+is the case $Y=\mathrm{id}$ on $(\R,\mathcal N(0,\sigma^2))$.
 \end{theorem}
 
 \begin{proof}\leanok
@@ -497,7 +494,7 @@ therefore leaves the Gaussian limit unchanged.
 \end{proof}
 
 \begin{lemma}[Anscombe random-time self-normalized CLT]\label{lem:anscombe_clt}
-\lean{AlphaRAR.tendsto_map_anscombe_iid}\leanok
+\lean{AlphaRAR.tendstoInDistribution_anscombe_iid}\leanok
 \uses{thm:mart_clt}
 Let $(\xi_i)_{i\ge0}$ be i.i.d.\ with mean $\mu$ and finite variance $v=\mathrm{Var}(\xi_0)$, and let
 $S_m=\sum_{i<m}(\xi_i-\mu)$. Let $(\tau_n)$ be positive-integer random indices for which there is a
@@ -522,13 +519,14 @@ is bounded by the maximal increment over a window of length $\varepsilon c_n$, w
 $O(\sqrt{\varepsilon c_n})$ in $L^1$ by Doob's maximal inequality; letting $\varepsilon\to0$ gives the
 claim.
 
-\emph{Formalization.} \texttt{AlphaRAR.tendsto\_map\_anscombe\_iid}, assembled from the base CLT along
-a subsequence (\texttt{tendsto\_map\_clt\_comp}, wrapping Mathlib's
+\emph{Formalization.} \texttt{AlphaRAR.tendstoInDistribution\_anscombe\_iid}, assembled from the
+base CLT along a subsequence (\texttt{tendstoInDistribution\_clt\_comp}, wrapping Mathlib's
 \texttt{tendstoInDistribution\_inv\_sqrt\_mul\_sum\_sub}), the negligibility of the window remainder
 (\texttt{AlphaRAR.tendstoInMeasure\_window}, via the Doob maximal inequality
 \texttt{AlphaRAR.mart\_maximal} on the i.i.d.-sum martingale \texttt{AlphaRAR.martingale\_iidSum}),
-and two Slutsky steps (\texttt{tendsto\_map\_mul\_of\_tendstoInMeasure\_one},
-\texttt{AlphaRAR.tendsto\_map\_add\_of\_tendstoInMeasure\_zero}). The regularity $\tau_n/c_n\to1$ is
+and two Slutsky steps (\texttt{TendstoInDistribution.mul\_of\_tendstoInMeasure\_const},
+Mathlib's \texttt{TendstoInDistribution.add\_of\_tendstoInMeasure\_const}). The regularity
+$\tau_n/c_n\to1$ is
 essential: for a general adaptive $\tau_n\to\infty$ the statement is false (one can freeze the
 self-normalized martingale above its typical value by pausing the index near a level crossing, using
 the law of the iterated logarithm). This lemma is the standalone martingale-CLT ingredient that
@@ -581,6 +579,6 @@ Lemma~\ref{lem:mart_clt_selfnorm_arm_sparse} gives the claim.
 
 \emph{Formalization.} \texttt{AlphaRAR.estimator\_sqrtN\_anscombe\_tendsto}, from
 \texttt{respMart\_selfNorm\_anscombe\_tendsto} via \texttt{estimator\_sub\_eq} and the two Slutsky
-lemmas \texttt{tendsto\_map\_mul\_of\_tendstoInMeasure\_one},
-\texttt{AlphaRAR.tendsto\_map\_add\_of\_tendstoInMeasure\_zero}.
+lemmas \texttt{TendstoInDistribution.mul\_of\_tendstoInMeasure\_const},
+\texttt{TendstoInDistribution.add\_of\_tendstoInMeasure\_const}.
 \end{proof}

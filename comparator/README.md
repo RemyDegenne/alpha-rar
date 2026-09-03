@@ -50,11 +50,9 @@ If comparator succeeds, every theorem in the config's `theorem_names` is guarant
 In particular the vendored LML sections cannot silently drift from upstream: comparator compares
 them constant-for-constant against the LML package the project is built with.
 
-Two configs list an auxiliary measurability lemma as a second target
-(`AlphaRAR.measurable_jointSqrtNVec`, `AlphaRAR.measurable_estimatorErrorVec`): the CLT statements
-mention these lemmas, because a `ProbabilityMeasure` bundles the pushforward measure with a proof.
-Listing them as targets makes comparator verify their statements and proofs the same way, while
-the challenge files leave them `sorry`.
+The two CLT challenges state convergence in distribution with Mathlib's `TendstoInDistribution`
+(limit the identity on the Gaussian law), so their statements mention no auxiliary lemma: the
+measurability of the random vectors is part of the conclusion, not of the statement.
 
 The sparse-rate challenge states `AlphaRAR.aRTSFE_sparse_rate_of_isARTSFE`, Theorem 5.2 of the
 paper, from the history-level design predicate `IsARTSFE` (the same packaging as the other
@@ -127,8 +125,10 @@ Comparator's exact-identity check makes elaboration details load-bearing; the ru
   no restatement can reproduce them. If one enters a statement's closure, the statement itself
   has to avoid the offending definition — that is why the sparse-rate challenge targets the
   `IsARTSFE` form (see above).
-- **Statements that mention lemmas** (e.g. through a `ProbabilityMeasure` subtype) get those
-  lemmas listed as extra `theorem_names` targets, `sorry`d in the challenge.
+- **Statements that mention lemmas** (e.g. a proof term inside a subtype) would need those
+  lemmas listed as extra `theorem_names` targets, `sorry`d in the challenge; the current
+  statements avoid this (convergence in distribution is `TendstoInDistribution`, not a
+  `ProbabilityMeasure`-valued `Tendsto`).
 
 If a headline statement (or a definition it rests on) changes, comparator fails with
 `Const does not match …` — regenerate the affected challenge from a fresh extraction and re-apply

@@ -6,6 +6,8 @@ Authors: Rémy Degenne
 module
 
 public import AlphaRAR.Mathlib.CondExp
+public import AlphaRAR.Mathlib.QuadraticVariation
+public import AlphaRAR.Mathlib.TendstoInDistribution
 public import Mathlib.MeasureTheory.Function.ConditionalExpectation.CondJensen
 public import Mathlib.MeasureTheory.Function.ConditionalExpectation.PullOut
 public import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
@@ -13,6 +15,7 @@ public import Mathlib.MeasureTheory.Order.Group.Lattice
 public import Mathlib.MeasureTheory.Measure.LevyConvergence
 public import Mathlib.Probability.CondVar
 public import Mathlib.Probability.Distributions.Gaussian.Real
+public import Mathlib.Probability.HasLaw
 public import Mathlib.Probability.Process.Filtration
 public meta import Characterization
 
@@ -23,15 +26,22 @@ This file develops, for a triangular array of martingale differences, the
 one-dimensional central limit theorem in Lindeberg form (the Hall–Heyde form).
 The analytic top of the argument (Lévy's continuity theorem, the Gaussian
 characteristic function, `TendstoInDistribution` and Slutsky) is already in
-Mathlib; here we build the martingale core.
+Mathlib; here we build the martingale core. The statement has the shape of Mathlib's i.i.d.
+central limit theorem `ProbabilityTheory.tendstoInDistribution_inv_sqrt_mul_sum_sub`: the row sums
+converge in distribution to any random variable `Y` with `HasLaw Y (gaussianReal 0 σ²)`.
 
 This file is Mathlib-bound staging (cf. the `AlphaRAR/Mathlib/` directory).
 
 ## Reusable analytic ingredients
 
 * `AlphaRAR.norm_expI_sub_taylor_le` : `‖e^{ix} - (1 + ix - x²/2)‖ ≤ min (2x²) |x|³`,
-  the second-order expansion of the complex exponential on the imaginary axis.
-* `AlphaRAR.abs_exp_mul_one_sub_le` : `|eʸ(1-y) - 1| ≤ y²` for `y ≤ 1`.
+  the second-order expansion of the complex exponential on the imaginary axis, valid for every
+  real `x` (Mathlib's `Complex.norm_exp_sub_one_sub_id_le` needs `‖x‖ ≤ 1`).
+* `AlphaRAR.abs_exp_mul_one_sub_le'` : `|eʸ(1-y) - 1| ≤ y² eʸ` for `y ≥ 0`.
+* `AlphaRAR.tendsto_integral_of_tendstoInMeasure` : bounded convergence in probability,
+  `∫ g n → ∫ f` when `g n → f` in measure and `‖g n‖ ≤ C` a.e.
+* `AlphaRAR.tendsto_integral_sq_indicator_gt` : `∫ Z² 𝟙{|Z| > c} → 0` as `c → ∞` for `Z ∈ L²`, the
+  analytic heart of every i.i.d. Lindeberg condition.
 
 ## Main results
 
@@ -44,13 +54,16 @@ This file is Mathlib-bound staging (cf. the `AlphaRAR/Mathlib/` directory).
 * `AlphaRAR.MartDiffArray.clt_charFun` : the characteristic-function form behind `mart_clt`,
   `𝔼[e^{it S_n}] → e^{-t²σ²/2}`, obtained from the bounded-predictable-variation case
   `clt_charFun_bounded` by truncation.
+* `AlphaRAR.MartDiffArray.predVar_ae_eq_predQuadVar` : the array's predictable variation is the
+  predictable quadratic variation `⟨S_{n,·}⟩_{k_n}` of the row martingale (`martingale_partialSum`).
 * `AlphaRAR.MartDiffArray.ofSeq` : the array built from a single adapted sequence, with
   `rowSum_ofSeq` and `predVar_ofSeq` identifying its row sums and predictable variation.
-* `AlphaRAR.tendsto_map_mul_of_tendstoInMeasure_one` and
-  `AlphaRAR.tendsto_map_comp_of_tendstoInMeasure_const` : the Slutsky steps used to transfer the
-  limit through a multiplicative factor tending to `1` in probability.
 * `AlphaRAR.MartDiffArray.condVar_ae_eq_condVar` : the array's conditional variance agrees a.e.
   with Mathlib's `ProbabilityTheory.condVar`.
+
+The complements to Mathlib's `TendstoInDistribution` API that the applications use (eventual
+congruence, subsequences, naming a limit by its law, Slutsky for a product, Cramér–Wold) are in
+`AlphaRAR.Mathlib.TendstoInDistribution`, which this file imports publicly.
 -/
 
 @[expose] public section
@@ -179,24 +192,9 @@ end ExpBound
 
 section RealExpBound
 
-/-- **Real elementary bound**: `|eʸ(1-y) - 1| ≤ y²` for `y ≤ 1` (in particular on `[0,1]`). -/
-lemma abs_exp_mul_one_sub_le {y : ℝ} (hy1 : y ≤ 1) :
-    |Real.exp y * (1 - y) - 1| ≤ y ^ 2 := by
-  have hle : Real.exp y * (1 - y) ≤ 1 := by
-    have h1 : 1 - y ≤ Real.exp (-y) := by linarith [Real.add_one_le_exp (-y)]
-    have h2 := mul_le_mul_of_nonneg_left h1 (Real.exp_pos y).le
-    rwa [← Real.exp_add, add_neg_cancel, Real.exp_zero] at h2
-  have hge : 1 - y ^ 2 ≤ Real.exp y * (1 - y) := by
-    have h3 := mul_le_mul_of_nonneg_right
-      (by linarith [Real.add_one_le_exp y] : (1 : ℝ) + y ≤ Real.exp y)
-      (by positivity : (0 : ℝ) ≤ 1 - y)
-    nlinarith [h3]
-  rw [abs_of_nonpos (by linarith)]
-  linarith
-
-/-- **Real elementary bound, unbounded form**: `|eʸ(1-y) - 1| ≤ y²·eʸ` for every `y ≥ 0`. Unlike
-`abs_exp_mul_one_sub_le`, this holds for all `y ≥ 0` (the extra `eʸ` factor is what makes it valid
-past `y = 1`). -/
+/-- **Real elementary bound**: `|eʸ(1-y) - 1| ≤ y²·eʸ` for every `y ≥ 0`. The factor `eʸ` is what
+makes it valid past `y = 1`; on `[0, 1]` the bound `y²` would do, but the predictable variation the
+bound is applied to is only known to be bounded, not `≤ 1`. -/
 lemma abs_exp_mul_one_sub_le' {y : ℝ} (hy : 0 ≤ y) :
     |Real.exp y * (1 - y) - 1| ≤ y ^ 2 * Real.exp y := by
   have hle : Real.exp y * (1 - y) ≤ 1 := by
@@ -476,70 +474,20 @@ open Filter
 
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω}
 
-/-- **Bounded convergence in probability, `L¹` form.** On a probability space, if `g n → 0` in
-measure and `‖g n‖ ≤ C` a.e. uniformly in `n`, then `∫ ‖g n‖ → 0`. -/
-lemma tendsto_integral_norm_of_tendstoInMeasure_zero [IsProbabilityMeasure P] {E : Type*}
-    [NormedAddCommGroup E] {g : ℕ → Ω → E} {C : ℝ}
-    (hmeas : ∀ n, StronglyMeasurable (g n)) (hbdd : ∀ n, ∀ᵐ ω ∂P, ‖g n ω‖ ≤ C)
-    (hconv : TendstoInMeasure P g atTop 0) :
-    Tendsto (fun n ↦ ∫ ω, ‖g n ω‖ ∂P) atTop (𝓝 0) := by
-  let C' : ℝ := max C 0
-  have hC'0 : 0 ≤ C' := le_max_right _ _
-  have hbdd' : ∀ n, ∀ᵐ ω ∂P, ‖g n ω‖ ≤ C' :=
-    fun n ↦ (hbdd n).mono fun ω hω ↦ le_trans hω (le_max_left _ _)
-  have hint : ∀ n, Integrable (g n) P :=
-    fun n ↦ Integrable.mono' (integrable_const C) (hmeas n).aestronglyMeasurable (hbdd n)
-  rw [Metric.tendsto_atTop]
-  intro δ hδ
-  have hε : (0 : ℝ) < δ / 2 := by positivity
-  have hmc : Tendsto (fun n ↦ (P {ω | δ / 2 ≤ ‖g n ω‖}).toReal) atTop (𝓝 0) := by
-    have h0 := hconv (ENNReal.ofReal (δ / 2)) (by positivity)
-    have hset : ∀ n, {ω | ENNReal.ofReal (δ / 2) ≤ edist (g n ω) ((0 : Ω → E) ω)}
-        = {ω | δ / 2 ≤ ‖g n ω‖} := by
-      intro n; ext ω
-      simp only [Set.mem_ofPred_eq, Pi.zero_apply, edist_zero_right]
-      rw [← ofReal_norm, ENNReal.ofReal_le_ofReal_iff (norm_nonneg _)]
-    simp_rw [hset] at h0
-    exact (ENNReal.tendsto_toReal_zero_iff (fun n ↦ measure_ne_top P _)).mpr h0
-  have hmc' : Tendsto (fun n ↦ C' * (P {ω | δ / 2 ≤ ‖g n ω‖}).toReal) atTop (𝓝 0) := by
-    simpa using hmc.const_mul C'
-  obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp hmc' (δ / 2) hε
-  refine ⟨N, fun n hn ↦ ?_⟩
-  have hSmeas : MeasurableSet {ω | δ / 2 ≤ ‖g n ω‖} :=
-    measurableSet_le measurable_const (hmeas n).norm.measurable
-  have hbound : ∫ ω, ‖g n ω‖ ∂P ≤ δ / 2 + C' * (P {ω | δ / 2 ≤ ‖g n ω‖}).toReal := by
-    have hle : (fun ω ↦ ‖g n ω‖) ≤ᵐ[P]
-        fun ω ↦ δ / 2 + {ω | δ / 2 ≤ ‖g n ω‖}.indicator (fun _ ↦ C') ω := by
-      filter_upwards [hbdd' n] with ω hω
-      by_cases hmem : ω ∈ {ω | δ / 2 ≤ ‖g n ω‖}
-      · rw [Set.indicator_of_mem hmem]; linarith [hω, hε.le]
-      · rw [Set.indicator_of_notMem hmem, add_zero]
-        simp only [Set.mem_ofPred_eq, not_le] at hmem
-        linarith [hmem]
-    calc ∫ ω, ‖g n ω‖ ∂P
-        ≤ ∫ ω, (δ / 2 + {ω | δ / 2 ≤ ‖g n ω‖}.indicator (fun _ ↦ C') ω) ∂P :=
-          integral_mono_ae (hint n).norm
-            ((integrable_const _).add ((integrable_const C').indicator hSmeas)) hle
-      _ = δ / 2 + C' * (P {ω | δ / 2 ≤ ‖g n ω‖}).toReal := by
-          rw [integral_add (integrable_const _) ((integrable_const C').indicator hSmeas),
-            MeasureTheory.integral_const, integral_indicator_const _ hSmeas]
-          simp only [measureReal_def, measure_univ, ENNReal.toReal_one, smul_eq_mul]
-          ring
-  rw [Real.dist_eq, sub_zero, abs_of_nonneg (integral_nonneg fun ω ↦ norm_nonneg _)]
-  have hN' := hN n hn
-  rw [Real.dist_eq, sub_zero] at hN'
-  linarith [hbound, hN', le_abs_self (C' * (P {ω | δ / 2 ≤ ‖g n ω‖}).toReal)]
-
-/-- **Bounded convergence in probability.** On a probability space, if `g n → 0` in measure and
-`‖g n‖ ≤ C` a.e. uniformly in `n`, then `∫ g n → 0`. This is the quantitative core of the
-bounded-convergence steps of the martingale CLT (`V_n →ᵖ σ²` and `L_n(ε) →ᵖ 0`). -/
-lemma tendsto_integral_of_tendstoInMeasure_zero [IsProbabilityMeasure P] {E : Type*}
-    [NormedAddCommGroup E] [NormedSpace ℝ E] {g : ℕ → Ω → E} {C : ℝ}
-    (hmeas : ∀ n, StronglyMeasurable (g n)) (hbdd : ∀ n, ∀ᵐ ω ∂P, ‖g n ω‖ ≤ C)
-    (hconv : TendstoInMeasure P g atTop 0) :
-    Tendsto (fun n ↦ ∫ ω, g n ω ∂P) atTop (𝓝 0) :=
-  squeeze_zero_norm (fun n ↦ norm_integral_le_integral_norm (g n))
-    (tendsto_integral_norm_of_tendstoInMeasure_zero hmeas hbdd hconv)
+/-- **Bounded convergence in probability.** On a finite measure, if `g n → f` in measure and
+`‖g n‖ ≤ C` a.e. uniformly in `n`, then `∫ g n → ∫ f`. Every subsequence has a further subsequence
+converging a.e. (`TendstoInMeasure.exists_seq_tendsto_ae`), along which dominated convergence
+applies. This is the quantitative core of the bounded-convergence steps of the martingale CLT
+(`V_n →ᵖ σ²` and `L_n(ε) →ᵖ 0`). -/
+lemma tendsto_integral_of_tendstoInMeasure [IsFiniteMeasure P] {E : Type*}
+    [NormedAddCommGroup E] [NormedSpace ℝ E] {g : ℕ → Ω → E} {f : Ω → E} {C : ℝ}
+    (hmeas : ∀ n, AEStronglyMeasurable (g n) P) (hbdd : ∀ n, ∀ᵐ ω ∂P, ‖g n ω‖ ≤ C)
+    (hconv : TendstoInMeasure P g atTop f) :
+    Tendsto (fun n ↦ ∫ ω, g n ω ∂P) atTop (𝓝 (∫ ω, f ω ∂P)) := by
+  refine tendsto_of_subseq_tendsto fun ns hns ↦ ?_
+  obtain ⟨ms, -, hae⟩ := (hconv.comp hns).exists_seq_tendsto_ae
+  exact ⟨ms, tendsto_integral_of_dominated_convergence (fun _ ↦ C) (fun _ ↦ hmeas _)
+    (integrable_const C) (fun _ ↦ hbdd _) hae⟩
 
 /-- **Bounded × (→ 0 in measure) = → 0 in measure.** If `‖f n‖ ≤ C` a.e. and `h n → 0` in
 measure, then `f n · h n → 0` in measure. -/
@@ -1356,6 +1304,36 @@ lemma integrable_expI_rowSum [IsFiniteMeasure P] (t : ℝ) (n : ℕ) :
 further, matching `rowSum_eq_partialSum` on the sums side"]
 lemma predVar_eq_partialVar (n : ℕ) : A.predVar n = A.partialVar n (A.k n) := rfl
 
+/-- **The partial row sums form a martingale** for the row filtration:
+`S_{n,j+1} - S_{n,j} = d_{n,j}` is a martingale difference. -/
+lemma martingale_partialSum [IsFiniteMeasure P] (n : ℕ) :
+    Martingale (A.partialSum n) (A.𝓕 n) P := by
+  have hint : ∀ j, Integrable (A.partialSum n j) P := fun j ↦
+    integrable_finsetSum _ fun i _ ↦ (A.memLp n i).integrable one_le_two
+  refine martingale_nat (A.stronglyMeasurable_partialSum n) hint fun j ↦ ?_
+  have hS : A.partialSum n (j + 1) = A.partialSum n j + A.d n j := by
+    funext ω; simp [MartDiffArray.partialSum, Finset.sum_range_succ]
+  rw [hS]
+  filter_upwards [condExp_add (hint j) ((A.memLp n j).integrable one_le_two) (A.𝓕 n j),
+    A.mgdiff n j] with ω h1 h2
+  rw [h1, Pi.add_apply, condExp_of_stronglyMeasurable ((A.𝓕 n).le j)
+    (A.stronglyMeasurable_partialSum n j) (hint j)]
+  simp [h2]
+
+/-- **The predictable variation is the predictable quadratic variation of the row martingale**:
+`V_n = ⟨S_{n,·}⟩_{k_n}` a.e., since both are `∑_{i<k_n} E[d_{n,i}² | 𝓕_i]`
+(`predQuadVar_ae_eq_sum`). -/
+lemma predVar_ae_eq_predQuadVar [IsFiniteMeasure P] (n : ℕ) :
+    A.predVar n =ᵐ[P] predQuadVar (A.partialSum n) (A.𝓕 n) P (A.k n) := by
+  have hS2 : ∀ j, MemLp (A.partialSum n j) 2 P := fun j ↦
+    memLp_finsetSum _ fun i _ ↦ A.memLp n i
+  have hd : ∀ i, (fun ω ↦ (A.partialSum n (i + 1) ω - A.partialSum n i ω) ^ 2)
+      = fun ω ↦ A.d n i ω ^ 2 := fun i ↦ by
+    funext ω; simp [MartDiffArray.partialSum, Finset.sum_range_succ]
+  filter_upwards [predQuadVar_ae_eq_sum (A.martingale_partialSum n) hS2 (A.k n)] with ω hω
+  rw [hω, Finset.sum_apply]
+  exact Finset.sum_congr rfl fun i _ ↦ by rw [hd i]; rfl
+
 /-- The characteristic-function integrand factors through the `Z`-process:
 `e^{it S_n} = Z_{n,k_n} · e^{-(t²/2) V_n}` (since `Z_{n,k_n} = e^{it S_n + (t²/2) V_n}`). -/
 lemma expI_rowSum_eq (t : ℝ) (n : ℕ) (ω : Ω) :
@@ -1422,8 +1400,10 @@ lemma clt_Z_expectation [IsProbabilityMeasure P] (t : ℝ) {B : ℝ} (hB0 : 0 �
     Tendsto (fun n ↦ ∫ ω, A.Zproc t n (A.k n) ω ∂P) atTop (𝓝 1) := by
   have hEL : ∀ ε, 0 < ε → Tendsto (fun n ↦ ∫ ω, A.lindeberg n ε ω ∂P) atTop (𝓝 0) := by
     intro ε hε
-    refine tendsto_integral_of_tendstoInMeasure_zero (C := B)
-      (A.stronglyMeasurable_lindeberg · ε) (fun n ↦ ?_) (hLindeberg ε hε)
+    have h := tendsto_integral_of_tendstoInMeasure (C := B)
+      (fun n ↦ (A.stronglyMeasurable_lindeberg n ε).aestronglyMeasurable) (fun n ↦ ?_)
+      (hLindeberg ε hε)
+    · simpa only [Pi.zero_apply, integral_zero] using h
     filter_upwards [A.lindeberg_nonneg n ε, A.lindeberg_le_predVar n ε, hB n] with ω h0 h1 h2
     simp only [Pi.zero_apply] at h0
     rw [Real.norm_of_nonneg h0]
@@ -1521,10 +1501,13 @@ lemma clt_charFun_bounded [IsProbabilityMeasure P] (t : ℝ) {B σ2 : ℝ} (hB0 
       - c) atTop 0 := A.tendstoInMeasure_expNeg_predVar_sub ht0 hσ2 A.predVar_nonneg hV
   have hZW0 : Tendsto (fun n ↦ ∫ ω, A.Zproc t n (A.k n) ω *
       (Complex.exp ((-(t ^ 2 / 2 * A.predVar n ω) : ℝ) : ℂ) - c) ∂P) atTop (𝓝 0) := by
-    refine tendsto_integral_of_tendstoInMeasure_zero
+    have h := tendsto_integral_of_tendstoInMeasure
+      (g := fun n ω ↦ A.Zproc t n (A.k n) ω *
+        (Complex.exp ((-(t ^ 2 / 2 * A.predVar n ω) : ℝ) : ℂ) - c))
       (C := Real.exp (t ^ 2 / 2 * B) * (1 + ‖c‖))
-      (fun n ↦ (hZ_sm n).mul ((hWexp_sm n).sub stronglyMeasurable_const)) (fun n ↦ ?_)
-      (tendstoInMeasure_bdd_mul hZbdd hW)
+      (fun n ↦ ((hZ_sm n).mul ((hWexp_sm n).sub stronglyMeasurable_const)).aestronglyMeasurable)
+      (fun n ↦ ?_) (tendstoInMeasure_bdd_mul hZbdd hW)
+    · simpa only [Pi.zero_apply, integral_zero] using h
     filter_upwards [hZbdd n, hWexp_bdd n] with ω hZ hWe
     rw [norm_mul]
     refine mul_le_mul hZ (le_trans (norm_sub_le _ _) (add_le_add hWe le_rfl)) (norm_nonneg _)
@@ -1551,52 +1534,26 @@ lemma clt_charFun_bounded [IsProbabilityMeasure P] (t : ℝ) {B σ2 : ℝ} (hB0 
       (Real.exp_pos _).le
   rw [hpt, integral_add hZWc_int ((hZint n).const_mul c), MeasureTheory.integral_const_mul]
 
-open Filter ProbabilityTheory MeasureTheory in
-/-- **Martingale CLT, Lindeberg form — bounded predictable variation.** If `V_n ≤ B` a.e.,
-`V_n → σ²` in probability and the conditional Lindeberg condition holds, then the laws of the row
-sums converge weakly to `𝒩(0, σ²)`. Combines `clt_charFun_bounded` with Mathlib's Lévy continuity
-theorem. -/
-lemma mart_clt_bounded [IsProbabilityMeasure P] {B σ2 : ℝ} (hB0 : 0 ≤ B) (hσ2 : 0 ≤ σ2)
-    (hB : ∀ n, A.predVar n ≤ᵐ[P] fun _ ↦ B)
-    (hV : TendstoInMeasure P (fun n ↦ A.predVar n) atTop (fun _ ↦ σ2))
-    (hLindeberg : ∀ ε, 0 < ε → TendstoInMeasure P (A.lindeberg · ε) atTop 0) :
-    Tendsto (β := ProbabilityMeasure ℝ) (fun n ↦ ⟨P.map (A.rowSum n),
-        Measure.isProbabilityMeasure_map (A.measurable_rowSum n).aemeasurable⟩) atTop
-      (𝓝 ⟨gaussianReal 0 σ2.toNNReal, inferInstance⟩) := by
-  refine ProbabilityMeasure.tendsto_iff_tendsto_charFun.2 fun t ↦ ?_
-  simp only [ProbabilityMeasure.coe_mk]
-  have hrhs : charFun (gaussianReal 0 σ2.toNNReal) t
-      = Complex.exp ((-(t ^ 2 / 2 * σ2) : ℝ) : ℂ) := by
-    rw [charFun_gaussianReal, Real.coe_toNNReal σ2 hσ2]
-    push_cast
-    ring_nf
-  have hcont : Continuous (fun x : ℝ ↦ Complex.exp ((t : ℂ) * (x : ℂ) * I)) := by fun_prop
-  have hlhs : ∀ n, charFun (P.map (A.rowSum n)) t
-      = ∫ ω, Complex.exp (((t * A.rowSum n ω : ℝ) : ℂ) * I) ∂P := by
-    intro n
-    rw [charFun_apply_real,
-      integral_map (A.measurable_rowSum n).aemeasurable hcont.aestronglyMeasurable]
-    simp only [← Complex.ofReal_mul]
-  simp_rw [hlhs, hrhs]
-  exact A.clt_charFun_bounded t hB0 hσ2 hB hV hLindeberg
-
 /-! ### Reduction to bounded predictable variation
 
 The general martingale CLT is reduced to the bounded case (`clt_charFun_bounded`,
 `mart_clt_bounded`) by the variance truncation `A.trunc B` with `B = σ² + 1`: on `{V_n ≤ B}` the
 truncated array agrees with the original, and `P(V_n > B) → 0`. -/
 
+/-- Within the row, every partial predictable variation is at most the full one: a.s., for all
+`i < k n`, `V_{n,i+1} ≤ V_n`. -/
+lemma partialVar_succ_le_predVar (n : ℕ) :
+    ∀ᵐ ω ∂P, ∀ i, i < A.k n → A.partialVar n (i + 1) ω ≤ A.predVar n ω := by
+  filter_upwards [ae_all_iff.mpr fun l ↦ A.condVar_nonneg n l] with ω hω i hi
+  simp only [Pi.zero_apply] at hω
+  exact Finset.sum_le_sum_of_subset_of_nonneg (Finset.range_mono (Nat.succ_le_of_lt hi))
+    fun l _ _ ↦ hω l
+
 /-- On `{V_n ≤ B}`, the truncated predictable variation agrees with the original (every truncation
 indicator equals `1`, since `V` is nondecreasing). -/
 lemma predVar_trunc_ae_eq_of_le [IsFiniteMeasure P] (B : ℝ) (n : ℕ) :
     ∀ᵐ ω ∂P, A.predVar n ω ≤ B → (A.trunc B).predVar n ω = A.predVar n ω := by
-  have hmono : ∀ i, ∀ᵐ ω ∂P, i < A.k n → A.partialVar n (i + 1) ω ≤ A.predVar n ω := by
-    intro i
-    by_cases hi : i < A.k n
-    · filter_upwards [A.partialVar_mono n (Nat.succ_le_of_lt hi)] with ω hω _
-      rw [A.predVar_eq_partialVar]; exact hω
-    · exact ae_of_all _ fun ω h ↦ absurd h hi
-  filter_upwards [ae_all_iff.mpr fun i ↦ A.condVar_trunc B n i, ae_all_iff.mpr hmono]
+  filter_upwards [ae_all_iff.mpr fun i ↦ A.condVar_trunc B n i, A.partialVar_succ_le_predVar n]
     with ω hcv hmo hVle
   change ∑ i ∈ Finset.range (A.k n), (A.trunc B).condVar n i ω
     = ∑ i ∈ Finset.range (A.k n), A.condVar n i ω
@@ -1610,13 +1567,7 @@ lemma predVar_trunc_ae_eq_of_le [IsFiniteMeasure P] (B : ℝ) (n : ℕ) :
 nothing where it matters and the bounded-variance CLT transfers back to the original array"]
 lemma rowSum_trunc_ae_eq_of_le [IsFiniteMeasure P] (B : ℝ) (n : ℕ) :
     ∀ᵐ ω ∂P, A.predVar n ω ≤ B → (A.trunc B).rowSum n ω = A.rowSum n ω := by
-  have hmono : ∀ i, ∀ᵐ ω ∂P, i < A.k n → A.partialVar n (i + 1) ω ≤ A.predVar n ω := by
-    intro i
-    by_cases hi : i < A.k n
-    · filter_upwards [A.partialVar_mono n (Nat.succ_le_of_lt hi)] with ω hω _
-      rw [A.predVar_eq_partialVar]; exact hω
-    · exact ae_of_all _ fun ω h ↦ absurd h hi
-  filter_upwards [ae_all_iff.mpr hmono] with ω hmo hVle
+  filter_upwards [A.partialVar_succ_le_predVar n] with ω hmo hVle
   change ∑ i ∈ Finset.range (A.k n), (A.trunc B).d n i ω
     = ∑ i ∈ Finset.range (A.k n), A.d n i ω
   refine Finset.sum_congr rfl fun i hi ↦ ?_
@@ -1742,11 +1693,14 @@ lemma clt_charFun [IsProbabilityMeasure P] (t : ℝ) {σ2 : ℝ} (hσ2 : 0 ≤ �
       (fun ε hε ↦ A.tendstoInMeasure_lindeberg_trunc B ε (hLindeberg ε hε))
   have hcomp : Tendsto (fun n ↦ ∫ ω, (Complex.exp (((t * A.rowSum n ω : ℝ) : ℂ) * I)
       - Complex.exp (((t * (A.trunc B).rowSum n ω : ℝ) : ℂ) * I)) ∂P) atTop (𝓝 0) := by
-    refine tendsto_integral_of_tendstoInMeasure_zero (C := 2)
-      (fun n ↦ (A.stronglyMeasurable_expI_rowSum t n).sub
-        ((A.trunc B).stronglyMeasurable_expI_rowSum t n))
+    have h := tendsto_integral_of_tendstoInMeasure (C := 2)
+      (g := fun n ω ↦ Complex.exp (((t * A.rowSum n ω : ℝ) : ℂ) * I)
+        - Complex.exp (((t * (A.trunc B).rowSum n ω : ℝ) : ℂ) * I))
+      (fun n ↦ ((A.stronglyMeasurable_expI_rowSum t n).sub
+        ((A.trunc B).stronglyMeasurable_expI_rowSum t n)).aestronglyMeasurable)
       (fun n ↦ ae_of_all _ fun ω ↦ le_trans (norm_sub_le _ _) ?_)
       (A.tendstoInMeasure_expI_rowSum_sub t hσB hV)
+    · simpa only [Pi.zero_apply, integral_zero] using h
     rw [A.norm_expI_rowSum t n ω, (A.trunc B).norm_expI_rowSum t n ω]; norm_num
   have hsplit : ∀ n, (∫ ω, Complex.exp (((t * A.rowSum n ω : ℝ) : ℂ) * I) ∂P)
       = (∫ ω, (Complex.exp (((t * A.rowSum n ω : ℝ) : ℂ) * I)
@@ -1762,33 +1716,38 @@ lemma clt_charFun [IsProbabilityMeasure P] (t : ℝ) {σ2 : ℝ} (hσ2 : 0 ≤ �
 open Filter ProbabilityTheory MeasureTheory in
 /-- **Martingale CLT, Lindeberg form** (Hall–Heyde). Let `(Δ_{n,i})_{i<k_n}` be a
 martingale difference array with predictable quadratic variation `V_n → σ²` in probability and
-satisfying the conditional Lindeberg condition. Then the laws of the row sums `S_n = ∑_i Δ_{n,i}`
-converge weakly to `𝒩(0, σ²)`. -/
+satisfying the conditional Lindeberg condition. Then the row sums `S_n = ∑_i Δ_{n,i}` converge in
+distribution to any `Y` with law `𝒩(0, σ²)` — the statement has the shape of Mathlib's
+`tendstoInDistribution_inv_sqrt_mul_sum_sub`. For the laws of the row sums themselves take
+`Y := id` on `(ℝ, 𝒩(0, σ²))` (`HasLaw.id`) and `TendstoInDistribution.tendsto`. -/
 @[specifies MartDiffArray "certifies the bundled fields are exactly the data the classical \
 Hall–Heyde martingale CLT runs on: nothing beyond square-integrability, the \
 martingale-difference property and the `𝓕 (i+1)`-adaptedness is needed to reach the Gaussian limit"]
-theorem mart_clt [IsProbabilityMeasure P] {σ2 : ℝ} (hσ2 : 0 ≤ σ2)
+theorem mart_clt [IsProbabilityMeasure P] {Ω' : Type*} {mΩ' : MeasurableSpace Ω'}
+    {P' : Measure Ω'} [IsProbabilityMeasure P'] {Y : Ω' → ℝ} {σ2 : ℝ} (hσ2 : 0 ≤ σ2)
+    (hY : HasLaw Y (gaussianReal 0 σ2.toNNReal) P')
     (hV : TendstoInMeasure P (fun n ↦ A.predVar n) atTop (fun _ ↦ σ2))
     (hLindeberg : ∀ ε, 0 < ε → TendstoInMeasure P (A.lindeberg · ε) atTop 0) :
-    Tendsto (β := ProbabilityMeasure ℝ) (fun n ↦ ⟨P.map (A.rowSum n),
-        Measure.isProbabilityMeasure_map (A.measurable_rowSum n).aemeasurable⟩) atTop
-      (𝓝 ⟨gaussianReal 0 σ2.toNNReal, inferInstance⟩) := by
-  refine ProbabilityMeasure.tendsto_iff_tendsto_charFun.2 fun t ↦ ?_
-  simp only [ProbabilityMeasure.coe_mk]
-  have hrhs : charFun (gaussianReal 0 σ2.toNNReal) t
-      = Complex.exp ((-(t ^ 2 / 2 * σ2) : ℝ) : ℂ) := by
-    rw [charFun_gaussianReal, Real.coe_toNNReal σ2 hσ2]
-    push_cast
-    ring_nf
-  have hcont : Continuous (fun x : ℝ ↦ Complex.exp ((t : ℂ) * (x : ℂ) * I)) := by fun_prop
-  have hlhs : ∀ n, charFun (P.map (A.rowSum n)) t
-      = ∫ ω, Complex.exp (((t * A.rowSum n ω : ℝ) : ℂ) * I) ∂P := by
-    intro n
-    rw [charFun_apply_real, integral_map (A.measurable_rowSum n).aemeasurable
-      hcont.aestronglyMeasurable]
-    simp only [← Complex.ofReal_mul]
-  simp_rw [hlhs, hrhs]
-  exact A.clt_charFun t hσ2 hV hLindeberg
+    TendstoInDistribution A.rowSum atTop Y (fun _ ↦ P) P' where
+  forall_aemeasurable n := (A.measurable_rowSum n).aemeasurable
+  aemeasurable_limit := hY.aemeasurable
+  tendsto := by
+    refine ProbabilityMeasure.tendsto_iff_tendsto_charFun.2 fun t ↦ ?_
+    simp only [ProbabilityMeasure.coe_mk, hY.map_eq]
+    have hrhs : charFun (gaussianReal 0 σ2.toNNReal) t
+        = Complex.exp ((-(t ^ 2 / 2 * σ2) : ℝ) : ℂ) := by
+      rw [charFun_gaussianReal, Real.coe_toNNReal σ2 hσ2]
+      push_cast
+      ring_nf
+    have hcont : Continuous (fun x : ℝ ↦ Complex.exp ((t : ℂ) * (x : ℂ) * I)) := by fun_prop
+    have hlhs : ∀ n, charFun (P.map (A.rowSum n)) t
+        = ∫ ω, Complex.exp (((t * A.rowSum n ω : ℝ) : ℂ) * I) ∂P := by
+      intro n
+      rw [charFun_apply_real, integral_map (A.measurable_rowSum n).aemeasurable
+        hcont.aestronglyMeasurable]
+      simp only [← Complex.ofReal_mul]
+    simp_rw [hlhs, hrhs]
+    exact A.clt_charFun t hσ2 hV hLindeberg
 
 /-! ### Single self-normalized martingale
 
@@ -1852,75 +1811,6 @@ lemma predVar_ofSeq (ha : ∀ n, 0 ≤ a n) (n : ℕ) :
   rw [hcv i, hcm i]
 
 end MartDiffArray
-
-section SelfNormalization
-
-open Filter ProbabilityTheory MeasureTheory
-
-variable {P : Measure Ω}
-
-/-- **Slutsky self-normalization for the CLT.** If the laws of `X n` converge weakly to `𝒩(0,σ²)`
-and `Y n → 1` in probability, then so do the laws of `X n · Y n`. It is what makes the
-self-normalized martingale CLT elementary, with no Anscombe random-time-change argument:
-`M_n/√(random) = (M_n/√(deterministic)) · √(deterministic/random)`, and the second factor tends to
-`1` in probability by the strong law, so the deterministic-normalizer CLT (`mart_clt`) plus
-this Slutsky step give the self-normalized limit. -/
-lemma tendsto_map_mul_of_tendstoInMeasure_one [IsProbabilityMeasure P] {σ2 : NNReal}
-    {X Y : ℕ → Ω → ℝ} (hX_meas : ∀ n, AEMeasurable (X n) P) (hY_meas : ∀ n, AEMeasurable (Y n) P)
-    (hX : Tendsto (β := ProbabilityMeasure ℝ)
-        (fun n ↦ ⟨P.map (X n), Measure.isProbabilityMeasure_map (hX_meas n)⟩) atTop
-        (𝓝 ⟨gaussianReal 0 σ2, inferInstance⟩))
-    (hY : TendstoInMeasure P Y atTop (fun _ ↦ (1 : ℝ))) :
-    Tendsto (β := ProbabilityMeasure ℝ)
-      (fun n ↦ ⟨P.map (fun ω ↦ X n ω * Y n ω),
-        Measure.isProbabilityMeasure_map ((hX_meas n).mul (hY_meas n))⟩) atTop
-      (𝓝 ⟨gaussianReal 0 σ2, inferInstance⟩) := by
-  have hid : TendstoInDistribution X atTop (id : ℝ → ℝ) (fun _ ↦ P) (gaussianReal 0 σ2) := by
-    refine ⟨hX_meas, aemeasurable_id, ?_⟩
-    simp only [Measure.map_id]
-    exact hX
-  have hslut := hid.continuous_comp_prodMk_of_tendstoInMeasure_const
-    (g := fun x : ℝ × ℝ ↦ x.1 * x.2) (by fun_prop) hY hY_meas
-  have h2 := hslut.tendsto
-  simp only [id_eq, mul_one, Measure.map_id'] at h2
-  exact h2
-
-/-- **Multivariate Slutsky.** If the laws of `Xn : ℕ → Ω → E` converge weakly to a probability
-measure `μ'` on `E`, `Rn : ℕ → Ω → E'` converges in probability to a constant `c`, and
-`g : E × E' → F` is continuous, then the laws of `fun ω ↦ g (Xn ω, Rn ω)` converge weakly to
-`μ'.map (fun x ↦ g (x, c))`. This is the vector generalisation of
-`tendsto_map_mul_of_tendstoInMeasure_one`, used to pass from a deterministic-normalizer joint CLT
-to the self-normalized one. -/
-lemma tendsto_map_comp_of_tendstoInMeasure_const [IsProbabilityMeasure P]
-    {E E' F : Type*}
-    [NormedAddCommGroup E] [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E]
-    [SeminormedAddCommGroup E'] [MeasurableSpace E'] [BorelSpace E'] [SecondCountableTopology E']
-    [TopologicalSpace F] [MeasurableSpace F] [BorelSpace F]
-    {μ' : Measure E} [IsProbabilityMeasure μ']
-    {Xn : ℕ → Ω → E} {Rn : ℕ → Ω → E'} {c : E'}
-    (g : E × E' → F) (hg : Continuous g)
-    (hX_meas : ∀ n, AEMeasurable (Xn n) P) (hR_meas : ∀ n, AEMeasurable (Rn n) P)
-    (hX : Tendsto (β := ProbabilityMeasure E)
-        (fun n ↦ ⟨P.map (Xn n), Measure.isProbabilityMeasure_map (hX_meas n)⟩) atTop
-        (𝓝 ⟨μ', inferInstance⟩))
-    (hR : TendstoInMeasure P Rn atTop (fun _ ↦ c)) :
-    Tendsto (β := ProbabilityMeasure F)
-      (fun n ↦ ⟨P.map (fun ω ↦ g (Xn n ω, Rn n ω)),
-        Measure.isProbabilityMeasure_map
-          (hg.measurable.comp_aemeasurable ((hX_meas n).prodMk (hR_meas n)))⟩) atTop
-      (𝓝 ⟨μ'.map (fun x ↦ g (x, c)),
-        Measure.isProbabilityMeasure_map
-          (hg.comp (continuous_id.prodMk continuous_const)).measurable.aemeasurable⟩) := by
-  have hid : TendstoInDistribution Xn atTop (id : E → E) (fun _ ↦ P) μ' := by
-    refine ⟨hX_meas, aemeasurable_id, ?_⟩
-    simp only [Measure.map_id]
-    exact hX
-  have hslut := hid.continuous_comp_prodMk_of_tendstoInMeasure_const (g := g) hg hR hR_meas
-  have h2 := hslut.tendsto
-  simp only [id_eq] at h2
-  exact h2
-
-end SelfNormalization
 
 end Array
 

@@ -1,4 +1,5 @@
 import Mathlib.Probability.Process.Filtration
+import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
 import Mathlib.Algebra.BigOperators.Field
 import Mathlib.Algebra.Order.Star.Real
 import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
@@ -328,11 +329,6 @@ open scoped Topology RealInnerProductSpace Matrix ENNReal
 namespace AlphaRAR
 variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐} [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] [Fintype 𝓐] {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν] {P : Measure Ω} [IsProbabilityMeasure P] {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
 
-omit [DecidableEq 𝓐] [Fintype 𝓐] in
-lemma measurable_jointSqrtNVec [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
-    (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (v : 𝓐 → ℝ) (n : ℕ) :
-    Measurable (jointSqrtNVec ν A Y θ₀ T v n) := sorry
-
 end AlphaRAR
 end
 
@@ -366,18 +362,12 @@ theorem aRTS_clt_joint [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace �
     (hTderiv : HasFDerivAt
       (fun x : EuclideanSpace ℝ 𝓐 ↦ (WithLp.toLp 2 (T (WithLp.ofLp x)) : EuclideanSpace ℝ 𝓐))
       (Matrix.toEuclideanCLM (𝕜 := ℝ) G) (WithLp.toLp 2 ν.means)) :
-    Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ (𝓐 ⊕ 𝓐)))
-      (fun n : ℕ ↦ (⟨P.map (jointSqrtNVec ν A Y θ₀ T (T ν.means) n),
-        Measure.isProbabilityMeasure_map
-          (measurable_jointSqrtNVec h θ₀ hlip.continuous (T ν.means) n).aemeasurable⟩
-          : ProbabilityMeasure (EuclideanSpace ℝ (𝓐 ⊕ 𝓐))))
-      atTop
-      (𝓝 ⟨multivariateGaussian 0 (Matrix.fromBlocks
+    TendstoInDistribution (jointSqrtNVec ν A Y θ₀ T (T ν.means)) atTop id (fun _ ↦ P)
+      (multivariateGaussian 0 (Matrix.fromBlocks
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ)
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ)
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ)
-        (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ)),
-          inferInstance⟩) := sorry
+        (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ))) := sorry
 
 end AlphaRAR
 end

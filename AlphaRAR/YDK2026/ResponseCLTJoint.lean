@@ -514,19 +514,15 @@ lemma wLinComb_scaled_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationaryE
     {ρ : 𝓐 → ℝ} (hσ2 : 0 ≤ ∑ a, w a ^ 2 * Var[id; ν a] * ρ a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / c a n)
       atTop (𝓝 (ρ a))) :
-    Tendsto (β := ProbabilityMeasure ℝ)
-      (fun n : ℕ ↦ (⟨P.map
-          (fun ω ↦ ∑ a, (w a / √(c a n)) * respMart ν A Y a n ω),
-        Measure.isProbabilityMeasure_map (Finset.measurable_sum _
-          fun a _ ↦ (measurable_respMart h a n).const_mul _).aemeasurable⟩
-            : ProbabilityMeasure ℝ))
-      atTop (𝓝 ⟨gaussianReal 0 (∑ a, w a ^ 2 * Var[id; ν a] * ρ a).toNNReal, inferInstance⟩) := by
+    TendstoInDistribution (fun (n : ℕ) ω ↦ ∑ a, (w a / √(c a n)) * respMart ν A Y a n ω) atTop
+      id (fun _ ↦ P) (gaussianReal 0 (∑ a, w a ^ 2 * Var[id; ν a] * ρ a).toNNReal) := by
   have hmart := (wArray h hνk (fun n a ↦ w a / √(c a n))).mart_clt
-    (σ2 := ∑ a, w a ^ 2 * Var[id; ν a] * ρ a) hσ2
+    (σ2 := ∑ a, w a ^ 2 * Var[id; ν a] * ρ a) hσ2 HasLaw.id
     (tendstoInMeasure_predVar_wArray h hνk w hc hNconv)
     (tendstoInMeasure_lindeberg_wArray h hνk w hc hc_atTop hNconv)
-  simp only [rowSum_wArray] at hmart
-  exact hmart
+  rwa [show (wArray h hνk (fun n a ↦ w a / √(c a n))).rowSum
+      = fun (n : ℕ) ω ↦ ∑ a, (w a / √(c a n)) * respMart ν A Y a n ω from
+    funext (rowSum_wArray h hνk _)] at hmart
 
 omit [DecidableEq 𝓐] in
 /-- **The 1-D CLT for a linear combination of the response martingales** (the Cramér–Wold
@@ -537,16 +533,12 @@ lemma wLinComb_tendsto_gaussianReal (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) 
     (hνk : ∀ a, MemLp id 2 (ν a)) (hσ2 : 0 ≤ ∑ a, w a ^ 2 * Var[id; ν a] * v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a))) :
-    Tendsto (β := ProbabilityMeasure ℝ)
-      (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (√(n : ℝ))⁻¹ * ∑ a, w a * respMart ν A Y a n ω),
-        Measure.isProbabilityMeasure_map (measurable_const.mul (Finset.measurable_sum _
-          fun a _ ↦ (measurable_respMart h a n).const_mul (w a))).aemeasurable⟩
-            : ProbabilityMeasure ℝ))
-      atTop (𝓝 ⟨gaussianReal 0 (∑ a, w a ^ 2 * Var[id; ν a] * v a).toNNReal, inferInstance⟩) := by
+    TendstoInDistribution (fun (n : ℕ) ω ↦ (√(n : ℝ))⁻¹ * ∑ a, w a * respMart ν A Y a n ω) atTop
+      id (fun _ ↦ P) (gaussianReal 0 (∑ a, w a ^ 2 * Var[id; ν a] * v a).toNNReal) := by
   have hgen := wLinComb_scaled_tendsto_gaussianReal h w hνk (c := fun _ n ↦ (n : ℝ))
     (fun _ n ↦ Nat.cast_nonneg n) (fun _ ↦ tendsto_natCast_atTop_atTop) hσ2 hNconv
-  refine hgen.congr' (Filter.Eventually.of_forall fun n ↦ Subtype.ext (congrArg (P.map ·) ?_))
-  funext ω
+  refine hgen.congr (fun n ↦ Eventually.of_forall fun ω ↦ ?_) EventuallyEq.rfl
+  change ∑ a, w a / √(n : ℝ) * respMart ν A Y a n ω = (√(n : ℝ))⁻¹ * ∑ a, w a * respMart ν A Y a n ω
   rw [Finset.mul_sum]
   exact Finset.sum_congr rfl fun a _ ↦ by rw [div_eq_mul_inv]; ring
 
@@ -665,41 +657,24 @@ lemma respMart_joint_tendsto_multivariateGaussian
     (hV : ∀ a, 0 ≤ Var[id; ν a])
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / c a n)
       atTop (𝓝 (ρ a))) :
-    Tendsto (fun n : ℕ ↦ ProbabilityMeasure.map (⟨P, inferInstance⟩ : ProbabilityMeasure Ω)
-        (measurable_respVec h c n).aemeasurable) atTop
-      (𝓝 (ProbabilityMeasure.map
-          (⟨multivariateGaussian 0 (Matrix.diagonal (fun a ↦ ρ a * Var[id; ν a])), inferInstance⟩
-            : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)) measurable_id.aemeasurable)) := by
-  refine tendsto_map_of_tendsto_map_inner measurable_id (measurable_respVec h c) fun t ↦ ?_
+    TendstoInDistribution (respVec ν A Y c) atTop id (fun _ ↦ P)
+      (multivariateGaussian 0 (Matrix.diagonal (fun a ↦ ρ a * Var[id; ν a]))) := by
+  refine tendstoInDistribution_of_forall_inner (measurable_respVec h c) measurable_id fun t ↦ ?_
   have hs2nn : 0 ≤ ∑ a, t.ofLp a ^ 2 * Var[id; ν a] * ρ a :=
     Finset.sum_nonneg fun a _ ↦ mul_nonneg (mul_nonneg (sq_nonneg _) (hV a)) (hρ a)
-  -- Q side: the projection of the target Gaussian is a real Gaussian.
-  have hQ : ProbabilityMeasure.map
-        (⟨multivariateGaussian 0 (Matrix.diagonal fun a ↦ ρ a * Var[id; ν a]), inferInstance⟩
-          : ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-          (measurable_id.inner_const (c := t)).aemeasurable
-      = ⟨gaussianReal 0 (∑ a, t.ofLp a ^ 2 * Var[id; ν a] * ρ a).toNNReal, inferInstance⟩ := by
-    apply ProbabilityMeasure.toMeasure_injective
-    simp only [ProbabilityMeasure.coe_mk]
-    change (multivariateGaussian 0 (Matrix.diagonal fun a ↦ ρ a * Var[id; ν a])).map
-      (fun x ↦ (⟪x, t⟫ : ℝ)) = _
+  -- The projection of the target Gaussian is a real Gaussian.
+  have hlaw : HasLaw (fun x : EuclideanSpace ℝ 𝓐 ↦ (⟪id x, t⟫ : ℝ))
+      (gaussianReal 0 (∑ a, t.ofLp a ^ 2 * Var[id; ν a] * ρ a).toNNReal)
+      (multivariateGaussian 0 (Matrix.diagonal fun a ↦ ρ a * Var[id; ν a])) := by
+    refine ⟨(measurable_id.inner_const (c := t)).aemeasurable, ?_⟩
+    simp only [id_eq]
     rw [multivariateGaussian_diag_map_inner _ (fun a ↦ mul_nonneg (hρ a) (hV a)) t]
     congr 2
     exact Finset.sum_congr rfl fun a _ ↦ by ring
-  -- P side: the `n`-th projected law is the 1-D linear-combination law.
-  have hP : ∀ n, ProbabilityMeasure.map (⟨P, inferInstance⟩ : ProbabilityMeasure Ω)
-        ((measurable_respVec h c n).inner_const (c := t)).aemeasurable
-      = ⟨P.map (fun ω ↦ ∑ a, (t.ofLp a / √(c a n)) * respMart ν A Y a n ω),
-          Measure.isProbabilityMeasure_map (Finset.measurable_sum _
-            fun a _ ↦ (measurable_respMart h a n).const_mul _).aemeasurable⟩ := by
-    intro n
-    apply ProbabilityMeasure.toMeasure_injective
-    simp only [ProbabilityMeasure.coe_mk]
-    change P.map (fun ω ↦ (⟪respVec ν A Y c n ω, t⟫ : ℝ)) = _
-    exact congrArg (P.map ·) (funext fun ω ↦ inner_respVec c n ω t)
-  rw [hQ]
-  exact Tendsto.congr (fun n ↦ (hP n).symm)
-    (wLinComb_scaled_tendsto_gaussianReal h t.ofLp hνk hc hc_atTop hs2nn hNconv)
+  -- The `n`-th projection is the 1-D linear combination.
+  refine (tendstoInDistribution_id_iff hlaw).mp ?_
+  exact (wLinComb_scaled_tendsto_gaussianReal h t.ofLp hνk hc hc_atTop hs2nn hNconv).congr
+    (fun n ↦ Eventually.of_forall fun ω ↦ (inner_respVec c n ω t).symm) EventuallyEq.rfl
 
 omit [Fintype 𝓐] [DecidableEq 𝓐] in
 /-- The self-normalized joint response-martingale vector `((√N_{n,a})⁻¹ Q_{n,a})_a ∈ ℝ^𝓐` is
@@ -718,7 +693,8 @@ open scoped RealInnerProductSpace in
 `(Q_{n,k}/√N_{n,k})_k` — each response martingale normalized by its *own* random count
 `√N_{n,k}` — converges weakly to `𝒩(0, diag(V_k))`.
 This is the deterministic-normalizer joint CLT (`respMart_joint_tendsto_multivariateGaussian`)
-composed with multivariate Slutsky (`tendsto_map_comp_of_tendstoInMeasure_const`): the
+composed with multivariate Slutsky
+(`TendstoInDistribution.continuous_comp_prodMk_of_tendstoInMeasure_const`): the
 coordinatewise scaling `√(c_{k,n}/N_{n,k}) → 1/√ρ_k` in probability, and the diagonal rescaling of
 the target Gaussian (`multivariateGaussian_diagonal_smul_map`) turns `diag(ρ_k V_k)` into
 `diag(V_k)`.
@@ -734,14 +710,10 @@ lemma respMart_joint_selfNorm_tendsto_multivariateGaussian
     (hc_atTop : ∀ a, Tendsto (c a) atTop atTop) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / c a n)
       atTop (𝓝 (v a))) :
-    Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-      (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (WithLp.toLp 2 (fun a ↦
-          (√(count (fun j ↦ actionIndicator A a j ω) n))⁻¹ * respMart ν A Y a n ω)
-            : EuclideanSpace ℝ 𝓐)),
-        Measure.isProbabilityMeasure_map (measurable_respSelfNormVec h n).aemeasurable⟩
-          : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)))
-      atTop
-      (𝓝 ⟨multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a]), inferInstance⟩) := by
+    TendstoInDistribution (fun n ω ↦ (WithLp.toLp 2 (fun a ↦
+        (√(count (fun j ↦ actionIndicator A a j ω) n))⁻¹ * respMart ν A Y a n ω)
+          : EuclideanSpace ℝ 𝓐)) atTop id (fun _ ↦ P)
+      (multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a])) := by
   have hVnn : ∀ a, 0 ≤ Var[id; ν a] := fun a ↦ variance_nonneg _ _
   set μ' : Measure (EuclideanSpace ℝ 𝓐) :=
     multivariateGaussian 0 (Matrix.diagonal fun a ↦ v a * Var[id; ν a]) with hμ'
@@ -770,51 +742,38 @@ lemma respMart_joint_selfNorm_tendsto_multivariateGaussian
   set g : EuclideanSpace ℝ 𝓐 × EuclideanSpace ℝ 𝓐 → EuclideanSpace ℝ 𝓐 :=
     fun p ↦ WithLp.toLp 2 (fun a ↦ p.2 a * p.1 a) with hg_def
   have hg : Continuous g := by rw [hg_def]; fun_prop
-  have hslut := tendsto_map_comp_of_tendstoInMeasure_const (P := P) (μ' := μ') g hg
-    (fun n ↦ (measurable_respVec h c n).aemeasurable) hRmeas ?_ hRtendsto
-  · -- Identify the source `g (respVec, Rn) = selfNormVec` and the limit Gaussian.
-    have hlim : μ'.map (fun x ↦ g (x, cst))
-        = multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a]) := by
-      rw [hμ', show (fun x : EuclideanSpace ℝ 𝓐 ↦ g (x, cst))
-          = fun x : EuclideanSpace ℝ 𝓐 ↦ (WithLp.toLp 2 (fun a ↦ (√(v a))⁻¹ * x a)
-            : EuclideanSpace ℝ 𝓐) from rfl,
-        multivariateGaussian_diagonal_smul_map (fun a ↦ v a * Var[id; ν a])
-          (fun a ↦ (√(v a))⁻¹) fun a ↦ mul_nonneg (hv a).le (hVnn a)]
-      refine congrArg (fun f ↦ multivariateGaussian 0 (Matrix.diagonal f)) (funext fun a ↦ ?_)
-      show (√(v a))⁻¹ ^ 2 * (v a * Var[id; ν a]) = Var[id; ν a]
-      rw [inv_pow, Real.sq_sqrt (hv a).le, inv_mul_cancel_left₀ (hv a).ne']
-    rw [show (⟨multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a]), inferInstance⟩
-          : ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-        = ⟨μ'.map (fun x ↦ g (x, cst)), Measure.isProbabilityMeasure_map
-            (hg.comp (continuous_id.prodMk continuous_const)).measurable.aemeasurable⟩
-        from Subtype.ext hlim.symm]
-    -- The scaling `√(c_{a,n})·(√(c_{a,n}))⁻¹` cancels once every `c_{a,n} > 0`, which holds
-    -- eventually since `c_{a,n} → ∞` (and `𝓐` is finite).
-    refine Tendsto.congr' ?_ hslut
-    filter_upwards [Filter.eventually_all.mpr
-      (fun a ↦ (hc_atTop a).eventually_gt_atTop 0)] with n hn
-    refine Subtype.ext (congrArg (P.map ·) ?_)
-    funext ω
-    simp only [hg_def]
-    refine congrArg (WithLp.toLp 2) (funext fun a ↦ ?_)
-    simp only [hRn, respVec, WithLp.ofLp_toLp]
-    have hsn : √(c a n) ≠ 0 := Real.sqrt_ne_zero'.mpr (hn a)
-    rw [show √(c a n) * (√(count (fun j ↦ actionIndicator A a j ω) n))⁻¹
-        * ((√(c a n))⁻¹ * respMart ν A Y a n ω)
-        = (√(c a n) * (√(c a n))⁻¹)
-          * ((√(count (fun j ↦ actionIndicator A a j ω) n))⁻¹ * respMart ν A Y a n ω)
-        by ring, mul_inv_cancel₀ hsn, one_mul]
-  · -- The deterministic-normalizer joint CLT, in the `⟨P.map ·, ·⟩` form.
-    have hjoint := respMart_joint_tendsto_multivariateGaussian h hνk hc hc_atTop
-      (fun a ↦ (hv a).le) hVnn hNconv
-    have e2 : (⟨μ', inferInstance⟩ : ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-        = ProbabilityMeasure.map
-          (⟨μ', inferInstance⟩ : ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-          measurable_id.aemeasurable :=
-      ProbabilityMeasure.toMeasure_injective Measure.map_id.symm
-    rw [e2]
-    refine Tendsto.congr (fun n ↦ ?_) hjoint
-    exact ProbabilityMeasure.toMeasure_injective rfl
+  -- The deterministic-normalizer joint CLT, then multivariate Slutsky.
+  have hjoint := respMart_joint_tendsto_multivariateGaussian h hνk hc hc_atTop
+    (fun a ↦ (hv a).le) hVnn hNconv
+  have hslut := hjoint.continuous_comp_prodMk_of_tendstoInMeasure_const hg hRtendsto hRmeas
+  -- The limit law: `g(·, cst)` rescales `diag(v_a V_a)` to `diag(V_a)`.
+  have hlim : μ'.map (fun x ↦ g (id x, cst))
+      = multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a]) := by
+    rw [hμ', show (fun x : EuclideanSpace ℝ 𝓐 ↦ g (id x, cst))
+        = fun x : EuclideanSpace ℝ 𝓐 ↦ (WithLp.toLp 2 (fun a ↦ (√(v a))⁻¹ * x a)
+          : EuclideanSpace ℝ 𝓐) from rfl,
+      multivariateGaussian_diagonal_smul_map (fun a ↦ v a * Var[id; ν a])
+        (fun a ↦ (√(v a))⁻¹) fun a ↦ mul_nonneg (hv a).le (hVnn a)]
+    refine congrArg (fun f ↦ multivariateGaussian 0 (Matrix.diagonal f)) (funext fun a ↦ ?_)
+    show (√(v a))⁻¹ ^ 2 * (v a * Var[id; ν a]) = Var[id; ν a]
+    rw [inv_pow, Real.sq_sqrt (hv a).le, inv_mul_cancel_left₀ (hv a).ne']
+  refine ((tendstoInDistribution_id_iff
+    ⟨(hg.comp (continuous_id.prodMk continuous_const)).measurable.aemeasurable, hlim⟩).mpr
+      hslut).congr' ?_ EventuallyEq.rfl fun n ↦ (measurable_respSelfNormVec h n).aemeasurable
+  -- The scaling `√(c_{a,n})·(√(c_{a,n}))⁻¹` cancels once every `c_{a,n} > 0`, which holds
+  -- eventually since `c_{a,n} → ∞` (and `𝓐` is finite).
+  filter_upwards [Filter.eventually_all.mpr
+    (fun a ↦ (hc_atTop a).eventually_gt_atTop 0)] with n hn
+  refine Eventually.of_forall fun ω ↦ ?_
+  simp only [hg_def]
+  refine congrArg (WithLp.toLp 2) (funext fun a ↦ ?_)
+  simp only [hRn, respVec, WithLp.ofLp_toLp]
+  have hsn : √(c a n) ≠ 0 := Real.sqrt_ne_zero'.mpr (hn a)
+  rw [show √(c a n) * (√(count (fun j ↦ actionIndicator A a j ω) n))⁻¹
+      * ((√(c a n))⁻¹ * respMart ν A Y a n ω)
+      = (√(c a n) * (√(c a n))⁻¹)
+        * ((√(count (fun j ↦ actionIndicator A a j ω) n))⁻¹ * respMart ν A Y a n ω)
+      by ring, mul_inv_cancel₀ hsn, one_mul]
 
 omit [Fintype 𝓐] [DecidableEq 𝓐] in
 /-- The estimator-error vector `D_n(θ̂_n-θ)_k = √N_{n,k}(θ̂_{n,k}-θ_k)` is measurable. -/
@@ -859,15 +818,11 @@ lemma estimatorError_joint_tendsto_multivariateGaussian
     (hcn_atTop : ∀ a, Tendsto (cn a) atTop atTop) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / cn a n)
       atTop (𝓝 (v a))) :
-    Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-      (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (WithLp.toLp 2 (fun k ↦
-          √(count (fun j ↦ actionIndicator A k j ω) n)
-            * (estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
-              : EuclideanSpace ℝ 𝓐)),
-        Measure.isProbabilityMeasure_map (measurable_estimatorErrorVec h θ₀ n).aemeasurable⟩
-          : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)))
-      atTop
-      (𝓝 ⟨multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a]), inferInstance⟩) := by
+    TendstoInDistribution (fun n ω ↦ (WithLp.toLp 2 (fun k ↦
+        √(count (fun j ↦ actionIndicator A k j ω) n)
+          * (estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
+            : EuclideanSpace ℝ 𝓐)) atTop id (fun _ ↦ P)
+      (multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a])) := by
   set μ' : Measure (EuclideanSpace ℝ 𝓐) :=
     multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a]) with hμ'
   set c : EuclideanSpace ℝ 𝓐 × EuclideanSpace ℝ 𝓐 :=
@@ -940,20 +895,14 @@ lemma estimatorError_joint_tendsto_multivariateGaussian
       exact hc2.congr fun n ↦ (mul_div_assoc _ _ _).symm
   -- Apply multivariate Slutsky; identify source (Bahadur) and limit (`g(·,c)=id`).
   have hX := respMart_joint_selfNorm_tendsto_multivariateGaussian h hνk hcn hcn_atTop hv hNconv
-  have hslut := tendsto_map_comp_of_tendstoInMeasure_const (P := P) (μ' := μ') g hg
-    (fun n ↦ (measurable_respSelfNormVec h n).aemeasurable) hRmeas hX hRtendsto
-  have hlimid : (fun x : EuclideanSpace ℝ 𝓐 ↦ g (x, c)) = id := by
+  have hslut := hX.continuous_comp_prodMk_of_tendstoInMeasure_const hg hRtendsto hRmeas
+  have hlimid : (fun x : EuclideanSpace ℝ 𝓐 ↦ g (id x, c)) = id := by
     funext x
     simp only [hg_def, hc, mul_one, add_zero, id_eq, WithLp.toLp_ofLp]
-  have heq : (⟨μ', inferInstance⟩ : ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-      = ⟨μ'.map (fun x ↦ g (x, c)), Measure.isProbabilityMeasure_map
-          (hg.comp (continuous_id.prodMk continuous_const)).measurable.aemeasurable⟩ := by
-    apply Subtype.ext
-    change μ' = μ'.map (fun x ↦ g (x, c))
-    rw [hlimid, Measure.map_id]
-  rw [heq]
-  refine Tendsto.congr (fun n ↦ Subtype.ext (congrArg (P.map ·) ?_)) hslut
-  funext ω
+  have hlaw : HasLaw (fun x : EuclideanSpace ℝ 𝓐 ↦ g (id x, c)) μ' μ' := by
+    rw [hlimid]; exact HasLaw.id
+  refine ((tendstoInDistribution_id_iff hlaw).mpr hslut).congr
+    (fun n ↦ Eventually.of_forall fun ω ↦ ?_) EventuallyEq.rfl
   simp only [hg_def, hRn]
   refine congrArg (WithLp.toLp 2) (funext fun k ↦ ?_)
   have hbr : respMG (fun j ↦ actionIndicator A k j ω) (Y · ω) (ν.means k) n
@@ -1013,14 +962,10 @@ lemma estimator_sqrtN_joint_tendsto_multivariateGaussian
     (hνk : ∀ a, MemLp id 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a))) :
-    Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-      (fun n : ℕ ↦ (⟨P.map (fun ω ↦ (WithLp.toLp 2 (fun k ↦ √n
-          * (estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
-              : EuclideanSpace ℝ 𝓐)),
-        Measure.isProbabilityMeasure_map (measurable_estimatorSqrtNVec h θ₀ n).aemeasurable⟩
-          : ProbabilityMeasure (EuclideanSpace ℝ 𝓐)))
-      atTop
-      (𝓝 ⟨multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a] / v a), inferInstance⟩) := by
+    TendstoInDistribution (fun (n : ℕ) ω ↦ (WithLp.toLp 2 (fun k ↦ √n
+        * (estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
+          : EuclideanSpace ℝ 𝓐)) atTop id (fun _ ↦ P)
+      (multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a] / v a)) := by
   have hVnn : ∀ a, 0 ≤ Var[id; ν a] := fun a ↦ variance_nonneg _ _
   set μ' : Measure (EuclideanSpace ℝ 𝓐) :=
     multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a]) with hμ'
@@ -1112,29 +1057,21 @@ lemma estimator_sqrtN_joint_tendsto_multivariateGaussian
   have hX := respMart_joint_selfNorm_tendsto_multivariateGaussian h hνk
     (c := fun _ m ↦ (m : ℝ)) (fun _ m ↦ Nat.cast_nonneg m)
     (fun _ ↦ tendsto_natCast_atTop_atTop) hv hNconv
-  have hslut := tendsto_map_comp_of_tendstoInMeasure_const (P := P) (μ' := μ') g hg
-    (fun n ↦ (measurable_respSelfNormVec h n).aemeasurable) hRmeas hX hRtendsto
-  have hgc : (fun x : EuclideanSpace ℝ 𝓐 ↦ g (x, c))
+  have hslut := hX.continuous_comp_prodMk_of_tendstoInMeasure_const hg hRtendsto hRmeas
+  have hgc : (fun x : EuclideanSpace ℝ 𝓐 ↦ g (id x, c))
       = fun x : EuclideanSpace ℝ 𝓐 ↦ (WithLp.toLp 2 (fun k ↦ (√(v k))⁻¹ * x k)
         : EuclideanSpace ℝ 𝓐) := by
-    funext x; simp only [hg_def, hc, add_zero]
-  have hlim : μ'.map (fun x ↦ g (x, c))
+    funext x; simp only [hg_def, hc, add_zero, id_eq]
+  have hlim : μ'.map (fun x ↦ g (id x, c))
       = multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a] / v a) := by
     rw [hgc, hμ', multivariateGaussian_diagonal_smul_map (fun a ↦ Var[id; ν a])
       (fun k ↦ (√(v k))⁻¹) hVnn]
     refine congrArg (fun f ↦ multivariateGaussian 0 (Matrix.diagonal f)) (funext fun k ↦ ?_)
     show (√(v k))⁻¹ ^ 2 * Var[id; ν k] = Var[id; ν k] / v k
     rw [inv_pow, Real.sq_sqrt (hv k).le, inv_mul_eq_div]
-  have heq : (⟨multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a] / v a), inferInstance⟩
-        : ProbabilityMeasure (EuclideanSpace ℝ 𝓐))
-      = ⟨μ'.map (fun x ↦ g (x, c)), Measure.isProbabilityMeasure_map
-          (hg.comp (continuous_id.prodMk continuous_const)).measurable.aemeasurable⟩ := by
-    apply Subtype.ext
-    change multivariateGaussian 0 (Matrix.diagonal fun a ↦ Var[id; ν a] / v a) = μ'.map _
-    rw [hlim]
-  rw [heq]
-  refine Tendsto.congr (fun n ↦ Subtype.ext (congrArg (P.map ·) ?_)) hslut
-  funext ω
+  refine ((tendstoInDistribution_id_iff
+    ⟨(hg.comp (continuous_id.prodMk continuous_const)).measurable.aemeasurable, hlim⟩).mpr
+      hslut).congr (fun n ↦ Eventually.of_forall fun ω ↦ ?_) EventuallyEq.rfl
   simp only [hg_def, hRn]
   refine congrArg (WithLp.toLp 2) (funext fun k ↦ ?_)
   have hbr : respMG (fun j ↦ actionIndicator A k j ω) (Y · ω) (ν.means k) n

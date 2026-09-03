@@ -32,7 +32,7 @@ The key device (which avoids the Anscombe / random-time-change argument) is to n
 
 The deterministic-normalizer CLT (`respMart_div_sqrt_tendsto_gaussianReal`) then gives
 `Q_{n,k}/√(V_k v_k n) ⇒ 𝒩(0,1)`, and self-normalization by `√(v_k n/N_{n,k}) → 1`
-(`tendsto_map_mul_of_tendstoInMeasure_one`) recovers the random-normalizer statement.
+(`TendstoInDistribution.mul_of_tendstoInMeasure_const`) recovers the random-normalizer statement.
 -/
 
 @[expose] public section
@@ -423,38 +423,32 @@ lemma respMart_div_sqrt_tendsto_gaussianReal [Finite 𝓐]
     (hνk : ∀ a, MemLp id 2 (ν a)) (k : 𝓐) (vk : ℝ) (hvk : 0 < vk) (hVk : 0 < Var[id; ν k])
     (hNconv : ∀ᵐ ω ∂P,
       Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 vk)) :
-    Tendsto (β := ProbabilityMeasure ℝ)
-      (fun n : ℕ ↦ (⟨P.map (fun ω ↦
-          (√(Var[id; ν k] * vk * (n : ℝ)))⁻¹ * respMart ν A Y k n ω),
-        Measure.isProbabilityMeasure_map
-          (measurable_const.mul (measurable_respMart h k n)).aemeasurable⟩ : ProbabilityMeasure ℝ))
-      atTop (𝓝 ⟨gaussianReal 0 1, inferInstance⟩) := by
-  have hmart := (respArray h hνk k vk).mart_clt (σ2 := 1) zero_le_one
+    TendstoInDistribution
+      (fun (n : ℕ) ω ↦ (√(Var[id; ν k] * vk * (n : ℝ)))⁻¹ * respMart ν A Y k n ω)
+      atTop id (fun _ ↦ P) (gaussianReal 0 1) := by
+  have hmart := (respArray h hνk k vk).mart_clt (σ2 := 1) zero_le_one HasLaw.id
     (tendstoInMeasure_predVar_respArray h hνk k vk hvk hVk hNconv)
     (tendstoInMeasure_lindeberg_respArray h hνk k vk hvk hVk)
-  simp only [rowSum_respArray, Real.toNNReal_one] at hmart
-  exact hmart
+  rw [show (respArray h hνk k vk).rowSum
+      = fun (n : ℕ) ω ↦ (√(Var[id; ν k] * vk * (n : ℝ)))⁻¹ * respMart ν A Y k n ω from
+    funext (rowSum_respArray h hνk k vk)] at hmart
+  simpa only [Real.toNNReal_one] using hmart
 
 /-- **The self-normalized per-arm CLT for the response martingale.** The law of
 `Q_{n,k}/√(V_k N_{n,k})` — the response martingale normalized by the *random* observed variation
 `√(V_k N_{n,k})` — converges weakly to the standard Gaussian `𝒩(0,1)`. This is the univariate
 form of the componentwise self-normalized CLT, under a positive limiting proportion `0 < v_k`. It
 follows from the deterministic-normalizer CLT (`respMart_div_sqrt_tendsto_gaussianReal`) and
-Slutsky (`tendsto_map_mul_of_tendstoInMeasure_one`), since the ratio
+Slutsky (`TendstoInDistribution.mul_of_tendstoInMeasure_const`), since the ratio
 `√(V_k v_k n)/√(V_k N_{n,k}) = √(v_k n/N_{n,k}) → 1` in probability (from `N_{n,k}/n → v_k`). -/
 lemma respMart_selfNorm_tendsto_gaussianReal [Finite 𝓐]
     (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (k : 𝓐) (vk : ℝ) (hvk : 0 < vk) (hVk : 0 < Var[id; ν k])
     (hNconv : ∀ᵐ ω ∂P,
       Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 vk)) :
-    Tendsto (β := ProbabilityMeasure ℝ)
-      (fun n : ℕ ↦ (⟨P.map (fun ω ↦
-          (√(Var[id; ν k] * count (fun j ↦ actionIndicator A k j ω) n))⁻¹
-            * respMart ν A Y k n ω),
-        Measure.isProbabilityMeasure_map
-          ((((measurable_const.mul (measurable_count_actionIndicator h k n)).sqrt).inv).mul
-            (measurable_respMart h k n)).aemeasurable⟩ : ProbabilityMeasure ℝ))
-      atTop (𝓝 ⟨gaussianReal 0 1, inferInstance⟩) := by
+    TendstoInDistribution (fun (n : ℕ) ω ↦
+        (√(Var[id; ν k] * count (fun j ↦ actionIndicator A k j ω) n))⁻¹ * respMart ν A Y k n ω)
+      atTop id (fun _ ↦ P) (gaussianReal 0 1) := by
   have hRmeas : ∀ n : ℕ, AEMeasurable (fun ω ↦ √(Var[id; ν k] * vk * (n : ℝ))
       * (√(Var[id; ν k] * count (fun j ↦ actionIndicator A k j ω) n))⁻¹) P :=
     fun n ↦ (measurable_const.mul
@@ -488,9 +482,8 @@ lemma respMart_selfNorm_tendsto_gaussianReal [Finite 𝓐]
       rw [Real.sqrt_div (hcnn n), Real.sqrt_mul (mul_nonneg hVk.le hvk.le),
         Real.sqrt_mul hVk.le, Real.sqrt_mul hVk.le]
       field_simp
-  have hslut := tendsto_map_mul_of_tendstoInMeasure_one (σ2 := 1)
-    (fun n ↦ (measurable_const.mul (measurable_respMart h k n)).aemeasurable) hRmeas
-    (respMart_div_sqrt_tendsto_gaussianReal h hνk k vk hvk hVk hNconv) hRtendsto
+  have hslut := (respMart_div_sqrt_tendsto_gaussianReal h hνk k vk hvk hVk
+    hNconv).mul_of_tendstoInMeasure_const hRtendsto hRmeas
   -- Identify `X_n · R_n` with the self-normalized statistic.
   have hXR : ∀ n : ℕ, (fun ω ↦ (√(Var[id; ν k] * vk * (n : ℝ)))⁻¹ * respMart ν A Y k n ω
         * (√(Var[id; ν k] * vk * (n : ℝ))
@@ -510,7 +503,7 @@ lemma respMart_selfNorm_tendsto_gaussianReal [Finite 𝓐]
             * ((√(Var[id; ν k] * count (fun j ↦ actionIndicator A k j ω) n))⁻¹
               * respMart ν A Y k n ω) := by ring
       rw [hrw, inv_mul_cancel₀ hne, one_mul]
-  refine Tendsto.congr (fun n ↦ ?_) hslut
-  exact Subtype.ext (congrArg (fun f ↦ P.map f) (hXR n))
+  exact hslut.congr (fun n ↦ Eventually.of_forall fun ω ↦ congrFun (hXR n) ω)
+    (Eventually.of_forall fun x ↦ mul_one _)
 
 end AlphaRAR

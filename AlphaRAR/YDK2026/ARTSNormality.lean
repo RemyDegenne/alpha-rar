@@ -110,18 +110,12 @@ lemma clt_joint_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
     (hsmall_op : ∀ k, IsLittleOpOne P (fun n ω ↦
       max ((1 + ((pullCount A k (hitting (Q k ω) n) ω : ℝ)
         - (hitting (Q k ω) n : ℝ) * aRTSTarget A Y θ₀ T (hitting (Q k ω) n) ω k)) / √n) 0)) :
-    Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ (𝓐 ⊕ 𝓐)))
-      (fun n : ℕ ↦ (⟨P.map (jointSqrtNVec ν A Y θ₀ T (T ν.means) n),
-        Measure.isProbabilityMeasure_map
-          (measurable_jointSqrtNVec h θ₀ hlip.continuous (T ν.means) n).aemeasurable⟩
-          : ProbabilityMeasure (EuclideanSpace ℝ (𝓐 ⊕ 𝓐))))
-      atTop
-      (𝓝 ⟨multivariateGaussian 0 (Matrix.fromBlocks
+    TendstoInDistribution (jointSqrtNVec ν A Y θ₀ T (T ν.means)) atTop id (fun _ ↦ P)
+      (multivariateGaussian 0 (Matrix.fromBlocks
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ)
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ)
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ)
-        (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ)),
-          inferInstance⟩) := by
+        (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ))) := by
   have hY2 : ∀ n, MemLp (Y n) 2 P := fun n ↦ h.memLp_feedback hνk n
   have hT : Continuous T := hlip.continuous
   -- The consistencies at the hitting time.
@@ -199,18 +193,12 @@ theorem aRTS_clt_joint [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace �
     (hTderiv : HasFDerivAt
       (fun x : EuclideanSpace ℝ 𝓐 ↦ (WithLp.toLp 2 (T (WithLp.ofLp x)) : EuclideanSpace ℝ 𝓐))
       (Matrix.toEuclideanCLM (𝕜 := ℝ) G) (WithLp.toLp 2 ν.means)) :
-    Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ (𝓐 ⊕ 𝓐)))
-      (fun n : ℕ ↦ (⟨P.map (jointSqrtNVec ν A Y θ₀ T (T ν.means) n),
-        Measure.isProbabilityMeasure_map
-          (measurable_jointSqrtNVec h θ₀ hlip.continuous (T ν.means) n).aemeasurable⟩
-          : ProbabilityMeasure (EuclideanSpace ℝ (𝓐 ⊕ 𝓐))))
-      atTop
-      (𝓝 ⟨multivariateGaussian 0 (Matrix.fromBlocks
+    TendstoInDistribution (jointSqrtNVec ν A Y θ₀ T (T ν.means)) atTop id (fun _ ↦ P)
+      (multivariateGaussian 0 (Matrix.fromBlocks
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ)
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ)
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ)
-        (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ)),
-          inferInstance⟩) :=
+        (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / T ν.means a) * Gᵀ))) :=
   clt_joint_of_hitting h hνk θ₀ T hTnn hTsum α hα hα1 hlip hTpos G hTderiv
     (aRTSUnder A Y θ₀ T) (fun k m ↦ measurableSet_aRTSUnder h θ₀ hlip.continuous k m)
     (fun k ↦ throttle_of_isARTS h hARTS k)

@@ -107,16 +107,12 @@ lemma clt_joint
       (Y · ω) (θ₀ k') n) atTop (𝓝 ν.means))
     (hprop : TendstoInMeasure P
       (fun n ω ↦ propSqrtNVec A v n ω - targetSqrtNVec ν A Y θ₀ T n ω) atTop (fun _ ↦ 0)) :
-    Tendsto (β := ProbabilityMeasure (EuclideanSpace ℝ (𝓐 ⊕ 𝓐)))
-      (fun n : ℕ ↦ (⟨P.map (jointSqrtNVec ν A Y θ₀ T v n),
-        Measure.isProbabilityMeasure_map (measurable_jointSqrtNVec h θ₀ hT v n).aemeasurable⟩
-          : ProbabilityMeasure (EuclideanSpace ℝ (𝓐 ⊕ 𝓐))))
-      atTop
-      (𝓝 ⟨multivariateGaussian 0 (Matrix.fromBlocks
+    TendstoInDistribution (jointSqrtNVec ν A Y θ₀ T v) atTop id (fun _ ↦ P)
+      (multivariateGaussian 0 (Matrix.fromBlocks
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / v a) * Gᵀ)
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / v a) * Gᵀ)
         (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / v a) * Gᵀ)
-        (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / v a) * Gᵀ)), inferInstance⟩) := by
+        (G * Matrix.diagonal (fun a ↦ Var[id; ν a] / v a) * Gᵀ))) := by
   have hVnn : ∀ a, 0 ≤ Var[id; ν a] := fun a ↦ variance_nonneg _ _
   set M : Matrix 𝓐 𝓐 ℝ := G * Matrix.diagonal (fun a ↦ Var[id; ν a] / v a) * Gᵀ with hMdef
   set μ' : Measure (EuclideanSpace ℝ 𝓐) := multivariateGaussian 0 M with hμ'
@@ -160,27 +156,19 @@ lemma clt_joint
     congr 1
     ext ω
     simp only [Set.mem_ofPred_eq, dist_zero_right, hembed n ω, norm_toLp_sumElim_zero]
-  have hslut := tendsto_map_comp_of_tendstoInMeasure_const (P := P) (μ' := μ') g hg
-    (fun n ↦ (hXmeas n).aemeasurable) hRmeas hclt hR
+  have hslut := hclt.continuous_comp_prodMk_of_tendstoInMeasure_const hg hR hRmeas
   -- The limit law: `μ'.map (d) = 𝒩(0, D M Dᵀ) = 𝒩(0, Ω)`.
-  have hlim : μ'.map (fun x ↦ g (x, 0))
+  have hlim : μ'.map (fun x ↦ g (id x, 0))
       = multivariateGaussian 0 (Matrix.fromBlocks M M M M) := by
-    have hgc : (fun x : EuclideanSpace ℝ 𝓐 ↦ g (x, 0)) = d := by funext x; simp [hg_def]
+    have hgc : (fun x : EuclideanSpace ℝ 𝓐 ↦ g (id x, 0)) = d := by funext x; simp [hg_def]
     rw [hgc, hd, hμ', multivariateGaussian_map_matrix M D hMpsd]
     congr 1
     rw [hDdef, Matrix.transpose_fromRows, Matrix.transpose_one, Matrix.fromRows_mul,
       Matrix.mul_fromCols]
     simp only [Matrix.one_mul, Matrix.mul_one, Matrix.fromCols_fromRows_eq_fromBlocks]
-  have heq : (⟨multivariateGaussian 0 (Matrix.fromBlocks M M M M), inferInstance⟩
-        : ProbabilityMeasure (EuclideanSpace ℝ (𝓐 ⊕ 𝓐)))
-      = ⟨μ'.map (fun x ↦ g (x, 0)), Measure.isProbabilityMeasure_map
-          (hg.comp (continuous_id.prodMk continuous_const)).measurable.aemeasurable⟩ := by
-    apply Subtype.ext
-    change multivariateGaussian 0 _ = μ'.map _
-    rw [hlim]
-  rw [heq]
-  refine Tendsto.congr (fun n ↦ Subtype.ext (congrArg (P.map ·) ?_)) hslut
-  funext ω
+  refine ((tendstoInDistribution_id_iff
+    ⟨(hg.comp (continuous_id.prodMk continuous_const)).measurable.aemeasurable, hlim⟩).mpr
+      hslut).congr (fun n ↦ Eventually.of_forall fun ω ↦ ?_) EventuallyEq.rfl
   simp only [hg_def, hRn]
   abel
 
