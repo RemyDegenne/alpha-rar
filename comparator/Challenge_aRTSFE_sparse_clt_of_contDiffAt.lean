@@ -197,9 +197,22 @@ This is the number of entries in `h` in which the arm is `a`. -/
 noncomputable
 def pullCount' (n : ℕ) (h : Iic n → 𝓐 × R) (a : 𝓐) := #{s | (h s).1 = a}
 
+end Learning
+end
+
+-- ═══ vendored from LML: LeanMachineLearning.SequentialLearning.SumRewards ═══
+section
+open MeasureTheory Finset Learning
+namespace Learning
+variable {𝓐 𝓨 Ω : Type*} {m𝓐 : MeasurableSpace 𝓐} {m𝓨 : MeasurableSpace 𝓨} {mΩ : MeasurableSpace Ω}
+  [DecidableEq 𝓐] [AddCommGroup 𝓨]
+  {P : Measure Ω} [IsProbabilityMeasure P]
+  {A : ℕ → Ω → 𝓐} {R : ℕ → Ω → 𝓨}
+  {a : 𝓐} {m n t : ℕ} {ω : Ω}
+
 /-- Sum of rewards of arm `a` up to (and including) time `n`. -/
 noncomputable
-def sumRewards' (n : ℕ) (h : Iic n → 𝓐 × ℝ) (a : 𝓐) :=
+def sumRewards' (n : ℕ) (h : Iic n → 𝓐 × 𝓨) (a : 𝓐) :=
   ∑ s, if (h s).1 = a then (h s).2 else 0
 
 end Learning

@@ -23,7 +23,7 @@ For each headline result there is a **challenge** file and a JSON config:
 | `AlphaRAR.aRTSFE_sparse_clt_of_contDiffAt` | `Challenge_aRTSFE_sparse_clt_of_contDiffAt.lean` | `aRTSFE_sparse_clt_of_contDiffAt.json` |
 | `AlphaRAR.aRTSFE_sparse_rate_of_isARTSFE` | `Challenge_aRTSFE_sparse_rate.lean` | `aRTSFE_sparse_rate.json` |
 
-Each challenge (320–390 lines) states the theorem with `sorry`, with **every** definition the
+Each challenge (335–395 lines) states the theorem with `sorry`, with **every** definition the
 statement rests on inlined verbatim: the project's definitions, and the handful of
 [LML](https://github.com/LeanMachineLearning/LML) declarations they build on (`Algorithm`,
 `Environment`, `history`, `IsAlgEnvSeq`, `stationaryEnv`/`obliviousEnv`, `pullCount`,
@@ -120,6 +120,18 @@ Comparator's exact-identity check makes elaboration details load-bearing; the ru
   that order) in `AlphaRAR/YDK2026/PluginTargetCLT.lean`; see the comment there. If a challenge
   fails with `Const does not match` on a `_proof_*`-bearing definition, check whether the
   project mints the constant under the name the single-file elaboration would choose.
+- **Vendor each LML declaration under its own file's `variable` block.** The binder telescope
+  and universe parameters of a vendored constant are part of what comparator compares, and they
+  come from the `variable` line in scope, so a declaration must be copied together with the
+  context of *its* LML source file — not merged into a neighbouring vendored section. This bit
+  once: `sumRewards'` lives in `SequentialLearning/SumRewards.lean`, whose block supplies
+  `{𝓐 𝓨 Ω : Type*} … [DecidableEq 𝓐] [AddCommGroup 𝓨]`, but had been vendored inside the
+  `FiniteActions` section (which has no `𝓨` and no `AddCommGroup`), so it elaborated as the
+  `ℝ`-specialised `{𝓐} [DecidableEq 𝓐] … → ℝ`. When LML later generalised the reward type, all
+  six challenges failed — reported against `AlphaRAR.histTarget`, the first constant in the
+  closure whose *value* mentions the drifted one, not against `sumRewards'` itself. When a
+  mismatch names a definition that looks untouched, diff its dependencies' full
+  `set_option pp.all true` `#print` output between the challenge module and `Solution`.
 - **Module-private auxiliary constants are fatal** (name scheme `_private.<module>.0.<decl>…`,
   e.g. minted by `grind` inside a definition): their names embed the defining module's name, so
   no restatement can reproduce them. If one enters a statement's closure, the statement itself
