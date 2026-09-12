@@ -74,7 +74,7 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
   [MeasurableSingletonClass 𝓐] [Finite 𝓐]
   {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν]
   {P : Measure Ω} [IsProbabilityMeasure P]
-  {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
+  {O : ℕ → Ω → Unit} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm Unit 𝓐 ℝ}
 
 omit [MeasurableSingletonClass 𝓐] [IsMarkovKernel ν] [IsProbabilityMeasure P] in
 /-- **Rate for the plug-in target**, abstract-rate form. Given the estimator vector `θ̂_n → θ` a.s.,

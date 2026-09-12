@@ -46,7 +46,7 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
   [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] [Fintype 𝓐]
   {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν]
   {P : Measure Ω} [IsProbabilityMeasure P]
-  {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
+  {O : ℕ → Ω → Unit} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm Unit 𝓐 ℝ}
 
 -- NOTE: `propSqrtNVec`, `targetSqrtNVec` and `jointSqrtNVec` are deliberately defined together
 -- in this module, `propSqrtNVec` first: they share an embedded instance proof, which the
@@ -79,9 +79,9 @@ noncomputable def estimatorSqrtNVec (ν : Kernel 𝓐 ℝ) (A : ℕ → Ω → �
     (estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) (θ₀ k) n - ν.means k))
 
 omit [DecidableEq 𝓐] [Fintype 𝓐] in
-lemma measurable_estimatorSqrtNVec' (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
+lemma measurable_estimatorSqrtNVec' (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (n : ℕ) : Measurable (estimatorSqrtNVec ν A Y θ₀ n) := by
-  refine (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (measurable_pi_lambda _ fun k ↦ ?_)
+  refine (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (Measurable.of_eval fun k ↦ ?_)
   refine Measurable.const_mul ?_ (√n)
   have harm : ∀ j, Measurable (fun ω ↦ actionIndicator A k j ω) := fun j ↦
     (measurable_const (a := (1 : ℝ))).indicator ((measurableSet_singleton k).preimage
@@ -99,7 +99,7 @@ matches definitionally. -/
 the arm-`k` variance inflated by `1/v_k` because arm `k` is only pulled a fraction `v_k` of the \
 time"]
 lemma estimatorSqrtNVec_joint_tendsto_multivariateGaussian
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp id 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a))) :
@@ -109,10 +109,10 @@ lemma estimatorSqrtNVec_joint_tendsto_multivariateGaussian
 
 omit [DecidableEq 𝓐] [Fintype 𝓐] in
 /-- Measurability of the estimator vector `ω ↦ (θ̂_{n,k}(ω))_k : 𝓐 → ℝ`. -/
-lemma measurable_estimatorVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ) (n : ℕ) :
+lemma measurable_estimatorVec (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ) (n : ℕ) :
     Measurable (fun ω ↦ (fun k ↦ estimator (fun j ↦ actionIndicator A k j ω)
       (Y · ω) (θ₀ k) n : 𝓐 → ℝ)) := by
-  refine measurable_pi_lambda _ fun k ↦ ?_
+  refine Measurable.of_eval fun k ↦ ?_
   have harm : ∀ j, Measurable (fun ω ↦ actionIndicator A k j ω) := fun j ↦
     (measurable_const (a := (1 : ℝ))).indicator ((measurableSet_singleton k).preimage
       (h.measurable_action j))
@@ -121,11 +121,11 @@ lemma measurable_estimatorVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ
     (θ₀ k)).div ((measurable_count_actionIndicator h k n).add_const 1)
 
 omit [DecidableEq 𝓐] [Fintype 𝓐] in
-lemma measurable_targetSqrtNVec [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma measurable_targetSqrtNVec [Finite 𝓐] (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (n : ℕ) :
     Measurable (targetSqrtNVec ν A Y θ₀ T n) := by
   cases nonempty_fintype 𝓐
-  refine (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (measurable_pi_lambda _ fun k ↦ ?_)
+  refine (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (Measurable.of_eval fun k ↦ ?_)
   refine Measurable.const_mul ?_ (√n)
   exact ((measurable_pi_apply k).comp
     (hT.measurable.comp (measurable_estimatorVec h θ₀ n))).sub_const _
@@ -139,7 +139,7 @@ plug-in target satisfies `√n(T(θ̂_n) - T(θ)) ⇒ 𝒩(0, G · diag(V_k/v_k)
 the linear pushforward of the estimator's Gaussian (`multivariateGaussian_map_matrix`), obtained via
 the product-space Slutsky lemma with `g(x, r) = G·x + r`. -/
 lemma clt_rho_of_tendstoInMeasure
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp id 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a)))
@@ -206,7 +206,7 @@ and whose `Sₙ → 0` input is the a.s. consistency. -/
 the estimator error (no extra rate is introduced by `T`) and the centring at `T(θ)` rather than at \
 any running quantity, which is what makes the limit the delta-method Gaussian `G Σ Gᵀ`"]
 lemma clt_rho
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp id 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a)))
@@ -253,7 +253,7 @@ lemma clt_rho
   have hSmeas : ∀ n, Measurable (S n) := by
     intro n
     simp only [hSdef]
-    refine (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (measurable_pi_lambda _ fun k ↦ ?_)
+    refine (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (Measurable.of_eval fun k ↦ ?_)
     have harm : ∀ j, Measurable (fun ω ↦ actionIndicator A k j ω) := fun j ↦
       (measurable_const (a := (1 : ℝ))).indicator ((measurableSet_singleton k).preimage
         (h.measurable_action j))

@@ -106,7 +106,7 @@ end Process
 
 section PullCount
 
-variable {Ω 𝓐 : Type*} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ}
+variable {Ω 𝓐 : Type*} {O : ℕ → Ω → Unit} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ}
 
 /-- Count of a fixed arm is nonnegative. -/
 lemma count_actionIndicator_nonneg (A : ℕ → Ω → 𝓐) (k : 𝓐) (n : ℕ) (ω : Ω) :
@@ -121,11 +121,11 @@ lemma count_indicator_eq_pullCount (k : 𝓐) (n : ℕ) (ω : Ω) :
     count (fun j ↦ actionIndicator A k j ω) n = (pullCount A k n ω : ℝ) :=
   sum_actionIndicator_eq_pullCount A k n ω
 
-/-- The process count `N_{n+1,k}` equals the history-level count on the history up to time `n`. -/
+/-- The process count `N_{n,k}` equals the history-level count on the history before time `n`. -/
 lemma histCount_eq (k : 𝓐) (n : ℕ) (ω : Ω) :
-    count (fun j ↦ actionIndicator A k j ω) (n + 1) = (pullCount' n (history A Y n ω) k : ℝ) := by
-  have hpc : pullCount A k (n + 1) ω = pullCount' n (history A Y n ω) k :=
-    pullCount_add_one_eq_pullCount' (R' := Y)
+    count (fun j ↦ actionIndicator A k j ω) n = (pullCount' n (history O A Y n ω) k : ℝ) := by
+  have hpc : pullCount A k n ω = pullCount' n (history O A Y n ω) k :=
+    pullCount_eq_pullCount' (R' := Y)
   rw [count_indicator_eq_pullCount, hpc]
 
 end PullCount

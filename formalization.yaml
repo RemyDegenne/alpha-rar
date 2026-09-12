@@ -29,9 +29,6 @@ project:
     - "Rémy Degenne"
   responsible_maintainers:
     - "Rémy Degenne"
-  # `AlphaRAR/Mathlib/CramerWold.lean` is not original to this project: it is a verbatim
-  # vendoring (adapted to non-`module` syntax) of Mathlib PR #40345, by Ivo Malinowski,
-  # kept here only until that PR is merged. It is credited in its own file header.
   license: "Apache-2.0"
   # extra keys (tolerated by the schema), kept for convenience:
   repository: "https://github.com/RemyDegenne/alpha-rar"
@@ -119,9 +116,9 @@ status:
   size:
     # Counted over the development, `AlphaRAR/**/*.lean`; the comparator challenges are excluded.
     # `definitions` counts def/abbrev/structure/inductive.
-    lean_lines: 23635
-    theorems_and_lemmas: 723
-    definitions: 87
+    lean_lines: 22456
+    theorems_and_lemmas: 726
+    definitions: 85
   main_results:
     - declaration: "AlphaRAR.aRTS_LLN"
       file: "AlphaRAR/YDK2026/ARTSRates.lean"
@@ -431,8 +428,6 @@ alignment:
       note: "Empirical, not a mathematical statement; out of scope apart from Lemma 6.1 above."
 
 acknowledgements: >-
-  `AlphaRAR/Mathlib/CramerWold.lean` is vendored verbatim from Mathlib PR #40345 by Ivo
-  Malinowski, pending that PR's merge; it is not work of this project.
   Built on Mathlib. Depends on LeanMachineLearning for the bandit/algorithm-environment
   interaction model (`Learning.IsAlgEnvSeq`, `Learning.actionIndicator`), on Characterization for
   specification statements, and on Patrick Massot's leanblueprint/checkdecls for the blueprint

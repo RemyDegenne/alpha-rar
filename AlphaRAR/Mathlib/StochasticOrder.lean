@@ -82,7 +82,6 @@ lemma IsBigOpOne.congr {Y Y' : ℕ → Ω → ℝ} (h : ∀ n, Y n =ᵐ[μ] Y' n
   refine ⟨M, fun n ↦ ?_⟩
   refine le_of_eq_of_le (measure_congr ?_) (hM n)
   filter_upwards [h n] with ω hω
-  change (M < |Y' n ω|) = (M < |Y n ω|)
   rw [hω]
 
 /-- **Single-variable tightness.** For a finite measure and an a.e.-measurable real

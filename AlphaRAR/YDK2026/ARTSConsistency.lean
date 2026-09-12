@@ -56,7 +56,7 @@ namespace AlphaRAR
 variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐}
   [MeasurableSingletonClass 𝓐] {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν]
   {P : Measure Ω} [IsProbabilityMeasure P]
-  {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
+  {O : ℕ → Ω → Unit} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm Unit 𝓐 ℝ}
 
 /-! ### The aRTS derived processes -/
 
@@ -138,7 +138,7 @@ time, resp. forced-exploration hitting time). Everything else — the vanishing 
 martingale, the plug-in-target convergence, and the generic key inequality
 (`generic_ineq_of_hitting`, valid for *any* predicate) — is discharged uniformly. -/
 lemma consistency_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
@@ -241,7 +241,7 @@ inputs) and Condition **B**'s non-sparsity `hTpos`, the sequential estimator con
 true parameter `θ̂_n → θ = (ν.means k)_k`, via the design-independent
 `theta_consistent_pi_of_condB`. -/
 lemma theta_consistent_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
@@ -283,7 +283,7 @@ the paper, first conclusion, generic form). The abstract-hitting-time generalisa
 `theta_consistent_of_hitting` (so `ρ̂_{n,k} → T(θ)_k` by continuity) identifies the limit as the
 deterministic `v_k = T(θ)_k`: `N_{n,k}/n → v_k` a.s. -/
 lemma proportion_tendsto_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)
@@ -315,7 +315,7 @@ selection probability is throttled (`hthrottle`), so the smallness `N_{ℓ} - �
 automatic (`generic_small_of_hitting`). Almost surely there is a common limit `u` with
 `N_{n,k}/n → u_k`, `ρ̂_{n,k} → u_k` for every `k`. -/
 lemma aRTS_consistency [Fintype 𝓐] [DecidableEq 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)

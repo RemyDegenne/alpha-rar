@@ -83,71 +83,87 @@ section
 open MeasureTheory ProbabilityTheory Filter Real Finset
 open scoped ENNReal NNReal
 namespace Learning
-variable {𝓐 𝓨 Ω : Type*} {m𝓐 : MeasurableSpace 𝓐} {m𝓨 : MeasurableSpace 𝓨} {mΩ : MeasurableSpace Ω}
+variable {𝓞 𝓐 𝓨 Ω : Type*} {m𝓞 : MeasurableSpace 𝓞} {m𝓐 : MeasurableSpace 𝓐}
+  {m𝓨 : MeasurableSpace 𝓨} {mΩ : MeasurableSpace Ω}
 
-/-- A stochastic, sequential algorithm. -/
-structure Algorithm (𝓐 𝓨 : Type*) [MeasurableSpace 𝓐] [MeasurableSpace 𝓨] where
-  /-- Policy or sampling rule: distribution of the next action. -/
-  policy : (n : ℕ) → Kernel (Iic n → 𝓐 × 𝓨) 𝓐
+/-- One round of interaction: an observation, then an action, then a feedback. -/
+abbrev Round (𝓞 𝓐 𝓨 : Type*) := 𝓞 × 𝓐 × 𝓨
+
+/-- The action of a round. -/
+def Round.action (r : Round 𝓞 𝓐 𝓨) : 𝓐 := r.2.1
+/-- The feedback of a round. -/
+def Round.feedback (r : Round 𝓞 𝓐 𝓨) : 𝓨 := r.2.2
+
+/-- History of `n` complete rounds; `n = 0` is the empty history. -/
+abbrev Hist (𝓞 𝓐 𝓨 : Type*) (n : ℕ) := Fin n → Round 𝓞 𝓐 𝓨
+
+/-- A stochastic, sequential algorithm.
+At each round, it sees an observation in `𝓞`, then takes an action in `𝓐`, and finally receives
+feedback in `𝓨`. The action is a random function of the past rounds and the current observation. -/
+@[ext]
+structure Algorithm (𝓞 𝓐 𝓨 : Type*) [MeasurableSpace 𝓞] [MeasurableSpace 𝓐] [MeasurableSpace 𝓨]
+    where
+  /-- Law of the action of round `n` given the past rounds and the current observation. -/
+  policy : (n : ℕ) → Kernel (Hist 𝓞 𝓐 𝓨 n × 𝓞) 𝓐
   /-- The policy is a Markov kernel. -/
-  [h_policy : ∀ n, IsMarkovKernel (policy n)]
-  /-- Distribution of the first action. -/
-  p0 : Measure 𝓐
-  /-- The first action distribution is a probability measure. -/
-  [hp0 : IsProbabilityMeasure p0]
+  [isMarkovKernel_policy : ∀ n, IsMarkovKernel (policy n)]
 
-instance (alg : Algorithm 𝓐 𝓨) (n : ℕ) : IsMarkovKernel (alg.policy n) := alg.h_policy n
-instance (alg : Algorithm 𝓐 𝓨) : IsProbabilityMeasure alg.p0 := alg.hp0
+instance (alg : Algorithm 𝓞 𝓐 𝓨) (n : ℕ) : IsMarkovKernel (alg.policy n) :=
+  alg.isMarkovKernel_policy n
 
-/-- A stochastic environment. -/
-structure Environment (𝓐 𝓨 : Type*) [MeasurableSpace 𝓐] [MeasurableSpace 𝓨] where
-  /-- Distribution of the next observation as function of the past history. -/
-  feedback : (n : ℕ) → Kernel ((Iic n → 𝓐 × 𝓨) × 𝓐) 𝓨
-  /-- The feedback kernels are Markov kernels. -/
-  [h_feedback : ∀ n, IsMarkovKernel (feedback n)]
-  /-- Distribution of the first observation given the first action. -/
-  ν0 : Kernel 𝓐 𝓨
-  /-- The initial observation kernel is a Markov kernel. -/
-  [hp0 : IsMarkovKernel ν0]
+/-- A stochastic environment.
+At each round, an observation is drawn prior to the algorithm taking an action. Then the environment
+provides feedback based on the observation and the action. -/
+@[ext]
+structure Environment (𝓞 𝓐 𝓨 : Type*) [MeasurableSpace 𝓞] [MeasurableSpace 𝓐] [MeasurableSpace 𝓨]
+    where
+  /-- Law of the observation of round `n` given the past rounds. -/
+  obs : (n : ℕ) → Kernel (Hist 𝓞 𝓐 𝓨 n) 𝓞
+  /-- Law of the feedback of round `n` given the past rounds, the observation and the action. -/
+  feedback : (n : ℕ) → Kernel ((Hist 𝓞 𝓐 𝓨 n × 𝓞) × 𝓐) 𝓨
+  /-- The observation kernel is a Markov kernel. -/
+  [isMarkovKernel_obs : ∀ n, IsMarkovKernel (obs n)]
+  /-- The feedback kernel is a Markov kernel. -/
+  [isMarkovKernel_feedback : ∀ n, IsMarkovKernel (feedback n)]
 
-instance (env : Environment 𝓐 𝓨) (n : ℕ) : IsMarkovKernel (env.feedback n) := env.h_feedback n
-instance (env : Environment 𝓐 𝓨) : IsMarkovKernel env.ν0 := env.hp0
+instance (env : Environment 𝓞 𝓐 𝓨) (n : ℕ) : IsMarkovKernel (env.obs n) := env.isMarkovKernel_obs n
+instance (env : Environment 𝓞 𝓐 𝓨) (n : ℕ) : IsMarkovKernel (env.feedback n) :=
+  env.isMarkovKernel_feedback n
 
 section IsAlgEnvSeq
 
-variable {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → 𝓨} {alg : Algorithm 𝓐 𝓨} {env : Environment 𝓐 𝓨}
+variable {O : ℕ → Ω → 𝓞} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → 𝓨}
+    {alg : Algorithm 𝓞 𝓐 𝓨} {env : Environment 𝓞 𝓐 𝓨}
     {P : Measure Ω} [IsFiniteMeasure P] {N : ℕ}
 
-/-- History of the algorithm-environment sequence up to time `n`. -/
-def history (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → 𝓨) (n : ℕ) (ω : Ω) : Iic n → 𝓐 × 𝓨 :=
-  fun i ↦ (A i ω, Y i ω)
+/-- History of the algorithm-environment sequence before time `n`: the rounds at
+times `0, ..., n - 1`. -/
+def history (O : ℕ → Ω → 𝓞) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → 𝓨) (n : ℕ) (ω : Ω) : Hist 𝓞 𝓐 𝓨 n :=
+  fun i ↦ (O i ω, A i ω, Y i ω)
 
-section IsAlgEnvSeq
-
-
-/-- An algorithm-environment sequence: a sequence of actions and feedbacks generated
+/-- An algorithm-environment sequence: a sequence of observations, actions and feedbacks generated
 by an algorithm interacting with an environment. -/
 structure IsAlgEnvSeq
-    (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → 𝓨) (alg : Algorithm 𝓐 𝓨) (env : Environment 𝓐 𝓨)
+    (O : ℕ → Ω → 𝓞) (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → 𝓨)
+    (alg : Algorithm 𝓞 𝓐 𝓨) (env : Environment 𝓞 𝓐 𝓨)
     (P : Measure Ω) [IsFiniteMeasure P] : Prop where
+  /-- The observation sequence is measurable. -/
+  measurable_obs n : Measurable (O n) := by fun_prop
   /-- The action sequence is measurable. -/
   measurable_action n : Measurable (A n) := by fun_prop
   /-- The feedback sequence is measurable. -/
   measurable_feedback n : Measurable (Y n) := by fun_prop
-  /-- The first action has the correct law. -/
-  hasLaw_action_zero : HasLaw (fun ω ↦ (A 0 ω)) alg.p0 P
-  /-- The first feedback has the correct conditional distribution. -/
-  hasCondDistrib_feedback_zero : HasCondDistrib (Y 0) (A 0) env.ν0 P
-  /-- The next action has the correct conditional distribution given the history. -/
+  /-- The observation at time `n` has the correct conditional distribution given the history. -/
+  hasCondDistrib_obs n :
+    HasCondDistrib (O n) (history O A Y n) (env.obs n) P
+  /-- The action at time `n` has the correct conditional distribution given the history and the
+  observation at time `n`. -/
   hasCondDistrib_action n :
-    HasCondDistrib (A (n + 1)) (history A Y n) (alg.policy n) P
-  /-- The next feedback has the correct conditional distribution given the history and
-  next action. -/
+    HasCondDistrib (A n) (fun ω ↦ (history O A Y n ω, O n ω)) (alg.policy n) P
+  /-- The feedback at time `n` has the correct conditional distribution given the history, the
+  observation and the action at time `n`. -/
   hasCondDistrib_feedback n :
-    HasCondDistrib (Y (n + 1)) (fun ω ↦ (history A Y n ω, A (n + 1) ω))
-      (env.feedback n) P
-
-end IsAlgEnvSeq
+    HasCondDistrib (Y n) (fun ω ↦ ((history O A Y n ω, O n ω), A n ω)) (env.feedback n) P
 
 end IsAlgEnvSeq
 
@@ -159,18 +175,22 @@ section
 open MeasureTheory ProbabilityTheory Filter Real Finset
 open scoped ENNReal NNReal
 namespace Learning
-variable {𝓐 𝓨 : Type*} {m𝓐 : MeasurableSpace 𝓐} {m𝓨 : MeasurableSpace 𝓨}
+variable {𝓞 𝓐 𝓨 : Type*} {m𝓞 : MeasurableSpace 𝓞} {m𝓐 : MeasurableSpace 𝓐}
+  {m𝓨 : MeasurableSpace 𝓨}
 
-/-- An oblivious environment, in which the distribution of the next feedback depends only on
-the last action, but in a possibly time-dependent manner. -/
+/-- An oblivious environment without observations, in which the distribution of the next feedback
+depends only on the last action, but in a possibly time-dependent manner. -/
 @[simps]
-def obliviousEnv (ν : ℕ → Kernel 𝓐 𝓨) [∀ n, IsMarkovKernel (ν n)] : Environment 𝓐 𝓨 where
-  feedback n := (ν (n + 1)).prodMkLeft _
-  ν0 := ν 0
+noncomputable
+def obliviousEnv (ν : ℕ → Kernel 𝓐 𝓨) [∀ n, IsMarkovKernel (ν n)] : Environment Unit 𝓐 𝓨 where
+  obs _ := Kernel.const _ (Measure.dirac ())
+  feedback n := (ν n).prodMkLeft _
 
-/-- A stationary environment, in which the distribution of the next feedback depends only on the
-last action. -/
-def stationaryEnv (ν : Kernel 𝓐 𝓨) [IsMarkovKernel ν] : Environment 𝓐 𝓨 := obliviousEnv fun _ ↦ ν
+/-- A stationary environment without observations, in which the distribution of the next feedback
+depends only on the last action. -/
+noncomputable
+def stationaryEnv (ν : Kernel 𝓐 𝓨) [IsMarkovKernel ν] : Environment Unit 𝓐 𝓨 :=
+  obliviousEnv fun _ ↦ ν
 
 end Learning
 end
@@ -179,11 +199,12 @@ end
 section
 open MeasureTheory Finset Learning
 namespace Learning
-variable {𝓐 R Ω : Type*} {m𝓐 : MeasurableSpace 𝓐} {mR : MeasurableSpace R} {mΩ : MeasurableSpace Ω}
+variable {𝓞 𝓐 R Ω : Type*} {m𝓞 : MeasurableSpace 𝓞} {m𝓐 : MeasurableSpace 𝓐}
+  {mR : MeasurableSpace R} {mΩ : MeasurableSpace Ω}
   [DecidableEq 𝓐]
-  {alg : Algorithm 𝓐 R} {env : Environment 𝓐 R}
+  {alg : Algorithm 𝓞 𝓐 R} {env : Environment 𝓞 𝓐 R}
   {P : Measure Ω} [IsProbabilityMeasure P]
-  {A : ℕ → Ω → 𝓐} {R' : ℕ → Ω → R}
+  {O : ℕ → Ω → 𝓞} {A : ℕ → Ω → 𝓐} {R' : ℕ → Ω → R}
   {a : 𝓐} {m n t : ℕ} {ω : Ω}
 
 /-- Number of times action `a` was chosen up to time `t` (excluding `t`). -/
@@ -191,10 +212,10 @@ noncomputable
 def pullCount (A : ℕ → Ω → 𝓐) (a : 𝓐) (t : ℕ) (ω : Ω) : ℕ :=
   #(filter (fun s ↦ A s ω = a) (range t))
 
-/-- Number of pulls of arm `a` up to (and including) time `n`.
+/-- Number of pulls of arm `a` in the history before time `n`.
 This is the number of entries in `h` in which the arm is `a`. -/
 noncomputable
-def pullCount' (n : ℕ) (h : Iic n → 𝓐 × R) (a : 𝓐) := #{s | (h s).1 = a}
+def pullCount' (n : ℕ) (h : Hist 𝓞 𝓐 R n) (a : 𝓐) := #{s | (h s).action = a}
 
 end Learning
 end
@@ -203,16 +224,17 @@ end
 section
 open MeasureTheory Finset Learning
 namespace Learning
-variable {𝓐 𝓨 Ω : Type*} {m𝓐 : MeasurableSpace 𝓐} {m𝓨 : MeasurableSpace 𝓨} {mΩ : MeasurableSpace Ω}
+variable {𝓞 𝓐 𝓨 Ω : Type*} {m𝓞 : MeasurableSpace 𝓞} {m𝓐 : MeasurableSpace 𝓐}
+  {m𝓨 : MeasurableSpace 𝓨} {mΩ : MeasurableSpace Ω}
   [DecidableEq 𝓐] [AddCommGroup 𝓨]
   {P : Measure Ω} [IsProbabilityMeasure P]
-  {A : ℕ → Ω → 𝓐} {R : ℕ → Ω → 𝓨}
+  {O : ℕ → Ω → 𝓞} {A : ℕ → Ω → 𝓐} {R : ℕ → Ω → 𝓨}
   {a : 𝓐} {m n t : ℕ} {ω : Ω}
 
-/-- Sum of rewards of arm `a` up to (and including) time `n`. -/
+/-- Sum of rewards of arm `a` in the history before time `n`. -/
 noncomputable
-def sumRewards' (n : ℕ) (h : Iic n → 𝓐 × 𝓨) (a : 𝓐) :=
-  ∑ s, if (h s).1 = a then (h s).2 else 0
+def sumRewards' (n : ℕ) (h : Hist 𝓞 𝓐 𝓨 n) (a : 𝓐) :=
+  ∑ s, if (h s).action = a then (h s).feedback else 0
 
 end Learning
 end
@@ -221,7 +243,9 @@ end
 section
 open MeasureTheory ProbabilityTheory Filter Finset
 namespace Learning
-variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐} [MeasurableSingletonClass 𝓐] {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {P : Measure Ω}
+variable {Ω 𝓞 𝓐 𝓨 : Type*} {mΩ : MeasurableSpace Ω} {m𝓞 : MeasurableSpace 𝓞}
+  {m𝓐 : MeasurableSpace 𝓐} {m𝓨 : MeasurableSpace 𝓨}
+  [MeasurableSingletonClass 𝓐] {O : ℕ → Ω → 𝓞} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → 𝓨} {P : Measure Ω}
 
 /-- The `{0,1}`-valued assignment indicator of action `k`:
 `actionIndicator A k n ω = 𝟙{A n ω = k}`. -/
@@ -278,14 +302,14 @@ section
 open MeasureTheory ProbabilityTheory Filter Learning Finset
 open scoped Topology
 namespace AlphaRAR
-variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐} [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν] {P : Measure Ω} [IsProbabilityMeasure P] {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
+variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐} [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν] {P : Measure Ω} [IsProbabilityMeasure P] {O : ℕ → Ω → Unit} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm Unit 𝓐 ℝ}
 
 /-- History-level plug-in target `ρ̂_k`: the target map `T` applied to the vector of regularized
-empirical means `(sumRewards' + θ₀)/(pullCount' + 1)` computed from a history `h : Iic n → 𝓐 × ℝ`.
+empirical means `(sumRewards' + θ₀)/(pullCount' + 1)` computed from a history `h : Hist Unit 𝓐 ℝ n`.
 This is the design's target as a function of the observed history, matching `aRTSTarget` on the
 history of the process (`histTarget_eq`). -/
 noncomputable def histTarget (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (k : 𝓐) (n : ℕ)
-    (h : Iic n → 𝓐 × ℝ) : ℝ :=
+    (h : Hist Unit 𝓐 ℝ n) : ℝ :=
   T (fun k' ↦ (sumRewards' n h k' + θ₀ k') / ((pullCount' n h k' : ℝ) + 1)) k
 
 end AlphaRAR
@@ -296,7 +320,7 @@ section
 open MeasureTheory ProbabilityTheory Filter Learning Real
 open scoped Topology ENNReal NNReal Matrix
 namespace AlphaRAR
-variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐} [MeasurableSingletonClass 𝓐] {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν] {P : Measure Ω} [IsProbabilityMeasure P] {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
+variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐} [MeasurableSingletonClass 𝓐] {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν] {P : Measure Ω} [IsProbabilityMeasure P] {O : ℕ → Ω → Unit} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm Unit 𝓐 ℝ}
 
 /-- An **exploration schedule**, in the weakened form this development uses: a nondecreasing
 threshold `h(m)` with `h(m) → ∞` and `h(m) = o(m)`. Monotonicity is a harmless convenience that
@@ -337,21 +361,21 @@ Like `IsARTS`, this is stated purely on histories — no process, measure or fil
 it is a property of the algorithm alone, checkable design by design. `throttle_of_isARTSFE` and
 `fe_of_isARTSFE` transport the two fields to the process-level hypotheses that the asymptotic
 theorems consume. -/
-structure IsARTSFE [DecidableEq 𝓐] (alg : Algorithm 𝓐 ℝ) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
+structure IsARTSFE [DecidableEq 𝓐] (alg : Algorithm Unit 𝓐 ℝ) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hsched : ℕ → ℝ) (α : ℝ) : Prop where
   /-- An arm that is neither under-sampled nor under-explored is throttled at `α ρ̂_k`. -/
-  throttle : ∀ (n : ℕ) (hist : Finset.Iic n → 𝓐 × ℝ) (k : 𝓐),
-    ((n : ℝ) + 1) * histTarget θ₀ T k n hist < (pullCount' n hist k : ℝ) →
-      hsched (n + 1) < (pullCount' n hist k : ℝ) →
-        (alg.policy n hist {k}).toReal ≤ α * histTarget θ₀ T k n hist
+  throttle : ∀ (n : ℕ) (hist : Hist Unit 𝓐 ℝ n) (k : 𝓐),
+    (n : ℝ) * histTarget θ₀ T k n hist < (pullCount' n hist k : ℝ) →
+      hsched n < (pullCount' n hist k : ℝ) →
+        (alg.policy n (hist, ()) {k}).toReal ≤ α * histTarget θ₀ T k n hist
   /-- When some arm is under-explored, an arm that is not a least-sampled under-explored one cannot
   be drawn. -/
-  forced : ∀ (n : ℕ) (hist : Finset.Iic n → 𝓐 × ℝ) (k : 𝓐),
-    (∃ j, (pullCount' n hist j : ℝ) ≤ hsched (n + 1)) →
-      (hsched (n + 1) < (pullCount' n hist k : ℝ) ∨
-        ∃ j, (pullCount' n hist j : ℝ) ≤ hsched (n + 1) ∧
+  forced : ∀ (n : ℕ) (hist : Hist Unit 𝓐 ℝ n) (k : 𝓐),
+    (∃ j, (pullCount' n hist j : ℝ) ≤ hsched n) →
+      (hsched n < (pullCount' n hist k : ℝ) ∨
+        ∃ j, (pullCount' n hist j : ℝ) ≤ hsched n ∧
           (pullCount' n hist j : ℝ) < (pullCount' n hist k : ℝ)) →
-        alg.policy n hist {k} = 0
+        alg.policy n (hist, ()) {k} = 0
 
 /-- **Consistency and rate for sparse targets, from the design predicate** (Theorem 5.2 of the
 paper). Under Condition **A** only (no non-sparsity), every arm `k` satisfies almost surely:
@@ -363,7 +387,7 @@ like the other headline results — the statement mentions only the design, the 
 schedule. -/
 theorem aRTSFE_sparse_rate_of_isARTSFE [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐]
     [Nonempty 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1)

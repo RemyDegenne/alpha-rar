@@ -47,7 +47,7 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
   [MeasurableSingletonClass 𝓐]
   {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν]
   {P : Measure Ω} [IsProbabilityMeasure P]
-  {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
+  {O : ℕ → Ω → Unit} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm Unit 𝓐 ℝ}
 
 /-- The `i`-th centered response-martingale increment of arm `k`:
 `respIncr ν A Y k i ω = 𝟙{A i ω = k}(Y i ω - ν.means k)`. This is `Q_{k}(i+1) - Q_k i`. -/
@@ -69,7 +69,7 @@ lemma sum_respIncr (k : 𝓐) (n : ℕ) :
 /-- Each increment is `𝒢 (i+1)`-strongly-measurable (the assignment `A i` and response `Y i` are
 revealed by step `i+1`). -/
 @[fun_prop]
-lemma stronglyMeasurable_respIncr (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (i : ℕ) :
+lemma stronglyMeasurable_respIncr (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (k : 𝓐) (i : ℕ) :
     StronglyMeasurable[h.filtrationAction (i + 1)] (respIncr ν A Y k i) := by
   have hAm := h.adapted_action_filtrationAction.measurable_le (Nat.lt_succ_self i).le
   have hYm := h.measurable_feedback_filtrationAction_of_lt (Nat.lt_succ_self i)
@@ -77,14 +77,14 @@ lemma stronglyMeasurable_respIncr (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
     (hYm.stronglyMeasurable.sub stronglyMeasurable_const)
 
 /-- Each increment is in `L²`: `memLp_respMart_increment` phrased in terms of `respIncr`. -/
-lemma memLp_respIncr [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma memLp_respIncr [Finite 𝓐] (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a))
     (k : 𝓐) (i : ℕ) : MemLp (respIncr ν A Y k i) 2 P :=
   memLp_respMart_increment k (h.measurable_action i) (h.memLp_feedback hνk i)
 
 /-- The increments are martingale differences for `𝒢`: `condExp_respMart_increment` phrased in
 terms of `respIncr`. -/
-lemma condExp_respIncr [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma condExp_respIncr [Finite 𝓐] (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a))
     (k : 𝓐) (i : ℕ) :
     P[respIncr ν A Y k i
@@ -94,30 +94,30 @@ lemma condExp_respIncr [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν)
 /-- The triangular martingale-difference array of arm `k`, normalized by the deterministic
 `a_n = V_k v_k n`: row `n` is `d_0/√a_n, …, d_{n-1}/√a_n` with `d_i = 𝟙{A i = k}(Y i - θ_k)`. Its
 row sum is `Q_{n,k}/√(V_k v_k n)`. -/
-noncomputable def respArray [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+noncomputable def respArray [Finite 𝓐] (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (k : 𝓐) (vk : ℝ) : MartDiffArray P :=
   MartDiffArray.ofSeq h.filtrationAction
     (respIncr ν A Y k) (fun n ↦ Var[id; ν k] * vk * n)
     (memLp_respIncr h hνk k) (condExp_respIncr h hνk k) (stronglyMeasurable_respIncr h k)
 
-@[simp] lemma respArray_d [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+@[simp] lemma respArray_d [Finite 𝓐] (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (k : 𝓐) (vk : ℝ) (n i : ℕ) :
     (respArray h hνk k vk).d n i
       = fun ω ↦ (√(Var[id; ν k] * vk * n))⁻¹ * respIncr ν A Y k i ω := rfl
 
-@[simp] lemma respArray_filt [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+@[simp] lemma respArray_filt [Finite 𝓐] (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (k : 𝓐) (vk : ℝ) :
     (respArray h hνk k vk).𝓕
       = fun _ ↦ h.filtrationAction := rfl
 
-@[simp] lemma respArray_k [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+@[simp] lemma respArray_k [Finite 𝓐] (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (k : 𝓐) (vk : ℝ) :
     (respArray h hνk k vk).k = id := rfl
 
 /-- The row sum of the array is `Q_{n,k}/√(V_k v_k n)`. -/
 @[specifies respArray "the array is assembled so that its row sum is the self-normalized statistic \
 `Q_{n,k}/√(V_k v_k n)` — the quantity the CLT is about"]
-lemma rowSum_respArray [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma rowSum_respArray [Finite 𝓐] (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (k : 𝓐) (vk : ℝ) (n : ℕ) :
     (respArray h hνk k vk).rowSum n
       = fun ω ↦ (√(Var[id; ν k] * vk * n))⁻¹ * respMart ν A Y k n ω := by
@@ -132,7 +132,7 @@ lemma rowSum_respArray [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν)
 @[specifies respArray "explains the choice of normalizer `a_n = V_k v_k n`: it cancels the arm \
 variance and leaves the predictable variation equal to `N_{n,k}/(v_k n)`, so the CLT hypothesis \
 `predVar → 1` becomes exactly the allocation statement `N_{n,k}/n → v_k`"]
-lemma predVar_respArray_ae [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma predVar_respArray_ae [Finite 𝓐] (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (k : 𝓐) (vk : ℝ) (hvk0 : 0 ≤ vk)
     (hVk0 : 0 ≤ Var[id; ν k]) (n : ℕ) :
     (respArray h hνk k vk).predVar n =ᵐ[P]
@@ -165,7 +165,7 @@ measurable `φ`, `E[𝟙{A i = k}·φ(Y i) | 𝒢 i] = 𝟙{A i = k}·∫ φ dν
 `𝒢 i`-measurable and pulls out, and the response's conditional law given `𝒢 i` on `{A i = k}` is
 `ν k`. This is the general form of `condExp_respMart_increment_sq` (which is the case
 `φ = (·-θ_k)²`), used for the conditional Lindeberg quantity. -/
-lemma condExp_indicator_comp (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (i : ℕ)
+lemma condExp_indicator_comp (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (k : 𝓐) (i : ℕ)
     {φ : ℝ → ℝ} (hφ : StronglyMeasurable φ) (hint : Integrable (fun ω ↦ φ (Y i ω)) P) :
     P[fun ω ↦ actionIndicator A k i ω * φ (Y i ω)
         | h.filtrationAction i] =ᵐ[P]
@@ -200,7 +200,7 @@ equals `(a_n)⁻¹ · h_n(ε) · N_{n,k}` (a.e.), where `a_n = V_k v_k n` and
 `h_n(ε) = ∫ (x-θ_k)² 𝟙{|x-θ_k| > ε√a_n} dν_k` is the deterministic truncated second moment of arm
 `k`. Each cell contributes `𝟙{A i = k}·(a_n)⁻¹ h_n(ε)` (`condExp_indicator_comp` with the truncated
 square), and the indicators sum to `N_{n,k}`. -/
-lemma lindeberg_respArray_ae [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma lindeberg_respArray_ae [Finite 𝓐] (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (k : 𝓐) (vk : ℝ) (hvk : 0 < vk) (hVk : 0 < Var[id; ν k])
     (ε : ℝ) (hε : 0 < ε) (n : ℕ) :
     (respArray h hνk k vk).lindeberg n ε =ᵐ[P]
@@ -296,7 +296,8 @@ lemma lindeberg_respArray_ae [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryE
 we have `0 ≤ L_n(ε) ≤ h_n(ε)/(V_k v_k)`, and `h_n(ε) = ∫(x-θ)²𝟙{|x-θ|>ε√a_n} dν_k → 0` because
 `√a_n → ∞` and `ν_k` has finite second moment (dominated convergence,
 `tendsto_integral_sq_indicator_gt`). So `L_n(ε) → 0` a.s., hence in measure. -/
-lemma tendstoInMeasure_lindeberg_respArray [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma tendstoInMeasure_lindeberg_respArray [Finite 𝓐]
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (k : 𝓐) (vk : ℝ) (hvk : 0 < vk) (hVk : 0 < Var[id; ν k]) :
     ∀ ε, 0 < ε → TendstoInMeasure P (fun n ↦ (respArray h hνk k vk).lindeberg n ε) atTop 0 := by
   intro ε hε
@@ -366,7 +367,7 @@ lemma tendstoInMeasure_lindeberg_respArray [Finite 𝓐] (h : IsAlgEnvSeq A Y al
 /-- **The predictable variation converges to `1` in probability** (the `hV` hypothesis of
 `MartDiffArray.mart_clt`). Since `predVar n = N_{n,k}/(v_k n)` (a.e.) and `N_{n,k}/n → v_k` a.s.
 (consistency), we get `predVar n → 1` a.s., hence in measure. -/
-lemma tendstoInMeasure_predVar_respArray [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma tendstoInMeasure_predVar_respArray [Finite 𝓐] (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (k : 𝓐) (vk : ℝ) (hvk : 0 < vk) (hVk : 0 < Var[id; ν k])
     (hNconv : ∀ᵐ ω ∂P,
       Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 vk)) :
@@ -395,7 +396,7 @@ lemma tendstoInMeasure_predVar_respArray [Finite 𝓐] (h : IsAlgEnvSeq A Y alg 
 
 /-- The assignment count `N_{n,k}` is measurable in `ω`. -/
 @[fun_prop]
-lemma measurable_count_actionIndicator (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
+lemma measurable_count_actionIndicator (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (n : ℕ) :
     Measurable (fun ω ↦ count (fun j ↦ actionIndicator A k j ω) n) := by
   simp only [count]
@@ -403,7 +404,7 @@ lemma measurable_count_actionIndicator (h : IsAlgEnvSeq A Y alg (stationaryEnv �
 
 /-- Each `Q_{n,k}` is measurable (a finite sum of measurable increments). -/
 @[fun_prop]
-lemma measurable_respMart (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
+lemma measurable_respMart (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
     Measurable (respMart ν A Y k n) := by
   have heq : respMart ν A Y k n = fun ω ↦ ∑ i ∈ Finset.range n, respIncr ν A Y k i ω := by
     funext ω; rw [← sum_respIncr k n, Finset.sum_apply]
@@ -419,7 +420,7 @@ This is `AlphaRAR.MartDiffArray.mart_clt` applied to `respArray`, whose predicta
 to `1` (`tendstoInMeasure_predVar_respArray`) and which satisfies the conditional Lindeberg
 condition (`tendstoInMeasure_lindeberg_respArray`). -/
 lemma respMart_div_sqrt_tendsto_gaussianReal [Finite 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (k : 𝓐) (vk : ℝ) (hvk : 0 < vk) (hVk : 0 < Var[id; ν k])
     (hNconv : ∀ᵐ ω ∂P,
       Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 vk)) :
@@ -442,7 +443,7 @@ follows from the deterministic-normalizer CLT (`respMart_div_sqrt_tendsto_gaussi
 Slutsky (`TendstoInDistribution.mul_of_tendstoInMeasure_const`), since the ratio
 `√(V_k v_k n)/√(V_k N_{n,k}) = √(v_k n/N_{n,k}) → 1` in probability (from `N_{n,k}/n → v_k`). -/
 lemma respMart_selfNorm_tendsto_gaussianReal [Finite 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) (k : 𝓐) (vk : ℝ) (hvk : 0 < vk) (hVk : 0 < Var[id; ν k])
     (hNconv : ∀ᵐ ω ∂P,
       Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n / (n : ℝ)) atTop (𝓝 vk)) :

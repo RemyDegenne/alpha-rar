@@ -108,7 +108,7 @@ lemma tight_of_tendstoInDistribution {mE : MeasurableSpace E} [OpensMeasurableSp
     {Z : Ω' → E} (h : TendstoInDistribution X atTop Z (fun _ ↦ μ) ν') (η : ℝ≥0∞) (hη : 0 < η) :
     ∃ M : ℝ, 0 < M ∧ ∀ᶠ n in atTop, μ {ω | M ≤ dist (X n ω) 0} ≤ η := by
   set ν : ProbabilityMeasure E :=
-    ⟨ν'.map Z, Measure.isProbabilityMeasure_map h.aemeasurable_limit⟩ with hνdef
+    ⟨ν'.map Z, inferInstance⟩ with hνdef
   have hconv := h.tendsto
   -- continuity from above: the finite measure `ν` of `{j ≤ ‖·‖}` tends to `ν ∅ = 0`
   have hCanti : Antitone (fun j : ℕ ↦ {x : E | (j : ℝ) ≤ dist x 0}) := by

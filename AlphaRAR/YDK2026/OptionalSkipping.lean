@@ -226,7 +226,7 @@ lemma measurableSet_hitEvent (hD : ∀ i, Measurable[𝒢 i] (D i)) (j m : ℕ) 
 where hits run out, so nothing is lost by replacing one with the other"]
 lemma sampleTime_eq_ae (hDinf : ∀ᵐ ω ∂μ, {j | D j ω = 1}.Infinite) (m j : ℕ) :
     {ω | sampleTime D m ω = j} =ᵐ[μ] hitEvent D j m := by
-  rw [Filter.eventuallyEq_set]
+  rw [Filter.eventuallyEqSet_iff]
   filter_upwards [hDinf] with ω hinf
   exact sampleTime_eq_iff hinf
 
@@ -279,7 +279,7 @@ exactly one live term a.e., so it agrees with the random-index preimage it repla
 lemma sampledSeq_preimage_ae_cleanPre
     (hDinf : ∀ᵐ ω ∂μ, {j | D j ω = 1}.Infinite) (i : ℕ) :
     (sampledSeq Y D i) ⁻¹' E =ᵐ[μ] cleanPre Y D E i := by
-  rw [Filter.eventuallyEq_set]
+  rw [Filter.eventuallyEqSet_iff]
   filter_upwards [hDinf] with ω hinf
   rw [Set.mem_preimage, mem_cleanPre]
   constructor
@@ -396,11 +396,11 @@ lemma measure_iInter_cleanPre [IsProbabilityMeasure μ]
       rw [← measure_iUnion hWIdisj hWImeas, ← Set.inter_iUnion]
       apply measure_congr
       have hcover : (⋃ j, hitEvent D j N) =ᵐ[μ] Set.univ := by
-        rw [Filter.eventuallyEq_set]
+        rw [Filter.eventuallyEqSet_iff]
         filter_upwards [hDinf] with ω hinf
         simp only [Set.mem_iUnion, Set.mem_univ, iff_true]
         exact ⟨sampleTime D N ω, (sampleTime_eq_iff hinf).mp rfl⟩
-      have h := (Filter.EventuallyEq.refl (ae μ) W).inter hcover
+      have h := (Filter.EventuallyEqSet.refl (ae μ) W).inter hcover
       rwa [Set.inter_univ] at h
     rw [hsum, mul_comm]
 
@@ -413,9 +413,9 @@ common law `ρ`. A measurable a.e.-representative `sampledClean` supplies `AEMea
 /-- Termwise a.e.-equality of a finite family lifts to their intersections. -/
 lemma biInter_ae_eq {ι : Type*} (s : Finset ι) {f g : ι → Set Ω}
     (h : ∀ i ∈ s, f i =ᵐ[μ] g i) : (⋂ i ∈ s, f i) =ᵐ[μ] (⋂ i ∈ s, g i) := by
-  rw [Filter.eventuallyEq_set]
+  rw [Filter.eventuallyEqSet_iff]
   have hall : ∀ᵐ ω ∂μ, ∀ i ∈ s, (ω ∈ f i ↔ ω ∈ g i) :=
-    (eventually_all_finset s).mpr (fun i hi ↦ Filter.eventuallyEq_set.mp (h i hi))
+    (eventually_all_finset s).mpr (fun i hi ↦ Filter.eventuallyEqSet_iff.mp (h i hi))
   filter_upwards [hall] with ω hω
   simp only [Set.mem_iInter]
   exact ⟨fun H i hi ↦ (hω i hi).mp (H i hi), fun H i hi ↦ (hω i hi).mpr (H i hi)⟩
@@ -558,13 +558,14 @@ the response given the history and current action is `ν (A j)`). Hence sampling
 open Learning
 
 variable {𝓐 : Type*} {m𝓐 : MeasurableSpace 𝓐} [MeasurableSingletonClass 𝓐]
-  {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν] {A : ℕ → Ω → 𝓐} {alg : Algorithm 𝓐 ℝ}
+  {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν] {O : ℕ → Ω → Unit} {A : ℕ → Ω → 𝓐}
+  {alg : Algorithm Unit 𝓐 ℝ}
 
 omit [MeasurableSingletonClass 𝓐] in
 /-- **Discharge of the freshness hypothesis.** For the arm-`k` selector in a stationary environment,
 `μ (Y j ⁻¹' E ∩ S) = (ν k) E · μ S` whenever `S` is measurable in the action-augmented filtration
 and forces `A j = k`: there the conditional law of the response `Y j` is the constant `ν k`. -/
-lemma hfact_stationaryEnv {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) μ) (k : 𝓐)
+lemma hfact_stationaryEnv {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) μ) (k : 𝓐)
     (j : ℕ) {E : Set ℝ} (hE : MeasurableSet E) {S : Set Ω}
     (hS : MeasurableSet[h.filtrationAction j] S)
     (hSsub : S ⊆ {ω | actionIndicator A k j ω = 1}) :
@@ -601,7 +602,7 @@ lemma hfact_stationaryEnv {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (sta
 environment with per-arm reward kernel `ν`, if arm `k` is pulled infinitely often almost surely,
 then the responses observed at the pulls of arm `k`, `sampledSeq Y (actionIndicator A k)`, are
 independent. -/
-lemma iIndepFun_sampledResponse {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) μ)
+lemma iIndepFun_sampledResponse {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) μ)
     (k : 𝓐) (hk_inf : ∀ᵐ ω ∂μ, {j | A j ω = k}.Infinite) :
     iIndepFun (sampledSeq Y (actionIndicator A k)) μ := by
   set 𝒢 := h.filtrationAction with h𝒢
@@ -622,7 +623,7 @@ lemma iIndepFun_sampledResponse {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y al
 /-- **Doob optional skipping (identical distribution).** Each response sampled at a pull of arm `k`
 has law `ν k`. Together with `iIndepFun_sampledResponse` this says the sampled responses are i.i.d.
 with the arm's reward law. -/
-lemma map_sampledResponse_eq {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) μ)
+lemma map_sampledResponse_eq {Y : ℕ → Ω → ℝ} (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) μ)
     (k : 𝓐) (hk_inf : ∀ᵐ ω ∂μ, {j | A j ω = k}.Infinite) (m : ℕ) :
     μ.map (sampledSeq Y (actionIndicator A k) m) = ν k := by
   set 𝒢 := h.filtrationAction with h𝒢

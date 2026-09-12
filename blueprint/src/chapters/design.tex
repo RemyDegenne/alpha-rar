@@ -151,7 +151,8 @@ if $N_{m,k}/m > \hat{\rho}_{m,k}$ then $p_{m+1,k} = \alpha\hat{\rho}_{m,k}$.
 \texttt{AlphaRAR.eradeProb\_throttle}. The simplex identity uses that the mass freed from the
 over-sampled arms, $\sum_{j\in S}(1-\alpha)\hat\rho_{m,j}$, is redistributed exactly over the $|T|$
 under-sampled arms; the degenerate case $|T|=0$ forces $S=\varnothing$ by mass conservation
-(\texttt{sum\_histProp}, \texttt{sum\_histTarget}).
+(\texttt{sum\_histProp\_le}, \texttt{sum\_histTarget}) --- the proportions never total more than
+$1$, which also covers the empty history, where every count is $0$.
 \end{proof}
 
 \begin{definition}[Interpolated D-Tracking]\label{def:d_tracking}

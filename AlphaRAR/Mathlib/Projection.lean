@@ -5,7 +5,7 @@ Authors: Rémy Degenne
 -/
 module
 
-public import Mathlib.Data.Real.Basic
+public import Mathlib.Basic.Real.Basic
 public import Mathlib.LinearAlgebra.Matrix.Symmetric
 public import Mathlib.Tactic.Abel
 public import Mathlib.Tactic.NoncommRing

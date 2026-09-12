@@ -6,7 +6,6 @@ public import AlphaRAR.LeanMachineLearning.PullCount
 public import AlphaRAR.Mathlib.AnscombeCLT
 public import AlphaRAR.Mathlib.CondExp
 public import AlphaRAR.Mathlib.Convergence
-public import AlphaRAR.Mathlib.CramerWold
 public import AlphaRAR.Mathlib.DeviationBound
 public import AlphaRAR.Mathlib.Filtration
 public import AlphaRAR.Mathlib.Freedman

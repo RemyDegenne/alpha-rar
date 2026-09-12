@@ -5,7 +5,6 @@ Authors: Rémy Degenne
 -/
 module
 
-public import AlphaRAR.Mathlib.CramerWold
 public import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
 public import Mathlib.Probability.HasLaw
 
@@ -25,8 +24,6 @@ on `(E, ν)` is a random variable with law `ν`.
   `HasLaw Y (gaussianReal 0 σ²) P'`) and a limit named by its law are exchanged.
 * `TendstoInDistribution.mul_of_tendstoInMeasure_const`: Slutsky for a product, the multiplicative
   twin of Mathlib's `TendstoInDistribution.add_of_tendstoInMeasure_const`.
-* `tendstoInDistribution_of_forall_inner`: the Cramér–Wold device (one direction) for
-  `TendstoInDistribution`, from the vendored `tendsto_map_of_tendsto_map_inner`.
 -/
 
 @[expose] public section
@@ -52,9 +49,9 @@ lemma _root_.MeasureTheory.TendstoInDistribution.congr' {X Y : ι → Ω → E} 
   aemeasurable_limit := h.aemeasurable_limit.congr hZT
   tendsto := by
     have ht := h.tendsto
-    rw [show (⟨μ'.map Z, Measure.isProbabilityMeasure_map h.aemeasurable_limit⟩ :
+    rw [show (⟨μ'.map Z, inferInstance⟩ :
           ProbabilityMeasure E)
-        = ⟨μ'.map T, Measure.isProbabilityMeasure_map (h.aemeasurable_limit.congr hZT)⟩ from
+        = ⟨μ'.map T, inferInstance⟩ from
         Subtype.ext (Measure.map_congr hZT)] at ht
     refine ht.congr' ?_
     filter_upwards [hXY] with i hi
@@ -75,8 +72,8 @@ lemma _root_.MeasureTheory.TendstoInDistribution.comp {X : ι → Ω → E} {Z :
 lemma tendstoInDistribution_id_iff {X : ι → Ω → E} {Z : Ω' → E} {ν : Measure E}
     [IsProbabilityMeasure ν] (hZ : HasLaw Z ν μ') :
     TendstoInDistribution X l id μ ν ↔ TendstoInDistribution X l Z μ μ' := by
-  have hlim : (⟨ν.map id, Measure.isProbabilityMeasure_map aemeasurable_id⟩ : ProbabilityMeasure E)
-      = ⟨μ'.map Z, Measure.isProbabilityMeasure_map hZ.aemeasurable⟩ :=
+  have hlim : (⟨ν.map id, inferInstance⟩ : ProbabilityMeasure E)
+      = ⟨μ'.map Z, inferInstance⟩ :=
     Subtype.ext (show ν.map id = μ'.map Z by rw [Measure.map_id, hZ.map_eq])
   constructor
   · intro h
@@ -99,21 +96,5 @@ lemma _root_.MeasureTheory.TendstoInDistribution.mul_of_tendstoInMeasure_const
     TendstoInDistribution (fun n ω ↦ X n ω * Y n ω) l (fun ω ↦ Z ω * c) (fun _ ↦ μ'') μ' :=
   hXZ.continuous_comp_prodMk_of_tendstoInMeasure_const (g := fun p : ℝ × ℝ ↦ p.1 * p.2)
     (by fun_prop) hY_tendsto hY
-
-open scoped RealInnerProductSpace in
-/-- **Cramér–Wold device (one direction) for `TendstoInDistribution`**: if every scalar projection
-`⟪Xn n, t⟫` converges in distribution to `⟪X, t⟫`, then `Xn` converges in distribution to `X`.
-This is the vendored `tendsto_map_of_tendsto_map_inner` restated for random variables. -/
-lemma tendstoInDistribution_of_forall_inner {F : Type*} [NormedAddCommGroup F]
-    [InnerProductSpace ℝ F] [FiniteDimensional ℝ F] [MeasurableSpace F] [BorelSpace F]
-    {P : Measure Ω} [IsProbabilityMeasure P] {Q : Measure Ω'} [IsProbabilityMeasure Q]
-    {Xn : ℕ → Ω → F} {X : Ω' → F} (hXn : ∀ n, Measurable (Xn n)) (hX : Measurable X)
-    (h : ∀ t : F, TendstoInDistribution (fun n ω ↦ ⟪Xn n ω, t⟫) atTop (fun ω ↦ ⟪X ω, t⟫)
-      (fun _ ↦ P) Q) :
-    TendstoInDistribution Xn atTop X (fun _ ↦ P) Q where
-  forall_aemeasurable n := (hXn n).aemeasurable
-  aemeasurable_limit := hX.aemeasurable
-  tendsto := tendsto_map_of_tendsto_map_inner (P := ⟨P, inferInstance⟩) (Q := ⟨Q, inferInstance⟩)
-    hX hXn fun t ↦ (h t).tendsto
 
 end AlphaRAR

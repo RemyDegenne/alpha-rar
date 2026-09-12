@@ -62,8 +62,6 @@ lemma multivariateGaussian_map_matrix (S : Matrix n n ℝ) (G : Matrix m n ℝ) 
     ((PiLp.continuous_toLp 2 (fun _ : m ↦ ℝ)).comp
       (((Matrix.mulVecLin G).continuous_of_finiteDimensional).comp
         (PiLp.continuous_ofLp 2 (fun _ : n ↦ ℝ)))).measurable
-  have : IsProbabilityMeasure ((multivariateGaussian 0 S).map L) :=
-    Measure.isProbabilityMeasure_map hLmeas.aemeasurable
   refine Measure.ext_of_charFun (funext fun t ↦ ?_)
   have hinner : ∀ x : EuclideanSpace ℝ n, (⟪L x, t⟫ : ℝ) = ⟪x, L' t⟫ := by
     intro x

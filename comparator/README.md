@@ -2,7 +2,7 @@
 
 Machine-checkable verification, with [leanprover/comparator](https://github.com/leanprover/comparator),
 that this repository proves the headline results claimed in [`formalization.yaml`](../formalization.yaml)
-— without having to read (or trust) any of the 23k lines of Lean in `AlphaRAR/`.
+— without having to read (or trust) any of the 22k lines of Lean in `AlphaRAR/`.
 
 Each challenge is **one self-contained file whose transitive imports resolve to Mathlib and Lean
 core only**. That exact shape is what the [Palomar registry](https://palomar-registry.org/)'s
@@ -23,10 +23,10 @@ For each headline result there is a **challenge** file and a JSON config:
 | `AlphaRAR.aRTSFE_sparse_clt_of_contDiffAt` | `Challenge_aRTSFE_sparse_clt_of_contDiffAt.lean` | `aRTSFE_sparse_clt_of_contDiffAt.json` |
 | `AlphaRAR.aRTSFE_sparse_rate_of_isARTSFE` | `Challenge_aRTSFE_sparse_rate.lean` | `aRTSFE_sparse_rate.json` |
 
-Each challenge (335–395 lines) states the theorem with `sorry`, with **every** definition the
+Each challenge (360–420 lines) states the theorem with `sorry`, with **every** definition the
 statement rests on inlined verbatim: the project's definitions, and the handful of
-[LML](https://github.com/LeanMachineLearning/LML) declarations they build on (`Algorithm`,
-`Environment`, `history`, `IsAlgEnvSeq`, `stationaryEnv`/`obliviousEnv`, `pullCount`,
+[LML](https://github.com/LeanMachineLearning/LML) declarations they build on (`Round`, `Hist`,
+`Algorithm`, `Environment`, `history`, `IsAlgEnvSeq`, `stationaryEnv`/`obliviousEnv`, `pullCount`,
 `pullCount'`, `sumRewards'`), which appear as clearly marked "vendored from LML" sections. The
 `sorry`s in these files are the point: they are restatements to be verified, not part of the
 formalization, and are excluded from `formalization.yaml`'s `sorry_count` (as the v0.4 spec

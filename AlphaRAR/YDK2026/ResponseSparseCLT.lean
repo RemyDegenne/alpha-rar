@@ -36,11 +36,11 @@ namespace AlphaRAR
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
   {𝓐 : Type*} {m𝓐 : MeasurableSpace 𝓐} [DecidableEq 𝓐] [MeasurableSingletonClass 𝓐]
   {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν]
-  {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
+  {O : ℕ → Ω → Unit} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm Unit 𝓐 ℝ}
   {P : Measure Ω} [IsProbabilityMeasure P]
 
 /-- The self-normalized response martingale `ω ↦ (√N_{n,k})⁻¹ Q_{n,k}` is measurable. -/
-lemma measurable_respSelfNorm (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
+lemma measurable_respSelfNorm (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
     Measurable (fun ω ↦ (√(pullCount A k n ω : ℝ))⁻¹ * respMart ν A Y k n ω) :=
   (((measurable_of_countable _).comp (measurable_pullCount h.measurable_action k n)).sqrt.inv).mul
     (measurable_respMart h k n)
@@ -52,7 +52,7 @@ deterministic `c_n → ∞`, the response martingale normalized by its own rando
 `Q_{n,k}/√N_{n,k} ⇒ 𝒩(0, V_k)`, where `V_k = Var[id; ν k]`. No positivity of the limiting proportion
 is required, so this holds for sparse targets `v_k = 0`. -/
 lemma respMart_selfNorm_anscombe_tendsto
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hk_inf : ∀ᵐ ω ∂P, {j | A j ω = k}.Infinite)
     (hνk : MemLp id 2 (ν k))
     {c : ℕ → ℕ} (hc : Tendsto c atTop atTop)
@@ -137,7 +137,7 @@ lemma respMart_selfNorm_anscombe_tendsto
 
 omit [DecidableEq 𝓐] in
 /-- The per-arm estimator `θ̂_{n,k}` is measurable. -/
-lemma measurable_estimator_arm (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
+lemma measurable_estimator_arm (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
     (n : ℕ) :
     Measurable (fun ω ↦ estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) θ₀ n) := by
   have harm : ∀ j, Measurable (fun ω ↦ actionIndicator A k j ω) := fun j ↦
@@ -149,7 +149,7 @@ lemma measurable_estimator_arm (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k
     ((measurable_count_actionIndicator h k n).add_const 1)
 
 /-- The self-normalized estimator error `ω ↦ √N_{n,k}(θ̂_{n,k} - θ_k)` is measurable. -/
-lemma measurable_estimatorSqrtN (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
+lemma measurable_estimatorSqrtN (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
     (n : ℕ) :
     Measurable (fun ω ↦ √(pullCount A k n ω : ℝ)
       * (estimator (fun j ↦ actionIndicator A k j ω) (Y · ω) θ₀ n - ν.means k)) :=
@@ -165,7 +165,7 @@ proportion is required, so this is the componentwise ingredient of the sparse CL
 `respMart_selfNorm_anscombe_tendsto` via the exact Bahadur identity `estimator_sub_eq` and two
 Slutsky steps (the scaling factors `N/(N+1) → 1` and `√N/(N+1) → 0` in probability). -/
 lemma estimator_sqrtN_anscombe_tendsto
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hk_inf : ∀ᵐ ω ∂P, {j | A j ω = k}.Infinite)
     (hνk : MemLp id 2 (ν k)) (θ₀ : ℝ)
     {c : ℕ → ℕ} (hc : Tendsto c atTop atTop)

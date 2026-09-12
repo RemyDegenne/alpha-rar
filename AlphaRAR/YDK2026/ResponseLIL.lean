@@ -62,7 +62,7 @@ lemma hitCount_tendsto_atTop {D : ℕ → Ω → ℝ} {ω : Ω}
   omega
 
 variable {𝓐 : Type*} {m𝓐 : MeasurableSpace 𝓐} [DecidableEq 𝓐]
-  {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν] {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ}
+  {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν] {O : ℕ → Ω → Unit} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ}
 
 omit [DecidableEq 𝓐] in
 /-- **Reindexing: the response martingale is the subsampled i.i.d. partial sum.** For every `ω`,
@@ -97,7 +97,7 @@ lemma hitCount_actionIndicator_eq_pullCount (k : 𝓐) (n : ℕ) (ω : Ω) :
   exact congrArg Finset.card (Finset.filter_congr (fun i _ ↦ by rw [actionIndicator_eq_one_iff]))
 
 variable [MeasurableSingletonClass 𝓐]
-  {P : Measure Ω} [IsProbabilityMeasure P] {alg : Algorithm 𝓐 ℝ}
+  {P : Measure Ω} [IsProbabilityMeasure P] {alg : Algorithm Unit 𝓐 ℝ}
 
 /-- **Loglog LIL for the response martingale.** For an algorithm–environment sequence in a
 stationary environment, if arm `k` is pulled infinitely often a.s. and its reward law `ν k` is in
@@ -105,7 +105,7 @@ stationary environment, if arm `k` is pulled infinitely often a.s. and its rewar
 `|Q_k n| ≤ β √(2 · Var[id; ν k] · N_{n,k} · log log N_{n,k})`, where `N_{n,k}` is the number of
 pulls of arm `k` before `n`. In particular `Q_k n = O(√(N_{n,k} log log N_{n,k}))`. -/
 lemma abs_respMart_le_sqrt_nat_mul_loglog
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hk_inf : ∀ᵐ ω ∂P, {j | A j ω = k}.Infinite)
     (hνk : MemLp id 2 (ν k)) :
     ∀ᵐ ω ∂P, ∀ β : ℝ, 1 < β → ∀ᶠ n in atTop,
@@ -215,7 +215,7 @@ Arm `k` being pulled infinitely often is *derived* from that positive proportion
 condition `ν k ∈ L²` (Condition **A**). No positivity of `Var[id; ν k]` is needed — a zero-variance
 arm has `Q_k ≡ 0`. -/
 lemma ae_eventually_abs_respMart_le_sqrt_nat_mul_loglog_of_proportion
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (k : 𝓐)
     (hνk : MemLp id 2 (ν k))
     {v : Ω → ℝ} (hv : ∀ᵐ ω ∂P, 0 < v ω)
     (hN : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω))) :
@@ -236,7 +236,7 @@ estimate `abs_estimator_sub_le_rate_loglog_ae`. Its only probabilistic input is 
 `N_{n,k}/n → v_k > 0` — infinitely-many pulls of arm `k` is derived from it — together with the
 reward-law moment condition `ν k ∈ L²` (Condition **A**). -/
 lemma abs_estimator_sub_le_rate_loglog_of_proportion
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
     (hνk : MemLp id 2 (ν k))
     {v : Ω → ℝ} (hv : ∀ᵐ ω ∂P, 0 < v ω)
     (hN : ∀ᵐ ω ∂P, Tendsto (fun n ↦ (pullCount A k n ω : ℝ) / (n : ℝ)) atTop (𝓝 (v ω))) :
@@ -256,7 +256,7 @@ layer — instead of a globally-named limit, and (ii) states it with the assignm
 instance for the pull count (the two agree by `count_indicator_eq_pullCount`). This is the form
 consumed when discharging `rho_rate`'s per-arm rate hypothesis for a concrete design. -/
 lemma abs_estimator_sub_le_rate_loglog_of_pos_count
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (k : 𝓐) (θ₀ : ℝ)
     (hνk : MemLp id 2 (ν k))
     (hpp : ∀ᵐ ω ∂P, ∃ uk : ℝ, 0 < uk ∧ Tendsto (fun n ↦ count (fun j ↦ actionIndicator A k j ω) n
       / (n : ℝ)) atTop (𝓝 uk)) :

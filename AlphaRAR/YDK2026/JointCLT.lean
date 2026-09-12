@@ -40,20 +40,20 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
   [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] [Fintype 𝓐]
   {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν]
   {P : Measure Ω} [IsProbabilityMeasure P]
-  {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
+  {O : ℕ → Ω → Unit} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm Unit 𝓐 ℝ}
 
 omit [DecidableEq 𝓐] [Fintype 𝓐] in
-lemma measurable_propSqrtNVec (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (v : 𝓐 → ℝ) (n : ℕ) :
+lemma measurable_propSqrtNVec (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (v : 𝓐 → ℝ) (n : ℕ) :
     Measurable (propSqrtNVec A v n) := by
-  refine (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (measurable_pi_lambda _ fun k ↦ ?_)
+  refine (WithLp.measurable_toLp 2 (𝓐 → ℝ)).comp (Measurable.of_eval fun k ↦ ?_)
   exact (((measurable_count_actionIndicator h k n).div_const _).sub_const _).const_mul _
 
 omit [DecidableEq 𝓐] [Fintype 𝓐] in
-lemma measurable_jointSqrtNVec [Finite 𝓐] (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma measurable_jointSqrtNVec [Finite 𝓐] (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (θ₀ : 𝓐 → ℝ) {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T) (v : 𝓐 → ℝ) (n : ℕ) :
     Measurable (jointSqrtNVec ν A Y θ₀ T v n) := by
   cases nonempty_fintype 𝓐
-  refine (WithLp.measurable_toLp 2 ((𝓐 ⊕ 𝓐) → ℝ)).comp (measurable_pi_lambda _ fun p ↦ ?_)
+  refine (WithLp.measurable_toLp 2 ((𝓐 ⊕ 𝓐) → ℝ)).comp (Measurable.of_eval fun p ↦ ?_)
   cases p with
   | inl a =>
     simp only [Sum.elim_inl]
@@ -95,7 +95,7 @@ centring as `targetSqrtNVec`, so that their difference vanishing in probability 
 equation (5) of the paper, and the first diagonal block of the limit is the proportion's own \
 Gaussian"]
 lemma clt_joint
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (θ₀ : 𝓐 → ℝ)
     (hνk : ∀ a, MemLp id 2 (ν a)) {v : 𝓐 → ℝ} (hv : ∀ a, 0 < v a)
     (hNconv : ∀ᵐ ω ∂P, ∀ a, Tendsto (fun n ↦ count (fun j ↦ actionIndicator A a j ω) n / (n : ℝ))
       atTop (𝓝 (v a)))

@@ -38,7 +38,7 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
   [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐] [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
   {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν]
   {P : Measure Ω} [IsProbabilityMeasure P]
-  {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
+  {O : ℕ → Ω → Unit} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm Unit 𝓐 ℝ}
 
 omit [StandardBorelSpace 𝓐] [Nonempty 𝓐] in
 /-- **Positive allocation proportion at an abstract hitting time** (per-arm). The
@@ -48,7 +48,7 @@ allocation proportion `N_{n,k}/n` converges a.s. to a *positive* limit `v_k = T(
 `θ` is attainable (a.s. limit of the estimator, `theta_consistent_of_hitting`), so `hTpos` makes
 `T(θ)` positive; `consistency_of_hitting` identifies the proportion limit with `T(θ)`. -/
 lemma count_proportion_pos_of_hitting
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1)
@@ -77,7 +77,7 @@ lemma count_proportion_pos_of_hitting
 
 /-- **Positive allocation proportion for an aRTS design** (count form, per-arm). The `aRTS`
 instantiation of `count_proportion_pos_of_hitting` at the last under-sampling time. -/
-lemma aRTS_count_proportion_pos (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma aRTS_count_proportion_pos (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
@@ -95,7 +95,7 @@ Theorem 4.1 of the paper, generic form). The abstract-hitting-time generalisatio
 subsampled loglog LIL `abs_estimator_sub_le_rate_loglog_of_pos_count`, whose positive-proportion
 input is `count_proportion_pos_of_hitting`, restated as an `IsBigO` (the rate function is
 nonnegative, so the absolute values of the pointwise bound are the norms of the `IsBigO`). -/
-lemma theta_rate_of_hitting (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma theta_rate_of_hitting (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1)
@@ -125,7 +125,7 @@ Theorem 4.1 of the paper, generic form). The abstract-hitting-time generalisatio
 `aRTS_rho_rate`: the plug-in target achieves `ρ̂_{n,k} - v_k = O(√(log log n / n))` a.s., combining
 the estimator consistency `theta_consistent_of_hitting` and the per-arm loglog estimator rate
 `theta_rate_of_hitting` through the delta-method rate `rho_rate`. -/
-lemma rho_rate_of_hitting (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+lemma rho_rate_of_hitting (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1)
@@ -148,7 +148,7 @@ lemma rho_rate_of_hitting (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
 /-- **Loglog rate of the estimator for an aRTS design** (the second conclusion of Theorem 4.1 of
 the paper). The `aRTS` instantiation of `theta_rate_of_hitting`:
 `θ̂_{n,k} - θ_k = O(√(log log n / n))` a.s. -/
-theorem aRTS_theta_rate (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+theorem aRTS_theta_rate (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
@@ -163,7 +163,7 @@ theorem aRTS_theta_rate (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
 /-- **Loglog rate of the plug-in target for an aRTS design** (the third conclusion of Theorem 4.1
 of the paper). The `aRTS` instantiation of `rho_rate_of_hitting`:
 `ρ̂_{n,k} - v_k = O(√(log log n / n))` a.s. -/
-theorem aRTS_rho_rate (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+theorem aRTS_rho_rate (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
@@ -185,7 +185,7 @@ consistent `θ̂_{n,k} → θ_k` and achieves the loglog rate `θ̂_{n,k} - θ_k
 the plug-in target achieves the same rate `ρ̂_{n,k} - v_k = O(√(log log n / n))` — the last two are
 the paper's `Θ̂_n - Θ = O(√(log log n / n))` and `n(ρ̂_n - v) = O(√(n log log n))`. Bundles
 `aRTS_proportion_tendsto`, `aRTS_theta_consistent`, `aRTS_theta_rate`, `aRTS_rho_rate`. -/
-theorem aRTS_LLN (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+theorem aRTS_LLN (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)

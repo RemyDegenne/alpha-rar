@@ -182,13 +182,14 @@ express it as a membership condition on the driving algorithm and close the loop
 \begin{definition}[$\aRTS$ algorithm]\label{def:aRTS_alg}
 \lean{AlphaRAR.IsARTS}\leanok
 \uses{def:aRTS}
-An algorithm chooses its next action from a history $h$ of action–reward pairs for patients
-$0,\dots,n$ via a Markov kernel; the probability it assigns to arm $k$ is
+An algorithm chooses the action of patient $n$ from a history $h$ of the $n$ completed rounds
+(patients $0,\dots,n-1$) via a Markov kernel; the probability it assigns to arm $k$ is
 $\mathrm{policy}_n(h)(\{k\})$. The algorithm
 is an \emph{$\alpha$-throttled $\aRTS$ design} with offsets $\Params_0$ and target map $\Target$ if
 its policy throttles every over-sampled arm: for every history $h$ and arm $k$, if
-$N_{n+1,k}(h) > (n+1)\,\hat\rho_k(h)$ then $\mathrm{policy}_n(h)(\{k\}) \le \alpha\,\hat\rho_k(h)$,
+$N_{n,k}(h) > n\,\hat\rho_k(h)$ then $\mathrm{policy}_n(h)(\{k\}) \le \alpha\,\hat\rho_k(h)$,
 where the count $N(h)$ and target $\hat\rho(h)=\Target(\estParams(h))$ are computed from $h$.
+At $n=0$ the condition is vacuous, since $N_{0,k}=0$.
 \end{definition}
 
 \begin{corollary}[Consistency of an $\aRTS$ algorithm]\label{cor:aRTS_alg_consistency}
@@ -208,8 +209,8 @@ positivity $v_k>0$ is then still required to apply that rate.
 \uses{cor:aRTS_consistency}
 The policy-level throttle discharges the process-level throttle hypothesis of
 Corollary~\ref{cor:aRTS_consistency}. The link is that the selection probability
-$p_{n+1,k}=P[\mathbf 1\{A_{n+1}=k\}\mid\filt_n]$ equals $\mathrm{policy}_n(\text{history}_n)(\{k\})$
-almost surely — a conditional expectation computed from the algorithm's conditional distribution of
+$p_{n+1,k}=P[\mathbf 1\{A_{n+1}=k\}\mid\filt_n]$ equals
+$\mathrm{policy}_{n+1}(\text{history}_{n+1})(\{k\})$ almost surely — a conditional expectation computed from the algorithm's conditional distribution of
 the next action given the history (\texttt{HasCondDistrib.condExp\_comp\_eq}) — and the history-level
 count and target agree with the process count $N_{n+1,k}$ and target $\hat\rho_{n+1,k}$.
 \end{proof}

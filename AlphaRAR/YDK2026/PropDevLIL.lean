@@ -188,7 +188,7 @@ section ARTS
 variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace 𝓐}
   [MeasurableSingletonClass 𝓐] {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν]
   {P : Measure Ω} [IsProbabilityMeasure P]
-  {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
+  {O : ℕ → Ω → Unit} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm Unit 𝓐 ℝ}
 
 /-- **Per-arm one-sided a.s. loglog bound on the deviation, at an abstract hitting time.** The
 abstract-hitting-time generalisation of `aRTS_dev_upper`: for arm `k'`, given the estimator
@@ -202,7 +202,7 @@ assignment-martingale LIL and the `ρ̂`-difference by the loglog rate, both lif
 time `ℓ ≤ n` via `exists_forall_le_mul_sqrt_mul_log_log`. Everything but `hsmall_upper` and the
 throttle is design-independent. -/
 lemma dev_upper_of_hitting [DecidableEq 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
@@ -359,7 +359,7 @@ and loglog rate come from the `aRTS_LLN` bundle (`aRTS_theta_consistent`, `aRTS_
 throttle from `throttle_of_isARTS`, and the smallness is automatic — at the last under-sampling time
 `N_ℓ - ℓ ρ̂_ℓ ≤ 0` (`preliminary_small`), so it is trivially `O(√(n log log n))`. -/
 lemma aRTS_dev_upper [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1) (hARTS : IsARTS alg θ₀ T α)
@@ -387,7 +387,7 @@ The abstract-hitting-time generalisation of `aRTS_prop_dev_ae`: from the per-arm
 The design enters only through `hθconv`, the throttle `hthrottle`, the per-arm loglog rate `hρrate`,
 and the per-arm smallness `hsmall_upper`. -/
 lemma prop_dev_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
@@ -432,7 +432,7 @@ come from the `aRTS_LLN` bundle, the throttle from `throttle_of_isARTS`, and the
 automatic (`N_ℓ - ℓ ρ̂_ℓ ≤ 0`, `preliminary_small`). Condition **A** (`hνk`) and the Condition
 **B** differentiability `hT_diff` feed the loglog rate `aRTS_rho_rate`. -/
 theorem aRTS_prop_dev_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1) (hARTS : IsARTS alg θ₀ T α)
@@ -458,7 +458,7 @@ time** (Theorem 4.2 (i) of the paper, equation (7), generic form). For every arm
 `prop_dev_ae_of_hitting` and the second is `n · O(√(n log log n)/n) = O(√(n log log n))` by the
 loglog rate `hρrate` and `isBigO_natMul_sqrt_mul_log_log`. -/
 lemma count_sub_smul_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1)
@@ -491,7 +491,7 @@ lemma count_sub_smul_ae_of_hitting [Fintype 𝓐] [DecidableEq 𝓐]
 `N_{n,k} - n v_k = O(√(n log log n))`, where `v_k = T ν.means k` is the limiting proportion.
 The `aRTS` instantiation of `count_sub_smul_ae_of_hitting`. -/
 theorem aRTS_count_sub_smul_ae [Fintype 𝓐] [DecidableEq 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (hνk : ∀ a, MemLp id 2 (ν a))
     (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     (α : ℝ) (hα : α ∈ Set.Icc (0 : ℝ) 1) (hα1 : α < 1) (hARTS : IsARTS alg θ₀ T α)

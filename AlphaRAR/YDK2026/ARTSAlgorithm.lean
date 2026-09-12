@@ -16,12 +16,13 @@ hypothesis on the selection probabilities. This file expresses that throttle as 
 of the driving `Algorithm` itself — a membership condition for the aRTS *family* — and bridges it
 back to the consistency theorem.
 
-An `Algorithm 𝓐 ℝ` chooses the next action from a history `h : Iic n → 𝓐 × ℝ` via a Markov kernel
-`alg.policy n`. The selection probability of arm `k` for patient `n+1` given the history is
-`(alg.policy n h {k}).toReal`. `IsARTS alg θ₀ T α` requires this to be throttled — bounded by
-`α · ρ̂_k(h)` — whenever arm `k` is over-sampled in `h`, where the plug-in target `ρ̂_k(h)` and the
-counts are computed from the history via the finite-action bookkeeping of `LeanMachineLearning`
-(`pullCount'`, `sumRewards'`).
+An `Algorithm Unit 𝓐 ℝ` chooses the action of patient `n` from the history
+`h : Hist Unit 𝓐 ℝ n` of the previous rounds via a Markov kernel `alg.policy n` (the observation
+component is trivial here). The selection probability of arm `k` for patient `n` given the history
+is `(alg.policy n (h, ()) {k}).toReal`. `IsARTS alg θ₀ T α` requires this to be throttled —
+bounded by `α · ρ̂_k(h)` — whenever arm `k` is over-sampled in `h`, where the plug-in target
+`ρ̂_k(h)` and the counts are computed from the history via the finite-action bookkeeping of
+`LeanMachineLearning` (`pullCount'`, `sumRewards'`).
 
 The bridge is in two steps: `throttle_of_isARTS` shows that any `IsARTS` algorithm satisfies the
 throttle hypothesis of `aRTS_consistency`, and `aRTS_consistency_of_isARTS` concludes that its
@@ -52,7 +53,7 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
   [MeasurableSingletonClass 𝓐] [DecidableEq 𝓐]
   {ν : Kernel 𝓐 ℝ} [IsMarkovKernel ν]
   {P : Measure Ω} [IsProbabilityMeasure P]
-  {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm 𝓐 ℝ}
+  {O : ℕ → Ω → Unit} {A : ℕ → Ω → 𝓐} {Y : ℕ → Ω → ℝ} {alg : Algorithm Unit 𝓐 ℝ}
 
 -- `[StandardBorelSpace 𝓐] [Nonempty 𝓐]` are needed only by the lemmas passing through
 -- `HasCondDistrib.condExp_comp_eq` on the action and their consequences, and `[Fintype 𝓐]` only by
@@ -61,22 +62,23 @@ variable {Ω 𝓐 : Type*} {mΩ : MeasurableSpace Ω} {m𝓐 : MeasurableSpace �
 /-! ### History-level plug-in target and the family predicate -/
 
 /-- History-level plug-in target `ρ̂_k`: the target map `T` applied to the vector of regularized
-empirical means `(sumRewards' + θ₀)/(pullCount' + 1)` computed from a history `h : Iic n → 𝓐 × ℝ`.
-This is the design's target as a function of the observed history, matching `aRTSTarget` on the
-history of the process (`histTarget_eq`). -/
+empirical means `(sumRewards' + θ₀)/(pullCount' + 1)` computed from a history
+`h : Hist Unit 𝓐 ℝ n`. This is the design's target as a function of the observed history, matching
+`aRTSTarget` on the history of the process (`histTarget_eq`). -/
 noncomputable def histTarget (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (k : 𝓐) (n : ℕ)
-    (h : Iic n → 𝓐 × ℝ) : ℝ :=
+    (h : Hist Unit 𝓐 ℝ n) : ℝ :=
   T (fun k' ↦ (sumRewards' n h k' + θ₀ k') / ((pullCount' n h k' : ℝ) + 1)) k
 
 /-- **The aRTS design family**, algorithm form (Definition 3.1 of the paper). An algorithm `alg` is
 an `α`-throttled aRTS design with offsets `θ₀` and target map `T` if its policy throttles every
-over-sampled arm: for any history `h : Iic n → 𝓐 × ℝ`, if arm `k` is over-sampled
-(`N_{n+1,k}(h) > (n+1) ρ̂_k(h)`), then the probability the policy assigns to arm `k` for the next
-patient is at most `α ρ̂_k(h)`. -/
-structure IsARTS (alg : Algorithm 𝓐 ℝ) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (α : ℝ) : Prop where
-  throttle : ∀ (n : ℕ) (h : Iic n → 𝓐 × ℝ) (k : 𝓐),
-    ((n : ℝ) + 1) * histTarget θ₀ T k n h < (pullCount' n h k : ℝ) →
-      (alg.policy n h {k}).toReal ≤ α * histTarget θ₀ T k n h
+over-sampled arm: for any history `h : Hist Unit 𝓐 ℝ n`, if arm `k` is over-sampled
+(`N_{n,k}(h) > n ρ̂_k(h)`), then the probability the policy assigns to arm `k` for patient `n`
+is at most `α ρ̂_k(h)`. (At `n = 0` the condition is vacuous: `N_{0,k} = 0`.) -/
+structure IsARTS (alg : Algorithm Unit 𝓐 ℝ) (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (α : ℝ) :
+    Prop where
+  throttle : ∀ (n : ℕ) (h : Hist Unit 𝓐 ℝ n) (k : 𝓐),
+    (n : ℝ) * histTarget θ₀ T k n h < (pullCount' n h k : ℝ) →
+      (alg.policy n (h, ()) {k}).toReal ≤ α * histTarget θ₀ T k n h
 
 /-! ### History-statistic identities -/
 
@@ -90,21 +92,21 @@ lemma estimator_eq (θ₀ : 𝓐 → ℝ) (k : 𝓐) (t : ℕ) (ω : Ω) :
   simp only [actionIndicator]
   exact count_indicator_eq_pullCount k t ω
 
-/-- The process plug-in target `ρ̂_{n+1,k}` equals the history-level target evaluated on the
-history of the process up to time `n`. -/
+/-- The process plug-in target `ρ̂_{n,k}` equals the history-level target evaluated on the
+history of the process before time `n`. -/
 @[specifies histTarget "the history-level target is the process target, read on the process's own \
-history — including the index shift: the history up to `n` determines `ρ̂` at time `n+1`",
+history: the rounds before patient `n` are exactly what determines `ρ̂` at time `n`",
   specifies aRTSTarget "the process target is a function of the observed history alone, so it is \
-implementable: `ρ̂_{n+1,k}` is computable from the first `n+1` observations and nothing else"]
+implementable: `ρ̂_{n,k}` is computable from the first `n` observations and nothing else"]
 lemma histTarget_eq (θ₀ : 𝓐 → ℝ) (T : (𝓐 → ℝ) → 𝓐 → ℝ) (k : 𝓐) (n : ℕ) (ω : Ω) :
-    histTarget θ₀ T k n (history A Y n ω) = aRTSTarget A Y θ₀ T (n + 1) ω k := by
+    histTarget θ₀ T k n (history O A Y n ω) = aRTSTarget A Y θ₀ T n ω k := by
   rw [aRTSTarget, histTarget]
   congr 1
   funext k'
-  have hsr : sumRewards A Y k' (n + 1) ω = sumRewards' n (history A Y n ω) k' :=
-    sumRewards_add_one_eq_sumRewards'
-  have hpc : pullCount A k' (n + 1) ω = pullCount' n (history A Y n ω) k' :=
-    pullCount_add_one_eq_pullCount' (R' := Y)
+  have hsr : sumRewards A Y k' n ω = sumRewards' n (history O A Y n ω) k' :=
+    sumRewards_eq_sumRewards'
+  have hpc : pullCount A k' n ω = pullCount' n (history O A Y n ω) k' :=
+    pullCount_eq_pullCount' (R' := Y)
   rw [estimator_eq, hsr, hpc]
 
 /-! ### The selection probability is the policy evaluated on the history -/
@@ -113,15 +115,17 @@ omit [DecidableEq 𝓐] in
 /-- **The selection probability is the policy's mass on the arm** (the linchpin of the bridge).
 For `m = n+1`, the aRTS selection probability `p_{n+1,k} = P[𝟙{A_{n+1}=k} | ℱ_n]` equals, almost
 surely, the probability the policy assigns to arm `k` given the history:
-`(alg.policy n (history A Y n ω) {k}).toReal`. Proved from the algorithm's `hasCondDistrib_action`
-via `HasCondDistrib.condExp_comp_eq` applied to the indicator `g = 𝟙_{· = k}`. -/
+`(alg.policy (n+1) (history O A Y (n+1) ω, ()) {k}).toReal`. Proved from the algorithm's
+`hasCondDistrib_action` via `HasCondDistrib.condExp_comp_eq` applied to the indicator
+`g = 𝟙_{· = k}`, the conditioning σ-algebra being identified by
+`filtrationObs_succ_eq_filtration`. -/
 @[specifies aRTSSelProb "identifies the conditional expectation with the quantity a designer \
 controls — the mass the policy puts on arm `k` given the history. Without this the definition \
 would be a probabilistic object with no operational meaning"]
 lemma aRTSSelProb_succ_ae [StandardBorelSpace 𝓐] [Nonempty 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P) (k : 𝓐) (n : ℕ) :
     aRTSSelProb A k h.filtration P (n + 1)
-      =ᵐ[P] fun ω ↦ (alg.policy n (history A Y n ω) {k}).toReal := by
+      =ᵐ[P] fun ω ↦ (alg.policy (n + 1) (history O A Y (n + 1) ω, ()) {k}).toReal := by
   let 𝔽 := h.filtration
   set g : 𝓐 → ℝ := Set.indicator {k} (fun _ ↦ (1 : ℝ)) with hg_def
   have hg : StronglyMeasurable g := stronglyMeasurable_const.indicator (measurableSet_singleton k)
@@ -137,8 +141,10 @@ lemma aRTSSelProb_succ_ae [StandardBorelSpace 𝓐] [Nonempty 𝓐]
   have hint : Integrable (fun ω ↦ g (A (n + 1) ω)) P := by
     rw [hgeq]; exact integrable_actionIndicator P k (h.measurable_action (n + 1))
   have hbridge : P[fun ω ↦ g (A (n + 1) ω) | 𝔽.shiftDown (n + 1)]
-      =ᵐ[P] fun ω ↦ ∫ a, g a ∂(alg.policy n (history A Y n ω)) :=
-    (h.hasCondDistrib_action n).condExp_comp_eq (h.measurable_history n) hg hint
+      =ᵐ[P] fun ω ↦ ∫ a, g a ∂(alg.policy (n + 1) (history O A Y (n + 1) ω, ())) := by
+    have hcd := (h.hasCondDistrib_action (n + 1)).condExp_comp_eq
+      ((h.measurable_history (n + 1)).prodMk (h.measurable_obs (n + 1))) hg hint
+    rwa [← h.filtrationObs_eq_comap (n + 1), h.filtrationObs_succ_eq_filtration n] at hcd
   have hsel : aRTSSelProb A k 𝔽 P (n + 1) = P[fun ω ↦ g (A (n + 1) ω) | 𝔽.shiftDown (n + 1)] := by
     unfold aRTSSelProb
     rw [← hgeq]
@@ -153,14 +159,14 @@ lemma aRTSSelProb_succ_ae [StandardBorelSpace 𝓐] [Nonempty 𝓐]
 /-- **`IsARTS` discharges the throttle hypothesis of `aRTS_consistency`.** If `alg` is an aRTS
 design (`IsARTS`), then for every arm the process selection probabilities satisfy the throttle:
 whenever arm `k` is over-sampled at time `m`, `p_{m,k} ≤ α ρ̂_{m,k}`. At `m = 0` the condition is
-vacuous (`N_0 = 0`); at `m = n+1` it is `IsARTS.throttle` transported through `aRTSSelProb_succ_ae`,
-`histTarget_eq` and `histCount_eq`. -/
+vacuous (`N_0 = 0`); at `m = n+1` it is `IsARTS.throttle` transported through
+`aRTSSelProb_succ_ae`, `histTarget_eq` and `histCount_eq`. -/
 @[specifies IsARTS "the history-level condition really is the process-level throttle: stating it \
 on arbitrary histories, rather than on the realised process, costs nothing",
   specifies aRTSUnder "fixes the sense of the inequality: `aRTSUnder` is the *under*-sampled event \
 `N ≤ m ρ̂`, so it is its complement that triggers the throttle"]
 lemma throttle_of_isARTS [StandardBorelSpace 𝓐] [Nonempty 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} {α : ℝ} (hARTS : IsARTS alg θ₀ T α) (k : 𝓐) :
     ∀ᵐ ω ∂P, ∀ m, ¬ aRTSUnder A Y θ₀ T k ω m →
       aRTSSelProb A k h.filtration P m ω
@@ -173,8 +179,8 @@ lemma throttle_of_isARTS [StandardBorelSpace 𝓐] [Nonempty 𝓐]
     exact absurd (by simp [aRTSUnder] : aRTSUnder A Y θ₀ T k ω 0) hm
   | succ n =>
     filter_upwards [aRTSSelProb_succ_ae h k n] with ω hsel hm
-    rw [hsel, ← histTarget_eq]
-    refine hARTS.throttle n (history A Y n ω) k ?_
+    rw [hsel, ← histTarget_eq (O := O)]
+    refine hARTS.throttle (n + 1) (history O A Y (n + 1) ω) k ?_
     -- Over-sampling: `¬ (N_{n+1,k} ≤ (n+1) ρ̂_{n+1,k})` gives `(n+1) ρ̂ < N_{n+1,k}`.
     have hlt : (↑(n + 1) : ℝ) * aRTSTarget A Y θ₀ T (n + 1) ω k
         < (pullCount A k (n + 1) ω : ℝ) := by
@@ -192,7 +198,7 @@ plug-in targets converge to a common limit: `N_{n,k}/n → u_k` and `ρ̂_{n,k} 
 @[specifies IsARTS "the membership condition is strong enough to be worth having: it alone (plus \
 Condition **A** and a simplex-valued continuous `T`) forces the allocation proportions to converge"]
 lemma aRTS_consistency_of_isARTS [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α) :
@@ -208,7 +214,7 @@ of the loglog estimator rate `abs_estimator_sub_le_rate_loglog_of_proportion` on
 limit `u_k` is named as a function of `ω` and its strict positivity `u_k > 0` (the non-sparsity
 of Condition **B**) is supplied. -/
 lemma aRTS_pullCount_div_ae_tendsto [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α) :
@@ -228,7 +234,7 @@ a.s. to the true parameter: `θ̂_n → θ = (ν.means k)_k`. The aRTS consisten
 infinitely often — and identifies each estimator limit as its arm mean. `hTpos` is the only
 hypothesis beyond those of `aRTS_consistency_of_isARTS`. -/
 lemma aRTS_theta_consistent [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
@@ -246,7 +252,7 @@ paper). For an aRTS design, under Condition **B** the allocation proportion conv
 `ρ̂_{n,k} = T(θ̂_n)_k → T(θ)_k` by continuity) with the joint aRTS consistency (`N_{n,k}/n` and
 `ρ̂_{n,k}` share the limit `u_k`) identifies `u_k = T(θ)_k = v_k`. -/
 lemma aRTS_proportion_tendsto [Fintype 𝓐] [StandardBorelSpace 𝓐] [Nonempty 𝓐]
-    (h : IsAlgEnvSeq A Y alg (stationaryEnv ν) P)
+    (h : IsAlgEnvSeq O A Y alg (stationaryEnv ν) P)
     (hνk : ∀ a, MemLp id 2 (ν a)) {θ₀ : 𝓐 → ℝ} {T : (𝓐 → ℝ) → 𝓐 → ℝ} (hT : Continuous T)
     (hTnn : ∀ z k, 0 ≤ T z k) (hTsum : ∀ z, ∑ k, T z k = 1)
     {α : ℝ} (hα : α ∈ Set.Icc (0 : ℝ) 1) (hARTS : IsARTS alg θ₀ T α)
