@@ -82,7 +82,7 @@ jobs:
       - name: Build the referee site
         id: referee
         if: github.event_name == 'push'
-        uses: LeanMachineLearning/exposition@v4.34.0-rc2-5
+        uses: LeanMachineLearning/exposition@v4.34.0-rc2
         with:
           root: AlphaRAR
           site-url: https://remydegenne.github.io/alpha-rar/referee
