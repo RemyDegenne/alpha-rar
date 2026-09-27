@@ -80,7 +80,7 @@ jobs:
         run: |
           echo "TAG=dataset-$(git rev-parse HEAD | cut -c1-12)" >> "$GITHUB_ENV"
           echo "DATE=$(git log -1 --format=%cs)" >> "$GITHUB_ENV"
-          echo "LABEL=$(git describe --tags --always)" >> "$GITHUB_ENV"
+          echo "LABEL=$(git describe --tags --always --exclude 'dataset-*')" >> "$GITHUB_ENV"
 
       - name: Extract and publish the dataset
         id: extract
