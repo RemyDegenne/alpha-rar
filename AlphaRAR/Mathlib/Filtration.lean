@@ -6,7 +6,7 @@ Authors: Rémy Degenne
 module
 
 public import Mathlib.Probability.Process.Filtration
-public meta import Characterization
+public meta import TrustAnnotations
 
 /-!
 # The previous-index filtration

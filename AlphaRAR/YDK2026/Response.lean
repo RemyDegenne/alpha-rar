@@ -15,7 +15,7 @@ public import AlphaRAR.Mathlib.MartingaleRate
 public import LeanMachineLearning.SequentialLearning.FiniteActions
 public import LeanMachineLearning.SequentialLearning.StationaryEnv
 public import Mathlib.Topology.Separation.CompletelyRegular
-public meta import Characterization
+public meta import TrustAnnotations
 
 /-!
 # The response martingale, via the algorithm–environment framework

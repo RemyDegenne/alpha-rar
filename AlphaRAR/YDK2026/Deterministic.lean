@@ -11,7 +11,7 @@ public import Mathlib.Algebra.BigOperators.Field
 public import Mathlib.Algebra.Order.Star.Real
 public import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
 public import Mathlib.Analysis.Complex.ExponentialBounds
-public meta import Characterization
+public meta import TrustAnnotations
 
 /-!
 # Deterministic core of the auxiliary processes
@@ -293,49 +293,44 @@ lemma hitting_sign (P : ℕ → Prop) [DecidablePred P] {n m : ℕ}
 /-! ### Characterization of the hitting time
 
 The two `@[specifies]` claims above are the halves of one description: `hitting P n` is the
-**greatest** `m ≤ n` satisfying `P`, and `0` when there is none. `IsHitting` states that, including
-the fallback, and it pins the value down exactly — a greatest element is unique, and the fallback
-branch is what settles the empty case rather than leaving it free. -/
+**greatest** `m ≤ n` satisfying `P`, and `0` when there is none. The theorem below states that,
+including the fallback, and it pins the value down exactly — a greatest element is unique, and the
+fallback branch is what settles the empty case rather than leaving it free. `@[characterization]`
+checks that `hitting P n` has the property, from the `@[specifies]` lemmas. -/
 
-/-- **`m` is the last time up to `n` at which `P` holds**: `m ≤ n`, nothing in `(m, n]` satisfies
-`P`, and `m` itself satisfies `P` unless it is the fallback `0`. -/
-@[characterization property hitting "the greatest `m ≤ n` with `P m`, and `0` when there is none \
-— including the fallback, which is the convention a reader has to be told"]
-structure IsHitting (P : ℕ → Prop) (n m : ℕ) : Prop where
-  /-- `m` does not look past the horizon. -/
-  le : m ≤ n
-  /-- `m` is the *last* such time: nothing strictly after it, up to `n`, satisfies `P`. -/
-  greatest : ∀ j, m < j → j ≤ n → ¬ P j
-  /-- `m` is itself such a time, unless it is the fallback. Both branches are needed: without the
-  left one every non-hit would qualify, and without the right one there would be no value at all
-  when `P` fails throughout `[0, n]`. -/
-  hit_or_zero : P m ∨ m = 0
+/-- The hitting time does not look past the horizon. -/
+@[specifies hitting "it never looks past the horizon `n`"]
+lemma hitting_le (P : ℕ → Prop) [DecidablePred P] (n : ℕ) : hitting P n ≤ n :=
+  Nat.findGreatest_le n
 
-/-- **The hitting time is the last such time** — the existence half of the characterization. -/
-@[characterization existence]
-lemma isHitting_hitting (P : ℕ → Prop) [DecidablePred P] (n : ℕ) : IsHitting P n (hitting P n) where
-  le := Nat.findGreatest_le n
-  greatest _ hlt hle := hitting_sign P hlt hle
-  hit_or_zero := by
-    rcases Nat.eq_zero_or_pos (hitting P n) with h | h
-    · exact Or.inr h
-    · obtain ⟨j, _, hjn, hj⟩ := Nat.findGreatest_pos.mp h
-      exact Or.inl (Nat.findGreatest_spec hjn hj)
+/-- The hitting time is itself a time at which `P` holds, unless it is the fallback `0`. -/
+@[specifies hitting "the fallback: `P` holds at the hitting time unless it is `0`, which is the \
+value when `P` fails throughout `[0, n]` — the convention a reader has to be told"]
+lemma hitting_spec_or_zero (P : ℕ → Prop) [DecidablePred P] (n : ℕ) :
+    P (hitting P n) ∨ hitting P n = 0 := by
+  rcases Nat.eq_zero_or_pos (hitting P n) with h | h
+  · exact Or.inr h
+  · obtain ⟨j, _, hjn, hj⟩ := Nat.findGreatest_pos.mp h
+    exact Or.inl (Nat.findGreatest_spec hjn hj)
 
-/-- **Nothing else is** — the uniqueness half: of two candidates the smaller one's maximality
-rules the larger out, which forces the larger to be the fallback `0` and hence not larger at all. -/
-@[characterization uniqueness]
-lemma IsHitting.eq_hitting {P : ℕ → Prop} [DecidablePred P] {n m : ℕ} (hm : IsHitting P n m) :
-    m = hitting P n := by
-  have hh := isHitting_hitting P n
+/-- **The hitting time is the last time up to `n` at which `P` holds**, and nothing else is: if
+`m ≤ n`, nothing in `(m, n]` satisfies `P`, and `m` itself satisfies `P` unless it is `0`, then
+`m = hitting P n`. Of two such numbers the smaller one's maximality rules the larger out, which
+forces the larger to be the fallback `0` and hence not larger at all. Both branches of the last
+condition are needed: without the left one every non-hit would qualify, and without the right one
+there would be no value at all when `P` fails throughout `[0, n]`. -/
+@[characterization "the greatest `m ≤ n` with `P m`, and `0` when there is none — including the \
+fallback, which is the convention a reader has to be told"]
+lemma eq_hitting {P : ℕ → Prop} [DecidablePred P] {n m : ℕ} (hle : m ≤ n)
+    (hgreatest : ∀ j, m < j → j ≤ n → ¬ P j) (hhit : P m ∨ m = 0) : m = hitting P n := by
   by_contra hne
   rcases Nat.lt_or_ge m (hitting P n) with hlt | hge
-  · rcases hh.hit_or_zero with hP | hz
-    · exact hm.greatest _ hlt hh.le hP
+  · rcases hitting_spec_or_zero P n with hP | hz
+    · exact hgreatest _ hlt (hitting_le P n) hP
     · omega
   · have hlt : hitting P n < m := lt_of_le_of_ne hge (Ne.symm hne)
-    rcases hm.hit_or_zero with hP | hz
-    · exact hh.greatest _ hlt hm.le hP
+    rcases hhit with hP | hz
+    · exact hitting_sign P hlt hle hP
     · omega
 
 /-- **Key inequality** (the paper's Lemma A.1 (ii)).

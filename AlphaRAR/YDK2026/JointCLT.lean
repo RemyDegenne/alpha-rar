@@ -7,7 +7,7 @@ module
 
 public import AlphaRAR.YDK2026.PluginTargetCLT
 public import Mathlib.Data.Matrix.ColumnRowPartitioned
-public meta import Characterization
+public meta import TrustAnnotations
 
 /-!
 # The joint central limit theorem for proportions and plug-in targets

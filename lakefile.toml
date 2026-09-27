@@ -18,9 +18,9 @@ name = "checkdecls"
 git = "https://github.com/PatrickMassot/checkdecls.git"
 
 [[require]]
-name = "Characterization"
-git = "https://github.com/RemyDegenne/characterization"
-rev = "main"
+name = "TrustAnnotations"
+git = "https://github.com/LeanTrustBuilders/annotations"
+rev = "lean-v4.34.0-rc2"
 
 [[lean_lib]]
 name = "AlphaRAR"

@@ -8,7 +8,7 @@ module
 public import AlphaRAR.LeanMachineLearning.PullCount
 public import LeanMachineLearning.SequentialLearning.ActionIndicator
 public import AlphaRAR.Mathlib.Filtration
-public meta import Characterization
+public meta import TrustAnnotations
 
 /-!
 # Allocation counts

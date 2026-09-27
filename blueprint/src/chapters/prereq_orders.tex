@@ -144,8 +144,9 @@ This is the martingale part in the Doob decomposition of $M^2$
 \end{proof}
 
 \begin{lemma}[$\langle M\rangle$ is the unique compensator]\label{lem:qv_unique}
-\lean{AlphaRAR.IsPredQuadVar, AlphaRAR.isPredQuadVar_predQuadVar,
-AlphaRAR.IsPredQuadVar.indistinguishable_predQuadVar}\leanok
+\lean{AlphaRAR.martingale_sq_sub_predQuadVar, AlphaRAR.isStronglyPredictable_predQuadVar,
+AlphaRAR.predQuadVar_zero, AlphaRAR.integrable_predQuadVar,
+AlphaRAR.indistinguishable_predQuadVar}\leanok
 \uses{def:pred_qv, lem:qv_mart}
 Call a process $A$ a \emph{compensator} of $M^2$ if $M^2 - A$ is an $(\filt_n)$-martingale, $A$ is
 predictable, $A_0 = 0$, and each $A_n$ is integrable. Then $\langle M\rangle$ is a compensator of

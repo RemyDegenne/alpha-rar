@@ -5,10 +5,9 @@ Authors: Rémy Degenne
 -/
 module
 
-public import AlphaRAR.Mathlib.CondExp
 public import AlphaRAR.YDK2026.ConsistencyMatching
 public import AlphaRAR.YDK2026.ResponseConsistency
-public meta import Characterization
+public meta import TrustAnnotations
 
 /-!
 # Consistency of the aRTS design family
@@ -49,7 +48,7 @@ step, taken here as a hypothesis; everything downstream of it is proved.
 
 open MeasureTheory ProbabilityTheory Filter Learning
 
-open scoped Topology
+open scoped ENNReal Topology
 
 namespace AlphaRAR
 
@@ -78,29 +77,50 @@ noncomputable def aRTSSelProb (A : ℕ → Ω → 𝓐) (k : 𝓐) (𝔽 : Filtr
 it is not the formula but the two choices inside it — which variable is averaged, and against which
 σ-algebra — and it is the second that the design turns on: conditioning on the history *strictly
 before* patient `n` is what makes `p_{n,k}` the probability of assigning arm `k` to that patient
-rather than a statement about an assignment already made. `IsCondExp` says exactly that, without
-naming `condExp`, and the existence theorem's statement is where the two choices are recorded and
-checked. -/
+rather than a statement about an assignment already made. The characterization says exactly that,
+without naming `condExp`: its hypotheses are the three conditions that make a function a version of
+the conditional expectation of `𝟙{A n = k}` given `ℱ.shiftDown n`, and the three `@[specifies]`
+lemmas before it are where `aRTSSelProb` is checked to satisfy them. -/
 
-attribute [characterization property aRTSSelProb "the conditional probability of assigning arm `k` \
-to patient `n` given the history strictly before that patient — the `shiftDown` is the content, \
-since against `ℱ n` the indicator is already known and the conditional expectation is itself"]
-  IsCondExp
+omit [IsProbabilityMeasure P] in
+/-- The selection probability is known before patient `n` is assigned. -/
+@[specifies aRTSSelProb "it is known before patient `n` is assigned: measurable for the history \
+strictly before that patient, which is the `shiftDown` in its definition"]
+lemma aestronglyMeasurable_aRTSSelProb (k : 𝓐) (𝔽 : Filtration ℕ mΩ) (n : ℕ) :
+    AEStronglyMeasurable[𝔽.shiftDown n] (aRTSSelProb A k 𝔽 P n) P :=
+  stronglyMeasurable_condExp.aestronglyMeasurable
 
-/-- **The selection probability averages the arm indicator over the previous history** — the
-existence half of the characterization. -/
-@[characterization existence]
-lemma isCondExp_aRTSSelProb (hA : ∀ n, Measurable (A n)) (k : 𝓐) (𝔽 : Filtration ℕ mΩ) (n : ℕ) :
-    IsCondExp P (𝔽.shiftDown n) (actionIndicator A k n) (aRTSSelProb A k 𝔽 P n) :=
-  isCondExp_condExp (𝔽.shiftDown.le n) (integrable_actionIndicator P k (hA n))
+omit [IsProbabilityMeasure P] in
+/-- The selection probability is integrable on every set. -/
+@[specifies aRTSSelProb "it is integrable, as a conditional expectation"]
+lemma integrableOn_aRTSSelProb (k : 𝓐) (𝔽 : Filtration ℕ mΩ) (n : ℕ) (s : Set Ω) :
+    IntegrableOn (aRTSSelProb A k 𝔽 P n) s P :=
+  integrable_condExp.integrableOn
 
-/-- **Nothing else does** — the uniqueness half: any `ℱ_{n-1}`-measurable function with the
-integrals of `𝟙{A n = k}` agrees a.e. with `p_{n,k}`. -/
-@[characterization uniqueness]
-lemma IsCondExp.ae_eq_aRTSSelProb (hA : ∀ n, Measurable (A n)) {k : 𝓐} {𝔽 : Filtration ℕ mΩ}
-    {n : ℕ} {g : Ω → ℝ} (hg : IsCondExp P (𝔽.shiftDown n) (actionIndicator A k n) g) :
+/-- **The selection probability averages the arm indicator over the previous history.** -/
+@[specifies aRTSSelProb "it has the integrals of the assignment indicator `𝟙{A n = k}` over every \
+event of the history strictly before patient `n`: the defining property of the conditional \
+probability of assigning arm `k` to that patient"]
+lemma setIntegral_aRTSSelProb (hA : ∀ n, Measurable (A n)) (k : 𝓐) (𝔽 : Filtration ℕ mΩ)
+    {n : ℕ} {s : Set Ω} (hs : MeasurableSet[𝔽.shiftDown n] s) :
+    ∫ ω in s, aRTSSelProb A k 𝔽 P n ω ∂P = ∫ ω in s, actionIndicator A k n ω ∂P :=
+  setIntegral_condExp (𝔽.shiftDown.le n) (integrable_actionIndicator P k (hA n)) hs
+
+/-- **The selection probability is the conditional probability of assigning arm `k`, and nothing
+else is**: any `ℱ_{n-1}`-measurable function, integrable on the `ℱ_{n-1}`-sets of finite measure,
+with the integrals of `𝟙{A n = k}` over them, agrees a.e. with `p_{n,k}`. This is Mathlib's
+`ae_eq_condExp_of_forall_setIntegral_eq`. -/
+@[characterization "the conditional probability of assigning arm `k` to patient `n` given the \
+history strictly before that patient — the `shiftDown` is the content, since against `ℱ n` the \
+indicator is already known and the conditional expectation is itself"]
+lemma ae_eq_aRTSSelProb (hA : ∀ n, Measurable (A n)) {k : 𝓐} {𝔽 : Filtration ℕ mΩ} {n : ℕ}
+    {g : Ω → ℝ} (hgm : AEStronglyMeasurable[𝔽.shiftDown n] g P)
+    (hgi : ∀ s, MeasurableSet[𝔽.shiftDown n] s → P s < ∞ → IntegrableOn g s P)
+    (hgs : ∀ s, MeasurableSet[𝔽.shiftDown n] s → P s < ∞ →
+      ∫ ω in s, g ω ∂P = ∫ ω in s, actionIndicator A k n ω ∂P) :
     g =ᵐ[P] aRTSSelProb A k 𝔽 P n :=
-  hg.ae_eq_condExp (𝔽.shiftDown.le n) (integrable_actionIndicator P k (hA n))
+  ae_eq_condExp_of_forall_setIntegral_eq (𝔽.shiftDown.le n)
+    (integrable_actionIndicator P k (hA n)) hgi hgs hgm
 
 /-- The under-sampling event of arm `k` at time `m`: `N_{m,k} ≤ m ρ̂_{m,k}`. -/
 def aRTSUnder [DecidableEq 𝓐] (A : ℕ → Ω → 𝓐) (Y : ℕ → Ω → ℝ) (θ₀ : 𝓐 → ℝ)

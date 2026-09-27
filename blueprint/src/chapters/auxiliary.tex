@@ -22,8 +22,8 @@ component of the vector used to draw $X_m$.
 \end{definition}
 
 \begin{lemma}[$p_{m,k}$ is the conditional probability]\label{lem:cond_prob_unique}
-\lean{AlphaRAR.IsCondExp, AlphaRAR.isCondExp_aRTSSelProb,
-AlphaRAR.IsCondExp.ae_eq_aRTSSelProb}\leanok
+\lean{AlphaRAR.aestronglyMeasurable_aRTSSelProb, AlphaRAR.integrableOn_aRTSSelProb,
+AlphaRAR.setIntegral_aRTSSelProb, AlphaRAR.ae_eq_aRTSSelProb}\leanok
 \uses{def:cond_prob, def:filtration}
 $p_{m,k}$ is a \emph{version} of $\E[X_{m,k}\mid\filt_{m-1}]$: it is $\filt_{m-1}$-measurable,
 locally integrable, and has the same integral as $X_{m,k}$ over every $\filt_{m-1}$-measurable set
@@ -334,7 +334,8 @@ condition \eqref{eq:throttle}.
 \end{proof}
 
 \begin{lemma}[The hitting time is the last such time]\label{lem:hitting_unique}
-\lean{AlphaRAR.IsHitting, AlphaRAR.isHitting_hitting, AlphaRAR.IsHitting.eq_hitting}\leanok
+\lean{AlphaRAR.hitting_le, AlphaRAR.hitting_sign, AlphaRAR.hitting_spec_or_zero,
+AlphaRAR.eq_hitting}\leanok
 \uses{def:hitting}
 Three properties characterize $\ell_{n,k}$: it is $\le n$; no $m$ with $\ell_{n,k}<m\le n$ is
 under-sampled; and $\ell_{n,k}$ is itself under-sampled unless it is $0$. No other number has all

@@ -8,7 +8,7 @@ module
 public import AlphaRAR.Mathlib.TsumMeasureIoi
 public import AlphaRAR.Mathlib.LILTruncation
 public import AlphaRAR.YDK2026.Response
-public meta import Characterization
+public meta import TrustAnnotations
 
 /-!
 # The truncated response martingale

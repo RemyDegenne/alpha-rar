@@ -12,7 +12,7 @@ public import AlphaRAR.Mathlib.TsumMeasureIoi
 public import Mathlib.Probability.ConditionalExpectation
 public import Mathlib.Analysis.SumIntegralComparisons
 public import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
-public meta import Characterization
+public meta import TrustAnnotations
 
 /-!
 # The i.i.d. Hartman–Wintner law of the iterated logarithm
@@ -201,6 +201,8 @@ lemma stronglyMeasurable_natFiltLT {Y : ℕ → Ω → ℝ} (hY : ∀ i, Strongl
 /-- **`natFiltLT` is the smallest such filtration.** Any filtration that already sees every
 strictly earlier variable contains it, since each `σ(Y j)` with `j < n` is below its level `n` and
 `natFiltLT` is the supremum of exactly those. -/
+@[specifies natFiltLT "not too large: it is below every filtration that sees the strict past — \
+without this, `Filtration.natural` and `⊤` would do too"]
 lemma natFiltLT_le {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i)) {𝒢 : Filtration ℕ m0}
     (h𝒢 : ∀ i n, i < n → StronglyMeasurable[𝒢 n] (Y i)) : (natFiltLT Y hY : Filtration ℕ m0) ≤ 𝒢 :=
   fun n ↦ iSup₂_le fun j hj ↦ (h𝒢 j n hj).measurable.comap_le
@@ -211,35 +213,20 @@ The two `@[specifies]` claims above are the two halves of a single description, 
 are the whole of it: `natFiltLT Y hY` is the **least** filtration that sees every strictly earlier
 variable. Large enough is `stronglyMeasurable_natFiltLT`; not too large is `natFiltLT_le`, and it
 is minimality that carries the off-by-one — the filtrations seeing `Y i` for `i ≤ n` also see it
-for `i < n`, and it is only by being least that `natFiltLT` excludes `Y n` from level `n`. -/
+for `i < n`, and it is only by being least that `natFiltLT` excludes `Y n` from level `n`. The
+theorem below states that description; `@[characterization]` checks that `natFiltLT` has it, from
+those two lemmas. -/
 
-/-- **`𝒢` is the natural filtration strictly before `n`**: it sees every variable of strictly
-earlier index, and it is the smallest filtration that does. -/
-@[characterization property natFiltLT "the least filtration seeing every strictly earlier \
-variable — `Y i` is known at level `n` exactly when `i < n`"]
-structure IsNatFiltLT (Y : ℕ → Ω → ℝ) (𝒢 : Filtration ℕ m0) : Prop where
-  /-- `𝒢` is large enough: every strictly earlier variable is measurable at level `n`. This is
-  what makes the partial sums `S n = ∑_{j<n} Y j` adapted. -/
-  stronglyMeasurable : ∀ i n, i < n → StronglyMeasurable[𝒢 n] (Y i)
-  /-- `𝒢` is not too large: it is below every filtration with the previous property. Without
-  this the field above is satisfied by `Filtration.natural` too, and by `⊤`. -/
-  le : ∀ 𝒢' : Filtration ℕ m0, (∀ i n, i < n → StronglyMeasurable[𝒢' n] (Y i)) → 𝒢 ≤ 𝒢'
-
-/-- **`natFiltLT` sees the strict past and no more** — the existence half of the
-characterization. -/
-@[characterization existence]
-lemma isNatFiltLT_natFiltLT {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i)) :
-    IsNatFiltLT Y (natFiltLT Y hY : Filtration ℕ m0) where
-  stronglyMeasurable _ _ hin := stronglyMeasurable_natFiltLT hY hin
-  le _ h𝒢 := natFiltLT_le hY h𝒢
-
-/-- **Nothing else does** — the uniqueness half: a least element of an order is unique, so any
-filtration with the property *is* `natFiltLT Y hY`, on the nose rather than up to anything. -/
-@[characterization uniqueness]
-lemma IsNatFiltLT.eq_natFiltLT {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i))
-    {𝒢 : Filtration ℕ m0} (h𝒢 : IsNatFiltLT Y 𝒢) : 𝒢 = natFiltLT Y hY :=
-  le_antisymm (h𝒢.le _ fun _ _ hin ↦ stronglyMeasurable_natFiltLT hY hin)
-    (natFiltLT_le hY h𝒢.stronglyMeasurable)
+/-- **`natFiltLT` is the least filtration seeing the strict past**, and nothing else is: a least
+element of an order is unique, so any filtration that sees every strictly earlier variable and is
+below every other such filtration *is* `natFiltLT Y hY`, on the nose rather than up to anything. -/
+@[characterization "the least filtration seeing every strictly earlier variable — `Y i` is known \
+at level `n` exactly when `i < n`"]
+lemma eq_natFiltLT {Y : ℕ → Ω → ℝ} (hY : ∀ i, StronglyMeasurable (Y i)) {𝒢 : Filtration ℕ m0}
+    (h𝒢 : ∀ i n, i < n → StronglyMeasurable[𝒢 n] (Y i))
+    (hle : ∀ 𝒢' : Filtration ℕ m0, (∀ i n, i < n → StronglyMeasurable[𝒢' n] (Y i)) → 𝒢 ≤ 𝒢') :
+    𝒢 = natFiltLT Y hY :=
+  le_antisymm (hle _ fun _ _ hin ↦ stronglyMeasurable_natFiltLT hY hin) (natFiltLT_le hY h𝒢)
 
 /-- The σ-algebra `σ(Y_n)` is independent of the past `𝒢_n = σ(Y_0,…,Y_{n-1})`, from the
 independence of `Y`. This is the disjoint-index instance of `indep_iSup_of_disjoint`. -/

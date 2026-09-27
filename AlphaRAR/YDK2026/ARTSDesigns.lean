@@ -7,7 +7,7 @@ module
 
 public import AlphaRAR.YDK2026.ARTSAlgorithm
 public import LeanMachineLearning.ForMathlib.MeasureTheory.Order.MeasurableArg
-public meta import Characterization
+public meta import TrustAnnotations
 
 /-!
 # Example designs in the aRTS family

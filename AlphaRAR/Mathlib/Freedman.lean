@@ -9,7 +9,7 @@ public import AlphaRAR.Mathlib.LILCommon
 public import AlphaRAR.Mathlib.QuadraticVariation
 public import Mathlib.Order.CompletePartialOrder
 public import Mathlib.Probability.Martingale.OptionalStopping
-public meta import Characterization
+public meta import TrustAnnotations
 
 /-!
 # The exponential supermartingale and Freedman's inequality

@@ -12,7 +12,7 @@ public import AlphaRAR.YDK2026.ResponseCLT
 public import AlphaRAR.Mathlib.Tactic.Tendsto
 public import Mathlib.Probability.Distributions.Gaussian.Fernique
 public import Mathlib.Probability.Distributions.Gaussian.Multivariate
-public meta import Characterization
+public meta import TrustAnnotations
 
 /-!
 # The joint componentwise central limit theorem

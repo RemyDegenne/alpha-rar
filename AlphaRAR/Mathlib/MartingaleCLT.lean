@@ -5,7 +5,6 @@ Authors: Rémy Degenne
 -/
 module
 
-public import AlphaRAR.Mathlib.CondExp
 public import AlphaRAR.Mathlib.QuadraticVariation
 public import AlphaRAR.Mathlib.TendstoInDistribution
 public import Mathlib.MeasureTheory.Function.ConditionalExpectation.CondJensen
@@ -17,7 +16,7 @@ public import Mathlib.Probability.CondVar
 public import Mathlib.Probability.Distributions.Gaussian.Real
 public import Mathlib.Probability.HasLaw
 public import Mathlib.Probability.Process.Filtration
-public meta import Characterization
+public meta import TrustAnnotations
 
 /-!
 # Martingale central limit theorem (Lindeberg form)
@@ -69,7 +68,7 @@ congruence, subsequences, naming a limit by its law, Slutsky for a product, Cram
 @[expose] public section
 
 open Complex intervalIntegral MeasureTheory
-open scoped ProbabilityTheory Real Topology
+open scoped ENNReal ProbabilityTheory Real Topology
 
 namespace AlphaRAR
 
@@ -613,28 +612,44 @@ lemma integrable_sq (n i : ℕ) :
 /-! ### Characterization of the cell variance
 
 `condVar` is *defined* as `P[d n i ² | 𝓕 n i]`, a formula. What it *is* — and the only thing about
-it that could be wrong — is which variable is averaged and against which σ-algebra. `IsCondExp`
-says that without naming `condExp`: `condVar n i` is the `𝓕 n i`-measurable function with the same
-integrals as `d n i ²` over `𝓕 n i`-sets, and nothing else is, up to a.e. equality. Which variable
-and which σ-algebra is then said by the existence theorem's statement, where it is checked. -/
+it that could be wrong — is which variable is averaged and against which σ-algebra. The
+characterization says that without naming `condExp`: `condVar n i` is the `𝓕 n i`-measurable
+function with the same integrals as `d n i ²` over `𝓕 n i`-sets, and nothing else is, up to a.e.
+equality. The three `@[specifies]` lemmas before it are where `condVar` is checked to have those
+properties, and so where which variable and which σ-algebra is recorded. -/
 
-attribute [characterization property condVar "the conditional second moment of the cell increment \
-given the cell's own past — which increment and which σ-algebra is the entire content of \
-`condVar`"] IsCondExp
+/-- The cell variance is known at the start of the cell. -/
+@[specifies condVar "it is known at the start of the cell: measurable for the cell's own past \
+`𝓕 n i`"]
+lemma aestronglyMeasurable_condVar (n i : ℕ) : AEStronglyMeasurable[A.𝓕 n i] (A.condVar n i) P :=
+  stronglyMeasurable_condExp.aestronglyMeasurable
 
-/-- **The cell variance averages the squared increment over the cell's past** — the existence half
-of the characterization. -/
-@[characterization existence]
-lemma isCondExp_condVar [IsFiniteMeasure P] (n i : ℕ) :
-    IsCondExp P (A.𝓕 n i) (fun ω ↦ (A.d n i ω) ^ 2) (A.condVar n i) :=
-  isCondExp_condExp ((A.𝓕 n).le i) (A.integrable_sq n i)
+/-- The cell variance is integrable on every set. -/
+@[specifies condVar "it is integrable, as a conditional expectation"]
+lemma integrableOn_condVar (n i : ℕ) (s : Set Ω) : IntegrableOn (A.condVar n i) s P :=
+  integrable_condExp.integrableOn
 
-/-- **Nothing else does** — the uniqueness half: any `𝓕 n i`-measurable function with the integrals
-of `d n i ²` agrees a.e. with `condVar n i`. -/
-@[characterization uniqueness]
-lemma _root_.AlphaRAR.IsCondExp.ae_eq_condVar [IsFiniteMeasure P] {n i : ℕ} {g : Ω → ℝ}
-    (hg : IsCondExp P (A.𝓕 n i) (fun ω ↦ (A.d n i ω) ^ 2) g) : g =ᵐ[P] A.condVar n i :=
-  hg.ae_eq_condExp ((A.𝓕 n).le i) (A.integrable_sq n i)
+/-- **The cell variance averages the squared increment over the cell's past.** -/
+@[specifies condVar "it has the integrals of the squared increment `d n i ²` over every event of \
+the cell's past: the defining property of the conditional second moment"]
+lemma setIntegral_condVar [IsFiniteMeasure P] {n i : ℕ} {s : Set Ω}
+    (hs : MeasurableSet[A.𝓕 n i] s) :
+    ∫ ω in s, A.condVar n i ω ∂P = ∫ ω in s, (A.d n i ω) ^ 2 ∂P :=
+  setIntegral_condExp ((A.𝓕 n).le i) (A.integrable_sq n i) hs
+
+/-- **The cell variance is the conditional second moment of the increment, and nothing else is**:
+any `𝓕 n i`-measurable function, integrable on the `𝓕 n i`-sets of finite measure, with the
+integrals of `d n i ²` over them, agrees a.e. with `condVar n i`. This is Mathlib's
+`ae_eq_condExp_of_forall_setIntegral_eq`. -/
+@[characterization "the conditional second moment of the cell increment given the cell's own \
+past — which increment and which σ-algebra is the entire content of `condVar`"]
+lemma ae_eq_condVar [IsFiniteMeasure P] {n i : ℕ} {g : Ω → ℝ}
+    (hgm : AEStronglyMeasurable[A.𝓕 n i] g P)
+    (hgi : ∀ s, MeasurableSet[A.𝓕 n i] s → P s < ∞ → IntegrableOn g s P)
+    (hgs : ∀ s, MeasurableSet[A.𝓕 n i] s → P s < ∞ →
+      ∫ ω in s, g ω ∂P = ∫ ω in s, (A.d n i ω) ^ 2 ∂P) :
+    g =ᵐ[P] A.condVar n i :=
+  ae_eq_condExp_of_forall_setIntegral_eq ((A.𝓕 n).le i) (A.integrable_sq n i) hgi hgs hgm
 
 /-- **Uniform smallness of the conditional variances**: each cell variance is controlled by `ε²`
 plus the whole Lindeberg sum. -/

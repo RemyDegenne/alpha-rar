@@ -6,7 +6,7 @@ Authors: Rémy Degenne
 module
 
 public import AlphaRAR.Mathlib.Freedman
-public meta import Characterization
+public meta import TrustAnnotations
 
 /-!
 # Martingale laws of the iterated logarithm

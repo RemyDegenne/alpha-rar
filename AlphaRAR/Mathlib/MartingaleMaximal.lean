@@ -8,7 +8,7 @@ module
 public import AlphaRAR.Mathlib.QuadraticVariation
 public import AlphaRAR.Mathlib.TailBoundLIntegral
 public import Mathlib.Probability.Martingale.OptionalStopping
-public meta import Characterization
+public meta import TrustAnnotations
 
 /-!
 # Doob's `L²` maximal inequality (`L¹` form)

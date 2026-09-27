@@ -8,7 +8,7 @@ module
 public import AlphaRAR.YDK2026.Response
 public import Mathlib.Data.Nat.Nth
 public import Mathlib.Probability.Independence.Basic
-public meta import Characterization
+public meta import TrustAnnotations
 
 /-!
 # Doob optional skipping
@@ -93,9 +93,14 @@ lemma hitCount_eq_sum (D : ℕ → Ω → ℝ) (j : ℕ) (ω : Ω) :
   rw [hitCount, Nat.count_eq_card_filter_range, Finset.card_filter]
 
 /-- **Characterization of the hit time.** When there are infinitely many hits, `τ_m ω = j` iff `j`
-is a hit (`D j ω = 1`) preceded by exactly `m` earlier hits (`hitCount D j ω = m`). -/
-@[specifies sampleTime "characterises the enumeration without reference to `Nat.nth`, and pins the \
-0-indexing: `τ_0` is the *first* hit, having no earlier hits before it"]
+is a hit (`D j ω = 1`) preceded by exactly `m` earlier hits (`hitCount D j ω = m`).
+
+This is the membership condition of `hitEvent D j m`, so there is one definition of "`j` is the
+`m`-th hit" and not two. It needs infinitely many hits: with finitely many, `Nat.nth` runs off the
+end of the enumeration and returns `0`. -/
+@[characterization "the `m`-th hit: a time that is a hit and has exactly `m` hits strictly before \
+it — which is what `Nat.nth` computes, without reference to it, and pins the 0-indexing, `τ₀` \
+being the first hit and having none before it"]
 lemma sampleTime_eq_iff {D : ℕ → Ω → ℝ} {ω : Ω}
     (hinf : {j | D j ω = 1}.Infinite) {m j : ℕ} :
     sampleTime D m ω = j ↔ D j ω = 1 ∧ hitCount D j ω = m := by
@@ -106,39 +111,6 @@ lemma sampleTime_eq_iff {D : ℕ → Ω → ℝ} {ω : Ω}
   · rintro ⟨hj, hc⟩
     rw [← hc]
     exact Nat.nth_count hj
-
-/-! ### Characterization of the hit time
-
-`sampleTime` is *defined* through `Nat.nth`, an enumeration primitive. What it is instead is the
-`m`-th hit: the time that is a hit and has exactly `m` hits before it. `sampleTime_eq_iff` already
-says so; the bundle below is the same statement split into the two halves the attribute checks, so
-that "characterised" is a fact a tool can read off rather than a claim in a docstring.
-
-The property is the membership condition of `hitEvent` with its arguments reordered, so there is
-one definition of "`j` is the `m`-th hit" and not two. Both halves need infinitely many hits: with
-finitely many, `Nat.nth` runs off the end of the enumeration and returns `0`. -/
-
-/-- **`j` is the `m`-th hit time for `ω`**: `j` is a hit and exactly `m` hits precede it. This is
-`hitEvent D j m` as a predicate on `j`, which is the order the characterized slot has to come
-last in. -/
-@[characterization property sampleTime "the `m`-th hit: a time that is a hit and has exactly `m` \
-hits strictly before it — which is what `Nat.nth` computes, and pins the 0-indexing, `τ₀` being \
-the first hit and having none before it"]
-def IsSampleTime (D : ℕ → Ω → ℝ) (ω : Ω) (m j : ℕ) : Prop := ω ∈ hitEvent D j m
-
-/-- **The `m`-th hit time is the `m`-th hit** — the existence half of the characterization. -/
-@[characterization existence]
-lemma isSampleTime_sampleTime {D : ℕ → Ω → ℝ} {ω : Ω} (hinf : {j | D j ω = 1}.Infinite) (m : ℕ) :
-    IsSampleTime D ω m (sampleTime D m ω) :=
-  (sampleTime_eq_iff hinf).mp rfl
-
-/-- **No other time is** — the uniqueness half: being a hit with exactly `m` hits before it
-determines the time exactly, since the hits before it are counted by a strictly increasing
-function of the rank. -/
-@[characterization uniqueness]
-lemma IsSampleTime.eq_sampleTime {D : ℕ → Ω → ℝ} {ω : Ω} (hinf : {j | D j ω = 1}.Infinite)
-    {m j : ℕ} (hj : IsSampleTime D ω m j) : j = sampleTime D m ω :=
-  ((sampleTime_eq_iff hinf).mpr hj).symm
 
 /-- The hit times are strictly increasing (when there are infinitely many hits). -/
 lemma sampleTime_strictMono {D : ℕ → Ω → ℝ} {ω : Ω}
