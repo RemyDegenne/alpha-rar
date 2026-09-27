@@ -142,7 +142,7 @@ jobs:
           set -euo pipefail
           # An editorial claim, not a derived fact: it says whoever publishes this site vouches for
           # Mathlib and everything under it. Drop it and every upstream package counts as unaudited.
-          trust-site build --dataset "$DATASET" --source . $BASELINE --ledger "$LEDGER" \
+          trust-site build --dataset "$DATASET" --source . ${BASELINE:-} --ledger "$LEDGER" \
             --trust mathlib --out "$RUNNER_TEMP/referee"
 
       - name: Compile blueprint and documentation
